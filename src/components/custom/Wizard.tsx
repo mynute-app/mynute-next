@@ -5,10 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CheckIcon } from "lucide-react";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
-
-function Step1() {
-  return <div>Componente para o Passo 1: Selecione o endereço</div>;
-}
+import { Address } from "../form/Address";
 
 function Step2() {
   return <div>Componente para o Passo 2: Profissionais</div>;
@@ -44,7 +41,7 @@ export default function Wizard() {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <Step1 />;
+        return <Address />;
       case 2:
         return <Step2 />;
       case 3:
@@ -80,7 +77,7 @@ export default function Wizard() {
             <Image src="/placeholder.svg" width={130} height={100} alt="Logo" />
           </div>
           <ul>
-            {steps.map((step) => (
+            {steps.map(step => (
               <li
                 key={step.id}
                 className={`flex items-center mb-4 ${
@@ -114,7 +111,7 @@ export default function Wizard() {
           {steps[currentStep - 1].title}
         </h1>
         <Separator className="my-4" />
-        <div className="flex-1 bg-white p-6 rounded-lg shadow-md mb-4">
+        <div className="flex-1 bg-white p-6 rounded-lg shadow-md mb-4 overflow-y-auto">
           {renderStepContent()}
         </div>
         <div className="mt-auto flex justify-between">
