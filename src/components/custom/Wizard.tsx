@@ -22,12 +22,13 @@ function Step4() {
 function Step5() {
   return <div>Componente para o Passo 5: Informação</div>;
 }
+
 function Step6() {
   return <div>Componente para o Passo 6: Confirmação</div>;
 }
 
 const steps = [
-  { id: 1, title: "Selecione o endereço" },
+  { id: 1, title: "Endereço" },
   { id: 2, title: "Profissionais" },
   { id: 3, title: "Serviço" },
   { id: 4, title: "Data e Hora" },
@@ -70,48 +71,61 @@ export default function Wizard() {
   };
 
   return (
-    <div className="flex w-full max-w-6xl h-5/6 rounded-lg shadow-lg">
-      <div className="w-64 bg-white shadow-xl">
-        <div className="p-4">
-          <div className="flex justify-center items-center my-4">
-            <Image src="/placeholder.svg" width={130} height={100} alt="Logo" />
-          </div>
-          <ul>
-            {steps.map(step => (
-              <li
-                key={step.id}
-                className={`flex items-center mb-4 ${
-                  step.id === currentStep
-                    ? "text-primary font-semibold"
-                    : step.id < currentStep
-                    ? "text-primary"
-                    : "text-gray-400"
+    <div className="flex flex-col w-full max-w-6xl h-auto rounded-lg shadow-lg">
+      <div className="relative bg-white shadow-xl p-4">
+        <div className="flex justify-center items-center my-4">
+          <Image src="/placeholder.svg" width={130} height={100} alt="Logo" />
+        </div>
+        <ul className="flex justify-center space-x-4 md:justify-between items-center relative">
+          <div
+            className="hidden md:block absolute top-5 left-16 right-6 h-1 bg-gray-200 "
+            style={{ transform: "translateY(-10%)" }}
+          />
+          <div
+            className="hidden md:block absolute top-5 left-12 right-6 h-1 bg-primary transition-all duration-500 "
+            style={{
+              width: `${((currentStep - 1) / (steps.length - 1)) * 90}%`,
+              transform: "translateY(-10%)",
+            }}
+          />
+          {steps.map(step => (
+            <li
+              key={step.id}
+              className={`flex flex-col items-center z-40 ${
+                step.id === currentStep
+                  ? "text-primary font-semibold"
+                  : step.id < currentStep
+                  ? "text-primary"
+                  : "text-gray-400"
+              }`}
+            >
+              <div
+                className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center ${
+                  step.id <= currentStep
+                    ? "bg-primary text-white"
+                    : "bg-gray-300 text-gray-700"
                 }`}
               >
-                <div
-                  className={`w-6 h-6 rounded-full mr-2 flex items-center justify-center ${
-                    step.id <= currentStep ? "bg-primary" : "bg-gray-200"
-                  }`}
-                >
-                  {step.id < currentStep ? (
-                    <CheckIcon className="w-4 h-4 text-white" />
-                  ) : (
-                    <span className="text-sm">{step.id}</span>
-                  )}
-                </div>
+                {step.id < currentStep ? (
+                  <CheckIcon className="w-4 h-4" />
+                ) : (
+                  <span className="text-sm">{step.id}</span>
+                )}
+              </div>
+              <span className="hidden md:block text-xs md:text-sm">
                 {step.title}
-              </li>
-            ))}
-          </ul>
-        </div>
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <div className="flex-1 flex flex-col p-4 bg-gray-100">
+      <div className="flex flex-col p-4 bg-gray-100">
         <h1 className="text-2xl font-bold mb-4">
           {steps[currentStep - 1].title}
         </h1>
         <Separator className="my-4" />
-        <div className="flex-1 bg-white p-6 rounded-lg shadow-md mb-4 overflow-y-auto">
+        <div className="bg-white p-6 rounded-lg shadow-md mb-4 overflow-y-auto">
           {renderStepContent()}
         </div>
         <div className="mt-auto flex justify-between">
