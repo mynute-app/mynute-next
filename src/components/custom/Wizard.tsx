@@ -71,18 +71,24 @@ export default function Wizard() {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-6xl h-auto rounded-lg shadow-lg">
-      <div className="relative bg-white shadow-xl p-4">
-        <div className="flex justify-center items-center my-4">
+    <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">
+      {/* Seção com imagem de fundo */}
+      <div
+        className="relative bg-cover bg-center shadow-xl p-4"
+        // style={{ backgroundImage: `url('/banner.webp')` }}
+      >
+        <div className="absolute inset-0 bg-black opacity-30"></div>
+
+        <div className="flex justify-center items-center my-4 relative z-10">
           <Image src="/placeholder.svg" width={130} height={100} alt="Logo" />
         </div>
-        <ul className="flex justify-center space-x-4 md:justify-between items-center relative">
+        <ul className="flex justify-center space-x-4 md:justify-between items-center relative z-10">
           <div
-            className="hidden md:block absolute top-5 left-16 right-6 h-1 bg-gray-200 "
+            className="hidden md:block absolute top-5 left-16 right-6 h-1 bg-gray-200"
             style={{ transform: "translateY(-10%)" }}
           />
           <div
-            className="hidden md:block absolute top-5 left-12 right-6 h-1 bg-primary transition-all duration-500 "
+            className="hidden md:block absolute top-5 left-12 right-6 h-1 bg-primary transition-all duration-500"
             style={{
               width: `${((currentStep - 1) / (steps.length - 1)) * 90}%`,
               transform: "translateY(-10%)",
@@ -120,12 +126,10 @@ export default function Wizard() {
         </ul>
       </div>
 
-      <div className="flex flex-col p-4 bg-gray-100">
-        <h1 className="text-2xl font-bold mb-4">
-          {steps[currentStep - 1].title}
-        </h1>
+      <div className="flex-1 flex flex-col p-4 bg-gray-100 overflow-hidden">
+        <h1 className="text-2xl font-bold">{steps[currentStep - 1].title}</h1>
         <Separator className="my-4" />
-        <div className="bg-white p-6 rounded-lg shadow-md mb-4 overflow-y-auto">
+        <div className="flex-1 bg-white p-6 rounded-lg shadow-md mb-4 overflow-y-auto">
           {renderStepContent()}
         </div>
         <div className="mt-auto flex justify-between">
