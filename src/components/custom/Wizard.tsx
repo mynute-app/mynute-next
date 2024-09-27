@@ -6,26 +6,10 @@ import { CheckIcon } from "lucide-react";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { Address } from "../form/Address";
-
-function Step2() {
-  return <div>Componente para o Passo 2: Profissionais</div>;
-}
-
-function Step3() {
-  return <div>Componente para o Passo 3: Serviço</div>;
-}
-
-function Step4() {
-  return <div>Componente para o Passo 4: Data e Hora</div>;
-}
-
-function Step5() {
-  return <div>Componente para o Passo 5: Informação</div>;
-}
-
-function Step6() {
-  return <div>Componente para o Passo 6: Confirmação</div>;
-}
+import { Person } from "../form/Person";
+import { z } from "zod";
+import { useWizardStore } from "@/context/useWizardStore";
+import { addressSchema } from "../../../validations/addressValidation";
 
 const steps = [
   { id: 1, title: "Endereço" },
@@ -36,48 +20,48 @@ const steps = [
   { id: 6, title: "Confirmação" },
 ];
 
-export default function Wizard() {
-  const [currentStep, setCurrentStep] = useState(1);
+const Wizard: React.FC = () => {
+  const { currentStep, nextStep, prevStep, selectedAddress } = useWizardStore();
+  const [error, setError] = useState<string>("");
 
-  const renderStepContent = () => {
+  const renderStepContent = (): JSX.Element | null => {
     switch (currentStep) {
       case 1:
         return <Address />;
       case 2:
-        return <Step2 />;
+        return <Person />;
       case 3:
-        return <Step3 />;
+        return <div>Componente para o Passo 3: Serviço</div>;
       case 4:
-        return <Step4 />;
+        return <div>Componente para o Passo 4: Data e Hora</div>;
       case 5:
-        return <Step5 />;
+        return <div>Componente para o Passo 5: Informação</div>;
       case 6:
-        return <Step6 />;
+        return <div>Componente para o Passo 6: Confirmação</div>;
       default:
         return null;
     }
   };
 
-  const nextStep = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+  const validateAndProceed = () => {
+    try {
+      addressSchema.parse({ selectedAddress });
+      setError("");
+      nextStep();
+    } catch (e) {
+      if (e instanceof z.ZodError) {
+        setError(e.errors[0].message);
+      }
     }
   };
 
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">
-      {/* Seção com imagem de fundo */}
       <div
         className="relative bg-cover bg-center shadow-xl p-4"
-        // style={{ backgroundImage: `url('/banner.webp')` }}
+        style={{ backgroundImage: `url('/banner.webp')` }}
       >
-        <div className="absolute inset-0 bg-black opacity-30"></div>
+        <div className="absolute inset-0 bg-black opacity-10"></div>
 
         <div className="flex justify-center items-center my-4 relative z-10">
           <Image src="/placeholder.svg" width={130} height={100} alt="Logo" />
@@ -129,18 +113,25 @@ export default function Wizard() {
       <div className="flex-1 flex flex-col p-4 bg-gray-100 overflow-hidden">
         <h1 className="text-2xl font-bold">{steps[currentStep - 1].title}</h1>
         <Separator className="my-4" />
+
         <div className="flex-1 bg-white p-6 rounded-lg shadow-md mb-4 overflow-y-auto">
           {renderStepContent()}
         </div>
-        <div className="mt-auto flex justify-between">
+        <div className="mt-auto flex justify-between ">
           <Button onClick={prevStep} disabled={currentStep === 1}>
             Anterior
           </Button>
-          <Button onClick={nextStep} disabled={currentStep === steps.length}>
+          {error && <p className="text-red-500 text-center text-xs">{error}</p>}
+          <Button
+            onClick={validateAndProceed}
+            disabled={currentStep === steps.length}
+          >
             {currentStep === steps.length ? "Finalizar" : "Próximo"}
           </Button>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Wizard;
