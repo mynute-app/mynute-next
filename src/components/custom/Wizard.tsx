@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { CheckIcon } from "lucide-react";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
-import { Address } from "../form/Address";
-import { Person } from "../form/Person";
 import { z } from "zod";
 import { useWizardStore } from "@/context/useWizardStore";
-import { addressSchema } from "../../../validations/addressValidation";
+import { addressSchema, personSchema } from "../../../validations/addressValidation";
+import { AddressStep } from "../form/Address";
+import { PersonStep } from "../form/Person";
+import { ServiceStep } from "../form/Service";
 
 const steps = [
   { id: 1, title: "Endereço" },
@@ -21,17 +22,17 @@ const steps = [
 ];
 
 const Wizard: React.FC = () => {
-  const { currentStep, nextStep, prevStep, selectedAddress } = useWizardStore();
+  const { currentStep, nextStep, prevStep, selectedAddress, selectedPerson } = useWizardStore();
   const [error, setError] = useState<string>("");
 
   const renderStepContent = (): JSX.Element | null => {
     switch (currentStep) {
       case 1:
-        return <Address />;
+        return <AddressStep />;
       case 2:
-        return <Person />;
+        return <PersonStep />;
       case 3:
-        return <div>Componente para o Passo 3: Serviço</div>;
+        return <ServiceStep />;
       case 4:
         return <div>Componente para o Passo 4: Data e Hora</div>;
       case 5:
@@ -45,7 +46,11 @@ const Wizard: React.FC = () => {
 
   const validateAndProceed = () => {
     try {
-      addressSchema.parse({ selectedAddress });
+      if (currentStep === 1) {
+        addressSchema.parse({ selectedAddress });
+      } else if (currentStep === 2) {
+        personSchema.parse({ selectedPerson });
+      }
       setError("");
       nextStep();
     } catch (e) {
@@ -55,11 +60,12 @@ const Wizard: React.FC = () => {
     }
   };
 
+
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">
       <div
         className="relative bg-cover bg-center shadow-xl p-4"
-        style={{ backgroundImage: `url('/banner.webp')` }}
+        // style={{ backgroundImage: `url('/banner.webp')` }}
       >
         <div className="absolute inset-0 bg-black opacity-10"></div>
 

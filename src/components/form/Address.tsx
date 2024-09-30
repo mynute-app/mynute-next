@@ -1,7 +1,7 @@
 import { CardCustom } from "@/components/custom/Card-Custom";
 import { useWizardStore } from "@/context/useWizardStore";
 
-export const Address: React.FC = () => {
+export const AddressStep = () => {
   const { setSelectedAddress, selectedAddress } = useWizardStore();
 
   const handleSelectAddress = (address: string) => {

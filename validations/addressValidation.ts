@@ -12,3 +12,16 @@ export const addressSchema = z
     message: "Você deve selecionar um endereço",
     path: ["selectedAddress"], 
   });
+
+
+export const personSchema = z
+  .object({
+    selectedPerson: z
+      .string()
+      .min(1, "Você deve selecionar uma pessoa")
+      .nullable(),
+  })
+  .refine(data => data.selectedPerson !== null, {
+    message: "Você deve selecionar uma pessoa",
+    path: ["selectedPerson"],
+  });
