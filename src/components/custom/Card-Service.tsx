@@ -1,35 +1,51 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
 import { BiLandscape } from "react-icons/bi";
-export const CardService = () => {
-  return (
-    <Card className="w-64 p-4 shadow-md rounded-lg flex flex-col gap-4">
-      <CardHeader className="flex items-center gap-4">
-        <div className="bg-gray-200 rounded-full w-14 h-14 flex items-center justify-center">
-          <BiLandscape />
-        </div>
-        <div className="flex-1">
-          <CardTitle className="text-sm font-semibold">
-            Alongamento em fibra de vidro
-          </CardTitle>
-          <CardDescription className="text-green-500 text-sm font-semibold">
-            R$50,00
-          </CardDescription>
-        </div>
-      </CardHeader>
 
-      <CardContent>
-        <Badge className="bg-yellow-400 text-black px-3 py-1 rounded-full">
-          50M
+interface ServiceCardProps {
+  title: string;
+  subtitle: string;
+  price: string;
+  duration: string;
+  iconSrc: string;
+  onClick?: () => void; 
+  isSelected?: boolean; 
+}
+
+export function CardService({
+  title,
+  subtitle,
+  price,
+  duration,
+  onClick,
+  isSelected = false,
+}: ServiceCardProps) {
+  return (
+    <div
+      onClick={onClick} 
+      className={`bg-white p-4 flex items-center gap-4 h-32 md:h-48 shadow-md rounded-md cursor-pointer 
+      transition-all ${
+        isSelected ? "border-2 border-primary" : "border border-transparent"
+      } 
+   `}
+    >
+      <div className="flex-shrink-0">
+        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+          <BiLandscape className="text-gray-600" size={24} />
+        </div>
+      </div>
+      <div className="flex flex-col flex-grow">
+        <span className="text-gray-800 font-semibold">{title}</span>
+        <span className="text-gray-600 text-sm">{subtitle}</span>
+      </div>
+      <div className="flex flex-col items-end gap-1">
+        <span className="text-green-500 font-bold">{price}</span>
+        <Badge
+          variant="outline"
+          className="text-sm bg-yellow-200 text-yellow-800"
+        >
+          {duration}
         </Badge>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
-};
+}

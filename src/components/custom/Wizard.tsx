@@ -7,7 +7,11 @@ import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { z } from "zod";
 import { useWizardStore } from "@/context/useWizardStore";
-import { addressSchema, personSchema } from "../../../validations/addressValidation";
+import {
+  addressSchema,
+  personSchema,
+  serviceSchema,
+} from "../../../validations/addressValidation";
 import { AddressStep } from "../form/Address";
 import { PersonStep } from "../form/Person";
 import { ServiceStep } from "../form/Service";
@@ -22,7 +26,14 @@ const steps = [
 ];
 
 const Wizard: React.FC = () => {
-  const { currentStep, nextStep, prevStep, selectedAddress, selectedPerson } = useWizardStore();
+  const {
+    currentStep,
+    nextStep,
+    prevStep,
+    selectedAddress,
+    selectedPerson,
+    selectedService,
+  } = useWizardStore();
   const [error, setError] = useState<string>("");
 
   const renderStepContent = (): JSX.Element | null => {
@@ -50,6 +61,8 @@ const Wizard: React.FC = () => {
         addressSchema.parse({ selectedAddress });
       } else if (currentStep === 2) {
         personSchema.parse({ selectedPerson });
+      } else if (currentStep === 3) {
+        serviceSchema.parse({ selectedService });
       }
       setError("");
       nextStep();
@@ -59,7 +72,6 @@ const Wizard: React.FC = () => {
       }
     }
   };
-
 
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">
