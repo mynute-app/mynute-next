@@ -15,6 +15,7 @@ import {
 import { AddressStep } from "../form/Address";
 import { PersonStep } from "../form/Person";
 import { ServiceStep } from "../form/Service";
+import { CardCalendar } from "./Card-Calendar";
 
 const steps = [
   { id: 1, title: "Endereço" },
@@ -45,7 +46,7 @@ const Wizard: React.FC = () => {
       case 3:
         return <ServiceStep />;
       case 4:
-        return <div>Componente para o Passo 4: Data e Hora</div>;
+        return <CardCalendar />
       case 5:
         return <div>Componente para o Passo 5: Informação</div>;
       case 6:
