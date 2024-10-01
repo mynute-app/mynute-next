@@ -37,3 +37,18 @@ export const serviceSchema = z
     message: "Você deve selecionar um serviço",
     path: ["selectedService"],
   });
+
+export const calendarSchema = z
+  .object({
+    selectedDate: z
+      .date()
+      .nullable(),
+    selectedHour: z
+      .string()
+      .min(1, "Você deve selecionar um horário")
+      .nullable(),
+  })
+  .refine(data => data.selectedDate !== null, {
+    message: "Você deve selecionar uma data",
+    path: ["selectedDate"],
+  })

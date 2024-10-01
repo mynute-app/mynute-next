@@ -7,9 +7,11 @@ interface WizardStore {
   selectedAddress: string | null;
   selectedPerson: string | null;
   selectedService: string | null;
+  selectedDate: Date | null;
   setSelectedAddress: (address: string) => void;
   setSelectedPerson: (person: string) => void;
   setSelectedService: (service: string) => void;
+  setSelectedDate: (date: Date) => void;
   setCurrentStep: (step: number) => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -20,9 +22,11 @@ export const useWizardStore = create<WizardStore>(set => ({
   selectedAddress: null,
   selectedPerson: null,
   selectedService: null,
+  selectedDate: null,
   setSelectedAddress: address => set({ selectedAddress: address }),
   setSelectedPerson: person => set({ selectedPerson: person }),
   setSelectedService: service => set({ selectedService: service }),
+  setSelectedDate: date => set({ selectedDate: date }),
   setCurrentStep: step => set({ currentStep: step }),
   nextStep: () => set(state => ({ currentStep: state.currentStep + 1 })),
   prevStep: () => set(state => ({ currentStep: state.currentStep - 1 })),

@@ -5,19 +5,28 @@ import { Button } from "@/components/ui/button";
 const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const hours = [
   "08:00",
+  "08:30",
   "09:00",
+  "09:30",
   "10:00",
+  "10:30",
   "11:00",
+  "11:30",
   "12:00",
+  "12:30",
   "13:00",
+  "13:30",
   "14:00",
+  "14:30",
   "15:00",
+  "15:30",
   "16:00",
+  "16:30",
   "17:00",
 ];
 
 export default function Calendar() {
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1)); // October 2024
+  const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
 
@@ -33,12 +42,14 @@ export default function Calendar() {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
     );
+    setSelectedDate(null); 
   };
 
   const handleNextMonth = () => {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
     );
+    setSelectedDate(null); 
   };
 
   const handleDateClick = (day: number) => {
@@ -50,6 +61,11 @@ export default function Calendar() {
 
   const handleHourClick = (hour: string) => {
     setSelectedHour(hour);
+  };
+
+  const handleGoBack = () => {
+    setSelectedDate(null); 
+    setSelectedHour(null);
   };
 
   const renderCalendar = () => {
@@ -103,37 +119,39 @@ export default function Calendar() {
 
   return (
     <div className="w-full max-w-md mx-auto p-4 bg-background shadow-md rounded-lg">
-      <div className="flex justify-between items-center mb-4">
-        <Button variant="outline" onClick={handlePrevMonth}>
-          <ChevronLeftIcon className="h-4 w-4" />
-        </Button>
-        <h2 className="text-lg font-semibold">
-          {currentDate.toLocaleString("pt-BR", {
-            month: "long",
-            year: "numeric",
-          })}
-        </h2>
-        <Button variant="outline" onClick={handleNextMonth}>
-          <ChevronRightIcon className="h-4 w-4" />
-        </Button>
-      </div>
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {daysOfWeek.map(day => (
-          <div key={day} className="text-center font-medium text-sm">
-            {day}
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-1 mb-4">{renderCalendar()}</div>
-      {selectedDate && (
-        <div>
-          <h3 className="font-semibold mb-2">Horário</h3>
-          <div className="grid grid-cols-5 gap-2">{renderHours()}</div>
+      {!selectedDate && (
+        <div className="flex justify-between items-center mb-4">
+          <Button variant="outline" onClick={handlePrevMonth}>
+            <ChevronLeftIcon className="h-4 w-4" />
+          </Button>
+          <h2 className="text-lg font-semibold">
+            {currentDate.toLocaleString("pt-BR", {
+              month: "long",
+              year: "numeric",
+            })}
+          </h2>
+          <Button variant="outline" onClick={handleNextMonth}>
+            <ChevronRightIcon className="h-4 w-4" />
+          </Button>
         </div>
       )}
       {!selectedDate && (
-        <div className="text-center text-muted-foreground">
-          Selecione a data
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {daysOfWeek.map(day => (
+            <div key={day} className="text-center font-medium text-sm">
+              {day}
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-1 mb-4">
+        {selectedDate ? renderHours() : renderCalendar()}
+      </div>
+      {selectedDate && (
+        <div className="flex justify-center mt-4">
+          <Button variant="outline" onClick={handleGoBack}>
+            Escolher outra data
+          </Button>
         </div>
       )}
       {selectedDate && selectedHour && (

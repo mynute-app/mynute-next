@@ -9,13 +9,15 @@ import { z } from "zod";
 import { useWizardStore } from "@/context/useWizardStore";
 import {
   addressSchema,
+  calendarSchema,
   personSchema,
   serviceSchema,
-} from "../../../validations/addressValidation";
+} from "../../../validations/validation";
 import { AddressStep } from "../form/Address";
 import { PersonStep } from "../form/Person";
 import { ServiceStep } from "../form/Service";
 import { CardCalendar } from "./Card-Calendar";
+import { CardInformation } from "./Customer-Information";
 
 const steps = [
   { id: 1, title: "Endereço" },
@@ -34,6 +36,7 @@ const Wizard: React.FC = () => {
     selectedAddress,
     selectedPerson,
     selectedService,
+    selectedDate,
   } = useWizardStore();
   const [error, setError] = useState<string>("");
 
@@ -48,7 +51,7 @@ const Wizard: React.FC = () => {
       case 4:
         return <CardCalendar />
       case 5:
-        return <div>Componente para o Passo 5: Informação</div>;
+        return <CardInformation />;
       case 6:
         return <div>Componente para o Passo 6: Confirmação</div>;
       default:
@@ -64,7 +67,7 @@ const Wizard: React.FC = () => {
         personSchema.parse({ selectedPerson });
       } else if (currentStep === 3) {
         serviceSchema.parse({ selectedService });
-      }
+      } 
       setError("");
       nextStep();
     } catch (e) {
