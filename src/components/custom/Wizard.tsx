@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckIcon } from "lucide-react";
@@ -18,6 +17,7 @@ import { PersonStep } from "../form/Person";
 import { ServiceStep } from "../form/Service";
 import { CardCalendar } from "./Card-Calendar";
 import { CardInformation } from "./Customer-Information";
+import { CustomAlertDialog } from "../dashboard/Custom-Alert-Dialog";
 
 const steps = [
   { id: 1, title: "Endereço" },
@@ -49,7 +49,7 @@ const Wizard: React.FC = () => {
       case 3:
         return <ServiceStep />;
       case 4:
-        return <CardCalendar />
+        return <CardCalendar />;
       case 5:
         return <CardInformation />;
       case 6:
@@ -67,7 +67,7 @@ const Wizard: React.FC = () => {
         personSchema.parse({ selectedPerson });
       } else if (currentStep === 3) {
         serviceSchema.parse({ selectedService });
-      } 
+      }
       setError("");
       nextStep();
     } catch (e) {
@@ -79,10 +79,7 @@ const Wizard: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">
-      <div
-        className="relative bg-cover bg-center shadow-xl p-4"
-        // style={{ backgroundImage: `url('/banner.webp')` }}
-      >
+      <div className="relative bg-cover bg-center shadow-xl p-4">
         <div className="absolute inset-0 bg-black opacity-10"></div>
 
         <div className="flex justify-center items-center my-4 relative z-10">
@@ -133,7 +130,10 @@ const Wizard: React.FC = () => {
       </div>
 
       <div className="flex-1 flex flex-col p-4 bg-gray-100 overflow-hidden">
-        <h1 className="text-2xl font-bold">{steps[currentStep - 1].title}</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">{steps[currentStep - 1].title}</h1>
+          <CustomAlertDialog />
+        </div>
         <Separator className="my-4" />
 
         <div className="flex-1 bg-white p-6 rounded-lg shadow-md mb-4 overflow-y-auto">
