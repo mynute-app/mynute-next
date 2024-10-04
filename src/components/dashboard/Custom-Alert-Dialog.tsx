@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   AlertDialog as AlertDialogComponent,
   AlertDialogContent,
@@ -9,10 +9,27 @@ import {
 import { Button } from "@/components/ui/button";
 import { LuSettings } from "react-icons/lu";
 import { CreatedAddress } from "./Created-Address";
-import { IoClose } from "react-icons/io5"; // Importa o ícone de fechar
+import { IoClose } from "react-icons/io5";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { CreatedService } from "./Created-Service";
+import { CreatedPerson } from "./Created-Person";
 
 export function CustomAlertDialog() {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("address");
+  const formRef = useRef<HTMLFormElement | null>(null);
+
+  const closeModal = () => setIsOpen(false);
+
+  const handleSave = () => {
+    // Checa a aba ativa e realiza a submissão correspondente
+    if (activeTab === "address") {
+      if (formRef.current) formRef.current.requestSubmit();
+    } else if (activeTab === "service") {
+      // Lógica para salvar outra aba (se necessário)
+      console.log("Salvando conteúdo da aba de serviço...");
+    }
+  };
 
   return (
     <AlertDialogComponent open={isOpen} onOpenChange={setIsOpen}>
@@ -25,22 +42,50 @@ export function CustomAlertDialog() {
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
-        {/* Adiciona um container flex para alinhar o X corretamente */}
         <div className="relative">
-          {/* Botão para fechar o modal */}
           <div
             className="absolute -top-2 right-0 cursor-pointer text-gray-600 hover:text-gray-900"
-            onClick={() => setIsOpen(false)}
+            onClick={closeModal}
           >
             <IoClose size={24} />
           </div>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-center">
-              Criar um Endereço
+              Configurações
             </AlertDialogTitle>
           </AlertDialogHeader>
-          {/* Passa a função para fechar o modal */}
-          <CreatedAddress closeModal={() => setIsOpen(false)} />
+
+          <div className="mt-4 h-[400px] overflow-y-auto scrollbar-hide">
+            <Tabs
+              defaultValue="address"
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="h-full"
+            >
+              <TabsList>
+                <TabsTrigger value="address">Endereço</TabsTrigger>
+                <TabsTrigger value="person">Profissionais</TabsTrigger>
+                <TabsTrigger value="service">Serviço</TabsTrigger>
+              </TabsList>
+              <TabsContent value="address" className="h-full">
+                <CreatedAddress closeModal={closeModal} formRef={formRef} />
+              </TabsContent>
+              <TabsContent value="person" className="h-full">
+                <CreatedPerson closeModal={closeModal} formRef={formRef} />
+              </TabsContent>
+              <TabsContent value="service" className="h-full">
+                <CreatedService closeModal={closeModal} formRef={formRef} />
+              </TabsContent>
+            </Tabs>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button type="button" variant="outline" onClick={closeModal}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={handleSave}>
+              Salvar
+            </Button>
+          </div>
         </div>
       </AlertDialogContent>
     </AlertDialogComponent>

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckIcon } from "lucide-react";
 import Image from "next/image";
@@ -31,6 +31,7 @@ const steps = [
 const Wizard: React.FC = () => {
   const {
     currentStep,
+    setCurrentStep, 
     nextStep,
     prevStep,
     selectedAddress,
@@ -39,6 +40,25 @@ const Wizard: React.FC = () => {
     selectedDate,
   } = useWizardStore();
   const [error, setError] = useState<string>("");
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const addressId = params.get("addressId");
+    const person = params.get("person");
+    const service = params.get("service");
+    const date = params.get("date");
+
+    if (addressId && !person) {
+      setCurrentStep(2); 
+    } else if (addressId && person && !service) {
+      setCurrentStep(3); 
+    } else if (addressId && person && service && !date) {
+      setCurrentStep(4); 
+    } else if (addressId && person && service && date) {
+      setCurrentStep(5); 
+    } else {
+      setCurrentStep(1); 
+    }
+  }, [setCurrentStep]);
 
   const renderStepContent = (): JSX.Element | null => {
     switch (currentStep) {

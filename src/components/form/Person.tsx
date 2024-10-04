@@ -1,11 +1,18 @@
+import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/context/useWizardStore";
 import { CardCustom } from "../custom/Card-Custom";
 
 export const PersonStep = () => {
   const { setSelectedPerson, selectedPerson } = useWizardStore();
+  const router = useRouter();
+
   const handleSelectPerson = (person: string) => {
     setSelectedPerson(person);
+    const params = new URLSearchParams(window.location.search);
+    params.set("person", person);
+    router.replace(`${window.location.pathname}?${params.toString()}`);
   };
+
   return (
     <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pr-2 md:pr-6">
       <CardCustom

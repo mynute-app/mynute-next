@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CardCustom } from "@/components/custom/Card-Custom";
 import { useWizardStore } from "@/context/useWizardStore";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,8 +15,8 @@ export const AddressStep = () => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  // Função para buscar endereços
   useEffect(() => {
     const fetchAddresses = async () => {
       try {
@@ -38,9 +39,11 @@ export const AddressStep = () => {
 
   const handleSelectAddress = (addressId: string) => {
     setSelectedAddress(addressId);
+    const params = new URLSearchParams(window.location.search);
+    params.set("addressId", addressId);
+    router.replace(`${window.location.pathname}?${params.toString()}`);
   };
 
-  // Renderiza o skeleton enquanto carrega
   if (loading) {
     return (
       <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pr-2 md:pr-6">
@@ -63,7 +66,7 @@ export const AddressStep = () => {
           title={address.title}
           description={address.description}
           onClick={() => handleSelectAddress(address.id)}
-          isSelected={selectedAddress === address.id}
+          isSelected={selectedAddress === address.id} 
         />
       ))}
     </div>

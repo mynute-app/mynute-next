@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea"; // Importa o Textarea do shadcn
 import {
   Form,
   FormControl,
@@ -16,12 +16,20 @@ import { useToast } from "@/hooks/use-toast";
 
 const createdAddressSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
-  description: z.string().min(1, "A descrição é obrigatória"),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  description: z.string().optional(),
 });
 
 type CreatedAddressFormData = z.infer<typeof createdAddressSchema>;
 
-export const CreatedAddress = ({ closeModal }: { closeModal: () => void }) => {
+export const CreatedAddress = ({
+  closeModal,
+  formRef,
+}: {
+  closeModal: () => void;
+  formRef: React.MutableRefObject<HTMLFormElement | null>;
+}) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const form = useForm<CreatedAddressFormData>({
@@ -44,20 +52,14 @@ export const CreatedAddress = ({ closeModal }: { closeModal: () => void }) => {
       });
 
       if (response.ok) {
-        const result = await response.json();
-        console.log("Form data posted successfully:", result);
-
         toast({
           title: "Endereço criado!",
           description: "O endereço foi adicionado com sucesso.",
           variant: "default",
         });
-
         closeModal();
-
         form.reset();
       } else {
-        console.error("Failed to post form data:", response.statusText);
         toast({
           title: "Erro ao criar endereço",
           description: "Houve um problema ao adicionar o endereço.",
@@ -65,7 +67,6 @@ export const CreatedAddress = ({ closeModal }: { closeModal: () => void }) => {
         });
       }
     } catch (error) {
-      console.error("Error posting form data:", error);
       toast({
         title: "Erro de rede",
         description: "Não foi possível se conectar ao servidor.",
@@ -80,7 +81,8 @@ export const CreatedAddress = ({ closeModal }: { closeModal: () => void }) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-4 flex flex-col"
+        ref={formRef}
+        className="space-y-4 flex flex-col px-2"
       >
         {/* Campo Title */}
         <FormField
@@ -88,16 +90,48 @@ export const CreatedAddress = ({ closeModal }: { closeModal: () => void }) => {
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Título</FormLabel>
+              <FormLabel>
+                Nome do Endereço <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Lá Família" {...field} />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        {/* Campo Description */}
+        {/* Campo Address */}
+        <FormField
+          name="address"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Endereço</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Campo Phone */}
+        <FormField
+          name="phone"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Telefone</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Campo Description como Textarea do shadcn */}
         <FormField
           name="description"
           control={form.control}
@@ -105,27 +139,17 @@ export const CreatedAddress = ({ closeModal }: { closeModal: () => void }) => {
             <FormItem>
               <FormLabel>Descrição</FormLabel>
               <FormControl>
-                <Input placeholder="São Roque" {...field} />
+                {/* Usa o Textarea do shadcn */}
+                <Textarea
+                  {...field}
+                  placeholder="Descrição detalhada do endereço"
+                  rows={4}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        {/* Botões de submissão e cancelamento */}
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={closeModal}
-            disabled={loading}
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Salvando..." : "Salvar"}
-          </Button>
-        </div>
       </form>
     </Form>
   );
