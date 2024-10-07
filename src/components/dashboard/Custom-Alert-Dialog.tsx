@@ -13,6 +13,7 @@ import { IoClose } from "react-icons/io5";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CreatedService } from "./Created-Service";
 import { CreatedPerson } from "./Created-Person";
+import  SchedulePanel  from "./Schedule-Panel";
 
 export function CustomAlertDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -66,6 +67,7 @@ export function CustomAlertDialog() {
                 <TabsTrigger value="address">Endereço</TabsTrigger>
                 <TabsTrigger value="person">Profissionais</TabsTrigger>
                 <TabsTrigger value="service">Serviço</TabsTrigger>
+                <TabsTrigger value="schedule">Configurção</TabsTrigger>
               </TabsList>
               <TabsContent value="address" className="h-full">
                 <CreatedAddress closeModal={closeModal} formRef={formRef} />
@@ -75,6 +77,9 @@ export function CustomAlertDialog() {
               </TabsContent>
               <TabsContent value="service" className="h-full">
                 <CreatedService closeModal={closeModal} formRef={formRef} />
+              </TabsContent>
+              <TabsContent value="schedule" className="h-full">
+                <SchedulePanel closeModal={closeModal}  />
               </TabsContent>
             </Tabs>
           </div>
