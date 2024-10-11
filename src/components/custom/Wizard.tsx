@@ -8,7 +8,6 @@ import { z } from "zod";
 import { useWizardStore } from "@/context/useWizardStore";
 import {
   addressSchema,
-  calendarSchema,
   personSchema,
   serviceSchema,
 } from "../../../validations/validation";
@@ -31,7 +30,7 @@ const steps = [
 const Wizard: React.FC = () => {
   const {
     currentStep,
-    setCurrentStep, 
+    setCurrentStep,
     nextStep,
     prevStep,
     selectedAddress,
@@ -40,6 +39,7 @@ const Wizard: React.FC = () => {
     selectedDate,
   } = useWizardStore();
   const [error, setError] = useState<string>("");
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const addressId = params.get("addressId");
@@ -48,15 +48,15 @@ const Wizard: React.FC = () => {
     const date = params.get("date");
 
     if (addressId && !person) {
-      setCurrentStep(2); 
+      setCurrentStep(2);
     } else if (addressId && person && !service) {
-      setCurrentStep(3); 
+      setCurrentStep(3);
     } else if (addressId && person && service && !date) {
-      setCurrentStep(4); 
+      setCurrentStep(4);
     } else if (addressId && person && service && date) {
-      setCurrentStep(5); 
+      setCurrentStep(5);
     } else {
-      setCurrentStep(1); 
+      setCurrentStep(1);
     }
   }, [setCurrentStep]);
 
@@ -103,55 +103,48 @@ const Wizard: React.FC = () => {
         <div className="absolute inset-0 bg-black opacity-10"></div>
 
         <div className="flex justify-center items-center my-4 relative z-10">
+          {/* Mantendo o logo intacto */}
           <Image src="/placeholder.svg" width={130} height={100} alt="Logo" />
         </div>
-        <ul className="flex justify-center space-x-4 md:justify-between items-center relative z-10">
-          <div
-            className="hidden md:block absolute top-5 left-16 right-6 h-1 bg-gray-200"
-            style={{ transform: "translateY(-10%)" }}
-          />
-          <div
-            className="hidden md:block absolute top-5 left-12 right-6 h-1 bg-primary transition-all duration-500"
-            style={{
-              width: `${((currentStep - 1) / (steps.length - 1)) * 90}%`,
-              transform: "translateY(-10%)",
-            }}
-          />
-          {steps.map(step => (
-            <li
-              key={step.id}
-              className={`flex flex-col items-center z-40 ${
-                step.id === currentStep
-                  ? "text-primary font-semibold"
-                  : step.id < currentStep
-                  ? "text-primary"
-                  : "text-gray-400"
-              }`}
-            >
-              <div
-                className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center ${
-                  step.id <= currentStep
-                    ? "bg-primary text-white"
-                    : "bg-gray-300 text-gray-700"
-                }`}
-              >
-                {step.id < currentStep ? (
-                  <CheckIcon className="w-4 h-4" />
-                ) : (
-                  <span className="text-sm">{step.id}</span>
-                )}
-              </div>
-              <span className="hidden md:block text-xs md:text-sm">
-                {step.title}
-              </span>
-            </li>
-          ))}
-        </ul>
       </div>
 
       <div className="flex-1 flex flex-col p-4 bg-gray-100 overflow-hidden">
+        <div className="flex justify-center items-center mb-6">
+          {/* Indicadores dos passos, semelhantes ao exemplo da imagem */}
+          <ul className="flex justify-center space-x-4 items-center relative z-10">
+            {steps
+              .filter(
+                step =>
+                  step.id === currentStep || // Passo atual
+                  step.id === currentStep - 1 || // Passo anterior
+                  step.id === currentStep + 1 // Próximo passo
+              )
+              .map(step => (
+                <li
+                  key={step.id}
+                  className={`flex items-center justify-center w-12 h-12 rounded-full border-4 border-white shadow-lg ${
+                    step.id === currentStep
+                      ? "bg-primary text-white"
+                      : "bg-gray-300 text-gray-700"
+                  }`}
+                  style={{
+                    transform:
+                      step.id === currentStep ? "scale(1.3)" : "scale(1)",
+                    transition: "transform 0.3s",
+                  }}
+                >
+                  <span className="text-lg font-semibold">{step.id}</span>
+
+                
+                </li>
+                  <h1 className="text-2xl font-bold">
+                    {steps[currentStep - 1].title}
+                  </h1>
+              ))}
+          </ul>
+        </div>
+
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">{steps[currentStep - 1].title}</h1>
           <CustomAlertDialog />
         </div>
         <Separator className="my-4" />

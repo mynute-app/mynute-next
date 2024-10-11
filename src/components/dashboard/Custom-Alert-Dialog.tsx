@@ -39,7 +39,7 @@ export function CustomAlertDialog() {
           variant="outline"
           className="flex gap-2 justify-center items-center"
         >
-          Settings <LuSettings />
+          <LuSettings />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
