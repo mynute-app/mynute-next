@@ -22,7 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
+import { GiBurningTree } from "react-icons/gi";
 export default function BrandDetailsForm() {
   const [businessName, setBusinessName] = useState("Vitor");
   const [bookingUrl, setBookingUrl] = useState("vitordcx3");
@@ -32,12 +32,18 @@ export default function BrandDetailsForm() {
     <div className="container mx-auto ">
       <div className="grid gap-6 md:grid-cols-2">
         <div>
-          <h2 className="text-2xl font-bold mb-6">Brand details</h2>
+          <h2 className="text-2xl font-bold mb-6">Detalhes da Empresa</h2>
           <div className="space-y-6">
             <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-center h-40 bg-gray-100 rounded-md">
-                  <Button variant="outline">
+              <CardContent className="p-0 relative">
+                <div className="flex items-center justify-center h-40 bg-gray-100 rounded-md ">
+                  <div className="border-2  rounded-full border-gray-300 p-2 shadow-md">
+                    <GiBurningTree className="size-6 " />
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="absolute bottom-2 right-2 rounded-md shadow-sm"
+                  >
                     <Upload className="mr-2 h-4 w-4" /> Upload banner image
                   </Button>
                 </div>
@@ -45,16 +51,17 @@ export default function BrandDetailsForm() {
             </Card>
 
             <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center shadow-md">
                 <Upload className="h-6 w-6 text-gray-400" />
               </div>
               <div>
-                <h3 className="font-semibold">Brand logo</h3>
-                <p className="text-sm text-gray-500">
-                  Select a 200 x 200 px image, up to 10 MB in size
+                <h3 className="font-semibold">Logotipo da marca</h3>
+                <p className="text-xs text-gray-500">
+                  Selecione uma imagem de 200 x 200 px, com <br /> tamanho
+                  máximo de 10 MB
                 </p>
                 <Button variant="outline" size="sm" className="mt-2">
-                  Upload logo
+                  Carregar logo{" "}
                 </Button>
               </div>
             </div>
@@ -130,7 +137,7 @@ export default function BrandDetailsForm() {
               </Button>
             </CardFooter>
           </Card>
-
+{/* 
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Need help with your Booking Page?</CardTitle>
@@ -159,7 +166,7 @@ export default function BrandDetailsForm() {
                 Connect with us
               </Button>
             </CardFooter>
-          </Card>
+          </Card> */}
         </div>
       </div>
     </div>
