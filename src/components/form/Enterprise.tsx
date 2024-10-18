@@ -27,6 +27,12 @@ export default function BrandDetailsForm() {
   const [businessName, setBusinessName] = useState("Vitor");
   const [bookingUrl, setBookingUrl] = useState("vitordcx3");
   const [industry, setIndustry] = useState("Barbershop");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [country, setCountry] = useState("Brazil");
+  const [zipCode, setZipCode] = useState("");
+  const [currency, setCurrency] = useState("Brazil - BRL R$");
 
   return (
     <div className="container mx-auto ">
@@ -67,7 +73,7 @@ export default function BrandDetailsForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="businessName">Business name</Label>
+              <Label htmlFor="businessName">Nome</Label>
               <Input
                 id="businessName"
                 value={businessName}
@@ -76,7 +82,7 @@ export default function BrandDetailsForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bookingUrl">Your Booking Page URL</Label>
+              <Label htmlFor="bookingUrl">URL da sua página de reservas</Label>
               <div className="flex">
                 <Input
                   id="bookingUrl"
@@ -91,7 +97,7 @@ export default function BrandDetailsForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
+              <Label htmlFor="industry">Indústria</Label>
               <Select value={industry} onValueChange={setIndustry}>
                 <SelectTrigger id="industry">
                   <SelectValue placeholder="Select an industry" />
@@ -105,7 +111,79 @@ export default function BrandDetailsForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="about">About</Label>
+              <Label htmlFor="address">Endereço</Label>
+              <Input
+                id="address"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                placeholder="Street name, apt, suite, floor"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="city">Cidade</Label>
+              <Input
+                id="city"
+                value={city}
+                onChange={e => setCity(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="state">Estado</Label>
+              <Select value={state} onValueChange={setState}>
+                <SelectTrigger id="state">
+                  <SelectValue placeholder="Select a state" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="California">California</SelectItem>
+                  <SelectItem value="New York">New York</SelectItem>
+                  <SelectItem value="Texas">Texas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="zipCode">CEP</Label>
+              <Input
+                id="zipCode"
+                value={zipCode}
+                onChange={e => setZipCode(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="country">País</Label>
+              <Select value={country} onValueChange={setCountry}>
+                <SelectTrigger id="country">
+                  <SelectValue placeholder="Select a country" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Brazil">Brazil</SelectItem>
+                  <SelectItem value="USA">USA</SelectItem>
+                  <SelectItem value="Canada">Canada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="currency">Moeda</Label>
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger id="currency">
+                  <SelectValue placeholder="Select a currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Brazil - BRL R$">
+                    Brazil - BRL R$
+                  </SelectItem>
+                  <SelectItem value="USA - USD $">USA - USD $</SelectItem>
+                  <SelectItem value="Canada - CAD $">Canada - CAD $</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="about">Sobre</Label>
               <Textarea
                 id="about"
                 placeholder="Tell the world about your brand"
@@ -116,7 +194,7 @@ export default function BrandDetailsForm() {
         </div>
 
         <div>
-          <h2 className="text-2xl font-bold mb-6">Preview</h2>
+          <h2 className="text-2xl font-bold mb-6">Sobre</h2>
           <Card className="bg-gray-900 text-white">
             <CardHeader>
               <div className="w-full h-40 bg-gray-800 rounded-md mb-4"></div>
@@ -137,36 +215,6 @@ export default function BrandDetailsForm() {
               </Button>
             </CardFooter>
           </Card>
-{/* 
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Need help with your Booking Page?</CardTitle>
-              <CardDescription>
-                We're real people here to help you 24/7
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex -space-x-2">
-                <Avatar>
-                  <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <Avatar>
-                  <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                  <AvatarFallback>CB</AvatarFallback>
-                </Avatar>
-                <Avatar>
-                  <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                  <AvatarFallback>ZD</AvatarFallback>
-                </Avatar>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full">
-                Connect with us
-              </Button>
-            </CardFooter>
-          </Card> */}
         </div>
       </div>
     </div>
