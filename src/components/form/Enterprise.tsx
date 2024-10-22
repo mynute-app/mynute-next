@@ -21,8 +21,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GiBurningTree } from "react-icons/gi";
+import BusinessHours from "../custom/BusinessHours";
 export default function BrandDetailsForm() {
   const [businessName, setBusinessName] = useState("Vitor");
   const [bookingUrl, setBookingUrl] = useState("vitordcx3");
@@ -190,6 +190,8 @@ export default function BrandDetailsForm() {
                 className="h-32"
               />
             </div>
+
+            <BusinessHours />
           </div>
         </div>
 
