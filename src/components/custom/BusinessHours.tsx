@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Switch } from "../ui/switch";
+import { Button } from "../ui/button";
+import { Trash2Icon } from "lucide-react";
 
 const BusinessHours = () => {
   type Day =
@@ -13,18 +15,46 @@ const BusinessHours = () => {
 
   type Hours = {
     open: boolean;
-    start: string;
-    end: string;
+    main: { start: string; end: string };
+    intervals: Array<{ start: string; end: string }>;
   };
 
   const [hours, setHours] = useState<Record<Day, Hours>>({
-    Segunda: { open: true, start: "09:00 AM", end: "05:00 PM" },
-    Terça: { open: true, start: "09:00 AM", end: "05:00 PM" },
-    Quarta: { open: true, start: "09:00 AM", end: "05:00 PM" },
-    Quinta: { open: true, start: "09:00 AM", end: "05:00 PM" },
-    Sexta: { open: true, start: "09:00 AM", end: "05:00 PM" },
-    Sábado: { open: false, start: "09:00 AM", end: "05:00 PM" },
-    Domingo: { open: false, start: "09:00 AM", end: "05:00 PM" },
+    Segunda: {
+      open: true,
+      main: { start: "09:00 AM", end: "06:00 PM" },
+      intervals: [{ start: "12:00 PM", end: "01:00 PM" }],
+    },
+    Terça: {
+      open: true,
+      main: { start: "09:00 AM", end: "06:00 PM" },
+      intervals: [{ start: "12:00 PM", end: "01:00 PM" }],
+    },
+    Quarta: {
+      open: true,
+      main: { start: "09:00 AM", end: "06:00 PM" },
+      intervals: [{ start: "12:00 PM", end: "01:00 PM" }],
+    },
+    Quinta: {
+      open: true,
+      main: { start: "09:00 AM", end: "06:00 PM" },
+      intervals: [{ start: "12:00 PM", end: "01:00 PM" }],
+    },
+    Sexta: {
+      open: true,
+      main: { start: "09:00 AM", end: "06:00 PM" },
+      intervals: [{ start: "12:00 PM", end: "01:00 PM" }],
+    },
+    Sábado: {
+      open: false,
+      main: { start: "09:00 AM", end: "06:00 PM" },
+      intervals: [],
+    },
+    Domingo: {
+      open: false,
+      main: { start: "09:00 AM", end: "06:00 PM" },
+      intervals: [],
+    },
   });
 
   const handleToggle = (day: Day) => {
@@ -34,10 +64,56 @@ const BusinessHours = () => {
     });
   };
 
-  const handleTimeChange = (day: Day, time: "start" | "end", value: string) => {
+  const handleTimeChange = (
+    day: Day,
+    time: "start" | "end",
+    value: string,
+    isMain: boolean,
+    intervalIndex?: number
+  ) => {
+    if (isMain) {
+      setHours({
+        ...hours,
+        [day]: {
+          ...hours[day],
+          main: { ...hours[day].main, [time]: value },
+        },
+      });
+    } else if (intervalIndex !== undefined) {
+      const newIntervals = [...hours[day].intervals];
+      newIntervals[intervalIndex] = {
+        ...newIntervals[intervalIndex],
+        [time]: value,
+      };
+
+      setHours({
+        ...hours,
+        [day]: { ...hours[day], intervals: newIntervals },
+      });
+    }
+  };
+
+  const addInterval = (day: Day) => {
     setHours({
       ...hours,
-      [day]: { ...hours[day], [time]: value },
+      [day]: {
+        ...hours[day],
+        intervals: [
+          ...hours[day].intervals,
+          { start: "01:00 PM", end: "02:00 PM" },
+        ],
+      },
+    });
+  };
+
+  const removeInterval = (day: Day, intervalIndex: number) => {
+    const newIntervals = hours[day].intervals.filter(
+      (_, index) => index !== intervalIndex
+    );
+
+    setHours({
+      ...hours,
+      [day]: { ...hours[day], intervals: newIntervals },
     });
   };
 
@@ -49,45 +125,96 @@ const BusinessHours = () => {
         página de reservas.
       </p>
       <div className="space-y-2">
-        {Object.entries(hours).map(([day, { open, start, end }]) => {
-          const dayName = day as Day; 
+        {Object.entries(hours).map(([day, { open, main, intervals }]) => {
+          const dayName = day as Day;
           return (
-            <div
-              key={dayName}
-              className="flex items-center justify-between space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={open}
-                  onCheckedChange={() => handleToggle(dayName)}
-                />
-                <span className="text-gray-700">{dayName}</span>
+            <div key={dayName} className="space-y-4">
+              <div className="flex items-center justify-between space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={open}
+                    onCheckedChange={() => handleToggle(dayName)}
+                  />
+                  <span className="text-gray-700">{dayName}</span>
+                </div>
+                <Button
+                  className=""
+                  onClick={() => addInterval(dayName)}
+                  disabled={!open}
+                >
+                  Adicionar intervalo
+                </Button>
               </div>
-              <div className="flex items-center space-x-2">
-                {open ? (
-                  <>
+
+              {open && (
+                <>
+                  {/* Horário principal */}
+                  <div className="flex items-center space-x-2">
                     <input
                       type="time"
-                      value={start}
+                      value={main.start}
                       onChange={e =>
-                        handleTimeChange(dayName, "start", e.target.value)
+                        handleTimeChange(dayName, "start", e.target.value, true)
                       }
                       className="border border-gray-300 rounded-md p-2"
                     />
                     <span>—</span>
                     <input
                       type="time"
-                      value={end}
+                      value={main.end}
                       onChange={e =>
-                        handleTimeChange(dayName, "end", e.target.value)
+                        handleTimeChange(dayName, "end", e.target.value, true)
                       }
                       className="border border-gray-300 rounded-md p-2"
                     />
-                  </>
-                ) : (
-                  <span className="text-gray-500">Closed</span>
-                )}
-              </div>
+                  </div>
+
+                  {/* Intervalos */}
+                  {intervals.map((interval, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 bg-gray-50 p-2 rounded-md border border-dashed border-gray-400"
+                    >
+                      <input
+                        type="time"
+                        value={interval.start}
+                        onChange={e =>
+                          handleTimeChange(
+                            dayName,
+                            "start",
+                            e.target.value,
+                            false,
+                            index
+                          )
+                        }
+                        className="border border-gray-200 rounded-sm p-1 text-sm text-gray-600"
+                      />
+                      <span className="text-gray-500 text-sm">—</span>
+                      <input
+                        type="time"
+                        value={interval.end}
+                        onChange={e =>
+                          handleTimeChange(
+                            dayName,
+                            "end",
+                            e.target.value,
+                            false,
+                            index
+                          )
+                        }
+                        className="border border-gray-200 rounded-sm p-1 text-sm text-gray-600"
+                      />
+                      <Button
+                        size="icon"
+                        className="text-white bg-red-500 "
+                        onClick={() => removeInterval(dayName, index)}
+                      >
+                        <Trash2Icon className="size-5" />
+                      </Button>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           );
         })}
