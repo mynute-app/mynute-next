@@ -1,4 +1,5 @@
 import Wizard from "@/components/custom/Wizard";
+import { Button } from "@/components/ui/button";
 
 export default function Page() {
   return (

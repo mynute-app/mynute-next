@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { signOut } from "next-auth/react";
 import { Separator } from "@/components/ui/separator";
 import { z } from "zod";
 import { useWizardStore } from "@/context/useWizardStore";
@@ -168,6 +169,7 @@ const Wizard: React.FC = () => {
 
         <div className="flex justify-between items-center">
           <CustomAlertDialog />
+          <button onClick={() => signOut()}>Sair</button>
         </div>
         <Separator className="my-4" />
 
