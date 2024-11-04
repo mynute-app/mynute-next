@@ -70,11 +70,7 @@ export const Sidebar = () => {
             </p>
           </div>
         )}
-        {!activeOption && (
-          <p className="text-sm text-muted-foreground">
-            Select an option to see details.
-          </p>
-        )}
+        {!activeOption && <SettingsSubSidebar />}
       </div>
     </div>
   );

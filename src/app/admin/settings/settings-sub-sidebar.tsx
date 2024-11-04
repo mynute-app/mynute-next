@@ -25,7 +25,7 @@ export const SettingsSubSidebar = () => {
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-2">
           <Users className="h-4 w-4" />
-          <Link href="/settings/your-team">Your team</Link>
+          <Link href="/admin/settings/your-team">Your team</Link>
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-2">
           <Calendar className="h-4 w-4" />
