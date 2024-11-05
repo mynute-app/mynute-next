@@ -17,7 +17,7 @@ export const SettingsSubSidebar = () => {
       <div className="space-y-2">
         <Button variant="ghost" className="w-full justify-start gap-2">
           <Layout className="h-4 w-4" />
-          <Link href="/settings/your-brand">Your brand</Link>
+          <Link href="/admin/settings/your-brand">Your brand</Link>
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-2">
           <Users className="h-4 w-4" />
