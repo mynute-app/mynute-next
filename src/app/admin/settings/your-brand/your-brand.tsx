@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,25 +12,42 @@ import * as zod from "zod";
 import { BusinessSchema } from "../../../../../schema";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Contact } from "./contact";
+import { IndustryField } from "./industry-field";
+import { BusinessNameField } from "./business-name-field";
+import { AboutField } from "./about-field";
+import { Location } from "./location";
 
 export default function YourBrand() {
   const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
     defaultValues: {
       businessName: "",
+      industry: "",
+      about: "",
     },
   });
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting, isDirty },
   } = form;
 
   const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
     try {
-      // Realiza o GET para verificar se o nome da empresa já existe
       const checkResponse = await fetch(
         `http://localhost:3333/business?businessName=${values.businessName}`
       );
@@ -45,7 +62,6 @@ export default function YourBrand() {
         return;
       }
 
-      // Caso o nome não exista, continua com o POST
       const response = await fetch("http://localhost:3333/business", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -69,14 +85,32 @@ export default function YourBrand() {
       });
     }
   };
+
   const handleButtonClick = () => {
     handleSubmit(onSubmit)();
   };
 
+  const industries = [
+    "Automotive",
+    "Barbershop",
+    "Beauty",
+    "Business services",
+    "Cafe",
+    "Charity",
+    "Church",
+    "Cleaning",
+    "Clinic",
+    "Computers",
+  ];
+
+  const filteredIndustries = industries.filter(industry =>
+    industry.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center ">
-        <h2 className="text-xl font-bold ">Your brand</h2>
+        <h2 className="text-xl font-bold">Your brand</h2>
 
         <Button
           onClick={handleButtonClick}
@@ -91,11 +125,11 @@ export default function YourBrand() {
         </Button>
       </div>
       <Separator className="my-4" />
+
+      {/* Divisão em duas colunas */}
       <div className="grid gap-6 md:grid-cols-2">
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-6 bg-yellow-300"
-        >
+        {/* Coluna do Formulário Principal */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Card>
             <CardContent className="p-0 relative">
               <div className="flex items-center justify-center h-40 bg-gray-100 rounded-md">
@@ -112,22 +146,27 @@ export default function YourBrand() {
             </CardContent>
           </Card>
 
-          <div className="space-y-2">
-            <Label htmlFor="businessName">Nome</Label>
-            <Input
-              id="businessName"
-              placeholder="Nome da empresa"
-              {...register("businessName")}
-            />
-            {errors.businessName && (
-              <p className="text-sm text-red-500">
-                {errors.businessName.message}
-              </p>
-            )}
-          </div>
-        </form>
+          <BusinessNameField
+            register={register}
+            error={errors.businessName?.message}
+          />
 
-        <div className="bg-fuchsia-500">...</div>
+          <IndustryField
+            control={control}
+            error={errors.industry?.message}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filteredIndustries={filteredIndustries}
+          />
+
+          <AboutField register={register} error={errors.about?.message} />
+          <Separator className="my-10" />
+          <Contact control={control} register={register} errors={errors} />
+          <Separator className="my-10" />
+          <Location control={control} register={register} errors={errors} />
+        </form>
+        <div>....</div>
+        {/* Coluna Direita: Componente Contact */}
       </div>
     </div>
   );
