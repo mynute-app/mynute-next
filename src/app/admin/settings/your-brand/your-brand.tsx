@@ -127,7 +127,7 @@ export default function YourBrand() {
       <Separator className="my-4" />
 
       {/* Divisão em duas colunas */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-1 max-w-3xl mx-auto">
         {/* Coluna do Formulário Principal */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Card>

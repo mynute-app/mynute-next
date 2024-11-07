@@ -2,7 +2,15 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ClockIcon, LinkIcon, MailIcon, PhoneIcon, PlusIcon, SearchIcon } from "lucide-react";
+import {
+  ClockIcon,
+  LinkIcon,
+  MailIcon,
+  PhoneIcon,
+  PlusIcon,
+  SearchIcon,
+} from "lucide-react";
+import AddTeamMemberDialog from "./add-team-member-modal";
 
 type TeamMember = {
   id: number;
@@ -21,10 +29,11 @@ export default function YourTeam() {
     teamMembers[0]
   );
   const [activeTab, setActiveTab] = useState("about");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleSelectMember = (member: TeamMember) => {
     setSelectedMember(member);
-    setActiveTab("about"); // Reset to "About" tab when a new member is selected
+    setActiveTab("about");
   };
 
   const renderTabContent = () => {
@@ -50,7 +59,7 @@ export default function YourTeam() {
       <div className="w-1/3 bg-gray-100 p-4 border-r">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Your Team</h2>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
             <PlusIcon className="w-5 h-5" />
           </Button>
         </div>
@@ -158,9 +167,14 @@ export default function YourTeam() {
           <p>Select a team member to view details</p>
         )}
       </div>
+
+      {/* Dialog for Adding Team Member */}
+      <AddTeamMemberDialog isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />
     </div>
   );
 }
+
+// Seções individuais
 
 function AboutSection() {
   return (
