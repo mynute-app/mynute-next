@@ -80,5 +80,25 @@
         "currency": "BRL"
       }
     }
+  ],
+  "team-members": [
+    {
+      "id": "a31b",
+      "fullName": "Vitor",
+      "email": "vitor@gmail.com",
+      "permission": "Access only"
+    },
+    {
+      "id": "e3f5",
+      "fullName": "Luan",
+      "email": "luan@gmail.com",
+      "permission": "Read only"
+    },
+    {
+      "id": "5205",
+      "fullName": "Camila",
+      "email": "camila@gmail.com",
+      "permission": "Access only"
+    }
   ]
 }

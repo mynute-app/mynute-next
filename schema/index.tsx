@@ -24,3 +24,19 @@ export const BusinessSchema = z.object({
     currency: z.string().min(1, "Currency is required"),
   }),
 });
+
+
+export const teamMemberSchema = z.object({
+  fullName: z
+    .string()
+    .min(1, "Full name is required")
+    .regex(/^[A-Za-z\s]+$/, "Full name must only contain letters and spaces"),
+  email: z.string().email("Invalid email address"),
+  permission: z.enum(["No access", "Access only", "Read only", "Edit"]),
+});
+
+export const formSchema = z.object({
+  teamMembers: z
+    .array(teamMemberSchema)
+    .nonempty("At least one team member is required"),
+});

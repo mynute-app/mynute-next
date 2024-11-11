@@ -1,6 +1,5 @@
-// components/YourTeam.tsx
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ClockIcon,
@@ -14,22 +13,48 @@ import AddTeamMemberDialog from "./add-team-member-modal";
 
 type TeamMember = {
   id: number;
-  name: string;
-  status: string;
-  role: string;
+  fullName: string;
+  email: string;
+  permission: string;
 };
 
-const teamMembers: TeamMember[] = [
-  { id: 1, name: "Vitor Augusto", status: "You", role: "Active" },
-  { id: 2, name: "Augusto", status: "Pending", role: "Inactive" },
-];
-
 export default function YourTeam() {
-  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(
-    teamMembers[0]
-  );
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [activeTab, setActiveTab] = useState("about");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    // Faz uma requisição GET para obter os membros da equipe
+    const fetchTeamMembers = async () => {
+      try {
+        const response = await fetch("http://localhost:3333/team-members");
+        if (response.ok) {
+          const data = await response.json();
+
+          // Certifica-se de que os dados estão em formato de array
+          if (Array.isArray(data)) {
+            setTeamMembers(data);
+
+            // Seleciona o primeiro membro automaticamente, se houver
+            if (data.length > 0) {
+              setSelectedMember(data[0]);
+            }
+          } else {
+            console.error(
+              "Erro: Dados de membros da equipe não estão no formato de array."
+            );
+          }
+        } else {
+          console.error("Erro ao buscar os membros da equipe");
+        }
+      } catch (error) {
+        console.error("Erro na requisição:", error);
+      }
+    };
+
+    fetchTeamMembers();
+  }, []);
 
   const handleSelectMember = (member: TeamMember) => {
     setSelectedMember(member);
@@ -39,7 +64,7 @@ export default function YourTeam() {
   const renderTabContent = () => {
     switch (activeTab) {
       case "about":
-        return <AboutSection />;
+        return <AboutSection selectedMember={selectedMember} />;
       case "integrations":
         return <IntegrationsSection />;
       case "services":
@@ -88,11 +113,11 @@ export default function YourTeam() {
             >
               <div className="flex items-center space-x-3">
                 <div className="rounded-full bg-gray-300 w-8 h-8 flex items-center justify-center font-bold text-gray-700">
-                  {member.name[0]}
+                  {member.fullName ? member.fullName[0] : "?"}
                 </div>
                 <div>
-                  <p className="font-medium">{member.name}</p>
-                  <p className="text-sm text-gray-500">{member.status}</p>
+                  <p className="font-medium">{member.fullName || "Unknown"}</p>
+                  <p className="text-sm text-gray-500">{member.permission}</p>
                 </div>
               </div>
             </li>
@@ -106,15 +131,17 @@ export default function YourTeam() {
           <>
             <div className="flex items-center space-x-4 mb-6">
               <div className="rounded-full bg-gray-200 w-16 h-16 flex items-center justify-center text-xl font-bold">
-                V
+                {selectedMember.fullName ? selectedMember.fullName[0] : "?"}
               </div>
               <div>
-                <h1 className="text-2xl font-semibold">Vitor Augusto</h1>
-                <p className="text-gray-500">Sorocaba, SP, BR • 3:18 PM</p>
+                <h1 className="text-2xl font-semibold">
+                  {selectedMember.fullName || "Unknown"}
+                </h1>
+                <p className="text-gray-500">
+                  {selectedMember.permission || "Role not defined"}
+                </p>
               </div>
             </div>
-            <h1 className="text-2xl font-semibold">{selectedMember.name}</h1>
-            <p className="text-gray-500">{selectedMember.role}</p>
 
             {/* Tabs */}
             <div className="flex space-x-4 border-b mt-4 mb-4">
@@ -176,8 +203,12 @@ export default function YourTeam() {
 
 // Seções individuais
 
-function AboutSection() {
-  return (
+function AboutSection({
+  selectedMember,
+}: {
+  selectedMember: TeamMember | null;
+}) {
+  return selectedMember ? (
     <div className="space-y-4">
       <div className="flex items-center space-x-2">
         <PhoneIcon className="w-5 h-5 text-gray-500" />
@@ -185,7 +216,7 @@ function AboutSection() {
       </div>
       <div className="flex items-center space-x-2">
         <MailIcon className="w-5 h-5 text-gray-500" />
-        <span>example@gmail.com</span>
+        <span>{selectedMember.email}</span>
       </div>
       <div className="flex items-center space-x-2">
         <ClockIcon className="w-5 h-5 text-gray-500" />
@@ -198,6 +229,8 @@ function AboutSection() {
         </a>
       </div>
     </div>
+  ) : (
+    <p>No member selected</p>
   );
 }
 
