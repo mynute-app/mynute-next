@@ -1,9 +1,7 @@
 import ProfileTabs from "./profile-tabs";
 
 const Page = () => {
-    return (
-        <div className=""><ProfileTabs /></div>
-    )
-}
+  return <ProfileTabs />;
+};
 
 export default Page;

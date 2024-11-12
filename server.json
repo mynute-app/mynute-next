@@ -83,22 +83,22 @@
   ],
   "team-members": [
     {
-      "id": "a31b",
-      "fullName": "Vitor",
+      "id": "4600",
+      "fullName": "Vitor ",
       "email": "vitor@gmail.com",
-      "permission": "Access only"
+      "permission": "No access"
     },
     {
-      "id": "e3f5",
-      "fullName": "Luan",
-      "email": "luan@gmail.com",
+      "id": "7c43",
+      "fullName": "Carlos",
+      "email": "carlos@gmail.com",
       "permission": "Read only"
     },
     {
-      "id": "5205",
+      "id": "02bc",
       "fullName": "Camila",
       "email": "camila@gmail.com",
-      "permission": "Access only"
+      "permission": "Read only"
     }
   ]
 }

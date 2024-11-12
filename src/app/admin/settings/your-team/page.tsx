@@ -1,11 +1,7 @@
 import YourTeam from "./profile-tour-team";
 
 const Page = () => {
-  return (
-    <div className="">
-      <YourTeam />
-    </div>
-  );
+  return <YourTeam />;
 };
 
 export default Page;
