@@ -4,43 +4,43 @@ import { CardCustom } from "@/components/custom/Card-Custom";
 import { useWizardStore } from "@/context/useWizardStore";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type Address = {
+type Business = {
   id: string;
-  title: string;
-  description: string;
+  businessName: string;
+  industry: string;
 };
 
-export const AddressStep = () => {
-  const { setSelectedAddress, selectedAddress } = useWizardStore();
-  const [addresses, setAddresses] = useState<Address[]>([]);
+export const BusinessStep = () => {
+  const { setSelectedBusiness, selectedBusiness } = useWizardStore();
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchAddresses = async () => {
+    const fetchBusinesses = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:3333/addresses");
-        if (!response.ok) throw new Error("Erro ao buscar endereços");
+        const response = await fetch("http://localhost:3333/business"); // Update the URL accordingly
+        if (!response.ok) throw new Error("Erro ao buscar empresas");
 
         const data = await response.json();
-        setAddresses(data);
+        setBusinesses(data);
       } catch (err) {
-        setError("Erro ao carregar endereços.");
+        setError("Erro ao carregar empresas.");
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAddresses();
+    fetchBusinesses();
   }, []);
 
-  const handleSelectAddress = (addressId: string) => {
-    setSelectedAddress(addressId);
+  const handleSelectBusiness = (businessId: string) => {
+    setSelectedBusiness(businessId);
     const params = new URLSearchParams(window.location.search);
-    params.set("addressId", addressId);
+    params.set("businessId", businessId);
     router.replace(`${window.location.pathname}?${params.toString()}`);
   };
 
@@ -60,13 +60,13 @@ export const AddressStep = () => {
 
   return (
     <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pr-2 md:pr-6">
-      {addresses.map(address => (
+      {businesses.map(business => (
         <CardCustom
-          key={address.id}
-          title={address.title}
-          description={address.description}
-          onClick={() => handleSelectAddress(address.id)}
-          isSelected={selectedAddress === address.id} 
+          key={business.id}
+          title={business.industry}
+          description={business.businessName}
+          onClick={() => handleSelectBusiness(business.id)}
+          isSelected={selectedBusiness === business.id}
         />
       ))}
     </div>

@@ -28,36 +28,6 @@
   ],
   "business": [
     {
-      "id": "085a",
-      "businessName": "Vitor Shop",
-      "industry": "Computers",
-      "about": "A loja Vitor shopA loja Vitor shopA loja Vitor shopA loja Vitor shopA loja Vitor shop A loja Vitor shopA loja Vitor shop",
-      "contact": {
-        "email": "vitoraugustodemattos@gmail.com",
-        "phoneNumbers": [
-          {
-            "countryCode": "+55",
-            "phone": "11971351731"
-          }
-        ]
-      }
-    },
-    {
-      "id": "694e",
-      "businessName": "Teste",
-      "industry": "Clinic",
-      "about": "TesteTesteTesteTeste",
-      "contact": {
-        "email": "vitoraugustodemattos@gmail.com",
-        "phoneNumbers": [
-          {
-            "countryCode": "+55",
-            "phone": "11971351731"
-          }
-        ]
-      }
-    },
-    {
       "id": "c701",
       "businessName": "Abc-Planejados",
       "industry": "Cafe",
@@ -68,6 +38,29 @@
           {
             "countryCode": "+55",
             "phone": "11971351731"
+          }
+        ]
+      },
+      "location": {
+        "address": "Sebastião Martins Villaça",
+        "city": "São Roque",
+        "state": "NY",
+        "zipCode": "18133360",
+        "country": "BR",
+        "currency": "BRL"
+      }
+    },
+    {
+      "id": "51c1",
+      "businessName": "Soft House Vitor",
+      "industry": "Computers",
+      "about": "A Minha Sof House é uma empresa especializada em oferecer soluções de sofás personalizados que combinam conforto, design e funcionalidade. Nosso objetivo é transformar a maneira como as pessoas vivenciam seus espaços, trazendo sofisticação e praticidade para cada ambiente.",
+      "contact": {
+        "email": "house@gmail.com",
+        "phoneNumbers": [
+          {
+            "countryCode": "+55",
+            "phone": "11 9 7135-1731"
           }
         ]
       },
