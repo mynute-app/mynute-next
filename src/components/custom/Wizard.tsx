@@ -11,13 +11,13 @@ import {
   personSchema,
   serviceSchema,
 } from "../../../validations/validation";
-import { AddressStep } from "../form/Address";
 import { PersonStep } from "../form/Person";
 import { ServiceStep } from "../form/Service";
 import { CardCalendar } from "./Card-Calendar";
 import { CardInformation } from "./Customer-Information";
 import { CustomAlertDialog } from "../dashboard/Custom-Alert-Dialog";
 import BrandDetailsForm from "../form/Enterprise";
+import { BusinessStep } from "../form/Address";
 
 const steps = [
   { id: 0, title: "Apresentação" },
@@ -67,7 +67,7 @@ const Wizard: React.FC = () => {
       case 0:
         return <BrandDetailsForm />;
       case 1:
-        return <AddressStep />;
+        return <BusinessStep />;
       case 2:
         return <PersonStep />;
       case 3:
@@ -103,16 +103,16 @@ const Wizard: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">
-      {/* <div className="relative bg-cover bg-center shadow-xl p-4">
+       <div className="relative bg-cover bg-center shadow-xl p-4">
         <div className="absolute inset-0 bg-black opacity-10"></div>
 
         <div className="flex justify-center items-center my-4 relative z-10">
           <Image src="/placeholder.svg" width={130} height={100} alt="Logo" />
         </div>
-      </div> */}
+      </div> 
 
       <div className="flex-1 flex flex-col p-4 bg-gray-100 overflow-hidden">
-        {/* <div className="flex justify-center items-center my-6 ">
+      <div className="flex justify-center items-center my-6 ">
           <ul className="flex justify-center space-x-4 items-center relative z-10">
             {steps
               .filter(
@@ -165,7 +165,7 @@ const Wizard: React.FC = () => {
                 );
               })}
           </ul>
-        </div> */}
+        </div> 
 
         <div className="flex justify-between items-center">
           <CustomAlertDialog />
