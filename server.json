@@ -28,40 +28,10 @@
   ],
   "business": [
     {
-      "id": "085a",
-      "businessName": "Vitor Shop",
-      "industry": "Computers",
-      "about": "A loja Vitor shopA loja Vitor shopA loja Vitor shopA loja Vitor shopA loja Vitor shop A loja Vitor shopA loja Vitor shop",
-      "contact": {
-        "email": "vitoraugustodemattos@gmail.com",
-        "phoneNumbers": [
-          {
-            "countryCode": "+55",
-            "phone": "11971351731"
-          }
-        ]
-      }
-    },
-    {
-      "id": "694e",
-      "businessName": "Teste",
-      "industry": "Clinic",
-      "about": "TesteTesteTesteTeste",
-      "contact": {
-        "email": "vitoraugustodemattos@gmail.com",
-        "phoneNumbers": [
-          {
-            "countryCode": "+55",
-            "phone": "11971351731"
-          }
-        ]
-      }
-    },
-    {
-      "id": "c701",
+      "id": "ceb0",
       "businessName": "Abc-Planejados",
-      "industry": "Cafe",
-      "about": "ASDdAdsadasda",
+      "industry": "Charity",
+      "about": "Abc-PlanejadosAbc-PlanejadosAbc-PlanejadosAbc-PlanejadosAbc-Planejados",
       "contact": {
         "email": "vitoraugustodemattos@gmail.com",
         "phoneNumbers": [

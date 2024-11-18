@@ -16,8 +16,6 @@ import { SettingsSubSidebar } from "@/app/admin/settings/settings-sub-sidebar";
 
 export const Sidebar = () => {
   const [activeOption, setActiveOption] = useState<string | null>(null);
-
-  // Função para definir o item ativo
   const handleOptionClick = (option: string) => {
     setActiveOption(option === activeOption ? null : option);
   };

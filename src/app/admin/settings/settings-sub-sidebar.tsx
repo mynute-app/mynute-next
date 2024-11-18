@@ -9,16 +9,84 @@ import {
   Activity,
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+
+type DataBusinesses = {
+  id: number;
+  businessName: string;
+}[];
+
 
 export const SettingsSubSidebar = () => {
+  const [isBrandSubMenuOpen, setIsBrandSubMenuOpen] = useState(false);
+  const [businesses, setBusinesses] = useState <DataBusinesses>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBusinesses = async () => {
+      try {
+        const response = await fetch("http://localhost:3333/business"); // Substitua pelo seu endpoint
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setBusinesses(data); // Armazena os dados no estado
+      } catch (error) {
+        console.error("Erro ao buscar empresas:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBusinesses();
+  }, []);
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Settings</h2>
+
       <div className="space-y-2">
-        <Button variant="ghost" className="w-full justify-start gap-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-2"
+          onClick={() => setIsBrandSubMenuOpen(!isBrandSubMenuOpen)}
+        >
           <Layout className="h-4 w-4" />
           <Link href="/admin/settings/your-brand">Your brand</Link>
         </Button>
+
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={
+            isBrandSubMenuOpen
+              ? { height: "auto", opacity: 1 }
+              : { height: 0, opacity: 0 }
+          }
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="overflow-hidden"
+        >
+          <div className="ml-6 space-y-2">
+            {loading ? (
+              <p>Carregando empresas...</p>
+            ) : businesses.length > 0 ? (
+              businesses.map(business => (
+                <Button
+                  key={business.id}
+                  variant="ghost"
+                  className="w-full justify-start gap-2"
+                >
+                  <Star className="h-4 w-4" />
+                  <Link href={`/admin/settings/your-brand/${business.id}`}>
+                    {business.businessName}
+                  </Link>
+                </Button>
+              ))
+            ) : (
+              <p>Nenhuma empresa encontrada.</p>
+            )}
+          </div>
+        </motion.div>
+
         <Button variant="ghost" className="w-full justify-start gap-2">
           <Users className="h-4 w-4" />
           <Link href="/admin/settings/your-profile">Your profile</Link>
