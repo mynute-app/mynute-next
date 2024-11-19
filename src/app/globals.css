@@ -84,3 +84,29 @@ body {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+/* Estilo da barra de rolagem */
+.custom-scrollbar {
+    scrollbar-width: thin; /* Para Firefox */
+    scrollbar-color: #a0aec0 #edf2f7; /* Para Firefox */
+}
+
+/* Para navegadores baseados em WebKit */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 2px; /* Largura da barra */
+    height: 2px; /* Altura da barra horizontal */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #a0aec0; /* Cor do "polegar" */
+    border-radius: 3px; /* Deixa as bordas arredondadas */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #718096; /* Cor ao passar o mouse */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background-color: #edf2f7; /* Cor do trilho */
+    border-radius: 3px;
+}

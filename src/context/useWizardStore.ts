@@ -20,18 +20,19 @@ interface WizardStore {
 }
 
 export const useWizardStore = create<WizardStore>(set => ({
-  currentStep: 1,
-  selectedAddress: null,
-  selectedPerson: null,
-  selectedService: null,
-  selectedDate: null,
-  selectedBusiness: null, // Inicializado
+  currentStep: 1, // Passo inicial
+  selectedBusiness: null, // Empresa selecionada
+  selectedAddress: null, // Endereço selecionado
+  selectedPerson: null, // Profissional selecionado
+  selectedService: null, // Serviço selecionado
+  selectedDate: null, // Data selecionada
+  setSelectedBusiness: business => set({ selectedBusiness: business }),
   setSelectedAddress: address => set({ selectedAddress: address }),
   setSelectedPerson: person => set({ selectedPerson: person }),
   setSelectedService: service => set({ selectedService: service }),
   setSelectedDate: date => set({ selectedDate: date }),
-  setSelectedBusiness: business => set({ selectedBusiness: business }), // Função adicionada
   setCurrentStep: step => set({ currentStep: step }),
   nextStep: () => set(state => ({ currentStep: state.currentStep + 1 })),
   prevStep: () => set(state => ({ currentStep: state.currentStep - 1 })),
 }));
+

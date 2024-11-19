@@ -6,9 +6,8 @@ interface ServiceCardProps {
   subtitle: string;
   price: string;
   duration: string;
-  iconSrc: string;
-  onClick?: () => void; 
-  isSelected?: boolean; 
+  onClick?: () => void;
+  isSelected?: boolean;
 }
 
 export function CardService({
@@ -21,27 +20,36 @@ export function CardService({
 }: ServiceCardProps) {
   return (
     <div
-      onClick={onClick} 
-      className={`bg-white p-4 flex items-center gap-4 h-32 md:h-48 shadow-md rounded-md cursor-pointer 
-      transition-all ${
-        isSelected ? "border-2 border-primary" : "border border-transparent"
-      } 
-   `}
+      onClick={onClick}
+      className={`bg-white px-4 flex items-center gap-2 h-32 shadow-md rounded-lg cursor-pointer transition-transform transform hover:shadow-lg ${
+        isSelected
+          ? "border-2 border-primary bg-primary/10"
+          : "border border-gray-200"
+      }`}
     >
+      {/* Ícone representando o serviço */}
       <div className="flex-shrink-0">
-        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-          <BiLandscape className="text-gray-600" size={24} />
+        <div className="md:w-14 md:h-14 rounded-full bg-gray-100 flex items-center justify-center p-2">
+          <BiLandscape className="text-primary size-5"  />
         </div>
       </div>
-      <div className="flex flex-col flex-grow">
-        <span className="text-gray-800 font-semibold">{title}</span>
-        <span className="text-gray-600 text-sm">{subtitle}</span>
+
+      {/* Informações principais do serviço */}
+      <div className="flex flex-col flex-grow overflow-hidden">
+        <span className="text-sm md:text-lg font-bold text-gray-900 truncate">
+          {title}
+        </span>
+        <span className="text-sm text-gray-600 truncate">{subtitle}</span>
       </div>
+
+      {/* Informações adicionais: preço e duração */}
       <div className="flex flex-col items-end gap-1">
-        <span className="text-green-500 font-bold">{price}</span>
+        <span className="text-sm md:text-lg font-bold text-green-600">
+          {price}
+        </span>
         <Badge
           variant="outline"
-          className="text-sm bg-yellow-200 text-yellow-800"
+          className="text-xs bg-yellow-100 text-yellow-800 border-none"
         >
           {duration}
         </Badge>

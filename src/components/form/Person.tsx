@@ -42,7 +42,7 @@ export const PersonStep = () => {
   };
 
   return (
-    <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pr-2 md:pr-6">
+    <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 pr-2 md:pr-6 custom-scrollbar">
       <CardCustom
         title="Qualquer profissional"
         onClick={() => handleSelectPerson("Qualquer profissional")}
@@ -57,7 +57,6 @@ export const PersonStep = () => {
           isSelected={selectedPerson === member.fullName}
         />
       ))}
-
     </div>
   );
 };
