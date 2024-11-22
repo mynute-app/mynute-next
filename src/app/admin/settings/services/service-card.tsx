@@ -36,11 +36,11 @@ const getFixedColor = (name: string) => {
 };
 
 const ServiceCard = ({ name, duration, buffer, price }: ServiceCardProps) => {
-  const colorClass = getFixedColor(name); // Obtém a cor baseada no nome
+  const colorClass = getFixedColor(name); 
 
   return (
     <div
-      className={`flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow border-l-4 ${colorClass}`}
+      className={`flex items-center justify-between px-4 py-2 border border-gray-200 rounded-lg hover:shadow-md transition-shadow border-l-4 ${colorClass}`}
     >
       <div className="flex items-center space-x-3">
         <div className="rounded-full bg-gray-100 w-10 h-10 flex items-center justify-center">

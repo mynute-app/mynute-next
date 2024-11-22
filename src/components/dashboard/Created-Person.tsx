@@ -3,8 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch"; // Switch do shadcn
-import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch"; 
 import {
   Form,
   FormControl,
@@ -18,11 +17,10 @@ import {
   SelectTrigger,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"; // Select do shadcn
+} from "@/components/ui/select"; 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-// Schema de validação usando Zod
 const createdPersonSchema = z.object({
   fullName: z.string().min(1, "O nome completo é obrigatório"),
   profession: z.string().optional(),
@@ -61,7 +59,6 @@ export const CreatedPerson = ({
   const onSubmit = async (data: CreatedPersonFormData) => {
     setLoading(true);
     try {
-      // Exemplo de chamada à API para salvar a pessoa
       const response = await fetch("http://localhost:3333/persons", {
         method: "POST",
         headers: {

@@ -2,16 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
-import {
-  Calendar,
-  Layout,
-  Users,
-  ChevronDown,
-  HelpCircle,
-  Settings,
-  User,
-} from "lucide-react";
-import Link from "next/link";
+import { Calendar, HelpCircle, Settings, User } from "lucide-react";
 import { SettingsSubSidebar } from "@/app/admin/settings/settings-sub-sidebar";
 
 export const Sidebar = () => {
@@ -23,8 +14,8 @@ export const Sidebar = () => {
   return (
     <div className="flex h-screen border-r">
       {/* Sidebar principal */}
-      <div className="p-4 w-2/5">
-        <div className="flex items-center gap-2 pb-4">
+      <div className="p-4 ">
+        <div className="flex items-center gap-2 pb-4 ">
           <User className="h-6 w-6" />
           <span className="font-semibold">Nome</span>
         </div>
@@ -57,7 +48,7 @@ export const Sidebar = () => {
       </div>
 
       {/* Sub-sidebar: exibe conteúdo relacionado ao item selecionado */}
-      <div className="p-4 w-3/5 border-l bg-gray-100">
+      <div className="p-4 flex-1 border-l bg-gray-100">
         {activeOption === "settings" && <SettingsSubSidebar />}
         {/* Conteúdo para "services" pode ser adicionado de forma similar */}
         {activeOption === "services" && (

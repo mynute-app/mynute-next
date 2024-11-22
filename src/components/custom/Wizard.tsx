@@ -55,17 +55,17 @@ useEffect(() => {
   const date = params.get("date");
 
   if (!businessId) {
-    setCurrentStep(1); // Primeiro passo: Empresas
+    setCurrentStep(1); 
   } else if (businessId && !addressId) {
-    setCurrentStep(2); // Segundo passo: Endereço
+    setCurrentStep(2); 
   } else if (businessId && addressId && !person) {
-    setCurrentStep(3); // Terceiro passo: Profissionais
+    setCurrentStep(3); 
   } else if (businessId && addressId && person && !service) {
-    setCurrentStep(4); // Quarto passo: Serviço
+    setCurrentStep(4); 
   } else if (businessId && addressId && person && service && !date) {
-    setCurrentStep(5); // Quinto passo: Data e Hora
+    setCurrentStep(5); 
   } else if (businessId && addressId && person && service && date) {
-    setCurrentStep(6); // Último passo: Informação
+    setCurrentStep(6); 
   }
 }, [setCurrentStep]);
 
@@ -75,19 +75,19 @@ useEffect(() => {
 const renderStepContent = (): JSX.Element | null => {
   switch (currentStep) {
     case 1:
-      return <BusinessStep />; // Passo 1: Empresas
+      return <BusinessStep />; 
     case 2:
-      return <AddressStep />; // Passo 2: Endereço
+      return <AddressStep />;
     case 3:
-      return <PersonStep />; // Passo 3: Profissionais
+      return <PersonStep />; 
     case 4:
-      return <ServiceStep />; // Passo 4: Serviço
+      return <ServiceStep />; 
     case 5:
-      return <CardCalendar />; // Passo 5: Data e Hora
+      return <CardCalendar />; 
     case 6:
-      return <CardInformation />; // Passo 6: Informação
+      return <CardInformation />; 
     case 7:
-      return <div>Componente para o Passo 7: Confirmação</div>; // Passo 7
+      return <div>Componente para o Passo 7: Confirmação</div>;
     default:
       return null;
   }
@@ -105,8 +105,8 @@ const validateAndProceed = () => {
     } else if (currentStep === 4 && !selectedService) {
       throw new Error("Por favor, selecione um serviço.");
     }
-    setError(""); // Limpa mensagens de erro
-    nextStep(); // Avança para o próximo passo
+    setError(""); 
+    nextStep();
   } catch (e) {
     if (e instanceof Error) {
       setError(e.message);
@@ -117,8 +117,6 @@ const validateAndProceed = () => {
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">
       <div className="relative bg-cover bg-center shadow-xl p-4  bg-no-repeat">
-        {/* {" "}
-        //bg-[url('/bannershop.webp')] */}
         <div className="absolute inset-0 bg-white opacity-15"></div>
         <div className="flex justify-center items-center my-4 relative z-10">
           <Image src="/placeholder.svg" width={130} height={100} alt="Logo" />
