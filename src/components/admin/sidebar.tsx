@@ -14,7 +14,7 @@ export const Sidebar = () => {
   return (
     <div className="flex h-screen border-r">
       {/* Sidebar principal */}
-      <div className="p-4 ">
+      <div className="p-4 a\">
         <div className="flex items-center gap-2 pb-4 ">
           <User className="h-6 w-6" />
           <span className="font-semibold">Nome</span>

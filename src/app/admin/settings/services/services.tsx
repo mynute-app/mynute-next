@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ServiceCard from "./service-card";
-import { BsPlus } from "react-icons/bs";
 import { AddServiceDialog } from "./add-service-dialog";
 
 type ServiceCategory = {
@@ -12,37 +12,38 @@ type ServiceCategory = {
   items: string[];
 };
 
+type Service = {
+  id: string;
+  title: string;
+  duration: string;
+  buffer: string;
+  cost: string;
+};
+
 export const ServicesPage = () => {
-  const servicesteste = [
-    {
-      name: "Testador 2",
-      duration: "20 mins",
-      buffer: "20 min buffer",
-      price: "R$50",
-    },
-    {
-      name: "Testador 3",
-      duration: "20 mins",
-      buffer: "20 min buffer",
-      price: "R$50",
-    },
-    {
-      name: "Testador 4",
-      duration: "20 mins",
-      buffer: "20 min buffer",
-      price: "R$50",
-    },
-    {
-      name: "Avaliação",
-      duration: "30 mins",
-      buffer: "10 min buffer",
-      price: "R$80",
-    },
-  ];
-  const [services, setServices] = useState<ServiceCategory[]>([
-    { id: 1, name: "Services", items: ["Service 1"] },
-  ]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ServiceCategory[]>([]);
+
+  // Função para buscar serviços
+  const fetchServices = async () => {
+    try {
+      const response = await fetch("http://localhost:3333/services");
+      if (!response.ok) {
+        throw new Error("Erro ao buscar serviços");
+      }
+      const data = await response.json();
+      setServices(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
 
   const handleAddClassCategory = () => {
     setClasses([
@@ -63,8 +64,6 @@ export const ServicesPage = () => {
             <h3 className="text-sm font-semibold">
               Services ({services.length})
             </h3>
-            {/* Botão que abre o Dialog */}
-            {/* <AddServiceDialog /> */}
             <Button
               variant="ghost"
               size="sm"
@@ -80,7 +79,7 @@ export const ServicesPage = () => {
                 key={service.id}
                 className="text-sm text-gray-700 p-2 rounded hover:bg-gray-100"
               >
-                {service.name}
+                {service.title}
               </li>
             ))}
           </ul>
@@ -125,15 +124,21 @@ export const ServicesPage = () => {
 
         {/* Renderizando cada serviço */}
         <div className="space-y-4">
-          {servicesteste.map((service, index) => (
-            <ServiceCard
-              key={index}
-              name={service.name}
-              duration={service.duration}
-              buffer={service.buffer}
-              price={service.price}
-            />
-          ))}
+          {loading ? (
+            <p>Carregando serviços...</p>
+          ) : services.length > 0 ? (
+            services.map(service => (
+              <ServiceCard
+                key={service.id}
+                name={service.title}
+                duration={`${service.duration} min`}
+                buffer={`${service.buffer} min`}
+                price={`R$ ${service.cost}`}
+              />
+            ))
+          ) : (
+            <p>Nenhum serviço encontrado.</p>
+          )}
         </div>
       </div>
     </div>

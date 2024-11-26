@@ -185,5 +185,47 @@
       "email": "camila@gmail.com",
       "permission": "Read only"
     }
+  ],
+  "services": [
+    {
+      "id": "9f00",
+      "title": "Cabelo",
+      "duration": "30",
+      "buffer": "20",
+      "cost": "60",
+      "location": "Rua X",
+      "category": "",
+      "hidden": false
+    },
+    {
+      "id": "56b9",
+      "title": "Barba",
+      "duration": "20",
+      "buffer": "10",
+      "cost": "45",
+      "location": "Rua X",
+      "category": "",
+      "hidden": false
+    },
+    {
+      "id": "e915",
+      "title": "Unha",
+      "duration": "15",
+      "buffer": "10",
+      "cost": "20",
+      "location": "Rua X",
+      "category": "",
+      "hidden": false
+    },
+    {
+      "id": "40b3",
+      "title": "Limpeza",
+      "duration": "50",
+      "buffer": "20",
+      "cost": "400",
+      "location": "Rua X",
+      "category": "",
+      "hidden": false
+    }
   ]
 }

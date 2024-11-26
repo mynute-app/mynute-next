@@ -49,7 +49,7 @@ const ServiceCard = ({ name, duration, buffer, price }: ServiceCardProps) => {
         <div>
           <p className="font-medium text-gray-900">{name}</p>
           <p className="text-sm text-gray-500">
-            {duration} · {buffer} · {price}
+            Duração: {duration} · Espera: {buffer} · {price}
           </p>
         </div>
       </div>
