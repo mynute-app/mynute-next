@@ -198,30 +198,40 @@
       "hidden": false
     },
     {
-      "id": "56b9",
       "title": "Barba",
       "duration": "20",
       "buffer": "10",
       "cost": "45",
       "location": "Rua X",
       "category": "",
-      "hidden": false
+      "hidden": false,
+      "id": "56b9"
     },
     {
-      "id": "e915",
-      "title": "Unha",
+      "title": "Unha 222",
       "duration": "15",
       "buffer": "10",
       "cost": "20",
       "location": "Rua X",
       "category": "",
-      "hidden": false
+      "hidden": false,
+      "id": "e915"
     },
     {
       "id": "40b3",
       "title": "Limpeza",
       "duration": "50",
       "buffer": "20",
+      "cost": "400",
+      "location": "Rua X",
+      "category": "",
+      "hidden": false
+    },
+    {
+      "id": "c0e7",
+      "title": "Funfun",
+      "duration": "12",
+      "buffer": "12",
       "cost": "400",
       "location": "Rua X",
       "category": "",

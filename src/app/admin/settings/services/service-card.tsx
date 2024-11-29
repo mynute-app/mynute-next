@@ -15,6 +15,8 @@ type ServiceCardProps = {
   duration: string;
   buffer: string;
   price: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
 };
 
 // Função para gerar uma cor fixa com base no nome
@@ -35,8 +37,15 @@ const getFixedColor = (name: string) => {
   return colors[index];
 };
 
-const ServiceCard = ({ name, duration, buffer, price }: ServiceCardProps) => {
-  const colorClass = getFixedColor(name); 
+const ServiceCard = ({
+  name,
+  duration,
+  buffer,
+  price,
+  onEdit,
+  onDelete,
+}: ServiceCardProps) => {
+  const colorClass = getFixedColor(name);
 
   return (
     <div
@@ -78,11 +87,11 @@ const ServiceCard = ({ name, duration, buffer, price }: ServiceCardProps) => {
             side="bottom"
             sideOffset={5}
           >
-            <DropdownMenuItem onClick={() => alert("Edit")}>
+            <DropdownMenuItem onClick={onEdit}>
               <MdOutlineModeEdit className="ml-1" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => alert("Delete")}>
+            <DropdownMenuItem onClick={onDelete}>
               <GoTrash className="ml-1" />
               Delete
             </DropdownMenuItem>

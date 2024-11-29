@@ -5,6 +5,7 @@ import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ServiceCard from "./service-card";
 import { AddServiceDialog } from "./add-service-dialog";
+import { EditServiceDialog } from "./edit-service-dialog";
 
 type ServiceCategory = {
   id: number;
@@ -16,14 +17,18 @@ type Service = {
   id: string;
   title: string;
   duration: string;
-  buffer: string;
-  cost: string;
+  buffer?: string; // Agora é opcional
+  cost?: string; // Agora é opcional
+  location?: string;
+  category?: string;
+  hidden?: boolean;
 };
 
 export const ServicesPage = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ServiceCategory[]>([]);
+  const [editingService, setEditingService] = useState<Service | null>(null);
 
   // Função para buscar serviços
   const fetchServices = async () => {
@@ -41,16 +46,47 @@ export const ServicesPage = () => {
     }
   };
 
+  // Função para atualizar um serviço
+  const handleUpdateService = async (updatedService: Service) => {
+    try {
+      // Fazendo uma requisição para atualizar o serviço no backend
+      const response = await fetch(
+        `http://localhost:3333/services/${updatedService.id}`,
+        {
+          method: "PUT", // Método PUT para atualização
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedService), // Corpo da requisição
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar o serviço.");
+      }
+
+      const updatedData = await response.json(); // Dados atualizados retornados pelo backend
+
+      // Atualiza o estado local
+      setServices(prev =>
+        prev.map(service =>
+          service.id === updatedData.id ? updatedData : service
+        )
+      );
+
+      console.log("Serviço atualizado:", updatedData);
+    } catch (error) {
+      console.error("Erro ao atualizar o serviço:", error);
+    }
+  };
+
+  const handleDeleteService = (id: string) => {
+    setServices(prev => prev.filter(service => service.id !== id));
+  };
+
   useEffect(() => {
     fetchServices();
   }, []);
-
-  const handleAddClassCategory = () => {
-    setClasses([
-      ...classes,
-      { id: Date.now(), name: `New Class ${classes.length + 1}`, items: [] },
-    ]);
-  };
 
   return (
     <div className="flex h-screen">
@@ -64,12 +100,7 @@ export const ServicesPage = () => {
             <h3 className="text-sm font-semibold">
               Services ({services.length})
             </h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-0 text-gray-500"
-              onClick={handleAddClassCategory}
-            >
+            <Button variant="ghost" size="sm" className="p-0 text-gray-500">
               <PlusIcon className="w-4 h-4" />
             </Button>
           </div>
@@ -80,33 +111,6 @@ export const ServicesPage = () => {
                 className="text-sm text-gray-700 p-2 rounded hover:bg-gray-100"
               >
                 {service.title}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Classes Section */}
-        <div className="mt-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">
-              Classes ({classes.length})
-            </h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-0 text-gray-500"
-              onClick={handleAddClassCategory}
-            >
-              <PlusIcon className="w-4 h-4" />
-            </Button>
-          </div>
-          <ul className="mt-2 space-y-1">
-            {classes.map(classItem => (
-              <li
-                key={classItem.id}
-                className="text-sm text-gray-700 p-2 rounded hover:bg-gray-100"
-              >
-                {classItem.name}
               </li>
             ))}
           </ul>
@@ -134,6 +138,8 @@ export const ServicesPage = () => {
                 duration={`${service.duration} min`}
                 buffer={`${service.buffer} min`}
                 price={`R$ ${service.cost}`}
+                onEdit={() => setEditingService(service)} // Define o serviço a ser editado
+                onDelete={() => handleDeleteService(service.id)}
               />
             ))
           ) : (
@@ -141,6 +147,18 @@ export const ServicesPage = () => {
           )}
         </div>
       </div>
+
+      {/* Modal de edição */}
+      {editingService && (
+        <EditServiceDialog
+          service={editingService} // Serviço selecionado para edição
+          onSave={updatedService => {
+            handleUpdateService(updatedService); // Chama a função para salvar
+            setEditingService(null); // Fecha o modal após salvar
+          }}
+          onCancel={() => setEditingService(null)} // Fecha o modal ao cancelar
+        />
+      )}
     </div>
   );
 };
