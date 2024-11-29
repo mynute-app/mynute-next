@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import ServiceCard from "./service-card";
 import { AddServiceDialog } from "./add-service-dialog";
 import { EditServiceDialog } from "./edit-service-dialog";
+import { DeleteServiceDialog } from "./delete-service-dailog";
 
 type ServiceCategory = {
   id: number;
@@ -29,6 +30,7 @@ export const ServicesPage = () => {
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ServiceCategory[]>([]);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [deletingService, setDeletingService] = useState<Service | null>(null);
 
   // Função para buscar serviços
   const fetchServices = async () => {
@@ -65,7 +67,7 @@ export const ServicesPage = () => {
         throw new Error("Erro ao atualizar o serviço.");
       }
 
-      const updatedData = await response.json(); // Dados atualizados retornados pelo backend
+      const updatedData = await response.json();
 
       // Atualiza o estado local
       setServices(prev =>
@@ -80,8 +82,17 @@ export const ServicesPage = () => {
     }
   };
 
-  const handleDeleteService = (id: string) => {
-    setServices(prev => prev.filter(service => service.id !== id));
+  const handleDeleteService = async (id: string) => {
+    try {
+      const response = await fetch(`http://localhost:3333/services/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Erro ao excluir serviço");
+      setServices(prev => prev.filter(service => service.id !== id));
+      console.log("Serviço excluído:", id);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
@@ -139,7 +150,10 @@ export const ServicesPage = () => {
                 buffer={`${service.buffer} min`}
                 price={`R$ ${service.cost}`}
                 onEdit={() => setEditingService(service)} // Define o serviço a ser editado
-                onDelete={() => handleDeleteService(service.id)}
+                onDelete={() => {
+                  console.log("Definindo serviço para exclusão:", service);
+                  setDeletingService(service);
+                }}
               />
             ))
           ) : (
@@ -157,6 +171,17 @@ export const ServicesPage = () => {
             setEditingService(null); // Fecha o modal após salvar
           }}
           onCancel={() => setEditingService(null)} // Fecha o modal ao cancelar
+        />
+      )}
+
+      {deletingService && (
+        <DeleteServiceDialog
+          serviceName={deletingService.title}
+          onConfirm={() => {
+            handleDeleteService(deletingService.id); // Exclui o serviço
+            setDeletingService(null); // Fecha o modal
+          }}
+          onCancel={() => setDeletingService(null)} // Fecha o modal sem excluir
         />
       )}
     </div>

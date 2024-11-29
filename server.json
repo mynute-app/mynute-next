@@ -188,24 +188,14 @@
   ],
   "services": [
     {
-      "id": "9f00",
-      "title": "Cabelo",
+      "title": "Cabelo222",
       "duration": "30",
       "buffer": "20",
       "cost": "60",
       "location": "Rua X",
       "category": "",
-      "hidden": false
-    },
-    {
-      "title": "Barba",
-      "duration": "20",
-      "buffer": "10",
-      "cost": "45",
-      "location": "Rua X",
-      "category": "",
       "hidden": false,
-      "id": "56b9"
+      "id": "9f00"
     },
     {
       "title": "Unha 222",
@@ -222,16 +212,6 @@
       "title": "Limpeza",
       "duration": "50",
       "buffer": "20",
-      "cost": "400",
-      "location": "Rua X",
-      "category": "",
-      "hidden": false
-    },
-    {
-      "id": "c0e7",
-      "title": "Funfun",
-      "duration": "12",
-      "buffer": "12",
       "cost": "400",
       "location": "Rua X",
       "category": "",
