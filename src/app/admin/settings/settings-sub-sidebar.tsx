@@ -55,7 +55,7 @@ export const SettingsSubSidebar = () => {
           <Link href="/admin/settings/your-brand">Your brand</Link>
         </Button>
 
-        <motion.div
+        {/* <motion.div
           initial={{ height: 0, opacity: 0 }}
           animate={
             isBrandSubMenuOpen
@@ -85,7 +85,7 @@ export const SettingsSubSidebar = () => {
               <p>Nenhuma empresa encontrada.</p>
             )}
           </div>
-        </motion.div>
+        </motion.div> */}
 
         <Button variant="ghost" className="w-full justify-start gap-2">
           <Users className="h-4 w-4" />

@@ -164,6 +164,29 @@
         "country": "BR",
         "currency": "BRL"
       }
+    },
+    {
+      "id": "4cec",
+      "businessName": "Empresa X",
+      "industry": "Cafe",
+      "about": "Sobre a empresa X, é a empresa X ",
+      "contact": {
+        "email": "empresax@gmail.com",
+        "phoneNumbers": [
+          {
+            "countryCode": "+55",
+            "phone": "11 971351731"
+          }
+        ]
+      },
+      "location": {
+        "address": "Rua Empresa X",
+        "city": "Cidade X",
+        "state": "CA",
+        "zipCode": "10000000",
+        "country": "BR",
+        "currency": "BRL"
+      }
     }
   ],
   "team-members": [

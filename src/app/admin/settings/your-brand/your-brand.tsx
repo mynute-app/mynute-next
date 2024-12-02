@@ -43,7 +43,7 @@ export default function YourBrand() {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting, isDirty, touchedFields },
   } = form;
 
   const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
@@ -108,7 +108,7 @@ export default function YourBrand() {
   );
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 max-h-screen h-screen overflow-y-auto">
       <div className="flex justify-between items-center ">
         <h2 className="text-xl font-bold">Your brand</h2>
 
@@ -161,7 +161,13 @@ export default function YourBrand() {
 
           <AboutField register={register} error={errors.about?.message} />
           <Separator className="my-10" />
-          <Contact control={control} register={register} errors={errors} />
+          <Contact
+            control={control}
+            register={register}
+            errors={errors}
+            touchedFields={touchedFields}
+          />
+
           <Separator className="my-10" />
           <Location control={control} register={register} errors={errors} />
         </form>

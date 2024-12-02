@@ -6,9 +6,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="grid h-screen grid-cols-[500px,1fr] bg-background">
+    <div className="grid h-screen w-screen grid-cols-[500px,1fr] bg-background">
+      {/* Sidebar fixa sem scroll */}
       <Sidebar />
-      <main>{children}</main>
+
+      {/* Conteúdo principal com scroll interno */}
+      <main className="h-screen overflow-y-auto">{children}</main>
     </div>
   );
 }

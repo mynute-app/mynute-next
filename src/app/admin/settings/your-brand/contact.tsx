@@ -32,9 +32,15 @@ interface ContactProps {
   control: Control<FormData>;
   register: UseFormRegister<FormData>;
   errors: FieldErrors<FormData>;
+  touchedFields: any; // Adicionamos o estado de campos tocados
 }
 
-export function Contact({ control, register, errors }: ContactProps) {
+export function Contact({
+  control,
+  register,
+  errors,
+  touchedFields,
+}: ContactProps) {
   const {
     fields: phoneFields,
     append,
@@ -46,7 +52,7 @@ export function Contact({ control, register, errors }: ContactProps) {
 
   // Adiciona um campo inicial de telefone se ainda não houver nenhum
   if (phoneFields.length === 0) {
-    append({ countryCode: "+55", phone: "" });
+    append({ countryCode: "+55", phone: "" }, { shouldFocus: false });
   }
 
   return (
@@ -64,7 +70,8 @@ export function Contact({ control, register, errors }: ContactProps) {
           type="email"
           {...register("contact.email")}
         />
-        {errors.contact?.email && (
+        {/* Exibe erro somente se o campo foi tocado */}
+        {touchedFields.contact?.email && errors.contact?.email && (
           <p className="text-sm text-red-500">{errors.contact.email.message}</p>
         )}
       </div>
@@ -90,11 +97,12 @@ export function Contact({ control, register, errors }: ContactProps) {
                 </Select>
               )}
             />
-            {errors.contact?.phoneNumbers?.[index]?.countryCode && (
-              <p className="text-sm text-red-500">
-                {errors.contact.phoneNumbers[index].countryCode.message}
-              </p>
-            )}
+            {touchedFields.contact?.phoneNumbers?.[index]?.countryCode &&
+              errors.contact?.phoneNumbers?.[index]?.countryCode && (
+                <p className="text-sm text-red-500">
+                  {errors.contact.phoneNumbers[index].countryCode.message}
+                </p>
+              )}
           </div>
 
           <div className="w-3/4">
@@ -126,11 +134,12 @@ export function Contact({ control, register, errors }: ContactProps) {
                 </DropdownMenu>
               )}
             </div>
-            {errors.contact?.phoneNumbers?.[index]?.phone && (
-              <p className="text-sm text-red-500">
-                {errors.contact.phoneNumbers[index].phone.message}
-              </p>
-            )}
+            {touchedFields.contact?.phoneNumbers?.[index]?.phone &&
+              errors.contact?.phoneNumbers?.[index]?.phone && (
+                <p className="text-sm text-red-500">
+                  {errors.contact.phoneNumbers[index].phone.message}
+                </p>
+              )}
           </div>
         </div>
       ))}
