@@ -7,6 +7,8 @@ import ServiceCard from "./service-card";
 import { AddServiceDialog } from "./add-service-dialog";
 import { EditServiceDialog } from "./edit-service-dialog";
 import { DeleteServiceDialog } from "./delete-service-dailog";
+import ServiceCardSkeleton from "./ServiceCardSkeleton";
+import ServiceListSkeleton from "./ServiceListSkeleton";
 
 type ServiceCategory = {
   id: number;
@@ -107,24 +109,30 @@ export const ServicesPage = () => {
 
         {/* Services Section */}
         <div>
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">
-              Services ({services.length})
-            </h3>
-            <Button variant="ghost" size="sm" className="p-0 text-gray-500">
-              <PlusIcon className="w-4 h-4" />
-            </Button>
-          </div>
-          <ul className="mt-2 space-y-1">
-            {services.map(service => (
-              <li
-                key={service.id}
-                className="text-sm text-gray-700 p-2 rounded hover:bg-gray-100"
-              >
-                {service.title}
-              </li>
-            ))}
-          </ul>
+          {loading ? (
+            <ServiceListSkeleton />
+          ) : (
+            <div>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">
+                  Services ({services.length})
+                </h3>
+                <Button variant="ghost" size="sm" className="p-0 text-gray-500">
+                  <PlusIcon className="w-4 h-4" />
+                </Button>
+              </div>
+              <ul className="mt-2 space-y-1">
+                {services.map(service => (
+                  <li
+                    key={service.id}
+                    className="text-sm text-gray-700 p-2 rounded hover:bg-gray-100"
+                  >
+                    {service.title}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
@@ -140,7 +148,10 @@ export const ServicesPage = () => {
         {/* Renderizando cada serviço */}
         <div className="space-y-4">
           {loading ? (
-            <p>Carregando serviços...</p>
+            // Renderiza múltiplos skeletons para simular a lista
+            Array.from({ length: 5 }).map((_, index) => (
+              <ServiceCardSkeleton key={index} />
+            ))
           ) : services.length > 0 ? (
             services.map(service => (
               <ServiceCard
@@ -149,7 +160,7 @@ export const ServicesPage = () => {
                 duration={`${service.duration} min`}
                 buffer={`${service.buffer} min`}
                 price={`R$ ${service.cost}`}
-                onEdit={() => setEditingService(service)} // Define o serviço a ser editado
+                onEdit={() => setEditingService(service)}
                 onDelete={() => {
                   console.log("Definindo serviço para exclusão:", service);
                   setDeletingService(service);

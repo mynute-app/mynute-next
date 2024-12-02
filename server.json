@@ -216,6 +216,16 @@
       "location": "Rua X",
       "category": "",
       "hidden": false
+    },
+    {
+      "id": "ef0b",
+      "title": "Sobrancelha",
+      "duration": "20",
+      "buffer": "5",
+      "cost": "25",
+      "location": "Rua X",
+      "category": "",
+      "hidden": false
     }
   ]
 }
