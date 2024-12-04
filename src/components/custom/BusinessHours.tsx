@@ -118,7 +118,7 @@ const BusinessHours = () => {
   };
 
   return (
-    <div className="p-6 space-y-4">
+    <div className=" space-y-4 py-4">
       <h2 className="text-lg font-medium">Horário comercial</h2>
       <p className="text-sm text-gray-500">
         Destaque os horários de abertura e fechamento do seu negócio na sua
@@ -156,7 +156,7 @@ const BusinessHours = () => {
                       onChange={e =>
                         handleTimeChange(dayName, "start", e.target.value, true)
                       }
-                      className="border border-gray-300 rounded-md p-2"
+                      className="border border-gray-300 rounded-md p-1"
                     />
                     <span>—</span>
                     <input
@@ -165,7 +165,7 @@ const BusinessHours = () => {
                       onChange={e =>
                         handleTimeChange(dayName, "end", e.target.value, true)
                       }
-                      className="border border-gray-300 rounded-md p-2"
+                      className="border border-gray-300 rounded-md p-1"
                     />
                   </div>
 
@@ -173,37 +173,39 @@ const BusinessHours = () => {
                   {intervals.map((interval, index) => (
                     <div
                       key={index}
-                      className="flex items-center space-x-2 bg-gray-50 p-2 rounded-md border border-dashed border-gray-400"
+                      className="flex items-center space-x-2 bg-gray-50 p-2 rounded-md border border-dashed border-gray-400 justify-between"
                     >
-                      <input
-                        type="time"
-                        value={interval.start}
-                        onChange={e =>
-                          handleTimeChange(
-                            dayName,
-                            "start",
-                            e.target.value,
-                            false,
-                            index
-                          )
-                        }
-                        className="border border-gray-200 rounded-sm p-1 text-sm text-gray-600"
-                      />
-                      <span className="text-gray-500 text-sm">—</span>
-                      <input
-                        type="time"
-                        value={interval.end}
-                        onChange={e =>
-                          handleTimeChange(
-                            dayName,
-                            "end",
-                            e.target.value,
-                            false,
-                            index
-                          )
-                        }
-                        className="border border-gray-200 rounded-sm p-1 text-sm text-gray-600"
-                      />
+                      <div className="space-x-2">
+                        <input
+                          type="time"
+                          value={interval.start}
+                          onChange={e =>
+                            handleTimeChange(
+                              dayName,
+                              "start",
+                              e.target.value,
+                              false,
+                              index
+                            )
+                          }
+                          className="border border-gray-200 rounded-sm p-1 text-sm text-gray-600"
+                        />
+                        <span className="text-gray-500 text-sm">—</span>
+                        <input
+                          type="time"
+                          value={interval.end}
+                          onChange={e =>
+                            handleTimeChange(
+                              dayName,
+                              "end",
+                              e.target.value,
+                              false,
+                              index
+                            )
+                          }
+                          className="border border-gray-200 rounded-sm p-1 text-sm text-gray-600"
+                        />
+                      </div>
                       <Button
                         size="icon"
                         className="text-white bg-red-500 "

@@ -26,6 +26,7 @@ import { IndustryField } from "./industry-field";
 import { BusinessNameField } from "./business-name-field";
 import { AboutField } from "./about-field";
 import { Location } from "./location";
+import BusinessHours from "@/components/custom/BusinessHours";
 
 export default function YourBrand() {
   const { toast } = useToast();
@@ -170,6 +171,8 @@ export default function YourBrand() {
 
           <Separator className="my-10" />
           <Location control={control} register={register} errors={errors} />
+          <Separator className="my-10" />
+          <BusinessHours />
         </form>
         <div>....</div>
         {/* Coluna Direita: Componente Contact */}
