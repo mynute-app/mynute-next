@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ClockIcon, LinkIcon, MailIcon, PhoneIcon } from "lucide-react";
-
+import { MdOutlineModeEdit } from "react-icons/md";
+import { EditUserProfileDialog } from "./edit-user-profile";
 
 export default function ProfileTabs() {
   const [activeTab, setActiveTab] = useState("about");
@@ -24,16 +25,22 @@ export default function ProfileTabs() {
         return null;
     }
   };
+  const [activeModal, setActiveModal] = useState(false);
 
   return (
     <div className="container mx-auto p-6 mt-4">
-      <div className="flex items-center space-x-4 mb-6">
-        <div className="rounded-full bg-gray-200 w-16 h-16 flex items-center justify-center text-xl font-bold">
-          V
+      <div className="flex items-center space-x-4 mb-6 justify-between bg-amber-400">
+        <div className="">
+          <div className="rounded-full bg-gray-200 w-16 h-16 flex items-center justify-center text-xl font-bold">
+            V
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold">Vitor Augusto</h1>
+            <p className="text-gray-500">Sorocaba, SP, BR • 3:18 PM</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-semibold">Vitor Augusto</h1>
-          <p className="text-gray-500">Sorocaba, SP, BR • 3:18 PM</p>
+        <div onClick={() => setActiveModal(true)}>
+          <MdOutlineModeEdit className="size-5 self-start mt-4 cursor-pointer" />
         </div>
       </div>
 
@@ -79,7 +86,12 @@ export default function ProfileTabs() {
           Breaks
         </button>
       </div>
-
+      <EditUserProfileDialog
+        isOpen={activeModal}
+        onClose={() => setActiveModal(false)}
+        user={() => {}}
+        onSave={() => {}}
+      />
       <div className=" w-2/3">{renderTabContent()}</div>
     </div>
   );
