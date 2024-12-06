@@ -1,9 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { UserProfile } from "./user-profile";
 
 export const EditUserProfileDialog = ({
   user,
@@ -16,6 +24,17 @@ export const EditUserProfileDialog = ({
   isOpen: boolean;
   onClose: () => void;
 }) => {
+  const [activeTab, setActiveTab] = useState("profile");
+  useEffect(() => {
+    // Simula chamada à API
+    fetch("/api/user-profile")
+      .then(res => res.json())
+      .then(data => setFormData(data));
+  }, []);
+
+  const handleFormChange = (values: any) => {
+    console.log("Form values updated:", values);
+  };
   const [formData, setFormData] = useState({
     fullName: user?.fullName ?? "",
     phone: user?.phone ?? "",
@@ -23,7 +42,6 @@ export const EditUserProfileDialog = ({
     role: user?.role ?? "",
     about: user?.about ?? "",
   });
-  const [activeTab, setActiveTab] = useState("profile");
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="max-w-4xl" onEscapeKeyDown={onClose}>
@@ -110,89 +128,10 @@ export const EditUserProfileDialog = ({
           {/* Lado direito - Conteúdo das tabs */}
           <div className="w-2/3 space-y-6">
             {activeTab === "profile" && (
-              <div>
-                <div>
-                  <Label
-                    htmlFor="fullName"
-                    className="text-xs font-semibold text-gray-500"
-                  >
-                    Full name
-                  </Label>
-                  <Input
-                    id="fullName"
-                    name="fullName"
-                    value={formData.fullName}
-                    className="mt-1"
-                  />
-                </div>
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <Label
-                      htmlFor="phone"
-                      className="text-xs font-semibold text-gray-500"
-                    >
-                      Phone
-                    </Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      placeholder="+55"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Label
-                      htmlFor="email"
-                      className="text-xs font-semibold text-gray-500"
-                    >
-                      Primary email
-                    </Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      readOnly
-                      disabled
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label
-                    htmlFor="role"
-                    className="text-xs font-semibold text-gray-500"
-                  >
-                    Role
-                  </Label>
-                  <Input
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    placeholder="Role"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label
-                    htmlFor="about"
-                    className="text-xs font-semibold text-gray-500"
-                  >
-                    About
-                  </Label>
-                  <Textarea
-                    id="about"
-                    name="about"
-                    value={formData.about}
-                    maxLength={6000}
-                    placeholder="About you"
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-gray-500">
-                    {6000 - formData.about.length} characters remaining
-                  </p>
-                </div>
-              </div>
+              <UserProfile
+                initialData={formData}
+                onFormChange={handleFormChange}
+              />
             )}
             {activeTab === "working-hours" && (
               <div>
@@ -226,9 +165,7 @@ export const EditUserProfileDialog = ({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button className="ml-2">
-            Save
-          </Button>
+          <Button className="ml-2">Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
