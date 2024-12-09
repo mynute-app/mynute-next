@@ -27,6 +27,8 @@ import { BusinessNameField } from "./business-name-field";
 import { AboutField } from "./about-field";
 import { Location } from "./location";
 import BusinessHours from "@/components/custom/BusinessHours";
+import BrandLogo from "./brand-logo";
+import BrandLogoUpload from "./brand-logo";
 
 export default function YourBrand() {
   const { toast } = useToast();
@@ -146,6 +148,8 @@ export default function YourBrand() {
               </div>
             </CardContent>
           </Card>
+
+          <BrandLogoUpload />
 
           <BusinessNameField
             register={register}

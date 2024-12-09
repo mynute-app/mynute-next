@@ -14,7 +14,7 @@ export default async function RootLayout({
   return (
     <div className="grid h-screen w-screen grid-cols-[500px,1fr] bg-background">
       {/* Sidebar fixa sem scroll */}
-      <Sidebar />
+      {/* <Sidebar /> */}
 
       {/* Conteúdo principal com scroll interno */}
       <main className="h-screen overflow-y-auto">{children}</main>
