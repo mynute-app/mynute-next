@@ -52,7 +52,7 @@ export const SettingsSubSidebar = () => {
           onClick={() => setIsBrandSubMenuOpen(!isBrandSubMenuOpen)}
         >
           <Layout className="h-4 w-4" />
-          <Link href="/admin/settings/your-brand">Your brand</Link>
+          <Link href="/admin/settings/your-brand">Sua marca</Link>
         </Button>
 
         {/* <motion.div
@@ -89,23 +89,23 @@ export const SettingsSubSidebar = () => {
 
         <Button variant="ghost" className="w-full justify-start gap-2">
           <Users className="h-4 w-4" />
-          <Link href="/admin/settings/your-profile">Your profile</Link>
+          <Link href="/admin/settings/your-profile">Perfil</Link>
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-2">
           <Users className="h-4 w-4" />
-          <Link href="/admin/settings/your-team">Your team</Link>
+          <Link href="/admin/settings/your-team">Time</Link>
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-2">
           <Calendar className="h-4 w-4" />
-          <Link href="/admin/settings/services">Services</Link>
+          <Link href="/admin/settings/services">Serviços</Link>
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-2">
+        {/* <Button variant="ghost" className="w-full justify-start gap-2">
           <Settings className="h-4 w-4" />
           <Link href="/settings/general">General</Link>
-        </Button>
+        </Button> */}
       </div>
 
-      <div className="pt-4">
+      {/* <div className="pt-4">
         <p className="px-2 text-sm font-medium text-muted-foreground">MANAGE</p>
         <div className="pt-2 space-y-2">
           <Button variant="ghost" className="w-full justify-start gap-2">
@@ -125,9 +125,9 @@ export const SettingsSubSidebar = () => {
             <Link href="/settings/reports">Reports</Link>
           </Button>
         </div>
-      </div>
+      </div> */}
 
-      <div className="pt-4">
+      {/* <div className="pt-4">
         <p className="px-2 text-sm font-medium text-muted-foreground">MORE</p>
         <div className="pt-2 space-y-2">
           <Button variant="ghost" className="w-full justify-start gap-2">
@@ -139,7 +139,7 @@ export const SettingsSubSidebar = () => {
             <Link href="/settings/activity">Activity</Link>
           </Button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

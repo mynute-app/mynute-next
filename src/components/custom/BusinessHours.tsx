@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import Select from "react-select";
+import { useState } from "react";
+import { Switch } from "../ui/switch";
 
 const BusinessHours = () => {
   type Day =
@@ -45,7 +45,6 @@ const BusinessHours = () => {
     });
   };
 
-  // Gera as opções de horário
   const generateTimeOptions = () => {
     const options = [];
     let hour = 0;
@@ -56,12 +55,8 @@ const BusinessHours = () => {
       const displayHour = hour % 12 === 0 ? 12 : hour % 12;
       const displayMinute = minute.toString().padStart(2, "0");
 
-      options.push({
-        value: `${displayHour}:${displayMinute} ${ampm}`,
-        label: `${displayHour}:${displayMinute} ${ampm}`,
-      });
-
-      minute += 15;
+      options.push(`${displayHour}:${displayMinute} ${ampm}`);
+      minute += 60;
       if (minute === 60) {
         minute = 0;
         hour++;
@@ -86,41 +81,43 @@ const BusinessHours = () => {
             className="flex items-center justify-between py-2 border-b last:border-b-0"
           >
             <div className="flex items-center space-x-4">
-              <input
-                type="checkbox"
+              <Switch
                 checked={open}
-                onChange={() => toggleDay(day as Day)}
-                className="cursor-pointer"
+                onCheckedChange={() => toggleDay(day as Day)}
               />
               <span className="font-medium text-gray-800">{day}</span>
             </div>
             {open ? (
               <div className="flex items-center space-x-2">
-                <Select
-                  className="w-28"
-                  options={timeOptions}
-                  value={timeOptions.find(option => option.value === startTime)}
-                  onChange={selectedOption =>
-                    updateTime(
-                      day as Day,
-                      "startTime",
-                      selectedOption?.value || ""
-                    )
+                {/* Start Time Dropdown */}
+                <select
+                  value={startTime}
+                  onChange={e =>
+                    updateTime(day as Day, "startTime", e.target.value)
                   }
-                />
+                  className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+                >
+                  {timeOptions.map(time => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                </select>
                 <span className="text-gray-600">—</span>
-                <Select
-                  className="w-28"
-                  options={timeOptions}
-                  value={timeOptions.find(option => option.value === endTime)}
-                  onChange={selectedOption =>
-                    updateTime(
-                      day as Day,
-                      "endTime",
-                      selectedOption?.value || ""
-                    )
+                {/* End Time Dropdown */}
+                <select
+                  value={endTime}
+                  onChange={e =>
+                    updateTime(day as Day, "endTime", e.target.value)
                   }
-                />
+                  className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+                >
+                  {timeOptions.map(time => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                </select>
               </div>
             ) : (
               <span className="text-sm text-gray-500">Closed</span>

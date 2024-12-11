@@ -14,24 +14,24 @@ export const Sidebar = () => {
   return (
     <div className="flex h-screen border-r">
       {/* Sidebar principal */}
-      <div className="p-4 a\">
+      <div className="p-4 w-48">
         <div className="flex items-center gap-2 pb-4 ">
           <User className="h-6 w-6" />
           <span className="font-semibold">Nome</span>
         </div>
         <ScrollArea className="h-[calc(100vh-8rem)]">
           <div className="space-y-2">
-            <Button
+           {/* <Button
               variant="ghost"
               className="w-full justify-start gap-2"
               onClick={() => handleOptionClick("services")}
             >
               <Calendar className="h-4 w-4" />
               Services
-            </Button>
+            </Button>  */}
             <Button
               variant="ghost"
-              className="w-full justify-start gap-2"
+              className="w-full justify-start gap-2 "
               onClick={() => handleOptionClick("settings")}
             >
               <Settings className="h-4 w-4" />
