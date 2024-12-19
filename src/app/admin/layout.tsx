@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/admin/sidebar";
-import { auth } from "../../../auth";
 import { redirect } from "next/navigation";
+import { auth } from "../../../auth";
+import { SessionProvider } from "next-auth/react";
 
 export default async function RootLayout({
   children,
@@ -14,10 +15,13 @@ export default async function RootLayout({
   return (
     <div className="grid h-screen w-screen grid-cols-[500px,1fr] bg-background">
       {/* Sidebar fixa sem scroll */}
-       <Sidebar /> 
+      <Sidebar />
 
       {/* Conteúdo principal com scroll interno */}
-      <main className="h-screen overflow-y-auto">{children}</main>
+      <SessionProvider>
+        {" "}
+        <main className="h-screen overflow-y-auto">{children}</main>
+      </SessionProvider>
     </div>
   );
 }

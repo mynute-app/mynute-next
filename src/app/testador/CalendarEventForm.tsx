@@ -20,7 +20,7 @@ const calendarEventSchema = z.object({
 type CalendarEventFormData = z.infer<typeof calendarEventSchema>;
 
 export const CalendarEventForm = () => {
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
   const {
     register,
     handleSubmit,
@@ -36,8 +36,8 @@ export const CalendarEventForm = () => {
   });
 
   const onSubmit = async (data: CalendarEventFormData) => {
-    const accessToken = session?.accessToken; // Pega o token
-    console.log("Access Token:", accessToken);
+    // const accessToken = session?.accessToken; // Pega o token
+    // console.log("Access Token:", accessToken);
     // Transformar os dados no formato esperado pela API
     const event = {
       summary: data.summary,
@@ -60,7 +60,7 @@ export const CalendarEventForm = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
+            // Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify(event),
         }
@@ -82,8 +82,9 @@ export const CalendarEventForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>{session?.user?.email}</div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
+      {/* <div>{session?.user?.email}</div> */}
+      
       <div>
         <label htmlFor="summary" className="block text-sm font-medium">
           Título
