@@ -10,6 +10,8 @@ declare module "next-auth" {
       email?: string;
       name?: string;
       image?: string;
+      address?: string;
+      accessToken: string
     };
   }
 
@@ -18,5 +20,7 @@ declare module "next-auth" {
     email_verified: boolean;
     givenName?: string;
     familyName?: string;
+    address?: string;
+    accessToken: string;
   }
 }

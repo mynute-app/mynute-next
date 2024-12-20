@@ -20,7 +20,9 @@ const calendarEventSchema = z.object({
 type CalendarEventFormData = z.infer<typeof calendarEventSchema>;
 
 export const CalendarEventForm = () => {
-  // const { data: session } = useSession();
+  const { data: session } = useSession();
+  const accessToken = session?.user?.accessToken; // Pega o token
+  console.log("Access Token:", accessToken);
   const {
     register,
     handleSubmit,
@@ -43,15 +45,16 @@ export const CalendarEventForm = () => {
       summary: data.summary,
       description: data.description,
       start: {
-        dateTime: data.startDateTime,
+        dateTime: new Date(data.startDateTime).toISOString(),
         timeZone: "America/Sao_Paulo",
       },
       end: {
-        dateTime: data.endDateTime,
+        dateTime: new Date(data.endDateTime).toISOString(),
         timeZone: "America/Sao_Paulo",
       },
-      attendees: data.attendees?.map(email => ({ email })) || [],
+      attendees: [{ email: "example@example.com" }], // E-mail fixo
     };
+
 
     try {
       const response = await fetch(
@@ -60,7 +63,7 @@ export const CalendarEventForm = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            // Authorization: `Bearer ${accessToken}`,
+             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify(event),
         }
@@ -82,9 +85,7 @@ export const CalendarEventForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
-      {/* <div>{session?.user?.email}</div> */}
-      
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label htmlFor="summary" className="block text-sm font-medium">
           Título
