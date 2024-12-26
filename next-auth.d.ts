@@ -11,16 +11,18 @@ declare module "next-auth" {
       name?: string;
       image?: string;
       address?: string;
-      accessToken: string
+      accessToken: string;
+      refresh_token: string;
     };
+    error?: "RefreshTokenError";
   }
 
+}
+declare module "next-auth/jwt" {
   interface JWT {
-    sub: string;
-    email_verified: boolean;
-    givenName?: string;
-    familyName?: string;
-    address?: string;
-    accessToken: string;
+    access_token: string;
+    expires_at: number;
+    refresh_token?: string;
+    error?: "RefreshTokenError";
   }
 }
