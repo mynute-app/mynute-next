@@ -30,8 +30,6 @@ const steps = [
   { id: 7, title: "Confirmação" },
 ];
 
-
-
 const Wizard: React.FC = () => {
   const {
     currentStep,
@@ -46,73 +44,84 @@ const Wizard: React.FC = () => {
   } = useWizardStore();
   const [error, setError] = useState<string>("");
 
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const businessId = params.get("businessId");
-  const addressId = params.get("addressId");
-  const person = params.get("person");
-  const service = params.get("service");
-  const date = params.get("date");
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const businessId = params.get("businessId");
+    const addressId = params.get("addressId");
+    const person = params.get("person");
+    const service = params.get("service");
+    const date = params.get("date");
 
-  if (!businessId) {
-    setCurrentStep(1); 
-  } else if (businessId && !addressId) {
-    setCurrentStep(2); 
-  } else if (businessId && addressId && !person) {
-    setCurrentStep(3); 
-  } else if (businessId && addressId && person && !service) {
-    setCurrentStep(4); 
-  } else if (businessId && addressId && person && service && !date) {
-    setCurrentStep(5); 
-  } else if (businessId && addressId && person && service && date) {
-    setCurrentStep(6); 
-  }
-}, [setCurrentStep]);
-
-
-
-
-const renderStepContent = (): JSX.Element | null => {
-  switch (currentStep) {
-    case 1:
-      return <BusinessStep />; 
-    case 2:
-      return <AddressStep />;
-    case 3:
-      return <PersonStep />; 
-    case 4:
-      return <ServiceStep />; 
-    case 5:
-      return <CardCalendar />; 
-    case 6:
-      return <CardInformation />; 
-    case 7:
-      return <div>Componente para o Passo 7: Confirmação</div>;
-    default:
-      return null;
-  }
-};
-
-
-const validateAndProceed = () => {
-  try {
-    if (currentStep === 1 && !selectedBusiness) {
-      throw new Error("Por favor, selecione uma empresa.");
-    } else if (currentStep === 2 && !selectedAddress) {
-      throw new Error("Por favor, selecione um endereço.");
-    } else if (currentStep === 3 && !selectedPerson) {
-      throw new Error("Por favor, selecione uma pessoa.");
-    } else if (currentStep === 4 && !selectedService) {
-      throw new Error("Por favor, selecione um serviço.");
+    if (!businessId) {
+      setCurrentStep(1);
+    } else if (businessId && !addressId) {
+      setCurrentStep(2);
+    } else if (businessId && addressId && !person) {
+      setCurrentStep(3);
+    } else if (businessId && addressId && person && !service) {
+      setCurrentStep(4);
+    } else if (businessId && addressId && person && service && !date) {
+      setCurrentStep(5);
+    } else if (businessId && addressId && person && service && date) {
+      setCurrentStep(6);
     }
-    setError(""); 
-    nextStep();
-  } catch (e) {
-    if (e instanceof Error) {
-      setError(e.message);
+  }, [setCurrentStep]);
+
+  const renderStepContent = (): JSX.Element | null => {
+    switch (currentStep) {
+      case 1:
+        return <BusinessStep />;
+      case 2:
+        return <AddressStep />;
+      case 3:
+        return <PersonStep />;
+      case 4:
+        return <ServiceStep />;
+      case 5:
+        return <CardCalendar />;
+      case 6:
+        return <CardInformation />;
+      case 7:
+        return <div>Componente para o Passo 7: Confirmação</div>;
+      default:
+        return null;
     }
-  }
-};
+  };
+
+  const validateAndProceed = () => {
+    try {
+      // Validações para os passos anteriores ao último
+      if (currentStep === 1 && !selectedBusiness) {
+        throw new Error("Por favor, selecione uma empresa.");
+      } else if (currentStep === 2 && !selectedAddress) {
+        throw new Error("Por favor, selecione um endereço.");
+      } else if (currentStep === 3 && !selectedPerson) {
+        throw new Error("Por favor, selecione uma pessoa.");
+      } else if (currentStep === 4 && !selectedService) {
+        throw new Error("Por favor, selecione um serviço.");
+      }
+
+      // Se estamos no último passo, exibir os logs e finalizar
+      if (currentStep === steps.length) {
+        console.log("Resumo do estado final:");
+        console.log("Empresa selecionada:", selectedBusiness);
+        console.log("Endereço selecionado:", selectedAddress);
+        console.log("Profissional selecionado:", selectedPerson);
+        console.log("Serviço selecionado:", selectedService);
+        console.log("Data selecionada:", selectedDate);
+        alert("Wizard finalizado com sucesso!");
+        return;
+      }
+
+      // Prossiga para o próximo passo
+      setError("");
+      nextStep();
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message);
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">
@@ -192,10 +201,7 @@ const validateAndProceed = () => {
           <Button onClick={prevStep} disabled={currentStep === 1}>
             Anterior
           </Button>
-          <Button
-            onClick={validateAndProceed}
-            disabled={currentStep === steps.length}
-          >
+          <Button onClick={validateAndProceed}>
             {currentStep === steps.length ? "Finalizar" : "Próximo"}
           </Button>
         </div>

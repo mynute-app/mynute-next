@@ -3,32 +3,30 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const hours = [
-  "08:00",
-  "08:30",
-  "09:00",
-  "09:30",
-  "10:00",
-  "10:30",
-  "11:00",
-  "11:30",
-  "12:00",
-  "12:30",
-  "13:00",
-  "13:30",
-  "14:00",
-  "14:30",
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-  "17:00",
-];
+
+// Gera dinamicamente os horários disponíveis
+const generateHours = () => {
+  const hours = [];
+  let currentTime = new Date(2024, 0, 1, 9, 0); // Começa às 9:00
+  const endTime = new Date(2024, 0, 1, 17, 0); // Termina às 17:00
+
+  while (currentTime <= endTime) {
+    const hour = currentTime.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    hours.push(hour);
+    currentTime.setMinutes(currentTime.getMinutes() + 30); // Incrementa 30 minutos
+  }
+  return hours;
+};
 
 export default function Calendar() {
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1));
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
+
+  const hours = generateHours();
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -42,14 +40,14 @@ export default function Calendar() {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
     );
-    setSelectedDate(null); 
+    setSelectedDate(null);
   };
 
   const handleNextMonth = () => {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
     );
-    setSelectedDate(null); 
+    setSelectedDate(null);
   };
 
   const handleDateClick = (day: number) => {
@@ -63,14 +61,10 @@ export default function Calendar() {
     setSelectedHour(hour);
   };
 
-  const handleGoBack = () => {
-    setSelectedDate(null); 
-    setSelectedHour(null);
-  };
-
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentDate);
     const firstDayOfMonth = getFirstDayOfMonth(currentDate);
+    const today = new Date(); // Data atual
     const days = [];
 
     for (let i = 0; i < firstDayOfMonth; i++) {
@@ -78,19 +72,29 @@ export default function Calendar() {
     }
 
     for (let i = 1; i <= daysInMonth; i++) {
+      const currentDay = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        i
+      );
+      const isPast = currentDay < new Date(today.setHours(0, 0, 0, 0)); // Verifica se a data é passada
       const isSelected =
         selectedDate?.getDate() === i &&
         selectedDate?.getMonth() === currentDate.getMonth();
+
       days.push(
         <Button
           key={i}
           variant={isSelected ? "default" : "outline"}
-          className={`p-2 w-full h-full aspect-square ${
+          className={`w-full h-full aspect-square text-sm ${
             isSelected
               ? "bg-primary text-primary-foreground"
+              : isPast
+              ? "opacity-50 cursor-not-allowed bg-zinc-300"
               : "hover:bg-primary hover:text-primary-foreground"
           }`}
-          onClick={() => handleDateClick(i)}
+          onClick={() => !isPast && handleDateClick(i)} // Impede clique em datas passadas
+          disabled={isPast} // Desabilita o botão
         >
           {i}
         </Button>
@@ -105,7 +109,7 @@ export default function Calendar() {
       <Button
         key={hour}
         variant={selectedHour === hour ? "default" : "outline"}
-        className={`p-2 ${
+        className={`p-2 text-sm ${
           selectedHour === hour
             ? "bg-primary text-primary-foreground"
             : "hover:bg-primary hover:text-primary-foreground"
@@ -118,44 +122,41 @@ export default function Calendar() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 bg-background shadow-md rounded-lg">
-      {!selectedDate && (
-        <div className="flex justify-between items-center mb-4">
-          <Button variant="outline" onClick={handlePrevMonth}>
-            <ChevronLeftIcon className="h-4 w-4" />
-          </Button>
-          <h2 className="text-lg font-semibold">
-            {currentDate.toLocaleString("pt-BR", {
-              month: "long",
-              year: "numeric",
-            })}
-          </h2>
-          <Button variant="outline" onClick={handleNextMonth}>
-            <ChevronRightIcon className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-      {!selectedDate && (
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {daysOfWeek.map(day => (
-            <div key={day} className="text-center font-medium text-sm">
-              {day}
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-1 mb-4">
-        {selectedDate ? renderHours() : renderCalendar()}
+    <div className="w-full max-w-lg mx-auto p-4 bg-white shadow-md rounded-lg">
+      <div className="flex justify-between items-center mb-4">
+        <Button variant="outline" className="p-1" onClick={handlePrevMonth}>
+          <ChevronLeftIcon className="h-4 w-4" />
+        </Button>
+        <h2 className="text-lg font-semibold text-center">
+          {currentDate.toLocaleString("pt-BR", {
+            month: "long",
+            year: "numeric",
+          })}
+        </h2>
+        <Button variant="outline" className="p-1" onClick={handleNextMonth}>
+          <ChevronRightIcon className="h-4 w-4" />
+        </Button>
       </div>
+      <div className="grid grid-cols-7 gap-1 text-center text-sm mb-2">
+        {daysOfWeek.map(day => (
+          <div key={day} className="font-medium">
+            {day}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-1 mb-4">{renderCalendar()}</div>
       {selectedDate && (
-        <div className="flex justify-center mt-4">
-          <Button variant="outline" onClick={handleGoBack}>
-            Escolher outra data
-          </Button>
-        </div>
+        <>
+          <h3 className="text-center text-lg font-semibold">
+            {selectedDate.toLocaleDateString("pt-BR")}
+          </h3>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-4">
+            {renderHours()}
+          </div>
+        </>
       )}
       {selectedDate && selectedHour && (
-        <div className="mt-4 text-center font-semibold">
+        <div className="mt-4 text-center font-semibold text-sm">
           Data e hora selecionadas: {selectedDate.toLocaleDateString("pt-BR")}{" "}
           às {selectedHour}
         </div>
