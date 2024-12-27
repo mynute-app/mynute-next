@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -25,16 +25,48 @@ export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
+ const [busySlots, setBusySlots] = useState<{ start: string; end: string }[]>(
+   []
+ );
+
 
   const hours = generateHours();
 
-  const getDaysInMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  };
+  useEffect(() => {
+    async function fetchBusySlots() {
+      const timeMin = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      ).toISOString();
+      const timeMax = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0
+      ).toISOString();
 
-  const getFirstDayOfMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  };
+      try {
+        const response = await fetch(
+          `/api/getBusySlots?calendarId=primary&timeMin=${timeMin}&timeMax=${timeMax}`
+        );
+        const data = await response.json();
+
+        // Verifica se a resposta é um array antes de atualizar o estado
+        if (Array.isArray(data)) {
+          setBusySlots(data);
+        } else {
+          console.error("Resposta inesperada da API:", data);
+          setBusySlots([]); // Define como array vazio em caso de erro
+        }
+      } catch (error) {
+        console.error("Erro ao buscar horários ocupados:", error);
+        setBusySlots([]); // Define como array vazio em caso de erro
+      }
+    }
+
+    fetchBusySlots();
+  }, [currentDate]);
+
 
   const handlePrevMonth = () => {
     setCurrentDate(
@@ -62,9 +94,17 @@ export default function Calendar() {
   };
 
   const renderCalendar = () => {
-    const daysInMonth = getDaysInMonth(currentDate);
-    const firstDayOfMonth = getFirstDayOfMonth(currentDate);
-    const today = new Date(); // Data atual
+    const daysInMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0
+    ).getDate();
+    const firstDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    ).getDay();
+    const today = new Date();
     const days = [];
 
     for (let i = 0; i < firstDayOfMonth; i++) {
@@ -105,21 +145,40 @@ export default function Calendar() {
   };
 
   const renderHours = () => {
-    return hours.map(hour => (
-      <Button
-        key={hour}
-        variant={selectedHour === hour ? "default" : "outline"}
-        className={`p-2 text-sm ${
-          selectedHour === hour
-            ? "bg-primary text-primary-foreground"
-            : "hover:bg-primary hover:text-primary-foreground"
-        }`}
-        onClick={() => handleHourClick(hour)}
-      >
-        {hour}
-      </Button>
-    ));
+    return hours.map(hour => {
+      const isBusy =
+        Array.isArray(busySlots) &&
+        busySlots.some(slot => {
+          const start = new Date(slot.start);
+          const end = new Date(slot.end);
+          const selectedTime = new Date(selectedDate as Date);
+          selectedTime.setHours(
+            parseInt(hour.split(":")[0]),
+            parseInt(hour.split(":")[1])
+          );
+          return selectedTime >= start && selectedTime < end;
+        });
+
+      return (
+        <Button
+          key={hour}
+          variant={selectedHour === hour ? "default" : "outline"}
+          className={`p-2 text-sm ${
+            selectedHour === hour
+              ? "bg-primary text-primary-foreground"
+              : isBusy
+              ? "opacity-50 cursor-not-allowed bg-zinc-300"
+              : "hover:bg-primary hover:text-primary-foreground"
+          }`}
+          onClick={() => !isBusy && handleHourClick(hour)}
+          disabled={isBusy}
+        >
+          {hour}
+        </Button>
+      );
+    });
   };
+
 
   return (
     <div className="w-full max-w-lg mx-auto p-4 bg-white shadow-md rounded-lg">
