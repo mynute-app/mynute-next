@@ -25,48 +25,49 @@ export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
- const [busySlots, setBusySlots] = useState<{ start: string; end: string }[]>(
-   []
- );
-
+  const [busySlots, setBusySlots] = useState<{ start: string; end: string }[]>(
+    []
+  );
 
   const hours = generateHours();
 
   useEffect(() => {
     async function fetchBusySlots() {
+      // Define o intervalo baseado no mês atual exibido no calendário
       const timeMin = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth(),
         1
-      ).toISOString();
+      ).toISOString(); // Primeiro dia do mês exibido
       const timeMax = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth() + 1,
-        0
-      ).toISOString();
+        0,
+        23,
+        59,
+        59
+      ).toISOString(); // Último dia do mês exibido
 
       try {
         const response = await fetch(
-          `/api/getBusySlots?calendarId=primary&timeMin=${timeMin}&timeMax=${timeMax}`
+          `/api/calendar/busySlots?calendarId=vitoraugusto2010201078@gmail.com&timeMin=${timeMin}&timeMax=${timeMax}`
         );
         const data = await response.json();
 
-        // Verifica se a resposta é um array antes de atualizar o estado
         if (Array.isArray(data)) {
           setBusySlots(data);
         } else {
           console.error("Resposta inesperada da API:", data);
-          setBusySlots([]); // Define como array vazio em caso de erro
+          setBusySlots([]);
         }
       } catch (error) {
         console.error("Erro ao buscar horários ocupados:", error);
-        setBusySlots([]); // Define como array vazio em caso de erro
+        setBusySlots([]);
       }
     }
 
     fetchBusySlots();
-  }, [currentDate]);
-
+  }, [currentDate]); // Atualiza ao mudar o mês exibido
 
   const handlePrevMonth = () => {
     setCurrentDate(
@@ -117,7 +118,7 @@ export default function Calendar() {
         currentDate.getMonth(),
         i
       );
-      const isPast = currentDay < new Date(today.setHours(0, 0, 0, 0)); // Verifica se a data é passada
+      const isPast = currentDay < new Date(today.setHours(0, 0, 0, 0));
       const isSelected =
         selectedDate?.getDate() === i &&
         selectedDate?.getMonth() === currentDate.getMonth();
@@ -133,8 +134,8 @@ export default function Calendar() {
               ? "opacity-50 cursor-not-allowed bg-zinc-300"
               : "hover:bg-primary hover:text-primary-foreground"
           }`}
-          onClick={() => !isPast && handleDateClick(i)} // Impede clique em datas passadas
-          disabled={isPast} // Desabilita o botão
+          onClick={() => !isPast && handleDateClick(i)}
+          disabled={isPast}
         >
           {i}
         </Button>
@@ -145,19 +146,22 @@ export default function Calendar() {
   };
 
   const renderHours = () => {
+    if (!selectedDate) return null;
+
     return hours.map(hour => {
-      const isBusy =
-        Array.isArray(busySlots) &&
-        busySlots.some(slot => {
-          const start = new Date(slot.start);
-          const end = new Date(slot.end);
-          const selectedTime = new Date(selectedDate as Date);
-          selectedTime.setHours(
-            parseInt(hour.split(":")[0]),
-            parseInt(hour.split(":")[1])
-          );
-          return selectedTime >= start && selectedTime < end;
-        });
+      const isBusy = busySlots.some(slot => {
+        const slotStart = new Date(slot.start);
+        const slotEnd = new Date(slot.end);
+
+        // Verifica se o horário atual está dentro do intervalo ocupado
+        const selectedTime = new Date(selectedDate);
+        selectedTime.setHours(
+          parseInt(hour.split(":")[0], 10),
+          parseInt(hour.split(":")[1], 10)
+        );
+
+        return selectedTime >= slotStart && selectedTime < slotEnd;
+      });
 
       return (
         <Button
@@ -178,7 +182,6 @@ export default function Calendar() {
       );
     });
   };
-
 
   return (
     <div className="w-full max-w-lg mx-auto p-4 bg-white shadow-md rounded-lg">
