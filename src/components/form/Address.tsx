@@ -62,7 +62,7 @@ export const AddressStep = () => {
     return (
       <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 pr-2 md:pr-6">
         {[...Array(8)].map((_, index) => (
-          <Skeleton key={index} className="h-32 w-full rounded-lg" />
+          <Skeleton key={index} className="h-20 md:h-32 w-full rounded-lg" />
         ))}
       </div>
     );
@@ -73,7 +73,7 @@ export const AddressStep = () => {
   }
 
   return (
-    <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 pr-2 md:pr-6 custom-scrollbar">
+    <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 custom-scrollbar p-2">
       {addresses.map(address => (
         <CardCustomAddress
           key={address.id}

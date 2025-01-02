@@ -21,7 +21,7 @@ export function CardService({
   return (
     <div
       onClick={onClick}
-      className={`bg-white px-4 flex items-center gap-2 h-32 shadow-md rounded-lg cursor-pointer transition-transform transform hover:shadow-lg ${
+      className={`bg-white px-4 flex items-center gap-2 md:h-36 shadow-md rounded-lg cursor-pointer transition-transform transform hover:shadow-lg ${
         isSelected
           ? "border-2 border-primary bg-primary/10"
           : "border border-gray-200"
@@ -30,7 +30,7 @@ export function CardService({
       {/* Ícone representando o serviço */}
       <div className="flex-shrink-0">
         <div className="md:w-14 md:h-14 rounded-full bg-gray-100 flex items-center justify-center p-2">
-          <BiLandscape className="text-primary size-5"  />
+          <BiLandscape className="text-primary size-8"  />
         </div>
       </div>
 

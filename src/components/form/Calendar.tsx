@@ -173,7 +173,13 @@ export default function Calendar() {
   };
 
   const renderHours = () => {
-    if (!selectedCalendarDate?.start.dateTime) return null;
+    if (!selectedCalendarDate?.start.dateTime) {
+      return (
+        <p className="text-center text-sm text-gray-500">
+          Selecione um dia primeiro.
+        </p>
+      );
+    }
 
     return hours.map(hour => {
       const isBusy = busySlots.some(slot => {
@@ -249,15 +255,12 @@ export default function Calendar() {
           </div>
         </>
       )}
+      {!selectedCalendarDate?.start.dateTime ||
+      !selectedCalendarDate?.end.dateTime ? (
+        <p className="text-center text-sm text-red-500 mt-2">
+          Por favor, selecione um dia e um horário.
+        </p>
+      ) : null}
     </div>
   );
 }
-// end
-// : 
-// {dateTime: '2025-01-06T19:30:00.000Z', timeZone: 'America/Sao_Paulo'}
-// start
-// : 
-// {dateTime: '2025-01-06T19:00:00.000Z', timeZone: 'America/Sao_Paulo'}
-// [[Prototype]]
-// : 
-// Object

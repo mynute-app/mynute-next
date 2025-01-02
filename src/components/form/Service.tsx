@@ -52,7 +52,7 @@ export const ServiceStep = () => {
   };
 
   return (
-    <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-2 md:pr-6">
+    <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-3 gap-4 pr-2 md:pr-6">
       {loading ? (
         <p>Carregando serviços...</p>
       ) : services.length > 0 ? (

@@ -19,7 +19,7 @@ export const CardCustomAddress: React.FC<CardCustomProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`bg-white shadow-md rounded-lg flex flex-col gap-2 items-start p-4 cursor-pointer transition-transform transform  ${
+      className={`bg-white shadow-md rounded-lg flex flex-row md:flex-col gap-2 items-start px-2 py-4 cursor-pointer transition-transform transform  ${
         isSelected
           ? "border-2 border-primary bg-primary/10"
           : "border border-gray-200"
@@ -31,11 +31,12 @@ export const CardCustomAddress: React.FC<CardCustomProps> = ({
         <MapPin className="text-primary w-6 h-6" />
       </div>
 
-      {/* Informações do endereço */}
-      <div className="flex flex-col w-full overflow-hidden">
-        <h1 className="text-lg font-bold text-gray-900 truncate">{title}</h1>
-        <p className="text-sm text-gray-600">{subTitle}</p>
-        <p className="text-sm text-gray-600 italic">{description}</p>
+      <div className="flex flex-col w-full overflow-hidden flex-1">
+        <h1 className="text-sm md:text-lg font-bold text-gray-900 truncate">
+          {title}
+        </h1>
+        <p className="text-xs md:text-sm text-gray-600">{subTitle}</p>
+        <p className="text-xs md:text-sm text-gray-600 italic">{description}</p>
       </div>
     </div>
   );

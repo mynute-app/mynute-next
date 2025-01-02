@@ -4,11 +4,11 @@ import React from "react";
 interface CardCustomProps {
   title: string;
   description?: string;
-  onClick?: () => void; 
-  isSelected?: boolean; 
+  onClick?: () => void;
+  isSelected?: boolean;
 }
 
-export const CardCustom: React.FC<CardCustomProps> = ({
+export const CardCustomProfile: React.FC<CardCustomProps> = ({
   title,
   description,
   onClick,
@@ -17,22 +17,20 @@ export const CardCustom: React.FC<CardCustomProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`bg-gray-100 shadow-md rounded-md flex md:flex-col py-5 h-32
+      className={`bg-gray-100 shadow-md rounded-md flex md:flex-col py-5
         justify-center items-center px-4 cursor-pointer transition-all  ${
           isSelected ? "border-2 border-primary" : ""
         }`}
     >
       <div className="md:flex-1 flex justify-center items-center">
-        <Avatar>
-          <AvatarImage src="https://github.com/shadcn.png" />
+        <Avatar className="w-14 h-14" >
+          <AvatarImage src="https://github.com/shadcn.png"  />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
       </div>
       <div className=" flex-1">
         <h1 className="text-lg md:text-2xl font-bold text-center">{title}</h1>
-        <p className="text-sm text-gray-500 text-center">
-          {description}
-        </p>
+        <p className="text-sm text-gray-500 text-center">{description}</p>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { CardCustom } from "@/components/custom/Card-Custom";
 import { useWizardStore } from "@/context/useWizardStore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 type Business = {
   id: string;
@@ -14,9 +15,8 @@ export const BusinessStep = () => {
   const { setSelectedBusiness, selectedBusiness } = useWizardStore();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-
+  const { toast } = useToast();
   useEffect(() => {
     const fetchBusinesses = async () => {
       try {
@@ -27,7 +27,11 @@ export const BusinessStep = () => {
         const data = await response.json();
         setBusinesses(data);
       } catch (err) {
-        setError("Erro ao carregar empresas.");
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar empresas.",
+          variant: "destructive",
+        });
         console.error(err);
       } finally {
         setLoading(false);
@@ -46,16 +50,12 @@ export const BusinessStep = () => {
 
   if (loading) {
     return (
-      <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 pr-2 md:pr-6">
+      <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 custom-scrollbar p-2">
         {[...Array(8)].map((_, index) => (
-          <Skeleton key={index} className="h-32 w-full rounded-lg" />
+          <Skeleton key={index} className="h-20 md:h-32 w-full rounded-lg" />
         ))}
       </div>
     );
-  }
-
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
   }
 
   return (
