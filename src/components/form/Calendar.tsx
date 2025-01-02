@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useWizardStore } from "@/context/useWizardStore";
 
 const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-// Gera dinamicamente os horários disponíveis
 const generateHours = () => {
   const hours = [];
   let currentTime = new Date(2024, 0, 1, 9, 0); // Começa às 9:00
@@ -22,9 +22,8 @@ const generateHours = () => {
 };
 
 export default function Calendar() {
+  const { selectedCalendarDate, setSelectedCalendarDate } = useWizardStore();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedHour, setSelectedHour] = useState<string | null>(null);
   const [busySlots, setBusySlots] = useState<{ start: string; end: string }[]>(
     []
   );
@@ -33,12 +32,11 @@ export default function Calendar() {
 
   useEffect(() => {
     async function fetchBusySlots() {
-      // Define o intervalo baseado no mês atual exibido no calendário
       const timeMin = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth(),
         1
-      ).toISOString(); // Primeiro dia do mês exibido
+      ).toISOString();
       const timeMax = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth() + 1,
@@ -46,7 +44,7 @@ export default function Calendar() {
         23,
         59,
         59
-      ).toISOString(); // Último dia do mês exibido
+      ).toISOString();
 
       try {
         const response = await fetch(
@@ -67,31 +65,58 @@ export default function Calendar() {
     }
 
     fetchBusySlots();
-  }, [currentDate]); // Atualiza ao mudar o mês exibido
+  }, [currentDate]);
 
   const handlePrevMonth = () => {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
     );
-    setSelectedDate(null);
   };
 
   const handleNextMonth = () => {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
     );
-    setSelectedDate(null);
   };
 
   const handleDateClick = (day: number) => {
-    setSelectedDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+    const selectedDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day
     );
-    setSelectedHour(null);
+    setSelectedCalendarDate({
+      start: {
+        dateTime: selectedDate.toISOString(),
+        timeZone: "America/Sao_Paulo",
+      },
+      end: {
+        dateTime: "", // Reseta o horário inicialmente
+        timeZone: "America/Sao_Paulo",
+      },
+    });
   };
 
   const handleHourClick = (hour: string) => {
-    setSelectedHour(hour);
+    if (selectedCalendarDate) {
+      const startDate = new Date(selectedCalendarDate.start.dateTime);
+      const [hourPart, minutePart] = hour.split(":").map(Number);
+      startDate.setHours(hourPart, minutePart);
+
+      const endDate = new Date(startDate);
+      endDate.setMinutes(endDate.getMinutes() + 30); // Incrementa 30 minutos
+
+      setSelectedCalendarDate({
+        start: {
+          dateTime: startDate.toISOString(),
+          timeZone: "America/Sao_Paulo",
+        },
+        end: {
+          dateTime: endDate.toISOString(),
+          timeZone: "America/Sao_Paulo",
+        },
+      });
+    }
   };
 
   const renderCalendar = () => {
@@ -120,8 +145,10 @@ export default function Calendar() {
       );
       const isPast = currentDay < new Date(today.setHours(0, 0, 0, 0));
       const isSelected =
-        selectedDate?.getDate() === i &&
-        selectedDate?.getMonth() === currentDate.getMonth();
+        selectedCalendarDate?.start.dateTime &&
+        new Date(selectedCalendarDate.start.dateTime).getDate() === i &&
+        currentDate.getMonth() ===
+          new Date(selectedCalendarDate.start.dateTime).getMonth();
 
       days.push(
         <Button
@@ -146,19 +173,16 @@ export default function Calendar() {
   };
 
   const renderHours = () => {
-    if (!selectedDate) return null;
+    if (!selectedCalendarDate?.start.dateTime) return null;
 
     return hours.map(hour => {
       const isBusy = busySlots.some(slot => {
         const slotStart = new Date(slot.start);
         const slotEnd = new Date(slot.end);
 
-        // Verifica se o horário atual está dentro do intervalo ocupado
-        const selectedTime = new Date(selectedDate);
-        selectedTime.setHours(
-          parseInt(hour.split(":")[0], 10),
-          parseInt(hour.split(":")[1], 10)
-        );
+        const selectedTime = new Date(selectedCalendarDate.start.dateTime);
+        const [hourPart, minutePart] = hour.split(":").map(Number);
+        selectedTime.setHours(hourPart, minutePart);
 
         return selectedTime >= slotStart && selectedTime < slotEnd;
       });
@@ -166,11 +190,17 @@ export default function Calendar() {
       return (
         <Button
           key={hour}
-          variant={selectedHour === hour ? "default" : "outline"}
+          variant={
+            selectedCalendarDate.start.dateTime &&
+            new Date(selectedCalendarDate.start.dateTime).toLocaleTimeString(
+              "pt-BR",
+              { hour: "2-digit", minute: "2-digit" }
+            ) === hour
+              ? "default"
+              : "outline"
+          }
           className={`p-2 text-sm ${
-            selectedHour === hour
-              ? "bg-primary text-primary-foreground"
-              : isBusy
+            isBusy
               ? "opacity-50 cursor-not-allowed bg-zinc-300"
               : "hover:bg-primary hover:text-primary-foreground"
           }`}
@@ -207,22 +237,27 @@ export default function Calendar() {
         ))}
       </div>
       <div className="grid grid-cols-7 gap-1 mb-4">{renderCalendar()}</div>
-      {selectedDate && (
+      {selectedCalendarDate?.start.dateTime && (
         <>
           <h3 className="text-center text-lg font-semibold">
-            {selectedDate.toLocaleDateString("pt-BR")}
+            {new Date(selectedCalendarDate.start.dateTime).toLocaleDateString(
+              "pt-BR"
+            )}
           </h3>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-4">
             {renderHours()}
           </div>
         </>
       )}
-      {selectedDate && selectedHour && (
-        <div className="mt-4 text-center font-semibold text-sm">
-          Data e hora selecionadas: {selectedDate.toLocaleDateString("pt-BR")}{" "}
-          às {selectedHour}
-        </div>
-      )}
     </div>
   );
 }
+// end
+// : 
+// {dateTime: '2025-01-06T19:30:00.000Z', timeZone: 'America/Sao_Paulo'}
+// start
+// : 
+// {dateTime: '2025-01-06T19:00:00.000Z', timeZone: 'America/Sao_Paulo'}
+// [[Prototype]]
+// : 
+// Object

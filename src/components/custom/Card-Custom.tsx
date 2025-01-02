@@ -17,12 +17,12 @@ export const CardCustom: React.FC<CardCustomProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`bg-gray-100 shadow-md rounded-md flex md:flex-col h-28 md:h-40 gap-0 md:gap-
+      className={`bg-gray-100 shadow-md rounded-md flex md:flex-col py-5
         justify-center items-center px-4 cursor-pointer transition-all  ${
           isSelected ? "border-2 border-primary" : ""
         }`}
     >
-      <div className="flex-1 flex justify-center items-center">
+      <div className="md:flex-1 flex justify-center items-center">
         <Avatar>
           <AvatarImage src="https://github.com/shadcn.png" />
           <AvatarFallback>CN</AvatarFallback>

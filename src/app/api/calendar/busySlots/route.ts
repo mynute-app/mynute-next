@@ -54,3 +54,47 @@ export async function GET(req: Request) {
     );
   }
 }
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+
+    const { summary, description, start, end } = body;
+
+    if (!summary || !start || !end) {
+      return NextResponse.json(
+        { error: "Missing required fields: summary, start, or end" },
+        { status: 400 }
+      );
+    }
+
+    const event = {
+      summary,
+      description: description || "",
+      start: {
+        dateTime: start,
+        timeZone: "America/Sao_Paulo",
+      },
+      end: {
+        dateTime: end,
+        timeZone: "America/Sao_Paulo",
+      },
+    };
+
+    const response = await calendar.events.insert({
+      calendarId: "vitoraugusto2010201078@gmail.com", // Substitua pelo ID do seu calendário
+      requestBody: event,
+    });
+
+    return NextResponse.json(
+      { message: "Evento criado com sucesso!", event: response.data },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Erro ao criar evento:", error);
+    return NextResponse.json(
+      { error: "Erro ao criar evento", details: error },
+      { status: 500 }
+    );
+  }
+}
