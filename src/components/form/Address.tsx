@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CardCustom } from "@/components/custom/Card-Custom";
+import { CardCustomAddress } from "../custom/Card-Custom-Address";
 import { useWizardStore } from "@/context/useWizardStore";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CardCustomAddress } from "../custom/Card-Custom-Address";
+import { useFetch } from "@/data/loader";
 
 type Address = {
   id: string;
@@ -16,40 +15,9 @@ type Address = {
 
 export const AddressStep = () => {
   const { setSelectedAddress, selectedAddress } = useWizardStore();
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchAddresses = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("http://localhost:3333/business");
-        if (!response.ok) throw new Error("Erro ao buscar empresas");
-
-        const businesses = await response.json();
-
-        const extractedAddresses = businesses.map((business: any) => ({
-          id: business.id,
-          address: business.location.address,
-          city: business.location.city,
-          state: business.location.state,
-          zipCode: business.location.zipCode,
-          businessName: business.businessName,
-        }));
-
-        setAddresses(extractedAddresses);
-      } catch (err) {
-        setError("Erro ao carregar endereços.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAddresses();
-  }, []);
+  const { data: businesses, loading, error } = useFetch<any[]>("/business");
 
   const handleSelectAddress = (addressId: string) => {
     setSelectedAddress(addressId);
@@ -71,6 +39,16 @@ export const AddressStep = () => {
   if (error) {
     return <div className="text-red-500">{error}</div>;
   }
+
+  const addresses: Address[] =
+    businesses?.map(business => ({
+      id: business.id,
+      address: business.location.address,
+      city: business.location.city,
+      state: business.location.state,
+      zipCode: business.location.zipCode,
+      businessName: business.businessName,
+    })) || [];
 
   return (
     <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 custom-scrollbar p-2">

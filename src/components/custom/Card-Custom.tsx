@@ -17,7 +17,7 @@ export const CardCustom: React.FC<CardCustomProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`bg-gray-100 shadow-md rounded-md flex md:flex-col py-5 h-32
+      className={`bg-gray-100 shadow-md rounded-md flex md:flex-col py-5 md:h-32
         justify-center items-center px-4 cursor-pointer transition-all  ${
           isSelected ? "border-2 border-primary" : ""
         }`}

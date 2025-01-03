@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/context/useWizardStore";
 import { CardService } from "../custom/Card-Service";
+import { useFetch } from "@/data/loader";
 
 type Service = {
   id: string;
   title: string;
-  subtitle?: string; // Caso precise descrever o serviço
+  subtitle?: string; 
   cost: string;
   duration: string;
 };
@@ -16,34 +16,8 @@ type Service = {
 export const ServiceStep = () => {
   const { setSelectedService, selectedService } = useWizardStore();
   const router = useRouter();
+  const { data: services, loading, error } = useFetch<Service[]>("/services");
 
-  // Estado para armazenar os serviços
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Função para buscar os serviços da API
-  const fetchServices = async () => {
-    try {
-      const response = await fetch("http://localhost:3333/services");
-      if (!response.ok) {
-        throw new Error("Erro ao buscar os serviços.");
-      }
-
-      const data = await response.json();
-      setServices(data); // Atualiza o estado com os serviços
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // UseEffect para buscar os serviços ao montar o componente
-  useEffect(() => {
-    fetchServices();
-  }, []);
-
-  // Lógica de seleção de serviço
   const handleSelectService = (serviceId: string) => {
     setSelectedService(serviceId);
     const params = new URLSearchParams(window.location.search);
@@ -51,25 +25,43 @@ export const ServiceStep = () => {
     router.replace(`${window.location.pathname}?${params.toString()}`);
   };
 
+  if (loading) {
+    return (
+      <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-3 gap-4 pr-2 md:pr-6">
+        <p>Carregando serviços...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-3 gap-4 pr-2 md:pr-6">
+        <p className="text-red-500">Erro ao carregar os serviços.</p>
+      </div>
+    );
+  }
+
+  if (!services || services.length === 0) {
+    return (
+      <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-3 gap-4 pr-2 md:pr-6">
+        <p>Nenhum serviço disponível.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-3 gap-4 pr-2 md:pr-6">
-      {loading ? (
-        <p>Carregando serviços...</p>
-      ) : services.length > 0 ? (
-        services.map(service => (
-          <CardService
-            key={service.id}
-            title={service.title}
-            subtitle={service.subtitle || "Descrição indisponível"}
-            price={`R$ ${service.cost}`}
-            duration={`${service.duration} min`}
-            onClick={() => handleSelectService(service.id)}
-            isSelected={selectedService === service.id}
-          />
-        ))
-      ) : (
-        <p>Nenhum serviço disponível.</p>
-      )}
+      {services.map(service => (
+        <CardService
+          key={service.id}
+          title={service.title}
+          subtitle={service.subtitle || "Descrição indisponível"}
+          price={`R$ ${service.cost}`}
+          duration={`${service.duration} min`}
+          onClick={() => handleSelectService(service.id)}
+          isSelected={selectedService === service.id}
+        />
+      ))}
     </div>
   );
 };
