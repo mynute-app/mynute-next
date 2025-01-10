@@ -52,7 +52,7 @@ export const CalendarEventForm = () => {
         dateTime: new Date(data.endDateTime).toISOString(),
         timeZone: "America/Sao_Paulo",
       },
-      attendees: [{ email: "example@example.com" }], // E-mail fixo
+      attendees: [{ email: "vitoraugusto20102010@hotmail.com" }], // E-mail fixo
     };
 
 

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "@/components/ui/separator";
 import { useWizardStore } from "@/context/useWizardStore";
 import { PersonStep } from "../form/Person";
 import { ServiceStep } from "../form/Service";
@@ -13,7 +13,7 @@ import { BusinessStep } from "../form/Business";
 import { useToast } from "@/hooks/use-toast";
 
 const steps = [
-  { id: 1, title: "Empresas" }, 
+  { id: 1, title: "Empresas" },
   { id: 2, title: "Endereço" },
   { id: 3, title: "Profissionais" },
   { id: 4, title: "Serviço" },
@@ -35,7 +35,7 @@ const Wizard: React.FC = () => {
     selectedBusiness,
   } = useWizardStore();
   const [error, setError] = useState<string>("");
-   const { toast } = useToast();
+  const { toast } = useToast();
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const businessId = params.get("businessId");
@@ -80,69 +80,68 @@ const Wizard: React.FC = () => {
     }
   };
 
- const validateAndProceed = async () => {
-   try {
-     if (currentStep === 1 && !selectedBusiness) {
-       throw new Error("Por favor, selecione uma empresa.");
-     } else if (currentStep === 2 && !selectedAddress) {
-       throw new Error("Por favor, selecione um endereço.");
-     } else if (currentStep === 3 && !selectedPerson) {
-       throw new Error("Por favor, selecione uma pessoa.");
-     } else if (currentStep === 4 && !selectedService) {
-       throw new Error("Por favor, selecione um serviço.");
-     } else if (
-       currentStep === 5 &&
-       (!selectedCalendarDate?.start.dateTime ||
-         !selectedCalendarDate?.end.dateTime)
-     ) {
-       throw new Error("Por favor, selecione um dia e uma hora.");
-     }
+  const validateAndProceed = async () => {
+    try {
+      if (currentStep === 1 && !selectedBusiness) {
+        throw new Error("Por favor, selecione uma empresa.");
+      } else if (currentStep === 2 && !selectedAddress) {
+        throw new Error("Por favor, selecione um endereço.");
+      } else if (currentStep === 3 && !selectedPerson) {
+        throw new Error("Por favor, selecione uma pessoa.");
+      } else if (currentStep === 4 && !selectedService) {
+        throw new Error("Por favor, selecione um serviço.");
+      } else if (
+        currentStep === 5 &&
+        (!selectedCalendarDate?.start.dateTime ||
+          !selectedCalendarDate?.end.dateTime)
+      ) {
+        throw new Error("Por favor, selecione um dia e uma hora.");
+      }
 
-     if (currentStep === steps.length) {
-       const postData = {
-         summary: "Agendamento",
-         description: `Cliente`,
-         start: selectedCalendarDate?.start.dateTime,
-         end: selectedCalendarDate?.end.dateTime,
-       };
+      if (currentStep === steps.length) {
+        const postData = {
+          summary: "Agendamento",
+          description: `Cliente`,
+          start: selectedCalendarDate?.start.dateTime,
+          end: selectedCalendarDate?.end.dateTime,
+        };
 
-       try {
-         const response = await fetch("/api/calendar/busySlots", {
-           method: "POST",
-           headers: {
-             "Content-Type": "application/json",
-           },
-           body: JSON.stringify(postData),
-         });
+        try {
+          const response = await fetch("/api/calendar/busySlots", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(postData),
+          });
 
-         if (!response.ok) {
-           throw new Error("Erro ao criar evento no calendário.");
-         }
+          if (!response.ok) {
+            throw new Error("Erro ao criar evento no calendário.");
+          }
 
-         const result = await response.json();
-         alert("Evento criado com sucesso!");
-         console.log("Evento criado:", result);
-       } catch (error) {
-         console.error("Erro ao criar evento:", error);
-         alert("Não foi possível criar o evento. Tente novamente.");
-       }
+          const result = await response.json();
+          alert("Evento criado com sucesso!");
+          console.log("Evento criado:", result);
+        } catch (error) {
+          console.error("Erro ao criar evento:", error);
+          alert("Não foi possível criar o evento. Tente novamente.");
+        }
 
-       return;
-     }
+        return;
+      }
 
-     setError("");
-     nextStep();
-   } catch (e) {
-     if (e instanceof Error) {
-       toast({
-         title: "Erro",
-         description: e.message,
-         variant: "destructive",
-       });
-     }
-   }
- };
-
+      setError("");
+      nextStep();
+    } catch (e) {
+      if (e instanceof Error) {
+        toast({
+          title: "Erro",
+          description: e.message,
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">

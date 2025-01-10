@@ -4,16 +4,24 @@ import { Label } from "@/components/ui/label";
 interface BusinessNameFieldProps {
   register: any;
   error?: string;
+  businessName?: string;
 }
 
-export function BusinessNameField({ register, error }: BusinessNameFieldProps) {
+export function BusinessNameField({
+  register,
+  error,
+  businessName,
+}: BusinessNameFieldProps) {
   return (
     <div className="space-y-2">
       <Label htmlFor="businessName">Business name</Label>
       <Input
         id="businessName"
         placeholder="Nome da empresa"
-        {...register("businessName")}
+        {...register("businessName", {
+          required: "O nome da empresa é obrigatório.",
+        })}
+        defaultValue={businessName}
       />
       {error && <p className="text-sm text-red-500">{error}</p>}
     </div>

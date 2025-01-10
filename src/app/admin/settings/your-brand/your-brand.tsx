@@ -1,122 +1,129 @@
 "use client";
 
-import { Controller, useForm } from "react-hook-form";
+import { useSession } from "next-auth/react"; 
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input"; 
+import { Label } from "@/components/ui/label"; 
 import { GiBurningTree } from "react-icons/gi";
 import * as zod from "zod";
 import { BusinessSchema } from "../../../../../schema";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useState } from "react";
-import { Textarea } from "@/components/ui/textarea";
-import { Contact } from "./contact";
-import { IndustryField } from "./industry-field";
-import { BusinessNameField } from "./business-name-field";
-import { AboutField } from "./about-field";
-import { Location } from "./location";
-import BusinessHours from "@/components/custom/BusinessHours";
-import BrandLogo from "./brand-logo";
+import { useState, useEffect } from "react";
 import BrandLogoUpload from "./brand-logo";
+import { BusinessNameField } from "./business-name-field";
 
 export default function YourBrand() {
+  const { data: session } = useSession(); 
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [businessId, setBusinessId] = useState<string | null>(null); 
+  const [isEditing, setIsEditing] = useState(false); 
+
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
     defaultValues: {
       businessName: "",
-      industry: "",
-      about: "",
     },
   });
 
   const {
     register,
     handleSubmit,
-    control,
-    formState: { errors, isSubmitting, isDirty, touchedFields },
+    setValue,
+    formState: { errors, isSubmitting, isDirty },
   } = form;
 
-  const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
-    try {
-      const checkResponse = await fetch(
-        `http://localhost:3333/business?businessName=${values.businessName}`
-      );
-      const existingBusinesses = await checkResponse.json();
+  useEffect(() => {
+    if (!session?.user?.email) return; 
 
-      if (existingBusinesses.length > 0) {
+    const fetchBusinessData = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3333/business?email=${session.user.email}`
+        );
+        const data = await response.json();
+
+        if (data.length === 0) {
+          setIsEditing(false);
+          return;
+        }
+
+        const business = data[0];
+        setBusinessId(business.id);
+        setValue("businessName", business.businessName);
+        setIsEditing(true);
+      } catch (error) {
+        console.error("Erro ao carregar dados da empresa:", error);
         toast({
           title: "Erro",
-          description: "O nome da empresa já existe. Escolha outro nome.",
+          description: "Não foi possível carregar os dados da empresa.",
           variant: "destructive",
         });
-        return;
       }
+    };
 
-      const response = await fetch("http://localhost:3333/business", {
-        method: "POST",
+    fetchBusinessData();
+  }, [setValue, toast, session]);
+
+  const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
+    if (!session?.user?.email) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const url = isEditing
+        ? `http://localhost:3333/business/${businessId}` 
+        : "http://localhost:3333/business"; 
+      const method = isEditing ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, email: session.user.email }),
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao enviar os dados");
+        throw new Error("Erro ao salvar os dados.");
       }
 
       toast({
         title: "Sucesso",
-        description: "Dados enviados com sucesso!",
+        description: isEditing
+          ? "Dados atualizados com sucesso!"
+          : "Empresa cadastrada com sucesso!",
       });
+
+      if (!isEditing) {
+        const newBusiness = await response.json();
+        setBusinessId(newBusiness.id); 
+        setIsEditing(true);
+      }
     } catch (error) {
-      console.error("Erro ao enviar dados:", error);
+      console.error("Erro ao salvar dados:", error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao enviar os dados.",
+        description: "Ocorreu um erro ao salvar os dados.",
         variant: "destructive",
       });
     }
   };
 
-  const handleButtonClick = () => {
-    handleSubmit(onSubmit)();
-  };
-
-  const industries = [
-    "Automotive",
-    "Barbershop",
-    "Beauty",
-    "Business services",
-    "Cafe",
-    "Charity",
-    "Church",
-    "Cleaning",
-    "Clinic",
-    "Computers",
-  ];
-
-  const filteredIndustries = industries.filter(industry =>
-    industry.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <div className="container mx-auto p-4 max-h-screen h-screen overflow-y-auto">
-      <div className="flex justify-between items-center ">
-        <h2 className="text-xl font-bold">Your brand</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold">Your Brand</h2>
 
         <Button
-          onClick={handleButtonClick}
+          onClick={handleSubmit(onSubmit)}
           disabled={!isDirty || isSubmitting}
           className={`rounded-full ${
             !isDirty
@@ -129,58 +136,40 @@ export default function YourBrand() {
       </div>
       <Separator className="my-4" />
 
-      {/* Divisão em duas colunas */}
-      <div className="grid gap-6 md:grid-cols-1 max-w-3xl mx-auto">
-        {/* Coluna do Formulário Principal */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Card>
-            <CardContent className="p-0 relative">
-              <div className="flex items-center justify-center h-40 bg-gray-100 rounded-md">
-                <div className="border-2 rounded-full border-gray-300 p-2 shadow-md">
-                  <GiBurningTree className="size-6" />
-                </div>
-                <Button
-                  variant="outline"
-                  className="absolute bottom-2 right-2 rounded-md shadow-sm"
-                >
-                  <Upload className="mr-2 h-4 w-4" /> Upload banner image
-                </Button>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            value={session?.user?.email || "Carregando..."}
+            readOnly
+            className="bg-gray-200 text-gray-500 cursor-not-allowed opacity-70 border-none focus:ring-0 pointer-events-none"
+          />
+        </div>
+
+        <Card>
+          <CardContent className="p-0 relative">
+            <div className="flex items-center justify-center h-40 bg-gray-100 rounded-md">
+              <div className="border-2 rounded-full border-gray-300 p-2 shadow-md">
+                <GiBurningTree className="size-6" />
               </div>
-            </CardContent>
-          </Card>
+              <Button
+                variant="outline"
+                className="absolute bottom-2 right-2 rounded-md shadow-sm"
+              >
+                <Upload className="mr-2 h-4 w-4" /> Upload banner image
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-          <BrandLogoUpload />
+        <BrandLogoUpload />
 
-          <BusinessNameField
-            register={register}
-            error={errors.businessName?.message}
-          />
-
-          <IndustryField
-            control={control}
-            error={errors.industry?.message}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filteredIndustries={filteredIndustries}
-          />
-
-          <AboutField register={register} error={errors.about?.message} />
-          <Separator className="my-10" />
-          <Contact
-            control={control}
-            register={register}
-            errors={errors}
-            touchedFields={touchedFields}
-          />
-
-          <Separator className="my-10" />
-          <Location control={control} register={register} errors={errors} />
-          <Separator className="my-10" />
-          <BusinessHours />
-        </form>
-        <div>....</div>
-        {/* Coluna Direita: Componente Contact */}
-      </div>
+        <BusinessNameField
+          register={register}
+          error={errors.businessName?.message}
+        />
+      </form>
     </div>
   );
 }

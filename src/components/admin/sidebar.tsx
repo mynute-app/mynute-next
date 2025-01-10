@@ -2,11 +2,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
-import { Calendar, HelpCircle, Settings, User } from "lucide-react";
+import { HelpCircle, Settings, User } from "lucide-react";
 import { SettingsSubSidebar } from "@/app/admin/settings/settings-sub-sidebar";
+import { useSession } from "next-auth/react";
 
 export const Sidebar = () => {
   const [activeOption, setActiveOption] = useState<string | null>(null);
+  const { data: session } = useSession();
   const handleOptionClick = (option: string) => {
     setActiveOption(option === activeOption ? null : option);
   };
@@ -17,11 +19,11 @@ export const Sidebar = () => {
       <div className="p-4 w-48">
         <div className="flex items-center gap-2 pb-4 ">
           <User className="h-6 w-6" />
-          <span className="font-semibold">Nome</span>
+          <span className="font-semibold">{session?.user?.name}</span>
         </div>
         <ScrollArea className="h-[calc(100vh-8rem)]">
           <div className="space-y-2">
-           {/* <Button
+            {/* <Button
               variant="ghost"
               className="w-full justify-start gap-2"
               onClick={() => handleOptionClick("services")}

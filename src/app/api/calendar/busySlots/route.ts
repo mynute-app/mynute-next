@@ -79,7 +79,9 @@ export async function POST(req: Request) {
         dateTime: end,
         timeZone: "America/Sao_Paulo",
       },
+      attendees: [{ email: "vitoraugustodemattos@gmail.com" }], // Adicione e-mails dinâmicos aqui
     };
+
 
     const response = await calendar.events.insert({
       calendarId: "vitoraugusto2010201078@gmail.com", // Substitua pelo ID do seu calendário
