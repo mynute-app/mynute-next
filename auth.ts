@@ -1,8 +1,42 @@
 import Google from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import NextAuth from "next-auth";
 import type { Provider } from "next-auth/providers";
 
 const providers: Provider[] = [
+  CredentialsProvider({
+    name: "Credentials",
+    credentials: {
+      email: {
+        label: "Email",
+        type: "email",
+        placeholder: "example@example.com",
+      },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      if (!credentials?.email || !credentials?.password) {
+        throw new Error("Email and password are required");
+      }
+
+      const email = credentials.email as string;
+      const password = credentials.password as string;
+
+      const user = {
+        id: "1",
+        email: email,
+        name: "User Test",
+      };
+
+      if (email === "vitor@gmail.com" && password === "1234") {
+        return user;
+      } else {
+        throw new Error("Invalid credentials");
+      }
+    },
+  }),
+
+  // Provedor do Google
   Google({
     clientId: process.env.AUTH_GOOGLE_ID!,
     clientSecret: process.env.AUTH_GOOGLE_SECRET!,
@@ -26,6 +60,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
   },
   callbacks: {
+    // Callback para manipular o token JWT
     async jwt({ token, account }) {
       if (account) {
         return {
@@ -62,8 +97,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return {
             ...token,
             access_token: refreshedTokens.access_token,
-            expires_at: Math.floor(Date.now() / 1000 + 3 * 60), // 
-            refresh_token: refreshedTokens.refresh_token || token.refresh_token, // Preserve o antigo caso não receba um novo
+            expires_at: Math.floor(Date.now() / 1000 + 3 * 60),
+            refresh_token: refreshedTokens.refresh_token || token.refresh_token,
           };
         } catch (error) {
           console.error("Erro ao renovar o token de acesso:", error);
@@ -74,6 +109,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
     },
+
+    // Callback para manipular a sessão
     async session({ session, token }) {
       session.user.id = token.sub as string;
       session.user.email_verified = token.email_verified as boolean;
@@ -86,4 +123,3 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
 });
-

@@ -14,6 +14,8 @@ import {
   ShareIcon,
 } from "lucide-react";
 import { signIn } from "../../../auth";
+import Link from "next/link";
+import { MdOutlineEmail } from "react-icons/md";
 
 export default function LoginPage() {
   return (
@@ -67,6 +69,16 @@ export default function LoginPage() {
                 <FcGoogle className="mr-2 h-6 w-6" />
                 Entrar com Google
               </Button>
+
+              <Link href="/login/credentials" passHref>
+                <Button
+                  variant="outline"
+                  className="w-full py-6 text-lg shadow-md hover:shadow-lg transition-shadow mt-4"
+                >
+                  <MdOutlineEmail className="mr-2 h-6 w-6" />
+                  Entrar com Email
+                </Button>
+              </Link>
             </form>
             <p className="text-sm text-gray-500 mt-4 text-center">
               Acesse agora e comece a organizar sua vida!
