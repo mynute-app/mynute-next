@@ -19,20 +19,24 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState(""); // Adicionando o estado para "name"
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
+    console.log("SignIn credentials:", { email, password, name }); // Log para debug
+
     const result = await signIn("credentials", {
       redirect: false,
       email,
       password,
+      name, // Incluindo "name" na requisição
     });
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError("Invalid email, name, or password");
     } else {
       router.push("/admin");
     }
@@ -49,6 +53,17 @@ export default function LoginPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

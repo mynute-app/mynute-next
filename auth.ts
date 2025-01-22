@@ -1,6 +1,6 @@
-import Google from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import NextAuth from "next-auth";
+import Google from "next-auth/providers/google";
+import NextAuth, { User } from "next-auth";
 import type { Provider } from "next-auth/providers";
 
 const providers: Provider[] = [
@@ -13,30 +13,50 @@ const providers: Provider[] = [
         placeholder: "example@example.com",
       },
       password: { label: "Password", type: "password" },
+      name: {
+        label: "Name",
+        type: "text",
+      },
     },
+
     async authorize(credentials) {
       if (!credentials?.email || !credentials?.password) {
+        console.error("Missing email or password");
         throw new Error("Email and password are required");
       }
 
-      const email = credentials.email as string;
-      const password = credentials.password as string;
+      try {
+        console.log("Sending request to backend...");
+        const response = await fetch(`${process.env.BACKEND_URL}/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: credentials.email,
+            password: credentials.password,
+            name: credentials.name,
+          }),
+        });
 
-      const user = {
-        id: "1",
-        email: email,
-        name: "User Test",
-      };
+        console.log("Response status:", response.status);
 
-      if (email === "vitor@gmail.com" && password === "1234") {
-        return user;
-      } else {
-        throw new Error("Invalid credentials");
+        if (!response.ok) {
+          throw new Error("Invalid credentials");
+        }
+
+        return {
+          id: "1", // Um ID fixo ou dinâmico, dependendo da lógica
+          email: String(credentials.email), // Garante que é uma string
+          name: credentials.name ? String(credentials.name) : "Usuário", // Garante que é uma string
+        } as User;
+      } catch (error) {
+        console.error("Error in authorize function:", error);
+        throw new Error("Authentication failed");
       }
     },
   }),
 
-  // Provedor do Google
   Google({
     clientId: process.env.AUTH_GOOGLE_ID!,
     clientSecret: process.env.AUTH_GOOGLE_SECRET!,
@@ -44,7 +64,7 @@ const providers: Provider[] = [
       params: {
         scope: "openid email profile https://www.googleapis.com/auth/calendar",
         access_type: "offline",
-        prompt: "consent", // Garante a geração do `refresh_token`
+        prompt: "consent",
       },
     },
     async profile(profile) {
@@ -60,7 +80,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
   },
   callbacks: {
-    // Callback para manipular o token JWT
     async jwt({ token, account }) {
       if (account) {
         return {
@@ -110,7 +129,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
     },
 
-    // Callback para manipular a sessão
     async session({ session, token }) {
       session.user.id = token.sub as string;
       session.user.email_verified = token.email_verified as boolean;
