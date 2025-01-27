@@ -1,28 +1,18 @@
 import NextAuth from "next-auth";
 
+// Extendendo os tipos de sessão e token
 declare module "next-auth" {
   interface Session {
+    accessToken: string;
     user: {
-      id: string;
-      email_verified: boolean;
-      firstName?: string;
-      lastName?: string;
-      email?: string;
-      name?: string;
-      image?: string;
-      address?: string;
-      accessToken: string;
-      refresh_token: string;
+      email: string;
+      name: string;
     };
-    error?: "RefreshTokenError";
   }
 
-}
-declare module "next-auth/jwt" {
-  interface JWT {
-    access_token: string;
-    expires_at: number;
-    refresh_token?: string;
-    error?: "RefreshTokenError";
+  interface User {
+    token: string;
+    email: string;
+    name: string;
   }
 }
