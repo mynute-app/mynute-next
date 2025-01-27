@@ -1,14 +1,57 @@
 // components/ProfileTabs.tsx
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ClockIcon, LinkIcon, MailIcon, PhoneIcon } from "lucide-react";
 import { MdOutlineModeEdit } from "react-icons/md";
 import { EditUserProfileDialog } from "./edit-user-profile";
+import { useFetch } from "@/data/loader";
+import { useSession } from "next-auth/react";
+
+interface User {
+  name: string;
+  email: string;
+  phone: string;
+}
 
 export default function ProfileTabs() {
   const [activeTab, setActiveTab] = useState("about");
+  const { data: session } = useSession();
+  console.log(session?.user.email);
+  const [userData, setUserData] = useState(null);
+  useEffect(() => {
+    if (session?.user?.email) {
+      const fetchUserData = async () => {
+        try {
+          const token = session?.accessToken; // Certifique-se de que o token está na sessão
+          const response = await fetch(`/user/email/${session.user.email}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token, // Passa o token diretamente
+            },
+          });
 
+          if (response.ok) {
+            const data = await response.json();
+            setUserData(data);
+          } else {
+            console.error(
+              "Erro ao buscar dados do usuário:",
+              response.statusText
+            );
+          }
+        } catch (error) {
+          console.error("Erro na requisição:", error);
+        }
+      };
+
+      fetchUserData();
+    }
+  }, [session?.user?.email]);
+
+
+  
   const renderTabContent = () => {
     switch (activeTab) {
       case "about":
