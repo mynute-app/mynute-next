@@ -7,6 +7,7 @@ import { MdOutlineModeEdit } from "react-icons/md";
 import { EditUserProfileDialog } from "./edit-user-profile";
 import { useFetch } from "@/data/loader";
 import { useSession } from "next-auth/react";
+import { AboutSection } from "./about-section";
 
 interface User {
   name: string;
@@ -23,12 +24,12 @@ export default function ProfileTabs() {
     if (session?.user?.email) {
       const fetchUserData = async () => {
         try {
-          const token = session?.accessToken; // Certifique-se de que o token está na sessão
+          const token = session?.accessToken;
           const response = await fetch(`/user/email/${session.user.email}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              Authorization: token, // Passa o token diretamente
+              Authorization: token,
             },
           });
 
@@ -50,8 +51,6 @@ export default function ProfileTabs() {
     }
   }, [session?.user?.email]);
 
-
-  
   const renderTabContent = () => {
     switch (activeTab) {
       case "about":
@@ -78,7 +77,7 @@ export default function ProfileTabs() {
             V
           </div>
           <div>
-            <h1 className="text-2xl font-semibold">Vitor Augusto</h1>
+            <h1 className="text-2xl font-semibold">{session?.user.name}</h1>
             <p className="text-gray-500">Sorocaba, SP, BR • 3:18 PM</p>
           </div>
         </div>
@@ -136,35 +135,6 @@ export default function ProfileTabs() {
         onSave={() => {}}
       />
       <div className=" w-2/3">{renderTabContent()}</div>
-    </div>
-  );
-}
-
-function AboutSection() {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <PhoneIcon className="w-5 h-5 text-gray-500" />
-        <span>(11) 97135-1731</span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <MailIcon className="w-5 h-5 text-gray-500" />
-        <span>vitoraugusto2010201078@gmail.com</span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <ClockIcon className="w-5 h-5 text-gray-500" />
-        <span>Today • 9:00 AM - 5:00 PM (HPDB)</span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <LinkIcon className="w-5 h-5 text-gray-500" />
-        <a
-          href="https://vitordcx3.setmore.com/vitor"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          https://vitordcx3.setmore.com/vitor
-        </a>
-      </div>
     </div>
   );
 }
