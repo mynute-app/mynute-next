@@ -18,7 +18,6 @@ export default async function RootLayout({
       <SessionProvider>
         <InitializeBusinessData>
           <Sidebar />{" "}
-          <p>Legal</p>
           <main className="h-screen overflow-y-auto">{children}</main>
         </InitializeBusinessData>
       </SessionProvider>

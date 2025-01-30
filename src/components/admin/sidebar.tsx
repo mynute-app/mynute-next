@@ -23,14 +23,6 @@ export const Sidebar = () => {
         </div>
         <ScrollArea className="h-[calc(100vh-8rem)]">
           <div className="space-y-2">
-            {/* <Button
-              variant="ghost"
-              className="w-full justify-start gap-2"
-              onClick={() => handleOptionClick("services")}
-            >
-              <Calendar className="h-4 w-4" />
-              Services
-            </Button>  */}
             <Button
               variant="ghost"
               className="w-full justify-start gap-2 "
@@ -49,7 +41,6 @@ export const Sidebar = () => {
         </div>
       </div>
 
-      {/* Sub-sidebar: exibe conteúdo relacionado ao item selecionado */}
       <div className="p-4 flex-1 border-l bg-gray-100">
         {activeOption === "settings" && <SettingsSubSidebar />}
         {/* Conteúdo para "services" pode ser adicionado de forma similar */}

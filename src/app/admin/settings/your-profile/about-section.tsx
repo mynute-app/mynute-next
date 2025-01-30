@@ -1,30 +1,38 @@
-import { ClockIcon, LinkIcon, MailIcon, PhoneIcon } from "lucide-react";
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 export const AboutSection = () => {
+  const email = "vitor@gmail.com";
+  const API_URL = `http://localhost:4000/user/email/${email}`;
+  const { data: session } = useSession();
+  const TOKEN = `${session?.accessToken}`;
+  console.log(TOKEN);
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(API_URL, {
+          mode: "no-cors",
+          headers: {
+            Authorization: TOKEN,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro ao buscar os dados do usuário");
+        }
+
+        const data = await response.json();
+        console.log("Resposta da API:", data); // Log para verificar os dados
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+      }
+    };
+
+    fetchUserData();
+  }, [API_URL, TOKEN]);
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <PhoneIcon className="w-5 h-5 text-gray-500" />
-        <span>(11) 97135-1731</span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <MailIcon className="w-5 h-5 text-gray-500" />
-        <span>vitoraugusto2010201078@gmail.com</span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <ClockIcon className="w-5 h-5 text-gray-500" />
-        <span>Today • 9:00 AM - 5:00 PM (HPDB)</span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <LinkIcon className="w-5 h-5 text-gray-500" />
-        <a
-          href="https://vitordcx3.setmore.com/vitor"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          https://vitordcx3.setmore.com/vitor
-        </a>
-      </div>
-    </div>
+    <div className="space-y-4">Verifique o console para o log da API.</div>
   );
 };

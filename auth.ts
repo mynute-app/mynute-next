@@ -23,7 +23,7 @@ export const { handlers, auth } = NextAuth({
             name,
           });
 
-          const loginUrl = new URL("http://localhost:3000/auth/login");
+          const loginUrl = new URL("http://localhost:4000/auth/login");
           const requestOptions: RequestInit = {
             method: "POST",
             headers: { "Content-Type": "application/json" },
