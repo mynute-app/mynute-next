@@ -3,7 +3,7 @@ import { ZodError } from "zod";
 import Credentials from "next-auth/providers/credentials";
 import { signInSchema } from "@/lib/zod";
 
-export const { handlers, auth } = NextAuth({
+export const { handlers, auth, signIn } = NextAuth({
   providers: [
     Credentials({
       credentials: {
@@ -33,6 +33,12 @@ export const { handlers, auth } = NextAuth({
           const response = await fetch(loginUrl.toString(), requestOptions);
 
           console.log("Resposta da API:", response.status, response.statusText);
+
+          // Logando os headers da resposta
+          console.log(
+            "Headers da resposta:",
+            Object.fromEntries(response.headers)
+          );
 
           if (!response.ok) {
             throw new Error(`Falha ao autenticar. Código: ${response.status}`);
@@ -65,16 +71,18 @@ export const { handlers, auth } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
+      console.log("Token no callback JWT:", token);
       if (user) {
         token.accessToken = user.token;
       }
       return token;
     },
     async session({ session, token }) {
+      console.log("Sessão no callback Session:", session);
       session.accessToken = token.accessToken as string;
       return session;
     },
   },
-  
+
   secret: process.env.NEXTAUTH_SECRET,
 });
