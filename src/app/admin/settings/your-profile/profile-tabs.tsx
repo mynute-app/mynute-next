@@ -1,27 +1,21 @@
-// components/ProfileTabs.tsx
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ClockIcon, LinkIcon, MailIcon, PhoneIcon } from "lucide-react";
+import { ClockIcon } from "lucide-react";
 import { MdOutlineModeEdit } from "react-icons/md";
-import { EditUserProfileDialog } from "./edit-user-profile";
-import { useSession } from "next-auth/react";
 import { AboutSection } from "./about-section";
-
-interface User {
-  name: string;
-  email: string;
-  phone: string;
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import { useUser } from "@/hooks/useUser";
+import { EditUserProfileDialog } from "./edit-user-profile";
 
 export default function ProfileTabs() {
   const [activeTab, setActiveTab] = useState("about");
-  const { data: session } = useSession();
+  const { user, loading } = useUser();
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "about":
-        return <AboutSection />;
+        return <AboutSection user={user} loading={loading} />;
       case "integrations":
         return <IntegrationsSection />;
       case "services":
@@ -35,17 +29,33 @@ export default function ProfileTabs() {
     }
   };
   const [activeModal, setActiveModal] = useState(false);
-
   return (
     <div className="container mx-auto p-6 mt-4">
-      <div className="flex items-center space-x-4 mb-6 justify-between bg-amber-400">
-        <div className="">
-          <div className="rounded-full bg-gray-200 w-16 h-16 flex items-center justify-center text-xl font-bold">
-            V
-          </div>
+      <div className="flex items-center space-x-4 mb-6 justify-between">
+        <div className="flex items-center space-x-4">
+          {/* Avatar */}
+          {loading ? (
+            <Skeleton className="w-16 h-16 rounded-full" />
+          ) : (
+            <div className="rounded-full bg-gray-200 w-16 h-16 flex items-center justify-center text-xl font-bold ">
+              V
+            </div>
+          )}
+
           <div>
-            <h1 className="text-2xl font-semibold">{session?.user.name}</h1>
-            <p className="text-gray-500">Sorocaba, SP, BR • 3:18 PM</p>
+            {loading ? (
+              <>
+                <Skeleton className="h-6 w-40 mb-2" />
+                <Skeleton className="h-4 w-32" />
+              </>
+            ) : (
+              <>
+                <h1 className="text-2xl font-semibold capitalize">
+                  {user.name} {user.surname}
+                </h1>
+                <p className="text-gray-500">Sorocaba, SP, BR • 3:18 PM</p>
+              </>
+            )}
           </div>
         </div>
         <div onClick={() => setActiveModal(true)}>
@@ -60,7 +70,7 @@ export default function ProfileTabs() {
             activeTab === "about" ? "border-b-2 border-black" : ""
           }`}
         >
-          About
+          Sobre
         </button>
         <button
           onClick={() => setActiveTab("integrations")}
@@ -95,13 +105,13 @@ export default function ProfileTabs() {
           Breaks
         </button>
       </div>
-      {/* <EditUserProfileDialog
+      <EditUserProfileDialog
         isOpen={activeModal}
         onClose={() => setActiveModal(false)}
         user={() => {}}
         onSave={() => {}}
-      /> */}
-      <div className=" w-2/3">{renderTabContent()}</div>
+      />
+      <div className="w-2/3">{renderTabContent()}</div>
     </div>
   );
 }

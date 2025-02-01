@@ -83,6 +83,8 @@ export const { handlers, auth, signIn } = NextAuth({
       return session;
     },
   },
-
+  pages: {
+    signIn: "/login/credentials",
+  },
   secret: process.env.NEXTAUTH_SECRET,
 });

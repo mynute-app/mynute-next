@@ -1,24 +1,50 @@
-import { useEffect } from "react";
+import { ClockIcon, LinkIcon, MailIcon, PhoneIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export const AboutSection = () => {
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch(`/api/user`);
-
-        const data = await response.json();
-        console.log(data);
-
-        console.log("Resposta da API:", data); // Log para verificar os dados
-      } catch (error) {
-        console.error("Erro ao buscar dados:", error);
-      }
-    };
-
-    fetchUserData();
-  }, []);
+export const AboutSection = ({
+  user,
+  loading,
+}: {
+  user: any;
+  loading: boolean;
+}) => {
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[40, 60, 48, 52].map((width, index) => (
+          <div key={index} className="flex items-center space-x-2">
+            <Skeleton className="w-5 h-5 rounded-full" />
+            <Skeleton className={`h-5 w-${width}`} />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">Verifique o console para o log da API.</div>
+    <div className="space-y-4">
+      <div className="flex items-center space-x-2">
+        <PhoneIcon className="w-5 h-5 text-gray-500" />
+        <span>{user.phone || "Telefone não cadastrado"}</span>
+      </div>
+      <div className="flex items-center space-x-2">
+        <MailIcon className="w-5 h-5 text-gray-500" />
+        <span>{user.email || "Email não disponível"}</span>
+      </div>
+      <div className="flex items-center space-x-2">
+        <ClockIcon className="w-5 h-5 text-gray-500" />
+        <span>Today • 9:00 AM - 5:00 PM (HPDB)</span>
+      </div>
+      <div className="flex items-center space-x-2">
+        <LinkIcon className="w-5 h-5 text-gray-500" />
+        <a
+          href="https://vitordcx3.setmore.com/vitor"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          https://vitordcx3.setmore.com/vitor
+        </a>
+      </div>
+    </div>
   );
 };
