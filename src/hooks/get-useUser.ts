@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export const useUser = () => {
+export const useGetUser = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

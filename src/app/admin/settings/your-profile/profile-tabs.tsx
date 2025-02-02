@@ -5,12 +5,12 @@ import { ClockIcon } from "lucide-react";
 import { MdOutlineModeEdit } from "react-icons/md";
 import { AboutSection } from "./about-section";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUser } from "@/hooks/useUser";
-import { EditUserProfileDialog } from "./edit-user-profile";
+import { useGetUser } from "@/hooks/get-useUser";
+import { EditDialog } from "./edit-dialog";
 
 export default function ProfileTabs() {
   const [activeTab, setActiveTab] = useState("about");
-  const { user, loading } = useUser();
+  const { user, loading } = useGetUser();
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -105,7 +105,7 @@ export default function ProfileTabs() {
           Breaks
         </button>
       </div>
-      <EditUserProfileDialog
+      <EditDialog
         isOpen={activeModal}
         onClose={() => setActiveModal(false)}
         user={() => {}}
