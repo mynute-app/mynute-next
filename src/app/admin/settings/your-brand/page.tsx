@@ -1,11 +1,7 @@
 import YourBrand from "./your-brand";
 
 const Page = () => {
-    return (
-      <div>
-        <YourBrand />
-      </div>
-    );
-}
+  return <YourBrand />;
+};
 
 export default Page;
