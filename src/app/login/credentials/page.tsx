@@ -96,6 +96,7 @@ export default function LoginPage() {
             <Button type="submit" className="w-full">
               Login
             </Button>
+           
           </CardFooter>
         </form>
       </Card>

@@ -79,6 +79,14 @@ export default function LoginPage() {
                   Entrar com Email
                 </Button>
               </Link>
+              <Link href="/register" passHref>
+                <Button
+                  variant="outline"
+                  className="w-full py-6 text-lg shadow-md hover:shadow-lg transition-shadow mt-4"
+                >
+                  Registrar-se aqui
+                </Button>
+              </Link>
             </form>
             <p className="text-sm text-gray-500 mt-4 text-center">
               Acesse agora e comece a organizar sua vida!
