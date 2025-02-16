@@ -9,6 +9,9 @@ export const useGetUser = () => {
       try {
         const response = await fetch(`/api/user`);
         const data = await response.json();
+
+        console.log("🔍 Debug useGetUser - API Response:", data); // Verifica o que está vindo da API
+
         setUser(data);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
@@ -17,6 +20,7 @@ export const useGetUser = () => {
         setLoading(false);
       }
     };
+
     fetchUserData();
   }, []);
 

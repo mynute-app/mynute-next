@@ -13,13 +13,20 @@ import * as zod from "zod";
 import { BusinessSchema } from "../../../../../schema";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
 import BrandLogoUpload from "./brand-logo";
 import { BusinessNameField } from "./business-name-field";
+import { useEffect } from "react";
+import { useCompany } from "@/hooks/get-company";
 
 export default function YourBrand() {
   const { data: session } = useSession();
   const { toast } = useToast();
+<<<<<<< HEAD
+=======
+  const { company, loading } = useCompany(); // Obtendo os dados da empresa
+
+  console.log(company);
+>>>>>>> eb3584462a78ede9a78baa60ab5ddf73f511cf31
 
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
@@ -35,8 +42,20 @@ export default function YourBrand() {
     formState: { errors, isSubmitting, isDirty },
   } = form;
 
+<<<<<<< HEAD
   const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
     console.log(values);
+=======
+  // Preencher o formulário com os dados da empresa quando disponíveis
+  useEffect(() => {
+    if (company && company.name) {
+      setValue("businessName", company.name);
+    }
+  }, [company, setValue]);
+
+  const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
+    console.log("dados", values);
+>>>>>>> eb3584462a78ede9a78baa60ab5ddf73f511cf31
   };
 
   return (
@@ -59,11 +78,23 @@ export default function YourBrand() {
       <Separator className="my-4" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Email do usuário */}
         <div>
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             value={session?.user?.email || "Carregando..."}
+            readOnly
+            className="bg-gray-200 text-gray-500 cursor-not-allowed opacity-70 border-none focus:ring-0 pointer-events-none"
+          />
+        </div>
+
+        {/* Nome da empresa */}
+        <div>
+          <Label htmlFor="businessName">Nome da Empresa</Label>
+          <Input
+            id="businessName"
+            value={loading ? "Carregando..." : company?.name || ""}
             readOnly
             className="bg-gray-200 text-gray-500 cursor-not-allowed opacity-70 border-none focus:ring-0 pointer-events-none"
           />
