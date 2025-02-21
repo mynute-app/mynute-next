@@ -2,8 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,25 +14,10 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-// 📌 Definição do schema de validação com Zod
-const registerSchema = z.object({
-  name: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
-  email: z.string().email("Digite um email válido"),
-  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-  phone: z
-    .string()
-    .min(10, "O telefone deve ter pelo menos 10 dígitos")
-    .max(11, "O telefone deve ter no máximo 11 dígitos"),
-  company_id: z.number().min(1, "O ID da empresa deve ser um número válido"),
-});
-
-// 📌 Tipagem do formulário baseada no schema do Zod
-type RegisterFormData = z.infer<typeof registerSchema>;
+import { RegisterFormData, registerSchema } from "../models/registerSchema";
+import { registerUser } from "../services/registerService";
 
 export default function RegisterForm() {
-  const router = useRouter();
-
   const {
     register,
     handleSubmit,
@@ -45,30 +28,6 @@ export default function RegisterForm() {
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
-    try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const result = await response.json();
-        setError(result.field as keyof RegisterFormData, {
-          message: result.message,
-        });
-        return;
-      }
-
-      // Se der certo, redireciona e limpa o formulário
-      reset();
-      router.push("/login");
-    } catch (error: any) {
-      setError("root", { message: "Erro ao registrar. Tente novamente." });
-    }
-  };
-
   return (
     <Card className="w-full max-w-xl">
       <CardHeader>
@@ -77,7 +36,9 @@ export default function RegisterForm() {
           Crie sua conta preenchendo os campos abaixo
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form
+        onSubmit={handleSubmit(data => registerUser(data, setError, reset))}
+      >
         <CardContent className="space-y-4">
           {/* Email */}
           <div className="space-y-2">
@@ -123,7 +84,7 @@ export default function RegisterForm() {
             )}
           </div>
 
-          {/* Outros campos */}
+          {/* Nome */}
           <div className="space-y-2">
             <Label htmlFor="name">Nome</Label>
             <Input
@@ -133,6 +94,7 @@ export default function RegisterForm() {
             />
           </div>
 
+          {/* Senha */}
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
             <Input
@@ -143,6 +105,7 @@ export default function RegisterForm() {
             />
           </div>
 
+          {/* ID da Empresa */}
           <div className="space-y-2">
             <Label htmlFor="company_id">ID da Empresa</Label>
             <Input
@@ -153,7 +116,7 @@ export default function RegisterForm() {
             />
           </div>
 
-          {/* Erro geral */}
+          {/* Erro Geral */}
           {errors.root && (
             <Alert variant="destructive">
               <AlertDescription>{errors.root.message}</AlertDescription>
