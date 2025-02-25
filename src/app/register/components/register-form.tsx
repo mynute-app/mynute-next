@@ -16,6 +16,8 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RegisterFormData, registerSchema } from "../models/registerSchema";
 import { registerUser } from "../services/registerService";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast"; // ✅ Agora dentro do componente
 
 export default function RegisterForm() {
   const {
@@ -28,6 +30,9 @@ export default function RegisterForm() {
     resolver: zodResolver(registerSchema),
   });
 
+  const router = useRouter();
+  const { toast } = useToast(); // ✅ Correto: hook chamado dentro do componente
+
   return (
     <Card className="w-full max-w-xl">
       <CardHeader>
@@ -37,7 +42,9 @@ export default function RegisterForm() {
         </CardDescription>
       </CardHeader>
       <form
-        onSubmit={handleSubmit(data => registerUser(data, setError, reset))}
+        onSubmit={handleSubmit(data =>
+          registerUser(data, setError, reset, router, toast)
+        )}
       >
         <CardContent className="space-y-4">
           {/* Email */}

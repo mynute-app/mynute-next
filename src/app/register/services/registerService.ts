@@ -1,18 +1,14 @@
 "use client";
 
 import { RegisterFormData } from "../models/registerSchema";
-import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
 
-// 📌 Função de registro separada
 export async function registerUser(
   data: RegisterFormData,
   setError: any,
-  reset: any
+  reset: any,
+  router: any,
+  toast: any
 ) {
-  const router = useRouter();
-  const { toast } = useToast();
-
   try {
     const response = await fetch("/api/register", {
       method: "POST",

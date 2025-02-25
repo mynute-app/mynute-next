@@ -21,12 +21,9 @@ import { useCompany } from "@/hooks/get-company";
 export default function YourBrand() {
   const { data: session } = useSession();
   const { toast } = useToast();
-<<<<<<< HEAD
-=======
   const { company, loading } = useCompany(); // Obtendo os dados da empresa
 
   console.log(company);
->>>>>>> eb3584462a78ede9a78baa60ab5ddf73f511cf31
 
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
@@ -42,10 +39,6 @@ export default function YourBrand() {
     formState: { errors, isSubmitting, isDirty },
   } = form;
 
-<<<<<<< HEAD
-  const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
-    console.log(values);
-=======
   // Preencher o formulário com os dados da empresa quando disponíveis
   useEffect(() => {
     if (company && company.name) {
@@ -55,7 +48,6 @@ export default function YourBrand() {
 
   const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
     console.log("dados", values);
->>>>>>> eb3584462a78ede9a78baa60ab5ddf73f511cf31
   };
 
   return (
