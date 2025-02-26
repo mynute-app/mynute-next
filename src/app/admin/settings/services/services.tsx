@@ -9,98 +9,38 @@ import { EditServiceDialog } from "./edit-service-dialog";
 import { DeleteServiceDialog } from "./delete-service-dailog";
 import ServiceCardSkeleton from "./ServiceCardSkeleton";
 import ServiceListSkeleton from "./ServiceListSkeleton";
-
-type ServiceCategory = {
-  id: number;
-  name: string;
-  items: string[];
-};
+import { useGetCompany } from "@/hooks/get-one-company";
 
 type Service = {
   id: string;
-  title: string;
+  name: string;
   duration: string;
   buffer?: string; // Agora é opcional
-  cost?: string; // Agora é opcional
+  price?: string; // Agora é opcional
   location?: string;
   category?: string;
   hidden?: boolean;
 };
 
 export const ServicesPage = () => {
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [classes, setClasses] = useState<ServiceCategory[]>([]);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [deletingService, setDeletingService] = useState<Service | null>(null);
 
-  // Função para buscar serviços
-  const fetchServices = async () => {
-    try {
-      const response = await fetch("http://localhost:3333/services");
-      if (!response.ok) {
-        throw new Error("Erro ao buscar serviços");
-      }
-      const data = await response.json();
-      setServices(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const companyId = 1;
+  const { company, loading } = useGetCompany(companyId);
+  const services: Service[] = company?.services ?? [];
 
   // Função para atualizar um serviço
   const handleUpdateService = async (updatedService: Service) => {
-    try {
-      // Fazendo uma requisição para atualizar o serviço no backend
-      const response = await fetch(
-        `http://localhost:3333/services/${updatedService.id}`,
-        {
-          method: "PUT", // Método PUT para atualização
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedService), // Corpo da requisição
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Erro ao atualizar o serviço.");
-      }
-
-      const updatedData = await response.json();
-
-      // Atualiza o estado local
-      setServices(prev =>
-        prev.map(service =>
-          service.id === updatedData.id ? updatedData : service
-        )
-      );
-
-      console.log("Serviço atualizado:", updatedData);
-    } catch (error) {
-      console.error("Erro ao atualizar o serviço:", error);
-    }
+    console.log("log");
   };
 
   const handleDeleteService = async (id: string) => {
-    try {
-      const response = await fetch(`http://localhost:3333/services/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Erro ao excluir serviço");
-      setServices(prev => prev.filter(service => service.id !== id));
-      console.log("Serviço excluído:", id);
-    } catch (error) {
-      console.error(error);
-    }
+    console.log("aaee");
   };
-
   useEffect(() => {
-    fetchServices();
-  }, []);
-
+    console.log("🛠️ Serviços da empresa:", services);
+  }, [services]);
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -127,7 +67,7 @@ export const ServicesPage = () => {
                     key={service.id}
                     className="text-sm text-gray-700 p-2 rounded hover:bg-gray-100"
                   >
-                    {service.title}
+                    {service.name}
                   </li>
                 ))}
               </ul>
@@ -156,10 +96,10 @@ export const ServicesPage = () => {
             services.map(service => (
               <ServiceCard
                 key={service.id}
-                name={service.title}
+                name={service.name}
                 duration={`${service.duration} min`}
                 buffer={`${service.buffer} min`}
-                price={`R$ ${service.cost}`}
+                price={`R$ ${service.price}`}
                 onEdit={() => setEditingService(service)}
                 onDelete={() => {
                   console.log("Definindo serviço para exclusão:", service);
@@ -187,7 +127,7 @@ export const ServicesPage = () => {
 
       {deletingService && (
         <DeleteServiceDialog
-          serviceName={deletingService.title}
+          serviceName={deletingService.name}
           onConfirm={() => {
             handleDeleteService(deletingService.id); // Exclui o serviço
             setDeletingService(null); // Fecha o modal

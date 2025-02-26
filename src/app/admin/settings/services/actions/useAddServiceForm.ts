@@ -4,13 +4,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 
 const addServiceSchema = z.object({
-  title: z.string().min(1, "O título é obrigatório."),
-  duration: z.string().min(1, "A duração é obrigatória."),
-  buffer: z.string().optional(),
-  cost: z.string().optional(),
-  location: z.string().optional(),
-  category: z.string().optional(),
-  hidden: z.boolean().optional(),
+  name: z.string().min(1, "O título é obrigatório."),
+  description: z.string().min(1, "A descrição é obrigatória."),
+  price: z
+    .string()
+    .min(1, "O preço é obrigatório.")
+    .transform(val => Number(val)),
+  duration: z
+    .string()
+    .min(1, "A duração é obrigatória.")
+    .transform(val => Number(val)),
 });
 
 type AddServiceFormValues = z.infer<typeof addServiceSchema>;
@@ -19,19 +22,18 @@ export const useAddServiceForm = () => {
   const form = useForm<AddServiceFormValues>({
     resolver: zodResolver(addServiceSchema),
     defaultValues: {
-      title: "",
-      duration: "",
-      buffer: "",
-      cost: "",
-      location: "",
-      category: "",
-      hidden: false,
+      name: "",
+      description: "",
+      price: 0,
+      duration: 0,
     },
   });
-   const { toast } = useToast();
+
+  const { toast } = useToast();
+
   const handleSubmit = async (data: AddServiceFormValues) => {
     try {
-      const response = await fetch("http://localhost:3333/services", {
+      const response = await fetch("/api/service", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,20 +45,15 @@ export const useAddServiceForm = () => {
         throw new Error("Erro ao criar o serviço.");
       }
 
-      const createdService = await response.json();
-
-      // Exibe o toast de sucesso
       toast({
         title: "Serviço criado!",
         description: "O serviço foi criado com sucesso.",
       });
 
-      // Limpa o formulário
       form.reset();
     } catch (error) {
-      console.error(error);
+      console.error("❌ Erro ao criar o serviço:", error);
 
-      // Exibe o toast de erro
       toast({
         title: "Erro ao criar o serviço",
         description:

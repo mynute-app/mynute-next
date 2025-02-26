@@ -34,10 +34,10 @@ import { Switch } from "@/components/ui/switch";
 
 // Esquema de validação Zod
 const addServiceSchema = z.object({
-  title: z.string().min(1, "O título é obrigatório."),
+  name: z.string().min(1, "O título é obrigatório."),
   duration: z.string().min(1, "A duração é obrigatória."),
   buffer: z.string().optional(),
-  cost: z.string().optional(),
+  price: z.string().optional(),
   location: z.string().optional(),
   category: z.string().optional(),
   hidden: z.boolean().optional(),
@@ -59,10 +59,10 @@ export const EditServiceDialog = ({
   const { register, handleSubmit, formState } = useForm<EditServiceFormValues>({
     resolver: zodResolver(addServiceSchema),
     defaultValues: {
-      title: service.title,
+      name: service.name,
       duration: service.duration,
       buffer: service.buffer,
-      cost: service.cost,
+      price: service.price,
       location: service.location,
       category: service.category,
       hidden: service.hidden,
@@ -74,15 +74,12 @@ export const EditServiceDialog = ({
       ...data,
       id: service.id,
       buffer: data.buffer ?? "", // Garante que seja uma string
-      cost: data.cost ?? "",
+      price: data.price ?? "",
       location: data.location ?? "",
       category: data.category ?? "",
       hidden: data.hidden ?? false,
     });
   };
-
-
-  
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
@@ -104,11 +101,11 @@ export const EditServiceDialog = ({
               <Input
                 id="title"
                 placeholder="Digite o título do serviço"
-                {...register("title")}
+                {...register("name")}
               />
-              {formState.errors.title && (
+              {formState.errors.name && (
                 <p className="text-sm text-red-500">
-                  {formState.errors.title.message}
+                  {formState.errors.name.message}
                 </p>
               )}
             </div>
@@ -158,11 +155,11 @@ export const EditServiceDialog = ({
               <Input
                 id="cost"
                 placeholder="Digite o custo (opcional)"
-                {...register("cost")}
+                {...register("price")}
               />
-              {formState.errors.cost && (
+              {formState.errors.price && (
                 <p className="text-sm text-red-500">
-                  {formState.errors.cost.message}
+                  {formState.errors.price.message}
                 </p>
               )}
             </div>

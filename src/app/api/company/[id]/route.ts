@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
-import { auth } from "../../../../auth";
+import { auth } from "../../../../../auth";
 
-export const GET = auth(async function GET(req) {
-  console.log("📡 Fazendo requisição direta para /company...");
+export const GET = auth(async function GET(req, { params }) {
+  console.log("📡 Fazendo requisição para obter dados da empresa...");
 
   try {
-    const email = req.auth?.user.email;
+    const companyId = params?.id;
     const Authorization = req.auth?.accessToken;
 
     if (!Authorization) {
       return NextResponse.json({ status: 401 });
     }
 
-    const userResponse = await fetch(
-      `${process.env.BACKEND_URL}/user/email/${email}`,
+    const companyResponse = await fetch(
+      `${process.env.BACKEND_URL}/company/${companyId}`,
       {
         method: "GET",
         headers: {
@@ -23,28 +23,13 @@ export const GET = auth(async function GET(req) {
       }
     );
 
-    if (!userResponse.ok) {
-      throw new Error("Erro ao buscar os dados do usuário");
-    }
-
-    const userData = await userResponse.json();
-    console.log("👤 ID do usuário:", userData?.id);
-
-    const companyResponse = await fetch(`${process.env.BACKEND_URL}/company`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
     console.log("🔄 Status da resposta de /company:", companyResponse.status);
-
-    const companyData = await companyResponse.json();
 
     if (!companyResponse.ok) {
       throw new Error("Erro ao buscar os dados da empresa");
     }
 
+    const companyData = await companyResponse.json();
     return NextResponse.json(companyData);
   } catch (error) {
     console.error("❌ Erro ao buscar dados da empresa:", error);

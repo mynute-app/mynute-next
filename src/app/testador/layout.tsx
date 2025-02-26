@@ -13,7 +13,7 @@ export default async function RootLayout({
     redirect("/login");
   }
   return (
-    <div className="grid h-screen w-screen grid-cols-[500px,1fr] bg-background">
+    <div className="">
       {/* Sidebar fixa sem scroll */}
       {/* Conteúdo principal com scroll interno */}
       <SessionProvider>

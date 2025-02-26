@@ -25,6 +25,7 @@ export const GET = auth(async function GET(req) {
     }
 
     const data = await response.json();
+    console.log('QUERO MEU ID')
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ status: 500 });

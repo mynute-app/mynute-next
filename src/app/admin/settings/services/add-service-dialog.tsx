@@ -29,8 +29,10 @@ import {
   FiTag,
   FiLock,
   FiImage,
+  FiAlignLeft,
 } from "react-icons/fi";
 import { useAddServiceForm } from "./actions/useAddServiceForm";
+import { Textarea } from "@/components/ui/textarea";
 
 export const AddServiceDialog = () => {
   const { form, handleSubmit } = useAddServiceForm();
@@ -40,8 +42,8 @@ export const AddServiceDialog = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const onSubmit = async (data: any) => {
-    await handleSubmit(data); 
-    setIsOpen(false); 
+    await handleSubmit(data);
+    setIsOpen(false);
   };
 
   return (
@@ -51,7 +53,7 @@ export const AddServiceDialog = () => {
           variant="ghost"
           size="sm"
           className="p-0 text-white h-10 w-10 bg-primary rounded-full flex justify-center items-center shadow-md"
-          onClick={() => setIsOpen(true)} // Abre o modal
+          onClick={() => setIsOpen(true)} 
         >
           <BsPlus className="w-6 h-6" />
         </Button>
@@ -76,10 +78,10 @@ export const AddServiceDialog = () => {
               <Input
                 id="title"
                 placeholder="Digite o título do serviço"
-                {...register("title")}
+                {...register("name")}
               />
-              {errors.title && (
-                <p className="text-sm text-red-500">{errors.title.message}</p>
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name.message}</p>
               )}
             </div>
           </div>
@@ -103,7 +105,7 @@ export const AddServiceDialog = () => {
           </div>
 
           {/* Tempo de Espera */}
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <FiClock className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
               <Label htmlFor="buffer">Tempo de espera</Label>
@@ -116,22 +118,37 @@ export const AddServiceDialog = () => {
                 <p className="text-sm text-red-500">{errors.buffer.message}</p>
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Custo */}
           <div className="flex items-center gap-3">
             <FiDollarSign className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
               <Label htmlFor="cost">Custo</Label>
-              <Input id="cost" placeholder="Ex.: R$50" {...register("cost")} />
-              {errors.cost && (
-                <p className="text-sm text-red-500">{errors.cost.message}</p>
+              <Input id="cost" placeholder="Ex.: R$50" {...register("price")} />
+              {errors.price && (
+                <p className="text-sm text-red-500">{errors.price.message}</p>
               )}
             </div>
           </div>
-
+          <div className="flex items-start gap-3">
+            <FiAlignLeft className="text-gray-500 w-5 h-5 mt-3" />
+            <div className="flex-1">
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea
+                id="description"
+                placeholder="Digite uma breve descrição do serviço"
+                {...register("description")}
+              />
+              {errors.description && (
+                <p className="text-sm text-red-500">
+                  {errors.description.message}
+                </p>
+              )}
+            </div>
+          </div>
           {/* Localização */}
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <FiMapPin className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
               <Label htmlFor="location">Localização</Label>
@@ -146,10 +163,10 @@ export const AddServiceDialog = () => {
                 </p>
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Categoria */}
-          <div className="flex items-center justify-center gap-3">
+          {/* <div className="flex items-center justify-center gap-3">
             <FiTag className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
               <Label htmlFor="category">Categoria</Label>
@@ -163,16 +180,16 @@ export const AddServiceDialog = () => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          </div> */}
 
           {/* Ocultar */}
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <FiLock className="text-gray-500 w-5 h-5" />
               <Label htmlFor="hidden">Definir como oculto</Label>
             </div>
             <Switch id="hidden" {...register("hidden")} />
-          </div>
+          </div> */}
 
           {/* Botões no Rodapé */}
           <DialogFooter>

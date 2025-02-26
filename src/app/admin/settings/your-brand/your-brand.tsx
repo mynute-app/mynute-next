@@ -16,14 +16,13 @@ import { useToast } from "@/hooks/use-toast";
 import BrandLogoUpload from "./brand-logo";
 import { BusinessNameField } from "./business-name-field";
 import { useEffect } from "react";
-import { useCompany } from "@/hooks/get-company";
+import { useGetCompany } from "@/hooks/get-one-company";
 
 export default function YourBrand() {
   const { data: session } = useSession();
   const { toast } = useToast();
-  const { company, loading } = useCompany(); // Obtendo os dados da empresa
-
-  console.log(company);
+  const companyId = 1;
+  const { company, loading } = useGetCompany(companyId);
 
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
@@ -39,7 +38,6 @@ export default function YourBrand() {
     formState: { errors, isSubmitting, isDirty },
   } = form;
 
-  // Preencher o formulário com os dados da empresa quando disponíveis
   useEffect(() => {
     if (company && company.name) {
       setValue("businessName", company.name);

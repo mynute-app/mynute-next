@@ -12,9 +12,9 @@ import { GoTrash } from "react-icons/go";
 
 type ServiceCardProps = {
   name: string;
-  duration: string;
-  buffer: string;
-  price: string;
+  duration?: string;
+  buffer?: string;
+  price?: string;
   onEdit?: () => void;
   onDelete?: () => void;
 };
@@ -32,7 +32,7 @@ const getFixedColor = (name: string) => {
   ];
   // Calcula um índice baseado no nome
   const index =
-    name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+    name?.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
     colors.length;
   return colors[index];
 };
@@ -58,7 +58,7 @@ const ServiceCard = ({
         <div>
           <p className="font-medium text-gray-900">{name}</p>
           <p className="text-sm text-gray-500">
-            Duração: {duration} · Espera: {buffer} · {price}
+            Duração: {duration} · {price}
           </p>
         </div>
       </div>
