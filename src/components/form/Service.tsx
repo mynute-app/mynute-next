@@ -8,8 +8,8 @@ import { useFetch } from "@/data/loader";
 type Service = {
   id: string;
   title: string;
-  subtitle?: string; 
-  cost: string;
+  subtitle?: string;
+  price: string;
   duration: string;
 };
 
@@ -17,7 +17,7 @@ export const ServiceStep = () => {
   const { setSelectedService, selectedService } = useWizardStore();
   const router = useRouter();
   const { data: services, loading, error } = useFetch<Service[]>("/services");
-
+  console.log(services);
   const handleSelectService = (serviceId: string) => {
     setSelectedService(serviceId);
     const params = new URLSearchParams(window.location.search);
@@ -56,7 +56,7 @@ export const ServiceStep = () => {
           key={service.id}
           title={service.title}
           subtitle={service.subtitle || "Descrição indisponível"}
-          price={`R$ ${service.cost}`}
+          price={`R$ ${service.price}`}
           duration={`${service.duration} min`}
           onClick={() => handleSelectService(service.id)}
           isSelected={selectedService === service.id}

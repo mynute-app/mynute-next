@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, SearchIcon } from "lucide-react";
 import AddTeamMemberDialog from "./add-team-member-modal";
-import { MdOutlineModeEdit } from "react-icons/md";
-import { IoMdMore } from "react-icons/io";
 import { BreaksSection } from "./breakssection";
 import { WorkingHoursSection } from "./working-hours-section";
 import { ServicesSection } from "./services-section";
@@ -21,7 +19,7 @@ type TeamMember = {
 };
 
 export default function YourTeam() {
-  const { data: session } = useSession(); // Acessa dados do usuário logado
+  const { data: session } = useSession();
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [activeTab, setActiveTab] = useState("about");
@@ -192,13 +190,12 @@ export default function YourTeam() {
                   </p>
                 </div>
               </div>
-       
-                <TeamMemberActions
-                  selectedMember={selectedMember}
-                  onDelete={() => handleDeleteMember(selectedMember)}
-                  onSave={updatedUser => handleSaveMember(updatedUser)}
-                />
-             
+
+              <TeamMemberActions
+                selectedMember={selectedMember}
+                onDelete={() => handleDeleteMember(selectedMember)}
+                onSave={updatedUser => handleSaveMember(updatedUser)}
+              />
             </div>
 
             {/* Tabs */}

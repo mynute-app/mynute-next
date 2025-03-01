@@ -53,4 +53,3 @@ export const useFetch = <T>(endpoint: string) => {
 
   return { data, loading, error };
 };
-
