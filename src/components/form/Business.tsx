@@ -2,34 +2,19 @@ import { useRouter } from "next/navigation";
 import { CardCustom } from "@/components/custom/Card-Custom";
 import { useWizardStore } from "@/context/useWizardStore";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
-import { useFetch } from "@/data/loader";
+import { useGetCompany } from "@/hooks/get-one-company";
 
-type Business = {
+type CompanyType = {
   id: string;
-  businessName: string;
-  industry: string;
+  name: string;
 };
 
 export const BusinessStep = () => {
   const { setSelectedBusiness, selectedBusiness } = useWizardStore();
+  const companyId = 1;
+  const { company, loading } = useGetCompany(companyId);
+
   const router = useRouter();
-  const { toast } = useToast();
-
-  const {
-    data: businesses,
-    loading,
-    error,
-  } = useFetch<Business[]>("/business");
-
-  if (error) {
-    toast({
-      title: "Erro",
-      description: "Erro ao carregar empresas.",
-      variant: "destructive",
-    });
-    console.error(error);
-  }
 
   const handleSelectBusiness = (businessId: string) => {
     setSelectedBusiness(businessId);
@@ -38,7 +23,7 @@ export const BusinessStep = () => {
     router.replace(`${window.location.pathname}?${params.toString()}`);
   };
 
-  if (loading) {
+  if (loading || !company) {
     return (
       <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 custom-scrollbar p-2">
         {[...Array(8)].map((_, index) => (
@@ -49,14 +34,14 @@ export const BusinessStep = () => {
   }
 
   return (
-    <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 custom-scrollbar p-2">
-      {businesses?.map(business => (
+    <div className="h-auto overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 custom-scrollbar p-2">
+      {company.company_types?.map((type: CompanyType) => (
         <CardCustom
-          key={business.id}
-          title={business.industry}
-          description={business.businessName}
-          onClick={() => handleSelectBusiness(business.id)}
-          isSelected={selectedBusiness === business.id}
+          key={type.id}
+          title={type.name}
+          description={company.name}
+          onClick={() => handleSelectBusiness(company.id)}
+          isSelected={selectedBusiness === company.id}
         />
       ))}
     </div>

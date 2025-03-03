@@ -21,32 +21,32 @@ export function CardService({
   return (
     <div
       onClick={onClick}
-      className={`bg-white px-4 flex items-center gap-2 md:h-36 shadow-md rounded-lg cursor-pointer transition-transform transform hover:shadow-lg ${
-        isSelected
-          ? "border-2 border-primary bg-primary/10"
-          : "border border-gray-200"
-      }`}
+      className={`bg-white px-5 py-4 flex items-center gap-4 md:h-36 shadow-md rounded-lg cursor-pointer transition-transform transform hover:scale-105 hover:shadow-xl
+        ${
+          isSelected
+            ? "border-2 border-primary bg-primary/10"
+            : "border border-gray-200"
+        }
+      `}
     >
       {/* Ícone representando o serviço */}
       <div className="flex-shrink-0">
-        <div className="md:w-14 md:h-14 rounded-full bg-gray-100 flex items-center justify-center p-2">
-          <BiLandscape className="text-primary size-8"  />
+        <div className="md:w-14 md:h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-2">
+          <BiLandscape className="text-white text-3xl" />
         </div>
       </div>
 
       {/* Informações principais do serviço */}
       <div className="flex flex-col flex-grow overflow-hidden">
-        <span className="text-sm md:text-lg font-bold text-gray-900 truncate">
+        <span className="text-sm md:text-lg font-semibold text-gray-900 truncate">
           {title}
         </span>
-        <span className="text-sm text-gray-600 truncate">{subtitle}</span>
+        <span className="text-xs text-gray-600 truncate">{subtitle}</span>
       </div>
 
       {/* Informações adicionais: preço e duração */}
-      <div className="flex flex-col items-end gap-1">
-        <span className="text-sm md:text-lg font-bold text-green-600">
-          {price}
-        </span>
+      <div className="flex flex-col items-end gap-2">
+        <span className="text-sm  font-semibold text-green-600">{price}</span>
         <Badge
           variant="outline"
           className="text-xs bg-yellow-100 text-yellow-800 border-none"

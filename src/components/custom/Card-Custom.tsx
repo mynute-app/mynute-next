@@ -4,8 +4,8 @@ import React from "react";
 interface CardCustomProps {
   title: string;
   description?: string;
-  onClick?: () => void; 
-  isSelected?: boolean; 
+  onClick?: () => void;
+  isSelected?: boolean;
 }
 
 export const CardCustom: React.FC<CardCustomProps> = ({
@@ -17,10 +17,20 @@ export const CardCustom: React.FC<CardCustomProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`bg-gray-100 shadow-md rounded-md flex md:flex-col py-5 md:h-32
-        justify-center items-center px-4 cursor-pointer transition-all  ${
-          isSelected ? "border-2 border-primary" : ""
-        }`}
+      className={`bg-white shadow-md rounded-xl flex flex-col gap-3 p-4 cursor-pointer transition-transform transform hover:scale-105
+    ${
+      isSelected
+        ? "border-2 border-primary bg-primary/10"
+        : "border border-gray-200"
+    }
+  `}
+      style={{
+        minWidth: "250px",
+        maxWidth: "320px",
+        minHeight: "150px",
+        height: "auto",
+        maxHeight: "200px",
+      }}
     >
       <div className="md:flex-1 flex justify-center items-center">
         <Avatar>
@@ -30,9 +40,7 @@ export const CardCustom: React.FC<CardCustomProps> = ({
       </div>
       <div className=" flex-1">
         <h1 className="text-lg md:text-2xl font-bold text-center">{title}</h1>
-        <p className="text-sm text-gray-500 text-center">
-          {description}
-        </p>
+        <p className="text-sm text-gray-500 text-center">{description}</p>
       </div>
     </div>
   );

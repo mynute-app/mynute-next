@@ -5,6 +5,7 @@ interface CardCustomProps {
   title: string;
   description?: string;
   subTitle?: string;
+  extraInfo?: string;
   onClick?: () => void;
   isSelected?: boolean;
 }
@@ -13,30 +14,43 @@ export const CardCustomAddress: React.FC<CardCustomProps> = ({
   title,
   description,
   subTitle,
+  extraInfo,
   onClick,
   isSelected = false,
 }) => {
   return (
     <div
       onClick={onClick}
-      className={`bg-white shadow-md rounded-lg flex flex-row md:flex-col gap-2 items-start px-2 py-4 cursor-pointer transition-transform transform  ${
-        isSelected
-          ? "border-2 border-primary bg-primary/10"
-          : "border border-gray-200"
-      }`}
-      style={{ minWidth: "250px", maxWidth: "320px" }} // Controle de largura mínima e máxima
+      className={`bg-white shadow-md rounded-xl flex flex-col gap-3 p-4 cursor-pointer transition-transform transform hover:scale-105
+    ${
+      isSelected
+        ? "border-2 border-primary bg-primary/10"
+        : "border border-gray-200"
+    }
+  `}
+      style={{
+        minWidth: "250px",
+        maxWidth: "320px",
+        minHeight: "150px",
+        height: "auto",
+        maxHeight: "200px",
+      }}
     >
-      {/* Ícone representando o endereço */}
-      <div className="flex items-center justify-center bg-gray-50 p-3 rounded-full shadow-md">
-        <MapPin className="text-primary w-6 h-6" />
-      </div>
-
-      <div className="flex flex-col w-full overflow-hidden flex-1">
-        <h1 className="text-sm md:text-lg font-bold text-gray-900 truncate">
+      <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center bg-gray-100 p-2 rounded-full shadow">
+          <MapPin className="text-primary w-5 h-5" />
+        </div>
+        <h1 className="text-base font-semibold text-gray-900 truncate">
           {title}
         </h1>
-        <p className="text-xs md:text-sm text-gray-600">{subTitle}</p>
-        <p className="text-xs md:text-sm text-gray-600 italic">{description}</p>
+      </div>
+
+      <div className="text-gray-700 text-sm">
+        <p>{subTitle}</p>
+        <p className="text-xs text-gray-500">{description}</p>
+        {extraInfo && (
+          <p className="text-xs text-gray-400 italic">{extraInfo}</p>
+        )}
       </div>
     </div>
   );

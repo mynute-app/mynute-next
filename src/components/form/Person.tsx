@@ -1,60 +1,52 @@
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/context/useWizardStore";
 import { CardCustomProfile } from "../custom/Card-Custom-Profile";
-import { useFetch } from "@/data/loader";
+import { useGetCompany } from "@/hooks/get-one-company";
 
 type TeamMember = {
-  id: string;
-  fullName: string;
+  id: number;
+  name: string;
   email: string;
-  permission: string;
+  phone: string;
 };
 
 export const PersonStep = () => {
   const { setSelectedPerson, selectedPerson } = useWizardStore();
   const router = useRouter();
 
-  const {
-    data: teamMembers,
-    loading,
-    error,
-  } = useFetch<TeamMember[]>("/team-members");
+  const companyId = 1;
+  const { company, loading } = useGetCompany(companyId);
 
-  const handleSelectPerson = (personName: string) => {
-    setSelectedPerson(personName);
+  const handleSelectPerson = (personId: number) => {
+    const personIdStr = String(personId);
+    setSelectedPerson(personIdStr);
     const params = new URLSearchParams(window.location.search);
-    params.set("person", personName);
+    params.set("person", personIdStr);
     router.replace(`${window.location.pathname}?${params.toString()}`);
   };
 
   if (loading) {
     return (
       <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 custom-scrollbar p-2">
-        {[...Array(8)].map((_, index) => (
+        {[...Array(6)].map((_, index) => (
           <div
             key={index}
-            className="h-20 md:h-32 w-full bg-gray-200 rounded-lg animate-pulse"
+            className="h-40 w-full bg-gray-200 rounded-lg animate-pulse"
           ></div>
         ))}
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-red-500">Erro ao carregar membros da equipe</div>
-    );
-  }
-
   return (
-    <div className="h-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 custom-scrollbar p-2 ">
-      {teamMembers?.map(member => (
+    <div className="h-auto overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 custom-scrollbar p-2">
+      {company.employees?.map((member: TeamMember) => (
         <CardCustomProfile
           key={member.id}
-          title={member.fullName}
-          description={member.permission}
-          onClick={() => handleSelectPerson(member.fullName)}
-          isSelected={selectedPerson === member.fullName}
+          title={member.name}
+          description={member.email}
+          onClick={() => handleSelectPerson(member.id)}
+          isSelected={selectedPerson === String(member.id)} // Convertendo para string na comparação
         />
       ))}
     </div>

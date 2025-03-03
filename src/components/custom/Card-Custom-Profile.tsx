@@ -17,14 +17,24 @@ export const CardCustomProfile: React.FC<CardCustomProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`bg-gray-100 shadow-md rounded-md flex md:flex-col py-5
-        justify-center items-center px-4 cursor-pointer transition-all  ${
-          isSelected ? "border-2 border-primary" : ""
-        }`}
+      className={`bg-white shadow-md rounded-xl flex flex-col gap-3 p-4 cursor-pointer transition-transform transform hover:scale-105
+    ${
+      isSelected
+        ? "border-2 border-primary bg-primary/10"
+        : "border border-gray-200"
+    }
+  `}
+      style={{
+        minWidth: "250px",
+        maxWidth: "320px",
+        minHeight: "150px",
+        height: "auto",
+        maxHeight: "200px",
+      }}
     >
       <div className="md:flex-1 flex justify-center items-center">
-        <Avatar className="w-14 h-14" >
-          <AvatarImage src="https://github.com/shadcn.png"  />
+        <Avatar className="w-14 h-14">
+          <AvatarImage src="https://github.com/shadcn.png" />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
       </div>
