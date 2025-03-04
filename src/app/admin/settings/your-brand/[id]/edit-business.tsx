@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { BusinessNameField } from "../business-name-field";
+import { BusinessNameField } from "../_components/business-Info-fields";
 import { IndustryField } from "../industry-field";
 import { AboutField } from "../about-field";
 import { Contact } from "../contact";

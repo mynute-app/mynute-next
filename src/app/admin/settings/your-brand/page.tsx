@@ -1,4 +1,4 @@
-import YourBrand from "./your-brand";
+import YourBrand from "./_components/your-brand";
 
 const Page = () => {
   return <YourBrand />;

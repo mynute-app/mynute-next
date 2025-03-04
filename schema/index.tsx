@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 export const BusinessSchema = z.object({
-  businessName: z.string().min(1, "Business name is required"),
+  name: z.string().min(1, "Business name is required"),
   // industry: z.string().min(1, "Industry is required"),
   // about: z.string().optional(),
   // contact: z.object({
@@ -24,7 +24,6 @@ export const BusinessSchema = z.object({
   //   currency: z.string().min(1, "Currency is required"),
   // }),
 });
-
 
 export const teamMemberSchema = z.object({
   fullName: z

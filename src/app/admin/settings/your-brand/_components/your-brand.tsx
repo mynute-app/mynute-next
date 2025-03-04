@@ -10,24 +10,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GiBurningTree } from "react-icons/gi";
 import * as zod from "zod";
-import { BusinessSchema } from "../../../../../schema";
+import { BusinessSchema } from "../../../../../../schema";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import BrandLogoUpload from "./brand-logo";
-import { BusinessNameField } from "./business-name-field";
-import { useEffect } from "react";
+import BrandLogoUpload from "../brand-logo";
 import { useGetCompany } from "@/hooks/get-one-company";
+import { BusinessInfoFields } from "./business-Info-fields";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AddressField } from "./address-field";
 
 export default function YourBrand() {
   const { data: session } = useSession();
   const { toast } = useToast();
   const companyId = 1;
   const { company, loading } = useGetCompany(companyId);
-
+  console.log(company);
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
     defaultValues: {
-      businessName: "",
+      name: "",
     },
   });
 
@@ -38,20 +39,28 @@ export default function YourBrand() {
     formState: { errors, isSubmitting, isDirty },
   } = form;
 
-  useEffect(() => {
-    if (company && company.name) {
-      setValue("businessName", company.name);
-    }
-  }, [company, setValue]);
-
   const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
     console.log("dados", values);
   };
 
   return (
-    <div className="container mx-auto p-4 max-h-screen h-screen overflow-y-auto">
+    <div className="container mx-auto p-4 max-h-screen h-screen overflow-y-auto ">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Your Brand</h2>
+        {loading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        ) : (
+          <>
+            <div className="text-xl font-bold flex justify-start items-start flex-col">
+              Sua Marca
+              <div className="text-sm font-thin text-gray-500">
+                ({company?.name})
+              </div>
+            </div>
+          </>
+        )}
 
         <Button
           onClick={handleSubmit(onSubmit)}
@@ -75,18 +84,7 @@ export default function YourBrand() {
             id="email"
             value={session?.user?.email || "Carregando..."}
             readOnly
-            className="bg-gray-200 text-gray-500 cursor-not-allowed opacity-70 border-none focus:ring-0 pointer-events-none"
-          />
-        </div>
-
-        {/* Nome da empresa */}
-        <div>
-          <Label htmlFor="businessName">Nome da Empresa</Label>
-          <Input
-            id="businessName"
-            value={loading ? "Carregando..." : company?.name || ""}
-            readOnly
-            className="bg-gray-200 text-gray-500 cursor-not-allowed opacity-70 border-none focus:ring-0 pointer-events-none"
+            className="bg-gray-200 text-gray-500 cursor-not-allowed opacity-70 border-none focus:ring-0"
           />
         </div>
 
@@ -105,13 +103,31 @@ export default function YourBrand() {
             </div>
           </CardContent>
         </Card>
-
         <BrandLogoUpload />
 
-        <BusinessNameField
+        <BusinessInfoFields
           register={register}
-          error={errors.businessName?.message}
+          error={errors.name?.message}
+          name={company?.name || ""}
+          taxId={company?.tax_id || ""}
+          loading={loading}
         />
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Filiais</h2>
+          {loading ? (
+            <Skeleton className="h-6 w-full" />
+          ) : (
+            company?.branches?.map((branch: any, index: any) => (
+              <AddressField
+                key={branch.id}
+                register={register}
+                branch={branch}
+                error={errors.name?.message}
+                index={index}
+              />
+            ))
+          )}
+        </div>
       </form>
     </div>
   );

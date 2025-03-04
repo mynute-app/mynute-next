@@ -21,8 +21,6 @@ type CalendarEventFormData = z.infer<typeof calendarEventSchema>;
 
 export const CalendarEventForm = () => {
   const { data: session } = useSession();
-  const accessToken = session?.user?.accessToken; // Pega o token
-  console.log("Access Token:", accessToken);
   const {
     register,
     handleSubmit,
@@ -55,7 +53,6 @@ export const CalendarEventForm = () => {
       attendees: [{ email: "vitoraugusto20102010@hotmail.com" }], // E-mail fixo
     };
 
-
     try {
       const response = await fetch(
         "https://www.googleapis.com/calendar/v3/calendars/primary/events",
@@ -63,7 +60,6 @@ export const CalendarEventForm = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify(event),
         }
