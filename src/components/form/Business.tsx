@@ -35,15 +35,13 @@ export const BusinessStep = () => {
 
   return (
     <div className="h-auto overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 custom-scrollbar p-2">
-      {company.company_types?.map((type: CompanyType) => (
-        <CardCustom
-          key={type.id}
-          title={type.name}
-          description={company.name}
-          onClick={() => handleSelectBusiness(company.id)}
-          isSelected={selectedBusiness === company.id}
-        />
-      ))}
+      <CardCustom
+        key={company.id}
+        title={company.name}
+        description={`ID: ${company.id}`}
+        onClick={() => handleSelectBusiness(company.id)}
+        isSelected={selectedBusiness === company.id}
+      />
     </div>
   );
 };

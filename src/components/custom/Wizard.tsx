@@ -33,6 +33,7 @@ const Wizard: React.FC = () => {
     selectedService,
     selectedCalendarDate,
     selectedBusiness,
+    clientInfo,
   } = useWizardStore();
   const [error, setError] = useState<string>("");
   const { toast } = useToast();
@@ -101,7 +102,7 @@ const Wizard: React.FC = () => {
       if (currentStep === steps.length) {
         const postData = {
           summary: "Agendamento",
-          description: `Cliente`,
+          description: `Cliente: ${clientInfo.fullName}`,
           start: selectedCalendarDate?.start.dateTime,
           end: selectedCalendarDate?.end.dateTime,
         };
@@ -119,12 +120,40 @@ const Wizard: React.FC = () => {
             throw new Error("Erro ao criar evento no calendário.");
           }
 
-          const result = await response.json();
-          alert("Evento criado com sucesso!");
-          console.log("Evento criado:", result);
+          console.log("✅ Evento criado com sucesso!");
+
+          // 🚀 **Correção no envio do e-mail**
+          if (!clientInfo.email || !clientInfo.fullName || !clientInfo.phone) {
+            throw new Error("Os dados do cliente estão incompletos.");
+          }
+
+          const emailData = {
+            fullName: clientInfo.fullName, // Nome do cliente
+            email: clientInfo.email, // E-mail do cliente
+            phone: clientInfo.phone, // Telefone do cliente
+          };
+
+          console.log("📩 Enviando e-mail com os dados:", emailData);
+
+          const emailResponse = await fetch("/api/send", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(emailData),
+          });
+
+          if (!emailResponse.ok) {
+            const errorResponse = await emailResponse.json();
+            console.error("❌ Erro ao enviar e-mail:", errorResponse);
+            throw new Error("Erro ao enviar o e-mail de confirmação.");
+          }
+
+          console.log("✅ E-mail de confirmação enviado!");
+          alert("E-mail de confirmação enviado com sucesso!");
         } catch (error) {
-          console.error("Erro ao criar evento:", error);
-          alert("Não foi possível criar o evento. Tente novamente.");
+          console.error("❌ Erro:", error);
+          alert("Não foi possível processar sua solicitação. Tente novamente.");
         }
 
         return;
@@ -142,6 +171,7 @@ const Wizard: React.FC = () => {
       }
     }
   };
+
 
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">

@@ -17,7 +17,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RegisterFormData, registerSchema } from "../models/registerSchema";
 import { registerUser } from "../services/registerService";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast"; // ✅ Agora dentro do componente
+import { useToast } from "@/hooks/use-toast";
 
 export default function RegisterForm() {
   const {
@@ -31,7 +31,7 @@ export default function RegisterForm() {
   });
 
   const router = useRouter();
-  const { toast } = useToast(); // ✅ Correto: hook chamado dentro do componente
+  const { toast } = useToast();
 
   return (
     <Card className="w-full max-w-xl">
@@ -101,6 +101,16 @@ export default function RegisterForm() {
             />
           </div>
 
+          {/* Sobrenome */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Sobrenome</Label>
+            <Input
+              id="surname"
+              placeholder="Digite seu sobrenome"
+              {...register("surname")}
+            />
+          </div>
+
           {/* Senha */}
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
@@ -112,17 +122,7 @@ export default function RegisterForm() {
             />
           </div>
 
-          {/* ID da Empresa */}
-          <div className="space-y-2">
-            <Label htmlFor="company_id">ID da Empresa</Label>
-            <Input
-              id="company_id"
-              type="number"
-              placeholder="Digite o ID da empresa"
-              {...register("company_id", { valueAsNumber: true })}
-            />
-          </div>
-
+       
           {/* Erro Geral */}
           {errors.root && (
             <Alert variant="destructive">

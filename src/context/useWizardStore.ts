@@ -11,10 +11,15 @@ interface WizardStore {
   selectedAddress: string | null;
   selectedPerson: string | null;
   selectedService: string | null;
+  clientInfo: {
+    email: string;
+    phone: string;
+    fullName: string;
+  }; // **Removido o null**
   selectedCalendarDate: {
     start: CalendarEventDateTime;
     end: CalendarEventDateTime;
-  } | null; // Apenas start e end
+  } | null;
   selectedBusiness: string | null;
   setSelectedAddress: (address: string) => void;
   setSelectedPerson: (person: string) => void;
@@ -22,7 +27,10 @@ interface WizardStore {
   setSelectedCalendarDate: (date: {
     start: CalendarEventDateTime;
     end: CalendarEventDateTime;
-  }) => void; // Atualiza start e end
+  }) => void;
+  setClientInfo: (
+    info: Partial<{ email: string; phone: string; fullName: string }>
+  ) => void; // Agora aceita atualizações parciais
   setSelectedBusiness: (business: string) => void;
   setCurrentStep: (step: number) => void;
   nextStep: () => void;
@@ -35,12 +43,17 @@ export const useWizardStore = create<WizardStore>(set => ({
   selectedAddress: null,
   selectedPerson: null,
   selectedService: null,
-  selectedCalendarDate: null, // Apenas start e end
+  selectedCalendarDate: null,
+  clientInfo: { email: "", phone: "", fullName: "" }, // **Agora tem um objeto padrão**
+  setClientInfo: info =>
+    set(state => ({
+      clientInfo: { ...state.clientInfo, ...info }, // Atualiza apenas os campos necessários
+    })),
   setSelectedBusiness: business => set({ selectedBusiness: business }),
   setSelectedAddress: address => set({ selectedAddress: address }),
   setSelectedPerson: person => set({ selectedPerson: person }),
   setSelectedService: service => set({ selectedService: service }),
-  setSelectedCalendarDate: date => set({ selectedCalendarDate: date }), // Recebe start e end
+  setSelectedCalendarDate: date => set({ selectedCalendarDate: date }),
   setCurrentStep: step => set({ currentStep: step }),
   nextStep: () => set(state => ({ currentStep: state.currentStep + 1 })),
   prevStep: () => set(state => ({ currentStep: state.currentStep - 1 })),

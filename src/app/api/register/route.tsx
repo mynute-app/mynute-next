@@ -5,7 +5,7 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const backendResponse = await fetch(
-      `${process.env.BACKEND_URL}/auth/register`,
+      `${process.env.BACKEND_URL}/user`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
