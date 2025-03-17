@@ -1,6 +1,6 @@
 "use client";
 
-import { RegisterFormData } from "../models/registerSchema";
+import { RegisterFormData } from "../../models/registerSchema";
 
 export async function registerUser(
   data: RegisterFormData,
@@ -36,7 +36,7 @@ export async function registerUser(
     });
 
     reset();
-    router.push("/login");
+    router.push("/auth/login");
   } catch (error: any) {
     setError("root", { message: "Erro ao registrar. Tente novamente." });
   }

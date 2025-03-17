@@ -1,9 +1,9 @@
 import { auth } from "./auth";
 
 export default auth(req => {
-  if (!req.auth && req.nextUrl.pathname !== "/login") {
+  if (!req.auth && req.nextUrl.pathname !== "/auth/login") {
     console.log("Redirecting to login");
-    const newUrl = new URL("/login", req.nextUrl.origin);
+    const newUrl = new URL("/auth/login", req.nextUrl.origin);
     return Response.redirect(newUrl);
   }
 });

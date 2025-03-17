@@ -9,25 +9,23 @@ export const { handlers, auth, signIn } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        name: { label: "Name", type: "text" },
       },
       authorize: async credentials => {
         try {
-          const { email, password, name } = await signInSchema.parseAsync(
+          const { email, password } = await signInSchema.parseAsync(
             credentials
           );
 
           console.log("Enviando credenciais para API:", {
             email,
             password,
-            name,
           });
 
           const loginUrl = new URL("http://localhost:4000/auth/login");
           const requestOptions: RequestInit = {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password, name }),
+            body: JSON.stringify({ email, password }),
           };
 
           const response = await fetch(loginUrl.toString(), requestOptions);
@@ -56,7 +54,7 @@ export const { handlers, auth, signIn } = NextAuth({
 
           console.log("Token recebido:", token);
 
-          return { email, name, token };
+          return { email, token };
         } catch (error) {
           if (error instanceof ZodError) {
             console.error("Erro de validação:", error.errors);
@@ -82,7 +80,7 @@ export const { handlers, auth, signIn } = NextAuth({
     },
   },
   pages: {
-    signIn: "/login/credentials",
+    signIn: "/auth/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
 });

@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { HelpCircle, Settings, User } from "lucide-react";
 import { SettingsSubSidebar } from "@/app/admin/settings/settings-sub-sidebar";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 
 export const Sidebar = () => {
   const [activeOption, setActiveOption] = useState<string | null>(null);
@@ -34,9 +35,13 @@ export const Sidebar = () => {
           </div>
         </ScrollArea>
         <div className="absolute bottom-4 space-y-2">
-          <Button variant="ghost" className="w-full justify-start gap-2">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2"
+            onClick={() => signIn("google", { callbackUrl: "/" })}
+          >
             <HelpCircle className="h-4 w-4" />
-            Help & Support
+            Sair
           </Button>
         </div>
       </div>

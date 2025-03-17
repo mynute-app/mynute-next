@@ -6,5 +6,4 @@ export const signInSchema = object({
     1,
     "Password is required"
   ),
-  name: string().min(1, "Name is required"), 
 });
