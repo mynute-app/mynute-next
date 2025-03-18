@@ -1,59 +1,52 @@
 import { ClockIcon, LinkIcon, MailIcon, PhoneIcon } from "lucide-react";
 import { TeamMember } from "../../../../../types/TeamMember";
-import { useSession } from "next-auth/react";
 
-export function AboutSection({
-  selectedMember,
-}: {
+interface AboutSectionProps {
   selectedMember: TeamMember | null;
-}) {
-  const { data: session } = useSession();
+}
+
+export function AboutSection({ selectedMember }: AboutSectionProps) {
+  if (!selectedMember) {
+    return <p className="text-gray-500">Nenhum membro selecionado</p>;
+  }
 
   return (
-    <div className="space-y-4">
-      {/* Nome do usuário logado */}
-      {session?.user?.name && (
+    <div className="space-y-4 p-4 bg-white ">
+      {/* Nome e Cargo */}
+      <div>
+        <h2 className="text-xl font-semibold ">
+          {selectedMember.name} {selectedMember.surname}
+        </h2>
+        <p className="text-gray-500 capitalize">
+          Permisão: {selectedMember.role || "Role não informada"}
+        </p>
+      </div>
+
+      {/* Telefone */}
+      {selectedMember.phone ? (
         <div className="flex items-center space-x-2">
-          <span className="font-semibold">Nome:</span>
-          <span>{session.user.name}</span>
+          <PhoneIcon className="w-5 h-5 text-gray-500" />
+          <span>{selectedMember.phone}</span>
         </div>
+      ) : (
+        <div className="text-gray-500">Telefone não informado</div>
       )}
 
-      {/* E-mail do usuário logado */}
-      {session?.user?.email && (
+      {/* Email */}
+      {selectedMember.email ? (
         <div className="flex items-center space-x-2">
           <MailIcon className="w-5 h-5 text-gray-500" />
-          <span>{session.user.email}</span>
+          <span>{selectedMember.email}</span>
         </div>
+      ) : (
+        <div className="text-gray-500">E-mail não informado</div>
       )}
 
-      {/* Dados do membro da equipe selecionado */}
-      {selectedMember && (
-        <>
-          <div className="flex items-center space-x-2">
-            <PhoneIcon className="w-5 h-5 text-gray-500" />
-            <span>(11) 97135-1731</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <MailIcon className="w-5 h-5 text-gray-500" />
-            <span>{selectedMember.email}</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <ClockIcon className="w-5 h-5 text-gray-500" />
-            <span>Today • 9:00 AM - 5:00 PM (HPDB)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <LinkIcon className="w-5 h-5 text-gray-500" />
-            <a
-              href="https://example.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              https://example.com
-            </a>
-          </div>
-        </>
-      )}
+      {/* Horário fixo */}
+      <div className="flex items-center space-x-2">
+        <ClockIcon className="w-5 h-5 text-gray-500" />
+        <span>Hoje • 9:00 AM - 5:00 PM (HPDB)</span>
+      </div>
     </div>
   );
 }

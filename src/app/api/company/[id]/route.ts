@@ -9,7 +9,7 @@ export const GET = auth(async function GET(req, { params }) {
     const Authorization = req.auth?.accessToken;
 
     if (!Authorization) {
-      return NextResponse.json({ status: 401 });
+      return NextResponse.json({ status: 401, message: "Não autorizado" });
     }
 
     const companyResponse = await fetch(
@@ -20,6 +20,7 @@ export const GET = auth(async function GET(req, { params }) {
           "Content-Type": "application/json",
           Authorization,
         },
+        next: { tags: ["company"] }, // 🔥 Adicionando tag para invalidar o cache dinamicamente
       }
     );
 

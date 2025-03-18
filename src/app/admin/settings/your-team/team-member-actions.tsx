@@ -20,7 +20,6 @@ function TeamMemberActions({
 }) {
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
 
-  // Verifica se o selectedMember é o admin (exemplo: id === 0 representa o admin)
   const isAdmin = selectedMember?.id === 0;
 
   return (

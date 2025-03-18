@@ -10,43 +10,19 @@ import { IntegrationsSection } from "./integration-button";
 import { AboutSection } from "./about-section";
 import { useSession } from "next-auth/react";
 import TeamMemberActions from "./team-member-actions";
-
-type TeamMember = {
-  id: number;
-  fullName: string;
-  email: string;
-  permission: string;
-};
+import { useGetCompany } from "@/hooks/get-one-company";
+import { TeamMember } from "../../../../../types/TeamMember";
+import { Skeleton } from "@/components/ui/skeleton";
+import MemberPlaceholder from "./member-placeholder";
 
 export default function YourTeam() {
   const { data: session } = useSession();
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [activeTab, setActiveTab] = useState("about");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchTeamMembers = async () => {
-      try {
-        const response = await fetch("http://localhost:3333/team-members");
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data)) {
-            setTeamMembers(data);
-          } else {
-            console.error(
-              "Erro: Dados de membros da equipe não estão no formato de array."
-            );
-          }
-        } else {
-          console.error("Erro ao buscar os membros da equipe");
-        }
-      } catch (error) {
-        console.error("Erro na requisição:", error);
-      }
-    };
-    fetchTeamMembers();
-  }, []);
+  const companyId = 1;
+  const { company, loading } = useGetCompany(companyId);
 
   const handleSelectMember = (member: TeamMember) => {
     setSelectedMember(member);
@@ -56,29 +32,33 @@ export default function YourTeam() {
   const handleDeleteMember = (member: TeamMember | null) => {
     if (member) {
       // Lógica para deletar o membro da equipe
-      console.log(`Deleting member: ${member.fullName}`);
+      console.log(`Deleting member: ${member.name}`);
     }
   };
 
   const handleSaveMember = (updatedUser: TeamMember) => {
     // Lógica para salvar o membro da equipe
-    console.log(`Saving member: ${updatedUser.fullName}`);
+    console.log(`Saving member: ${updatedUser.name}`);
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "about":
-        return (
+        return selectedMember ? (
           <AboutSection
             selectedMember={
               selectedMember || {
                 id: 0,
-                fullName: session?.user?.name || "Logged-in User",
-                email: session?.user?.email || "No email provided",
-                permission: "Logged-in User",
+                name: company?.employees?.name,
+                surname: company?.employees?.surname,
+                email: company?.employees?.email,
+                phone: company?.employees?.phone,
+                permission: company?.employees?.role,
               }
             }
           />
+        ) : (
+          <p>Selecione um membro para ver os detalhes</p>
         );
       case "integrations":
         return <IntegrationsSection />;
@@ -98,7 +78,7 @@ export default function YourTeam() {
       {/* Sidebar */}
       <div className="w-1/3 bg-gray-100 p-4 border-r">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Your Team</h2>
+          <h2 className="text-lg font-semibold">Meu time</h2>
           <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
             <PlusIcon className="w-5 h-5" />
           </Button>
@@ -115,79 +95,66 @@ export default function YourTeam() {
         </div>
 
         <ul className="space-y-2">
-          {session && (
-            <li
-              className={`p-2 rounded cursor-pointer ${
-                selectedMember?.id === 0 ? "bg-gray-200" : "hover:bg-gray-100"
-              }`}
-              onClick={() =>
-                setSelectedMember({
-                  id: 0,
-                  fullName: session.user?.name || "Logged-in User",
-                  email: session.user?.email || "No email provided",
-                  permission: "Logged-in User",
-                })
-              }
-            >
-              <div className="flex items-center space-x-3">
-                <div className="rounded-full bg-gray-300 w-8 h-8 flex items-center justify-center font-bold text-gray-700">
-                  {session.user?.name?.[0] || "?"}
-                </div>
-                <div>
-                  <p className="font-medium">
-                    {session.user?.name || "Unknown"}
-                  </p>
-                  <p className="text-sm text-gray-500">Logged-in User</p>
-                </div>
-              </div>
-            </li>
-          )}
+          {/* Verifica se ainda está carregando */}
+          {loading
+            ? Array.from({ length: 5 }).map((_, index) => (
+                <li
+                  key={index}
+                  className="p-2 rounded cursor-pointer bg-gray-100"
+                >
+                  <div className="flex items-center space-x-3">
+                    {/* Skeleton para o avatar */}
+                    <Skeleton className="rounded-full bg-gray-300 w-8 h-8" />
 
-          {/* Team List */}
-          {teamMembers.map(member => (
-            <li
-              key={member.id}
-              className={`p-2 rounded cursor-pointer ${
-                selectedMember?.id === member.id
-                  ? "bg-gray-200"
-                  : "hover:bg-gray-100"
-              }`}
-              onClick={() => handleSelectMember(member)}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="rounded-full bg-gray-300 w-8 h-8 flex items-center justify-center font-bold text-gray-700">
-                  {member.fullName ? member.fullName[0] : "?"}
-                </div>
-                <div>
-                  <p className="font-medium">{member.fullName || "Unknown"}</p>
-                  <p className="text-sm text-gray-500">{member.permission}</p>
-                </div>
-              </div>
-            </li>
-          ))}
+                    {/* Skeleton para nome e cargo */}
+                    <div>
+                      <Skeleton className="h-4 w-32 mb-2" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                </li>
+              ))
+            : company?.employees?.map((member: any) => (
+                <li
+                  key={member.id}
+                  className={`p-2 rounded cursor-pointer ${
+                    selectedMember?.id === member.id
+                      ? "bg-gray-200"
+                      : "hover:bg-gray-100"
+                  }`}
+                  onClick={() => handleSelectMember(member)}
+                >
+                  <div className="flex items-center space-x-3">
+                    {/* Avatar com a primeira letra do nome */}
+                    <div className="rounded-full bg-gray-300 w-8 h-8 flex items-center justify-center font-bold text-gray-700">
+                      {member.name ? member.name[0] : "?"}
+                    </div>
+                    {/* Informações do funcionário */}
+                    <div>
+                      <p className="font-medium">
+                        {member.name} {member.surname}
+                      </p>
+                      <p className="text-sm text-gray-500">{member.role}</p>
+                    </div>
+                  </div>
+                </li>
+              ))}
         </ul>
       </div>
 
       {/* Detail View */}
-      <div className="w-2/3 p-6">
-        {selectedMember || session ? (
+      <div className="w-2/3 p-6 ">
+        {selectedMember ? (
           <>
             <div className="flex items-center justify-between space-x-4 mb-6">
               <div className="flex justify-center items-start gap-4">
                 <div className="rounded-full bg-gray-200 w-16 h-16 flex items-center justify-center text-xl font-bold">
-                  {selectedMember?.fullName?.[0] ||
-                    session?.user?.name?.[0] ||
-                    "?"}
+                  {selectedMember?.name?.[0]}
                 </div>
-                <div className="flex justify-start items-center flex-col mt-2">
+                <div className="flex justify-start items-start flex-col mt-2">
                   <h1 className="text-2xl font-semibold">
-                    {selectedMember?.fullName ||
-                      session?.user?.name ||
-                      "Unknown"}
+                    {selectedMember?.name} {selectedMember?.surname}
                   </h1>
-                  <p className="text-gray-500">
-                    {selectedMember?.permission || "Logged-in User"}
-                  </p>
                 </div>
               </div>
 
@@ -206,7 +173,7 @@ export default function YourTeam() {
                   activeTab === "about" ? "border-b-2 border-black" : ""
                 }`}
               >
-                About
+                Sobre
               </button>
               <button
                 onClick={() => setActiveTab("integrations")}
@@ -245,7 +212,7 @@ export default function YourTeam() {
             <div>{renderTabContent()}</div>
           </>
         ) : (
-          <p>Select a team member to view details</p>
+          <MemberPlaceholder />
         )}
       </div>
 
