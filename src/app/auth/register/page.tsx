@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function RegisterPage() {
   return (
-    <div className="flex min-h-screen container mx-auto">
+    <div className="flex min-h-screen container mx-auto bg-slate-300 flex-col lg:flex-row justify-center items-center">
       {/* Lado esquerdo: Banner */}
       <div className="flex flex-col justify-center space-y-6">
         <h1 className="text-4xl font-bold tracking-tight text-[#1a2b47] md:text-5xl lg:text-6xl">
@@ -16,7 +16,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Lado direito: Formulário */}
-      <div className="w-3/5 flex flex-col justify-center items-center p-10">
+      <div className="w-full flex flex-col justify-center items-center p-10">
         <RegisterForm />
       </div>
     </div>

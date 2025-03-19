@@ -46,7 +46,7 @@ export function FormLogin() {
     if (result?.error) {
       setError("Email ou senha inválidos");
     } else {
-      router.push("/admin");
+      router.push("/dashboard");
     }
   };
 

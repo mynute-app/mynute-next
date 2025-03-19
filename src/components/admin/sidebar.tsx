@@ -13,9 +13,10 @@ export const Sidebar = () => {
   const handleOptionClick = (option: string) => {
     setActiveOption(option === activeOption ? null : option);
   };
+  console.log(session?.user);
 
   return (
-    <div className="flex h-screen border-r">
+    <div className="flex h-screen border-r bg-slate-400">
       {/* Sidebar principal */}
       <div className="p-4 w-48">
         <div className="flex items-center gap-2 pb-4 ">

@@ -24,7 +24,9 @@ export const SettingsSubSidebar = () => {
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-2">
           <Calendar className="h-4 w-4" />
-          <Link href="/admin/settings/services">Serviços</Link>
+          <Link href="/admin/settings/services">Serviços</Link>  
+
+          
         </Button>
       </div>
     </div>
