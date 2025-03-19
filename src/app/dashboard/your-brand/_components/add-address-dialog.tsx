@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,13 +13,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { BsPlus } from "react-icons/bs";
-import { FiMapPin, FiHome, FiHash, FiGlobe, FiFlag } from "react-icons/fi";
+import { BsFillBuildingFill, BsPlus } from "react-icons/bs";
+import {
+  FiMapPin,
+  FiHome,
+  FiHash,
+  FiGlobe,
+  FiFlag,
+  FiMail,
+} from "react-icons/fi";
 import { useAddAddressForm } from "./actions/useAddAddressForm";
 
 export const AddAddressDialog = () => {
   const { form, handleSubmit } = useAddAddressForm();
-  const { register, handleSubmit: submitHandler, formState } = form;
+  const { register, handleSubmit: submitHandler, setValue, formState } = form;
   const { errors } = formState;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -29,13 +36,31 @@ export const AddAddressDialog = () => {
     setIsOpen(false);
   };
 
+  // Função para buscar endereço pelo CEP
+  const fetchAddressByCEP = async (cep: any) => {
+    if (cep.length === 8) {
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+        if (!data.erro) {
+          setValue("street", data.logradouro);
+          setValue("city", data.localidade);
+          setValue("state", data.uf);
+          setValue("country", "Brasil");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar endereço pelo CEP:", error);
+      }
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
-          className="p-0 text-white h-10 w-10 bg-primary rounded-full flex justify-center items-center shadow-md"
+          className="p-0 text-white h-10 w-10 bg-primary rounded-full flex justify-center items-center shadow-md hover:bg-gray-800"
           onClick={() => setIsOpen(true)}
         >
           <BsPlus className="w-6 h-6" />
@@ -51,6 +76,41 @@ export const AddAddressDialog = () => {
 
         {/* Formulário */}
         <form onSubmit={submitHandler(onSubmit)} className="space-y-4">
+          {/* Nome da Filial */}
+          <div className="flex items-center gap-3">
+            <BsFillBuildingFill className="text-gray-500 w-5 h-5 mt-7" />
+            <div className="flex-1">
+              <Label htmlFor="name">Nome*</Label>
+              <Input
+                id="name"
+                placeholder="Nome da filial"
+                {...register("name")}
+              />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name.message}</p>
+              )}
+            </div>
+          </div>
+          {/* CEP */}
+          <div className="flex items-center gap-3">
+            <FiMail className="text-gray-500 w-5 h-5 mt-7" />
+            <div className="flex-1">
+              <Label htmlFor="zip_code">CEP*</Label>
+              <Input
+                id="zip_code"
+                placeholder="Digite o CEP"
+                {...register("zip_code")}
+                maxLength={8}
+                onBlur={e => fetchAddressByCEP(e.target.value)}
+              />
+              {errors.zip_code && (
+                <p className="text-sm text-red-500">
+                  {errors.zip_code.message}
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Rua */}
           <div className="flex items-center gap-3">
             <FiHome className="text-gray-500 w-5 h-5 mt-7" />
@@ -67,67 +127,94 @@ export const AddAddressDialog = () => {
             </div>
           </div>
 
-          {/* Número */}
+          {/* Bairro */}
           <div className="flex items-center gap-3">
-            <FiHash className="text-gray-500 w-5 h-5 mt-7" />
+            <FiHome className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
-              <Label htmlFor="number">Número*</Label>
+              <Label htmlFor="neighborhood">Bairro</Label>
               <Input
-                id="number"
-                placeholder="Digite o número"
-                {...register("number")}
+                id="neighborhood"
+                placeholder="Digite o bairro"
+                {...register("neighborhood")}
               />
-              {errors.number && (
-                <p className="text-sm text-red-500">{errors.number.message}</p>
-              )}
+            </div>
+          </div>
+          {/* Número e Complemento */}
+          <div className="flex gap-3">
+            <div className="flex items-center gap-3 flex-1">
+              <FiHash className="text-gray-500 w-5 h-5 mt-7" />
+              <div className="flex-1">
+                <Label htmlFor="number">Número*</Label>
+                <Input
+                  id="number"
+                  placeholder="Número"
+                  {...register("number")}
+                />
+                {errors.number && (
+                  <p className="text-sm text-red-500">
+                    {errors.number.message}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 flex-1">
+              <BsFillBuildingFill className="text-gray-500 w-5 h-5 mt-7" />
+              <div className="flex-1">
+                <Label htmlFor="complement">Complemento</Label>
+                <Input
+                  id="complement"
+                  placeholder="Apartamento, bloco, etc."
+                  {...register("complement")}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Cidade */}
-          <div className="flex items-center gap-3">
-            <FiMapPin className="text-gray-500 w-5 h-5 mt-7" />
-            <div className="flex-1">
-              <Label htmlFor="city">Cidade*</Label>
-              <Input
-                id="city"
-                placeholder="Digite a cidade"
-                {...register("city")}
-              />
-              {errors.city && (
-                <p className="text-sm text-red-500">{errors.city.message}</p>
-              )}
+          {/* Cidade, Estado e País */}
+          <div className="flex gap-3">
+            <div className="flex items-center gap-3 flex-1">
+              <FiMapPin className="text-gray-500 w-5 h-5 mt-7" />
+              <div className="flex-1">
+                <Label htmlFor="city">Cidade*</Label>
+                <Input
+                  id="city"
+                  placeholder="Digite a cidade"
+                  {...register("city")}
+                />
+                {errors.city && (
+                  <p className="text-sm text-red-500">{errors.city.message}</p>
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* Estado */}
-          <div className="flex items-center gap-3">
-            <FiFlag className="text-gray-500 w-5 h-5 mt-7" />
-            <div className="flex-1">
-              <Label htmlFor="state">Estado*</Label>
-              <Input
-                id="state"
-                placeholder="Digite o estado"
-                {...register("state")}
-              />
-              {errors.state && (
-                <p className="text-sm text-red-500">{errors.state.message}</p>
-              )}
+            <div className="flex items-center gap-3 flex-1">
+              <FiFlag className="text-gray-500 w-5 h-5 mt-7" />
+              <div className="flex-1">
+                <Label htmlFor="state">Estado*</Label>
+                <Input
+                  id="state"
+                  placeholder="Digite o estado"
+                  {...register("state")}
+                />
+                {errors.state && (
+                  <p className="text-sm text-red-500">{errors.state.message}</p>
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* País */}
-          <div className="flex items-center gap-3">
-            <FiGlobe className="text-gray-500 w-5 h-5 mt-7" />
-            <div className="flex-1">
-              <Label htmlFor="country">País*</Label>
-              <Input
-                id="country"
-                placeholder="Digite o país"
-                {...register("country")}
-              />
-              {errors.country && (
-                <p className="text-sm text-red-500">{errors.country.message}</p>
-              )}
+            <div className="flex items-center gap-3 flex-1">
+              <FiGlobe className="text-gray-500 w-5 h-5 mt-7" />
+              <div className="flex-1">
+                <Label htmlFor="country">País*</Label>
+                <Input
+                  id="country"
+                  placeholder="Digite o país"
+                  {...register("country")}
+                />
+                {errors.country && (
+                  <p className="text-sm text-red-500">
+                    {errors.country.message}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
