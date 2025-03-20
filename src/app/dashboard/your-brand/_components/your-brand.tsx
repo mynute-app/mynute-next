@@ -22,7 +22,6 @@ import { AddAddressDialog } from "./add-address-dialog";
 
 export default function YourBrand() {
   const { data: session } = useSession();
-  const { toast } = useToast();
   const companyId = 1;
   const { company, loading } = useGetCompany(companyId);
   console.log(company);
@@ -37,6 +36,7 @@ export default function YourBrand() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting, isDirty },
   } = form;
 
@@ -115,26 +115,37 @@ export default function YourBrand() {
             loading={loading}
           />
           <Separator className="my-4" />
-          <div className="space-y-4 ">
+          <div className="space-y-4">
             <div className="text-lg font-semibold flex justify-between items-center">
               Filiais <AddAddressDialog />
             </div>
+
             {loading ? (
               <Skeleton className="h-6 w-full" />
-            ) : (
-              company?.branches?.map((branch: any, index: any) => (
+            ) : company?.branches?.length ? (
+              company.branches.map((branch, index) => (
                 <AddressField
                   key={branch.id}
                   register={register}
                   branch={branch}
-                  error={errors.name?.message}
                   index={index}
+                  watch={watch}
+                  onDelete={(branchId: number) => {
+                    // Atualiza o estado da empresa removendo a filial deletada
+                    const updatedBranches = company.branches.filter(
+                      b => b.id !== branchId
+                    );
+                    company.branches = updatedBranches; // Atualiza localmente
+                  }}
                 />
               ))
+            ) : (
+              <p className="text-sm text-gray-500">
+                Nenhuma filial cadastrada.
+              </p>
             )}
           </div>
-          
-         
+
           <BusinessInfoFields
             register={register}
             error={errors.name?.message}

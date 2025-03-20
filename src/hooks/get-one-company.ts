@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { Company } from "../../types/company";
 
 export const useGetCompany = (companyId: string | number) => {
-  const [company, setCompany] = useState<any>(null);
+  const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,7 +15,7 @@ export const useGetCompany = (companyId: string | number) => {
           throw new Error("Erro ao buscar dados da empresa");
         }
 
-        const data = await response.json();
+        const data: Company = await response.json();
         setCompany(data);
       } catch (error) {
         console.error("❌ Erro ao buscar dados da empresa:", error);
