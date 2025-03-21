@@ -15,7 +15,7 @@ export const AddressStep = () => {
   const router = useRouter();
   const companyId = 1;
   const { company, loading } = useGetCompany(companyId);
-  console.log(company);
+
   const handleSelectAddress = (addressId: string) => {
     setSelectedAddress(addressId);
     const params = new URLSearchParams(window.location.search);

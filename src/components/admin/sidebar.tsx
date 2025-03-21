@@ -13,7 +13,6 @@ export const Sidebar = () => {
   const handleOptionClick = (option: string) => {
     setActiveOption(option === activeOption ? null : option);
   };
-  console.log(session?.user);
 
   return (
     <div className="flex h-screen border-r bg-slate-400">

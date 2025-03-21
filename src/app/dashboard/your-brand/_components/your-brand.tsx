@@ -24,7 +24,7 @@ export default function YourBrand() {
   const { data: session } = useSession();
   const companyId = 1;
   const { company, loading } = useGetCompany(companyId);
-  console.log(company);
+
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
     defaultValues: {

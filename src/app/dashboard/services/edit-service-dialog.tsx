@@ -35,9 +35,13 @@ import { Switch } from "@/components/ui/switch";
 // Esquema de validação Zod
 const addServiceSchema = z.object({
   name: z.string().min(1, "O título é obrigatório."),
-  duration: z.string().min(1, "A duração é obrigatória."),
-  buffer: z.string().optional(),
-  price: z.string().optional(),
+  description: z.string().min(1, "A descrição é obrigatória."),
+  duration: z.preprocess(
+    val => String(val),
+    z.string().min(1, "A duração é obrigatória.")
+  ),
+  buffer: z.preprocess(val => (val ? String(val) : ""), z.string().optional()),
+  price: z.preprocess(val => String(val), z.string().optional()),
   location: z.string().optional(),
   category: z.string().optional(),
   hidden: z.boolean().optional(),
@@ -46,8 +50,8 @@ const addServiceSchema = z.object({
 type EditServiceFormValues = z.infer<typeof addServiceSchema>;
 
 type EditServiceDialogProps = {
-  service: EditServiceFormValues & { id: string }; // Inclui o ID
-  onSave: (updatedService: EditServiceFormValues & { id: string }) => void; // Atualiza o serviço
+  service: EditServiceFormValues & { id: string };
+  onSave: (updatedService: EditServiceFormValues & { id: string }) => void;
   onCancel: () => void;
 };
 
@@ -60,6 +64,7 @@ export const EditServiceDialog = ({
     resolver: zodResolver(addServiceSchema),
     defaultValues: {
       name: service.name,
+      description: service.description, // Adicionado
       duration: service.duration,
       buffer: service.buffer,
       price: service.price,
@@ -69,17 +74,10 @@ export const EditServiceDialog = ({
     },
   });
 
-  const onSubmit = (data: EditServiceFormValues) => {
-    onSave({
-      ...data,
-      id: service.id,
-      buffer: data.buffer ?? "", // Garante que seja uma string
-      price: data.price ?? "",
-      location: data.location ?? "",
-      category: data.category ?? "",
-      hidden: data.hidden ?? false,
-    });
-  };
+ const onSubmit = async (data: EditServiceFormValues) => {
+   console.log("submetendo...", data); // 👈 Testa se esse log aparece
+
+ };
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
@@ -90,7 +88,7 @@ export const EditServiceDialog = ({
             Altere os detalhes do serviço abaixo.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           {/* Título */}
           <div className="flex items-start gap-4">
             <div className="relative w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">

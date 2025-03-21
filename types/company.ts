@@ -11,9 +11,22 @@ export interface Branch {
   country: string;
 }
 
+export type Service = {
+  id: string;
+  name: string;
+  duration: string;
+  buffer?: string;
+  price?: string;
+  description: string;
+  location?: string;
+  category?: string;
+  hidden?: boolean;
+};
+
 export interface Company {
   id: number;
   name: string;
   tax_id: string;
   branches: Branch[];
+  services: Service[];
 }

@@ -10,17 +10,7 @@ import { DeleteServiceDialog } from "./delete-service-dailog";
 import ServiceCardSkeleton from "./ServiceCardSkeleton";
 import ServiceListSkeleton from "./ServiceListSkeleton";
 import { useGetCompany } from "@/hooks/get-one-company";
-
-type Service = {
-  id: string;
-  name: string;
-  duration: string;
-  buffer?: string; // Agora é opcional
-  price?: string; // Agora é opcional
-  location?: string;
-  category?: string;
-  hidden?: boolean;
-};
+import { Service } from "../../../../types/company";
 
 export const ServicesPage = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -38,9 +28,7 @@ export const ServicesPage = () => {
   const handleDeleteService = async (id: string) => {
     console.log("aaee");
   };
-  useEffect(() => {
-    console.log("🛠️ Serviços da empresa:", services);
-  }, [services]);
+
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -116,12 +104,12 @@ export const ServicesPage = () => {
       {/* Modal de edição */}
       {editingService && (
         <EditServiceDialog
-          service={editingService} // Serviço selecionado para edição
+          service={editingService}
           onSave={updatedService => {
-            handleUpdateService(updatedService); // Chama a função para salvar
-            setEditingService(null); // Fecha o modal após salvar
+            handleUpdateService(updatedService);
+            setEditingService(null);
           }}
-          onCancel={() => setEditingService(null)} // Fecha o modal ao cancelar
+          onCancel={() => setEditingService(null)}
         />
       )}
 
