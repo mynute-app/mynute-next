@@ -45,6 +45,7 @@ export const AddAddressDialog = () => {
         if (!data.erro) {
           setValue("street", data.logradouro);
           setValue("city", data.localidade);
+          setValue("neighborhood", data.bairro);
           setValue("state", data.uf);
           setValue("country", "Brasil");
         }

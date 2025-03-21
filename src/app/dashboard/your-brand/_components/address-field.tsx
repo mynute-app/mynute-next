@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { UseFormRegister, UseFormWatch } from "react-hook-form";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-
+import { TfiLocationPin } from "react-icons/tfi";
+import { useToast } from "@/hooks/use-toast";
 interface Branch {
   id: number;
   name: string;
@@ -29,7 +30,7 @@ interface AddressFieldProps {
   watch: UseFormWatch<any>;
   branch: Branch;
   index: number;
-  onDelete: (branchId: number) => void; // Nova função para deletar a filial
+  onDelete: (branchId: number) => void;
 }
 
 export function AddressField({
@@ -41,7 +42,8 @@ export function AddressField({
 }: AddressFieldProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
   const hasChanges = [
     "street",
     "number",
@@ -58,7 +60,9 @@ export function AddressField({
 
   const handleSave = async () => {
     setIsSaving(true);
+
     const updatedData = {
+      name: watch(`branches.${index}.name`),
       street: watch(`branches.${index}.street`),
       number: watch(`branches.${index}.number`),
       complement: watch(`branches.${index}.complement`),
@@ -70,40 +74,56 @@ export function AddressField({
     };
 
     try {
-      const response = await fetch(`/api/branches/${branch.id}`, {
-        method: "PUT",
+      const response = await fetch(`/api/address/${branch.id}`, {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(updatedData),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        throw new Error("Erro ao atualizar filial");
+        console.error(
+          "❌ Erro ao atualizar filial:",
+          response.status,
+          responseData
+        );
+
+        toast({
+          title: "Erro ao atualizar filial",
+          description: "Ocorreu um erro ao tentar atualizar os dados.",
+          variant: "destructive",
+        });
+
+        return;
       }
 
-      alert("Filial atualizada com sucesso!");
+      console.log("✅ Filial atualizada com sucesso:", responseData);
+
+      toast({
+        title: "Filial atualizada!",
+        description: "Os dados foram salvos com sucesso.",
+      });
     } catch (error) {
-      console.error("Erro ao salvar alterações:", error);
-      alert("Erro ao salvar alterações");
+      console.error("❌ Erro ao salvar alterações:", error);
+
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (
-      !window.confirm(
-        `Tem certeza que deseja excluir a filial "${branch.name}"?`
-      )
-    ) {
-      return;
-    }
-
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/branches/${branch.id}`, {
+      const response = await fetch(`/api/address/${branch.id}`, {
         method: "DELETE",
       });
 
@@ -111,28 +131,50 @@ export function AddressField({
         throw new Error("Erro ao excluir filial");
       }
 
-      alert("Filial excluída com sucesso!");
-      onDelete(branch.id); // Remove a filial da UI
+      toast({
+        title: "Filial excluída!",
+        description: "A filial foi removida com sucesso.",
+      });
+
+      onDelete(branch.id); // Atualiza a lista de filiais no front
     } catch (error) {
       console.error("Erro ao excluir filial:", error);
-      alert("Erro ao excluir filial");
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir a filial.",
+        variant: "destructive",
+      });
     } finally {
       setIsDeleting(false);
+      setIsDialogOpen(false); // Fecha o modal após a ação
     }
   };
 
   return (
     <div>
-      <div className="font-bold text-lg">Endereço</div>
       <Accordion type="single" collapsible>
         <AccordionItem value={`branch-${index}`}>
-          <AccordionTrigger className="text-base font-light ">
-            {branch.name}
+          <AccordionTrigger className="text-base font-medium flex items-center gap-3 px-2 py-2 hover:no-underline hover:bg-muted rounded-md transition">
+            <div className="text-foreground flex justify-center items-center gap-3">
+              <TfiLocationPin />
+              {branch.name}
+            </div>
           </AccordionTrigger>
 
           <AccordionContent>
-            <div className="p-4 rounded-md">
+            <div className="p-4 rounded-md bg-gray-50 border">
               <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-4">
+                  <Label htmlFor={`branches.${index}.zip_code`}>CEP</Label>
+                  <Input
+                    id={`branches.${index}.zip_code`}
+                    placeholder="00000-000"
+                    {...register(`branches.${index}.zip_code`)}
+                    defaultValue={branch.zip_code || ""}
+                    className="bg-white shadow"
+                  />
+                </div>
+
                 <div className="col-span-6">
                   <Label htmlFor={`branches.${index}.street`}>Rua</Label>
                   <Input
@@ -140,6 +182,7 @@ export function AddressField({
                     placeholder="Rua"
                     {...register(`branches.${index}.street`)}
                     defaultValue={branch.street || ""}
+                    className="bg-white shadow"
                   />
                 </div>
 
@@ -150,6 +193,7 @@ export function AddressField({
                     placeholder="Número"
                     {...register(`branches.${index}.number`)}
                     defaultValue={branch.number || ""}
+                    className="bg-white shadow"
                   />
                 </div>
 
@@ -162,6 +206,7 @@ export function AddressField({
                     placeholder="Apt, sala, etc."
                     {...register(`branches.${index}.complement`)}
                     defaultValue={branch.complement || ""}
+                    className="bg-white shadow"
                   />
                 </div>
 
@@ -174,16 +219,7 @@ export function AddressField({
                     placeholder="Bairro"
                     {...register(`branches.${index}.neighborhood`)}
                     defaultValue={branch.neighborhood || ""}
-                  />
-                </div>
-
-                <div className="col-span-4">
-                  <Label htmlFor={`branches.${index}.zip_code`}>CEP</Label>
-                  <Input
-                    id={`branches.${index}.zip_code`}
-                    placeholder="00000-000"
-                    {...register(`branches.${index}.zip_code`)}
-                    defaultValue={branch.zip_code || ""}
+                    className="bg-white shadow"
                   />
                 </div>
 
@@ -194,6 +230,7 @@ export function AddressField({
                     placeholder="Cidade"
                     {...register(`branches.${index}.city`)}
                     defaultValue={branch.city || ""}
+                    className="bg-white shadow"
                   />
                 </div>
 
@@ -204,6 +241,7 @@ export function AddressField({
                     placeholder="Estado"
                     {...register(`branches.${index}.state`)}
                     defaultValue={branch.state || ""}
+                    className="bg-white shadow"
                   />
                 </div>
 
@@ -214,6 +252,7 @@ export function AddressField({
                     placeholder="País"
                     {...register(`branches.${index}.country`)}
                     defaultValue={branch.country || ""}
+                    className="bg-white shadow"
                   />
                 </div>
 
@@ -222,7 +261,7 @@ export function AddressField({
                   <Button
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="bg-red-600 text-white hover:bg-red-700 flex items-center gap-2"
+                    className="bg-red-500 text-white hover:bg-red-700 flex items-center gap-2"
                   >
                     <Trash2 size={16} />
                     {isDeleting ? "Excluindo..." : "Excluir"}
@@ -233,7 +272,7 @@ export function AddressField({
                     disabled={!hasChanges || isSaving}
                     className={`rounded-md px-4 py-2 ${
                       hasChanges
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        ? "bg-primary text-white hover:bg-blue-950"
                         : "bg-gray-400 text-gray-200 cursor-not-allowed"
                     }`}
                   >

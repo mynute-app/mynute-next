@@ -131,18 +131,17 @@ export default function YourBrand() {
                   index={index}
                   watch={watch}
                   onDelete={(branchId: number) => {
-                    // Atualiza o estado da empresa removendo a filial deletada
                     const updatedBranches = company.branches.filter(
                       b => b.id !== branchId
                     );
-                    company.branches = updatedBranches; // Atualiza localmente
+                    company.branches = updatedBranches;
                   }}
                 />
               ))
             ) : (
-              <p className="text-sm text-gray-500">
+              <div className="text-sm text-gray-600 text-center">
                 Nenhuma filial cadastrada.
-              </p>
+              </div>
             )}
           </div>
 
