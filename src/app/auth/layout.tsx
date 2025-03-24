@@ -8,7 +8,7 @@ export default async function RootLayout({
 }>) {
   return (
     <div className="min-h-screen bg-white bg-gradient-to-b from-white to-sky-100 ">
-      <Header />
+      {/* <Header /> */}
       <main>{children}</main>
     </div>
   ); 
