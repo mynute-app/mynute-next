@@ -66,6 +66,45 @@ export const { handlers, auth, signIn } = NextAuth({
         }
       },
     }),
+    Credentials({
+      id: "employee-login",
+      name: "Employee Login",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize: async credentials => {
+        try {
+          const { email, password } = await signInSchema.parseAsync(
+            credentials
+          );
+
+          const loginUrl = new URL("http://localhost:4000/employee/login");
+          const response = await fetch(loginUrl.toString(), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Falha ao autenticar. Código: ${response.status}`);
+          }
+
+          const token = response.headers.get("Authorization");
+
+          if (!token) throw new Error("Token não encontrado na resposta.");
+
+          return { email, token };
+        } catch (error) {
+          if (error instanceof ZodError) {
+            console.error("Erro de validação:", error.errors);
+            return null;
+          }
+          console.error("Erro durante a autenticação:", error);
+          return null;
+        }
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -75,7 +114,7 @@ export const { handlers, auth, signIn } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken as string;  
+      session.accessToken = token.accessToken as string;
       return session;
     },
   },
