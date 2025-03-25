@@ -1,12 +1,13 @@
-import { RegisterForm } from "../_components/form-admin-register";
+import { GalleryVerticalEnd } from "lucide-react";
+import { LoginFormEmployee } from "../_components/form-employee";
 
 export default function LoginPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex  gap-4 p-6 md:p-10 flex-col-reverse">
-        <div className="flex flex-1 items-start justify-center">
-          <div className="w-full max-w-md">
-            <RegisterForm />
+      <div className="flex flex-col gap-4 p-6 md:p-10">
+        <div className="flex flex-1 items-center justify-center">
+          <div className="w-full max-w-xs">
+            <LoginFormEmployee provider="employee-login" />
           </div>
         </div>
       </div>

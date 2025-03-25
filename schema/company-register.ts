@@ -1,16 +1,31 @@
 import { z } from "zod";
 
+function countDigits(value: string): number {
+  return value.replace(/\D/g, "").length;
+}
+
 export const companyRegisterSchema = z
   .object({
     name: z.string().min(1, "Nome da empresa é obrigatório"),
-    tax_id: z.string().min(14, "CNPJ inválido"),
+
+    tax_id: z.string().refine(val => countDigits(val) === 14, {
+      message: "CNPJ inválido (precisa ter 14 dígitos)",
+    }),
+
     owner_name: z.string().min(1, "Nome é obrigatório"),
     owner_surname: z.string().min(1, "Sobrenome é obrigatório"),
     owner_email: z.string().email("E-mail inválido"),
-    owner_phone: z
-      .string()
-      .min(10, "O telefone deve ter pelo menos 10 dígitos")
-      .max(11, "O telefone deve ter no máximo 11 dígitos"),
+
+    owner_phone: z.string().refine(
+      val => {
+        const len = countDigits(val);
+        return len >= 10 && len <= 11;
+      },
+      {
+        message: "Telefone deve ter entre 10 e 11 dígitos numéricos",
+      }
+    ),
+
     owner_password: z
       .string()
       .min(6, "A senha deve ter pelo menos 6 caracteres")
@@ -22,6 +37,7 @@ export const companyRegisterSchema = z
         /[^A-Za-z0-9]/,
         "A senha deve conter pelo menos um caractere especial"
       ),
+
     confirmPassword: z.string(),
   })
   .refine(data => data.owner_password === data.confirmPassword, {

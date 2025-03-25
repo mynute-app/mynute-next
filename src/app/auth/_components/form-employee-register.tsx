@@ -17,8 +17,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { FormError } from "./form/form-error";
+import {
+  formatCNPJ,
+  formatPhone,
+  preparePhoneToSubmit,
+  unmask,
+} from "@/utils/format-cnpj";
 
-export function RegisterForm({
+export function RegisterFormEmployee({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
@@ -27,6 +33,7 @@ export function RegisterForm({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
+    setValue,
   } = useForm<CompanyRegisterSchema>({
     resolver: zodResolver(companyRegisterSchema),
   });
@@ -39,7 +46,12 @@ export function RegisterForm({
 
   const onSubmit = async (data: CompanyRegisterSchema) => {
     try {
-      await submit(data);
+      const cleanData = {
+        ...data,
+        tax_id: unmask(data.tax_id),
+        owner_phone: preparePhoneToSubmit(data.owner_phone),
+      };
+      await submit(cleanData);
 
       toast({
         title: "Empresa cadastrada com sucesso!",
@@ -81,10 +93,14 @@ export function RegisterForm({
           <Label htmlFor="tax_id">CNPJ</Label>
           <Input
             id="tax_id"
+            placeholder="00.000.000/0000-00"
             {...register("tax_id")}
-            placeholder="00000000000000"
+            onChange={e => {
+              const formatted = formatCNPJ(e.target.value);
+              setValue("tax_id", formatted);
+            }}
           />
-          <FormError message={errors.name?.message} />
+          <FormError message={errors.tax_id?.message} />
         </div>
 
         <div className="flex gap-2">
@@ -125,9 +141,13 @@ export function RegisterForm({
           <Input
             id="owner_phone"
             {...register("owner_phone")}
-            placeholder="11999999999"
+            placeholder="(11) 99999-9999"
+            onChange={e => {
+              const formatted = formatPhone(e.target.value);
+              setValue("owner_phone", formatted);
+            }}
           />
-          <FormError message={errors.name?.message} />
+          <FormError message={errors.owner_phone?.message} />
         </div>
 
         {/* Senha */}
@@ -189,7 +209,7 @@ export function RegisterForm({
 
       <div className="text-center text-sm">
         Já tem uma conta?{" "}
-        <Link href="/auth/admin" className="underline underline-offset-4">
+        <Link href="/auth/employee" className="underline underline-offset-4">
           Faça login
         </Link>
       </div>

@@ -1,23 +1,21 @@
 import RegisterForm from "../_components/register-form";
-import Image from "next/image";
 
 export default function RegisterPage() {
   return (
-    <div className="flex min-h-screen container mx-auto bg-slate-300 flex-col lg:flex-row justify-center items-center">
-      {/* Lado esquerdo: Banner */}
-      <div className="flex flex-col justify-center space-y-6">
-        <h1 className="text-4xl font-bold tracking-tight text-[#1a2b47] md:text-5xl lg:text-6xl">
-          Crie seu próprio calendário de reservas
-        </h1>
-        <p className="text-lg text-gray-600">
-          Agende compromissos, gerencie seu calendário e aceite pagamentos em
-          qualquer lugar, com software de reserva online gratuito.
-        </p>
+    <div className="grid min-h-svh lg:grid-cols-2">
+      <div className="flex  gap-4 p-6 md:p-10 flex-col-reverse">
+        <div className="flex flex-1 items-start justify-center">
+          <div className="w-full max-w-md">
+            <RegisterForm />
+          </div>
+        </div>
       </div>
-
-      {/* Lado direito: Formulário */}
-      <div className="w-full flex flex-col justify-center items-center p-10">
-        <RegisterForm />
+      <div className="relative hidden bg-muted lg:block">
+        <img
+          src="/placeholder.svg"
+          alt="Image"
+          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+        />
       </div>
     </div>
   );
