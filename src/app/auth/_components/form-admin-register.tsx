@@ -14,6 +14,9 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { useCreateCompany } from "@/hooks/create-company";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { FormError } from "./form/form-error";
 
 export function RegisterForm({
   className,
@@ -27,8 +30,12 @@ export function RegisterForm({
   } = useForm<CompanyRegisterSchema>({
     resolver: zodResolver(companyRegisterSchema),
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const router = useRouter();
-  const { submit } = useCreateCompany(); // chama o hook
+  const { submit } = useCreateCompany();
 
   const onSubmit = async (data: CompanyRegisterSchema) => {
     try {
@@ -40,7 +47,6 @@ export function RegisterForm({
       });
 
       reset();
-
       router.push("/auth/admin");
     } catch (err) {
       toast({
@@ -54,68 +60,56 @@ export function RegisterForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className={cn("flex flex-col gap-6", className)}
+      className={cn("flex flex-col gap-3", className)}
       {...props}
     >
-      <div className="flex flex-col items-center gap-2 text-center">
+      <div className="flex flex-col items-center gap-1 text-center">
         <h1 className="text-2xl font-bold">Crie sua empresa</h1>
         <p className="text-balance text-sm text-muted-foreground">
           Preencha os dados abaixo para cadastrar sua empresa
         </p>
       </div>
 
-      <div className="grid gap-2">
-        <div className="grid gap-2">
+      <div className="grid gap-0.5">
+        <div className="grid gap-1">
           <Label htmlFor="name">Nome da Empresa</Label>
           <Input id="name" {...register("name")} placeholder="Waffle Tech" />
-          {errors.name && (
-            <p className="text-xs text-red-500">{errors.name.message}</p>
-          )}
+          <FormError message={errors.name?.message} />
         </div>
 
-        <div className="grid gap-2">
+        <div className="grid gap-1">
           <Label htmlFor="tax_id">CNPJ</Label>
           <Input
             id="tax_id"
             {...register("tax_id")}
             placeholder="00000000000000"
           />
-          {errors.tax_id && (
-            <p className="text-xs text-red-500">{errors.tax_id.message}</p>
-          )}
+          <FormError message={errors.name?.message} />
         </div>
 
-        <div className="flex gap-2 ">
-          <div className="grid gap-2 flex-1">
+        <div className="flex gap-2">
+          <div className="grid gap-1 flex-1">
             <Label htmlFor="owner_name">Nome</Label>
             <Input
               id="owner_name"
               {...register("owner_name")}
               placeholder="John"
             />
-            {errors.owner_name && (
-              <p className="text-xs text-red-500">
-                {errors.owner_name.message}
-              </p>
-            )}
+            <FormError message={errors.name?.message} />
           </div>
 
-          <div className="grid gap-2 flex-1">
+          <div className="grid gap-1 flex-1">
             <Label htmlFor="owner_surname">Sobrenome</Label>
             <Input
               id="owner_surname"
               {...register("owner_surname")}
               placeholder="Clark"
             />
-            {errors.owner_surname && (
-              <p className="text-xs text-red-500">
-                {errors.owner_surname.message}
-              </p>
-            )}
+            <FormError message={errors.name?.message} />
           </div>
         </div>
 
-        <div className="grid gap-2">
+        <div className="grid gap-1">
           <Label htmlFor="owner_email">Email</Label>
           <Input
             id="owner_email"
@@ -123,35 +117,69 @@ export function RegisterForm({
             {...register("owner_email")}
             placeholder="john.clark@gmail.com"
           />
-          {errors.owner_email && (
-            <p className="text-xs text-red-500">{errors.owner_email.message}</p>
-          )}
+          <FormError message={errors.name?.message} />
         </div>
 
-        <div className="grid gap-2">
+        <div className="grid gap-1">
           <Label htmlFor="owner_phone">Telefone</Label>
           <Input
             id="owner_phone"
             {...register("owner_phone")}
-            placeholder="+15555555555"
+            placeholder="11999999999"
           />
-          {errors.owner_phone && (
-            <p className="text-xs text-red-500">{errors.owner_phone.message}</p>
-          )}
+          <FormError message={errors.name?.message} />
         </div>
 
-        <div className="grid gap-2">
+        {/* Senha */}
+        <div className="grid gap-1 relative">
           <Label htmlFor="owner_password">Senha</Label>
-          <Input
-            id="owner_password"
-            type="password"
-            {...register("owner_password")}
-          />
-          {errors.owner_password && (
-            <p className="text-xs text-red-500">
-              {errors.owner_password.message}
-            </p>
-          )}
+          <div className="relative">
+            <Input
+              id="owner_password"
+              type={showPassword ? "text" : "password"}
+              {...register("owner_password")}
+              placeholder="Crie uma senha forte"
+              className="pr-10"
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
+              onClick={() => setShowPassword(prev => !prev)}
+            >
+              {showPassword ? (
+                <EyeOffIcon className="h-5 w-5" />
+              ) : (
+                <EyeIcon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          <FormError message={errors.name?.message} />
+        </div>
+
+        {/* Confirmar senha */}
+        <div className="grid gap-1 relative">
+          <Label htmlFor="confirmPassword">Confirmar senha</Label>
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              {...register("confirmPassword")}
+              placeholder="Repita sua senha"
+              className="pr-10"
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
+              onClick={() => setShowConfirmPassword(prev => !prev)}
+            >
+              {showConfirmPassword ? (
+                <EyeOffIcon className="h-5 w-5" />
+              ) : (
+                <EyeIcon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          <FormError message={errors.name?.message} />
         </div>
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>

@@ -1,37 +1,59 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import Link from "next/link";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type LoginFormProps = React.ComponentPropsWithoutRef<"form"> & {
   provider: "user-login" | "employee-login";
 };
 
+const loginSchema = z.object({
+  email: z.string().email("Digite um e-mail válido"),
+  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+});
+
+type LoginData = z.infer<typeof loginSchema>;
+
 export function LoginForm({ className, provider, ...props }: LoginFormProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginData>({
+    resolver: zodResolver(loginSchema),
+  });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = async (data: LoginData) => {
     setLoading(true);
     setError(null);
 
     const result = await signIn(provider, {
-      email,
-      password,
-      redirect: true,
-      callbackUrl: "/dashboard", // ou "/employee/dashboard" se quiser customizar
+      email: data.email,
+      password: data.password,
+      redirect: false,
     });
 
     if (result?.error) {
       setError("Falha no login. Verifique suas credenciais.");
+    } else {
+      router.push("/dashboard/your-brand");
     }
 
     setLoading(false);
@@ -39,7 +61,7 @@ export function LoginForm({ className, provider, ...props }: LoginFormProps) {
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(onSubmit)}
       className={cn("flex flex-col gap-6", className)}
       {...props}
     >
@@ -57,32 +79,52 @@ export function LoginForm({ className, provider, ...props }: LoginFormProps) {
             id="email"
             type="email"
             placeholder="m@example.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
+            {...register("email")}
           />
+          {errors.email?.message && (
+            <p className="text-sm text-red-500">{errors.email.message}</p>
+          )}
         </div>
 
         <div className="grid gap-2">
           <div className="flex items-center">
             <Label htmlFor="password">Senha</Label>
-            <a
-              href="#"
+            <Link
+              href="/forgot-password"
               className="ml-auto text-sm underline-offset-4 hover:underline"
             >
               Esqueceu sua senha?
-            </a>
+            </Link>
           </div>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              {...register("password")}
+              className="pr-10"
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
+              onClick={() => setShowPassword(prev => !prev)}
+            >
+              {showPassword ? (
+                <EyeOffIcon className="h-5 w-5" />
+              ) : (
+                <EyeIcon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          {errors.password?.message && (
+            <p className="text-sm text-red-500">{errors.password.message}</p>
+          )}
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Entrando..." : "Login"}
