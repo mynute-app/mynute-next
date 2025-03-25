@@ -34,9 +34,11 @@ export function RegisterFormEmployee({
     reset,
     formState: { errors, isSubmitting },
     setValue,
+    setError,
   } = useForm<CompanyRegisterSchema>({
     resolver: zodResolver(companyRegisterSchema),
   });
+  console.log("📛 Errors:", errors);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -51,6 +53,7 @@ export function RegisterFormEmployee({
         tax_id: unmask(data.tax_id),
         owner_phone: preparePhoneToSubmit(data.owner_phone),
       };
+
       await submit(cleanData);
 
       toast({
@@ -58,14 +61,59 @@ export function RegisterFormEmployee({
         description: "Você será redirecionado para o login.",
       });
 
-      reset();
-      router.push("/auth/admin");
+      router.push("/auth/employee");
     } catch (err) {
-      toast({
-        title: "Erro ao cadastrar empresa",
-        description: (err as Error).message,
-        variant: "destructive",
-      });
+      const errorMessage = (err as Error).message;
+      const normalizedMessage = errorMessage.toLowerCase();
+
+      const constraintMap: Record<
+        string,
+        { field: keyof CompanyRegisterSchema; message: string }
+      > = {
+        uni_companies_name: {
+          field: "name",
+          message: "Já existe uma empresa com esse nome.",
+        },
+        uni_companies_tax_id: {
+          field: "tax_id",
+          message: "Já existe uma empresa com esse CNPJ.",
+        },
+        idx_employees_email: {
+          field: "owner_email",
+          message: "Já existe uma conta com esse e-mail.",
+        },
+        idx_employees_phone: {
+          field: "owner_phone",
+          message: "Já existe uma conta com esse telefone.",
+        },
+      };
+
+      const matchedConstraint = Object.entries(constraintMap).find(
+        ([constraint]) =>
+          normalizedMessage.includes("duplicate key") &&
+          normalizedMessage.includes(constraint)
+      );
+
+      if (matchedConstraint) {
+        const [, { field, message }] = matchedConstraint;
+
+        setError(field, {
+          type: "manual",
+          message,
+        });
+
+        toast({
+          title: "Erro ao cadastrar empresa",
+          description: message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao cadastrar empresa",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -111,7 +159,7 @@ export function RegisterFormEmployee({
               {...register("owner_name")}
               placeholder="John"
             />
-            <FormError message={errors.name?.message} />
+            <FormError message={errors.owner_name?.message} />
           </div>
 
           <div className="grid gap-1 flex-1">
@@ -121,7 +169,7 @@ export function RegisterFormEmployee({
               {...register("owner_surname")}
               placeholder="Clark"
             />
-            <FormError message={errors.name?.message} />
+            <FormError message={errors.owner_surname?.message} />
           </div>
         </div>
 
@@ -133,7 +181,7 @@ export function RegisterFormEmployee({
             {...register("owner_email")}
             placeholder="john.clark@gmail.com"
           />
-          <FormError message={errors.name?.message} />
+          <FormError message={errors.owner_email?.message} />
         </div>
 
         <div className="grid gap-1">
@@ -173,7 +221,7 @@ export function RegisterFormEmployee({
               )}
             </button>
           </div>
-          <FormError message={errors.name?.message} />
+          <FormError message={errors.owner_password?.message} />
         </div>
 
         {/* Confirmar senha */}
@@ -199,7 +247,7 @@ export function RegisterFormEmployee({
               )}
             </button>
           </div>
-          <FormError message={errors.name?.message} />
+          <FormError message={errors.confirmPassword?.message} />
         </div>
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>

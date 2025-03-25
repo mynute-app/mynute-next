@@ -7,10 +7,19 @@ export const createCompany = async (data: CompanyRegisterSchema) => {
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData?.message || "Erro ao criar empresa.");
+  const text = await response.text();
+  let errorMessage = text;
+
+  try {
+    const json = JSON.parse(text);
+    errorMessage = json?.backendResponse || json?.message || text;
+  } catch {
+    // se não for JSON, usa o texto mesmo
   }
 
-  return response.json();
+  if (!response.ok) {
+    throw new Error(errorMessage);
+  }
+
+  return JSON.parse(text);
 };
