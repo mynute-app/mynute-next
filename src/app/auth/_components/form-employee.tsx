@@ -26,7 +26,11 @@ const loginSchema = z.object({
 
 type LoginData = z.infer<typeof loginSchema>;
 
-export function LoginFormEmployee({ className, provider, ...props }: LoginFormProps) {
+export function LoginFormEmployee({
+  className,
+  provider,
+  ...props
+}: LoginFormProps) {
   const {
     register,
     handleSubmit,
@@ -151,7 +155,7 @@ export function LoginFormEmployee({ className, provider, ...props }: LoginFormPr
       <div className="text-center text-sm">
         Não tem uma conta?{" "}
         <Link
-          href="/auth/employee-register"
+          href="/auth/register-company"
           className="underline underline-offset-4"
         >
           Cadastre-se

@@ -1,7 +1,7 @@
 "use client";
 
-import { RegisterFormEmployee } from "../_components/form-employee-register";
 import { motion } from "framer-motion";
+import { RegisterFormCompany } from "../_components/form-employee-register";
 
 export default function RegisterEmployeePage() {
   return (
@@ -9,7 +9,7 @@ export default function RegisterEmployeePage() {
       {/* Coluna da esquerda: Formulário */}
       <div className="flex items-center justify-center p-6 md:p-10">
         <div className="w-full max-w-md">
-          <RegisterFormEmployee />
+          <RegisterFormCompany />
         </div>
       </div>
 
@@ -21,7 +21,6 @@ export default function RegisterEmployeePage() {
           transition={{ duration: 1 }}
           className="pointer-events-none absolute inset-0"
         >
-        
           <motion.div
             className="absolute w-72 h-72 bg-blue-300 rounded-full filter blur-3xl opacity-30"
             animate={{
@@ -35,7 +34,6 @@ export default function RegisterEmployeePage() {
             }}
             style={{ top: "20%", left: "-10%" }}
           />
-
 
           <motion.div
             className="absolute w-80 h-80 bg-purple-500 rounded-full filter blur-3xl opacity-20"

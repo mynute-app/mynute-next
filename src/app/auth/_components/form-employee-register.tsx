@@ -24,7 +24,7 @@ import {
   unmask,
 } from "@/utils/format-cnpj";
 
-export function RegisterFormEmployee({
+export function RegisterFormCompany({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {

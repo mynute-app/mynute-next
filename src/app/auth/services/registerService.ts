@@ -1,6 +1,7 @@
 "use client";
 
-import { RegisterFormData } from "../../models/registerSchema";
+import { RegisterFormData } from "../models/registerSchema";
+
 
 export async function registerUser(
   data: RegisterFormData,
@@ -10,7 +11,7 @@ export async function registerUser(
   toast: any
 ) {
   try {
-    const response = await fetch("/api/register", {
+    const response = await fetch("/api/register-client", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),

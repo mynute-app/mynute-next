@@ -139,7 +139,7 @@ export function FormLogin() {
           <p className="text-sm text-gray-600 text-center mt-4">
             Ainda não tem conta?
             <Link
-              href="/auth/register"
+              href="/auth/register-client"
               className="text-blue-600 font-semibold hover:underline ml-2"
             >
               Cadastre-se
