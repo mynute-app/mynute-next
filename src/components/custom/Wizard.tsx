@@ -13,13 +13,12 @@ import { BusinessStep } from "../form/Business";
 import { useToast } from "@/hooks/use-toast";
 
 const steps = [
-  { id: 1, title: "Empresas" },
-  { id: 2, title: "Endereço" },
-  { id: 3, title: "Profissionais" },
-  { id: 4, title: "Serviço" },
-  { id: 5, title: "Data e Hora" },
-  { id: 6, title: "Informação" },
-  { id: 7, title: "Confirmação" },
+  { id: 1, title: "Endereço" },
+  { id: 2, title: "Profissionais" },
+  { id: 3, title: "Serviço" },
+  { id: 4, title: "Data e Hora" },
+  { id: 5, title: "Informação" },
+  { id: 6, title: "Confirmação" },
 ];
 
 const Wizard: React.FC = () => {
@@ -39,43 +38,38 @@ const Wizard: React.FC = () => {
   const { toast } = useToast();
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const businessId = params.get("businessId");
     const addressId = params.get("addressId");
     const person = params.get("person");
     const service = params.get("service");
     const date = params.get("date");
 
-    if (!businessId) {
+    if (!addressId) {
       setCurrentStep(1);
-    } else if (businessId && !addressId) {
+    } else if (addressId && !person) {
       setCurrentStep(2);
-    } else if (businessId && addressId && !person) {
+    } else if (addressId && person && !service) {
       setCurrentStep(3);
-    } else if (businessId && addressId && person && !service) {
+    } else if (addressId && person && service && !date) {
       setCurrentStep(4);
-    } else if (businessId && addressId && person && service && !date) {
+    } else if (addressId && person && service && date) {
       setCurrentStep(5);
-    } else if (businessId && addressId && person && service && date) {
-      setCurrentStep(6);
     }
   }, [setCurrentStep]);
 
   const renderStepContent = (): JSX.Element | null => {
     switch (currentStep) {
       case 1:
-        return <BusinessStep />;
-      case 2:
         return <AddressStep />;
-      case 3:
+      case 2:
         return <PersonStep />;
-      case 4:
+      case 3:
         return <ServiceStep />;
-      case 5:
+      case 4:
         return <CardCalendar />;
-      case 6:
+      case 5:
         return <CardInformation />;
-      case 7:
-        return <div>Componente para o Passo 7: Confirmação</div>;
+      case 6:
+        return <div>Componente para o Passo 6: Confirmação</div>;
       default:
         return null;
     }
@@ -83,16 +77,14 @@ const Wizard: React.FC = () => {
 
   const validateAndProceed = async () => {
     try {
-      if (currentStep === 1 && !selectedBusiness) {
-        throw new Error("Por favor, selecione uma empresa.");
-      } else if (currentStep === 2 && !selectedAddress) {
+      if (currentStep === 1 && !selectedAddress) {
         throw new Error("Por favor, selecione um endereço.");
-      } else if (currentStep === 3 && !selectedPerson) {
+      } else if (currentStep === 2 && !selectedPerson) {
         throw new Error("Por favor, selecione uma pessoa.");
-      } else if (currentStep === 4 && !selectedService) {
+      } else if (currentStep === 3 && !selectedService) {
         throw new Error("Por favor, selecione um serviço.");
       } else if (
-        currentStep === 5 &&
+        currentStep === 4 &&
         (!selectedCalendarDate?.start.dateTime ||
           !selectedCalendarDate?.end.dateTime)
       ) {
@@ -171,7 +163,6 @@ const Wizard: React.FC = () => {
       }
     }
   };
-
 
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">

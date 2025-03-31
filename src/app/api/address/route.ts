@@ -11,10 +11,9 @@ export const POST = auth(async function POST(req) {
   try {
     const body = await req.json();
 
-    // Criando o objeto com os dados necessários para a requisição
     const requestBody = {
       city: body.city,
-      company_id: 1, // 🔥 ID fixo da empresa
+      company_id: 1, 
       complement: body.complement || "",
       country: body.country,
       name: body.name,
@@ -27,12 +26,11 @@ export const POST = auth(async function POST(req) {
 
     console.log("📤 Enviando dados para API:", requestBody);
 
-    // Fazendo a requisição para o backend real
     const response = await fetch(`${process.env.BACKEND_URL}/branch`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization, // 🔥 Passando o token de autenticação
+        Authorization, 
       },
       body: JSON.stringify(requestBody),
     });

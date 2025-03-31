@@ -53,11 +53,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "Serviços",
             url: "/dashboard/services",
           },
-
-          // {
-          //   title: "Settings",
-          //   url: "#",
-          // },
+          {
+            title: "Funcionários",
+            url: "/dashboard/your-team",
+          },
+          {
+            title: "Filiais",
+            url: "/dashboard/branch",
+          },
         ],
       },
       // {
