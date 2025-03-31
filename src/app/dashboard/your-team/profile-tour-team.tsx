@@ -11,9 +11,11 @@ import { AboutSection } from "./about-section";
 import { useSession } from "next-auth/react";
 import TeamMemberActions from "./team-member-actions";
 import { useGetCompany } from "@/hooks/get-one-company";
-import { TeamMember } from "../../../../../types/TeamMember";
+import { TeamMember } from "../../../../types/TeamMember";
 import { Skeleton } from "@/components/ui/skeleton";
 import MemberPlaceholder from "./member-placeholder";
+import { Employee } from "../../../../types/company";
+import { Input } from "@/components/ui/input";
 
 export default function YourTeam() {
   const { data: session } = useSession();
@@ -23,7 +25,7 @@ export default function YourTeam() {
 
   const companyId = 1;
   const { company, loading } = useGetCompany(companyId);
-
+  const employees: Employee[] = company?.employees ?? [];
   const handleSelectMember = (member: TeamMember) => {
     setSelectedMember(member);
     setActiveTab("about");
@@ -31,13 +33,11 @@ export default function YourTeam() {
 
   const handleDeleteMember = (member: TeamMember | null) => {
     if (member) {
-      // Lógica para deletar o membro da equipe
       console.log(`Deleting member: ${member.name}`);
     }
   };
 
   const handleSaveMember = (updatedUser: TeamMember) => {
-    // Lógica para salvar o membro da equipe
     console.log(`Saving member: ${updatedUser.name}`);
   };
 
@@ -45,18 +45,7 @@ export default function YourTeam() {
     switch (activeTab) {
       case "about":
         return selectedMember ? (
-          <AboutSection
-            selectedMember={
-              selectedMember || {
-                id: 0,
-                name: company?.employees?.name,
-                surname: company?.employees?.surname,
-                email: company?.employees?.email,
-                phone: company?.employees?.phone,
-                permission: company?.employees?.role,
-              }
-            }
-          />
+          <AboutSection selectedMember={selectedMember} />
         ) : (
           <p>Selecione um membro para ver os detalhes</p>
         );
@@ -76,22 +65,22 @@ export default function YourTeam() {
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <div className="w-1/3 bg-gray-100 p-4 border-r">
+      <div className="w-1/3  p-4 border-r">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Meu time</h2>
+          <h2 className=" font-semibold">Meu time</h2>
           <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
-            <PlusIcon className="w-5 h-5" />
+            <PlusIcon />
           </Button>
         </div>
 
         {/* Search bar */}
         <div className="relative mb-4">
-          <input
+          <Input
             type="text"
             placeholder="Search"
-            className="w-full p-2 pl-10 rounded border border-gray-300"
+            className="w-full p-2 pl-10 rounded border border-gray-300 "
           />
-          <SearchIcon className="absolute left-3 top-2.5 w-5 h-5 text-gray-500" />
+          <SearchIcon className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
         </div>
 
         <ul className="space-y-2">
@@ -212,7 +201,8 @@ export default function YourTeam() {
             <div>{renderTabContent()}</div>
           </>
         ) : (
-          <MemberPlaceholder />
+          // <MemberPlaceholder />
+          <div>Nada</div>
         )}
       </div>
 

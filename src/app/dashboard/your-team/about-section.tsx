@@ -1,5 +1,5 @@
 import { ClockIcon, LinkIcon, MailIcon, PhoneIcon } from "lucide-react";
-import { TeamMember } from "../../../../../types/TeamMember";
+import { TeamMember } from "../../../../types/TeamMember";
 
 interface AboutSectionProps {
   selectedMember: TeamMember | null;

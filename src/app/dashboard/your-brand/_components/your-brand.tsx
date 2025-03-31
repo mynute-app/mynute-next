@@ -22,9 +22,8 @@ import { AddAddressDialog } from "./add-address-dialog";
 
 export default function YourBrand() {
   const { data: session } = useSession();
-  const companyId = 1;
+  const companyId = "Abc-Planejados";
   const { company, loading } = useGetCompany(companyId);
-
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
     defaultValues: {

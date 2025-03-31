@@ -23,10 +23,19 @@ export type Service = {
   hidden?: boolean;
 };
 
+export type Employee = {
+  id: number;
+  name: string;
+  surname: string;
+  email: string;
+  phone: string;
+  permission: string;
+};
 export interface Company {
   id: number;
   name: string;
   tax_id: string;
   branches: Branch[];
   services: Service[];
+  employees: Employee[];
 }

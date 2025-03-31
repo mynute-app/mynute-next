@@ -13,7 +13,7 @@ export const GET = auth(async function GET(req, { params }) {
     }
 
     const companyResponse = await fetch(
-      `${process.env.BACKEND_URL}/company/${companyId}`,
+      `${process.env.BACKEND_URL}/company/name/${companyId}`,
       {
         method: "GET",
         headers: {
