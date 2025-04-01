@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Upload } from "lucide-react";
@@ -11,19 +10,15 @@ import { Label } from "@/components/ui/label";
 import { GiBurningTree } from "react-icons/gi";
 import * as zod from "zod";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
 import BrandLogoUpload from "../brand-logo";
-import { useGetCompany } from "@/hooks/get-one-company";
 import { BusinessInfoFields } from "./business-Info-fields";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AddressField } from "./address-field";
 import { BusinessSchema } from "../../../../../schema";
-import { AddAddressDialog } from "./add-address-dialog";
+import { useGetUser } from "@/hooks/get-useUser";
 
 export default function YourBrand() {
-  const { data: session } = useSession();
-  const companyId = "Abc-Planejados";
-  const { company, loading } = useGetCompany(companyId);
+  const { user, loading } = useGetUser();
+  const company = user?.company;
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
     defaultValues: {
@@ -34,9 +29,7 @@ export default function YourBrand() {
   const {
     register,
     handleSubmit,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors },
   } = form;
 
   const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
@@ -63,6 +56,7 @@ export default function YourBrand() {
             </>
           )}
 
+          {/* 
           <Button
             onClick={handleSubmit(onSubmit)}
             disabled={!isDirty || isSubmitting}
@@ -73,21 +67,27 @@ export default function YourBrand() {
             }`}
           >
             {isSubmitting ? "Enviando..." : "Salvar"}
-          </Button>
+          </Button> */}
         </div>
         <Separator className="my-4" />
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Email do usuário */}
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              value={session?.user?.email || "Carregando..."}
-              readOnly
-              className="bg-gray-200 text-gray-500 cursor-not-allowed opacity-70 border-none focus:ring-0"
-            />
-          </div>
+          {loading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full rounded-md" />{" "}
+            </div>
+          ) : (
+            <>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                value={user?.email}
+                readOnly
+                className="bg-gray-200 text-gray-500 cursor-not-allowed opacity-70 border-none focus:ring-0"
+              />
+            </>
+          )}
 
           <Card>
             <CardContent className="p-0 relative">
@@ -114,57 +114,6 @@ export default function YourBrand() {
             loading={loading}
           />
           <Separator className="my-4" />
-          <div className="space-y-4">
-            <div className="text-lg font-semibold flex justify-between items-center">
-              Filiais <AddAddressDialog />
-            </div>
-
-            {loading ? (
-              <Skeleton className="h-6 w-full" />
-            ) : company?.branches?.length ? (
-              company.branches.map((branch, index) => (
-                <AddressField
-                  key={branch.id}
-                  register={register}
-                  branch={branch}
-                  index={index}
-                  watch={watch}
-                  onDelete={(branchId: number) => {
-                    const updatedBranches = company.branches.filter(
-                      b => b.id !== branchId
-                    );
-                    company.branches = updatedBranches;
-                  }}
-                />
-              ))
-            ) : (
-              <div className="text-sm text-gray-600 text-center">
-                Nenhuma filial cadastrada.
-              </div>
-            )}
-          </div>
-
-          <BusinessInfoFields
-            register={register}
-            error={errors.name?.message}
-            name={company?.name || ""}
-            taxId={company?.tax_id || ""}
-            loading={loading}
-          />
-          <BusinessInfoFields
-            register={register}
-            error={errors.name?.message}
-            name={company?.name || ""}
-            taxId={company?.tax_id || ""}
-            loading={loading}
-          />
-          <BusinessInfoFields
-            register={register}
-            error={errors.name?.message}
-            name={company?.name || ""}
-            taxId={company?.tax_id || ""}
-            loading={loading}
-          />
         </form>
       </div>
 

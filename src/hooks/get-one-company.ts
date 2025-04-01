@@ -6,6 +6,8 @@ export const useGetCompany = (companyId: string | number) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+
+    
     if (!companyId) return;
 
     const fetchCompanyData = async () => {

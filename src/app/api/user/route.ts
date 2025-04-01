@@ -9,23 +9,24 @@ export const GET = auth(async function GET(req) {
     return NextResponse.json({ status: 401 });
   }
 
-  const loginUrl = new URL(`${process.env.BACKEND_URL}/user/email/${email}`);
-
   try {
-    const response = await fetch(loginUrl.toString(), {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization,
-      },
-    });
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/employee/email/${email}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization,
+        },
+      }
+    );
 
     if (!response.ok) {
       throw new Error("Erro ao buscar os dados do usuário");
     }
 
     const data = await response.json();
-    console.log('QUERO MEU ID')
+    console.log("QUERO MEU ID");
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ status: 500 });

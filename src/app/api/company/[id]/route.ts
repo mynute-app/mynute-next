@@ -19,8 +19,7 @@ export const GET = auth(async function GET(req, { params }) {
         headers: {
           "Content-Type": "application/json",
           Authorization,
-        },
-        next: { tags: ["company"] }, // 🔥 Adicionando tag para invalidar o cache dinamicamente
+        }, // 🔥 Adicionando tag para invalidar o cache dinamicamente
       }
     );
 
