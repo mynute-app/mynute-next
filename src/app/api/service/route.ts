@@ -1,23 +1,52 @@
 import { NextResponse } from "next/server";
+import { auth } from "../../../../auth";
 
-export async function POST(req: Request) {
+export const POST = auth(async function POST(req) {
   try {
     const body = await req.json();
 
-    // Criando o objeto com os dados necessários
+    const email = req.auth?.user.email;
+    const Authorization = req.auth?.accessToken;
+
+    if (!email || !Authorization) {
+      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    }
+
+    const userResponse = await fetch(
+      `${process.env.BACKEND_URL}/employee/email/${email}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization,
+        },
+      }
+    );
+
+    if (!userResponse.ok) {
+      throw new Error("Erro ao buscar os dados do usuário.");
+    }
+
+    const userData = await userResponse.json();
+    const companyId = userData?.company?.id;
+
+    if (!companyId) {
+      throw new Error("Usuário não possui uma empresa associada.");
+    }
+
     const requestBody = {
       name: body.name,
       description: body.description,
-      price: Number(body.price), // Garantindo que seja um número
-      duration: Number(body.duration), // Garantindo que seja um número
-      company_id: 1, // 🔥 Company ID fixo
+      price: Number(body.price),
+      duration: Number(body.duration),
+      company_id: companyId,
     };
 
-    // Fazendo a requisição para o backend real
-    const response = await fetch("http://localhost:4000/service", {
+    const response = await fetch(`${process.env.BACKEND_URL}/service`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization,
       },
       body: JSON.stringify(requestBody),
     });
@@ -35,4 +64,4 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-}
+});

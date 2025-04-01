@@ -33,8 +33,13 @@ import {
 } from "react-icons/fi";
 import { useAddServiceForm } from "./actions/useAddServiceForm";
 import { Textarea } from "@/components/ui/textarea";
+import { Service } from "../../../../types/company";
 
-export const AddServiceDialog = () => {
+type AddServiceDialogProps = {
+  onCreate: (service: Service) => void;
+};
+
+export const AddServiceDialog = ({ onCreate }: AddServiceDialogProps) => {
   const { form, handleSubmit } = useAddServiceForm();
   const { register, handleSubmit: submitHandler, formState } = form;
   const { errors } = formState;
@@ -42,8 +47,11 @@ export const AddServiceDialog = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const onSubmit = async (data: any) => {
-    await handleSubmit(data);
-    setIsOpen(false);
+    const createdService = await handleSubmit(data);
+    if (createdService) {
+      onCreate(createdService); // 👈 ATUALIZA A LISTA NO COMPONENTE PAI
+      setIsOpen(false);
+    }
   };
 
   return (
@@ -53,7 +61,7 @@ export const AddServiceDialog = () => {
           variant="ghost"
           size="sm"
           className="p-0 text-white h-10 w-10 bg-primary rounded-full flex justify-center items-center shadow-md"
-          onClick={() => setIsOpen(true)} 
+          onClick={() => setIsOpen(true)}
         >
           <BsPlus className="w-6 h-6" />
         </Button>

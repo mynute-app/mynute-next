@@ -2,6 +2,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
+import { Service } from "../../../../../types/company";
 
 const addServiceSchema = z.object({
   name: z.string().min(1, "O título é obrigatório."),
@@ -31,7 +32,9 @@ export const useAddServiceForm = () => {
 
   const { toast } = useToast();
 
-  const handleSubmit = async (data: AddServiceFormValues) => {
+  const handleSubmit = async (
+    data: AddServiceFormValues
+  ): Promise<Service | null> => {
     try {
       const response = await fetch("/api/service", {
         method: "POST",
@@ -45,12 +48,15 @@ export const useAddServiceForm = () => {
         throw new Error("Erro ao criar o serviço.");
       }
 
+      const createdService = await response.json(); 
+
       toast({
         title: "Serviço criado!",
         description: "O serviço foi criado com sucesso.",
       });
 
       form.reset();
+      return createdService; // 👈 RETORNA PRA O COMPONENTE USAR
     } catch (error) {
       console.error("❌ Erro ao criar o serviço:", error);
 
@@ -60,8 +66,11 @@ export const useAddServiceForm = () => {
           "Ocorreu um erro ao tentar criar o serviço. Tente novamente.",
         variant: "destructive",
       });
+
+      return null;
     }
   };
+
 
   return { form, handleSubmit };
 };

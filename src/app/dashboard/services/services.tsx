@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ServiceCard from "./service-card";
@@ -9,16 +9,19 @@ import { EditServiceDialog } from "./edit-service-dialog";
 import { DeleteServiceDialog } from "./delete-service-dailog";
 import ServiceCardSkeleton from "./ServiceCardSkeleton";
 import ServiceListSkeleton from "./ServiceListSkeleton";
-import { useGetCompany } from "@/hooks/get-one-company";
 import { Service } from "../../../../types/company";
+import { useCompany } from "@/hooks/get-company";
 
 export const ServicesPage = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [deletingService, setDeletingService] = useState<Service | null>(null);
-
-  const companyId = 1;
-  const { company, loading } = useGetCompany(companyId);
-  const services: Service[] = company?.services ?? [];
+  const [services, setServices] = useState<Service[]>([]);
+  const { company, loading } = useCompany();
+  useEffect(() => {
+    if (company?.services) {
+      setServices(company.services);
+    }
+  }, [company]);
 
   // Função para atualizar um serviço
   const handleUpdateService = async (updatedService: Service) => {
@@ -28,7 +31,9 @@ export const ServicesPage = () => {
   const handleDeleteService = async (id: string) => {
     console.log("aaee");
   };
-
+  const handleAddService = (newService: Service) => {
+    setServices(prev => [...prev, newService]);
+  };
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -70,13 +75,12 @@ export const ServicesPage = () => {
           <h2 className="text-sm font-light text-gray-700">
             Services ({services.length})
           </h2>
-          <AddServiceDialog />
+          <AddServiceDialog onCreate={handleAddService} />
         </div>
 
         {/* Renderizando cada serviço */}
         <div className="space-y-4">
           {loading ? (
-            // Renderiza múltiplos skeletons para simular a lista
             Array.from({ length: 5 }).map((_, index) => (
               <ServiceCardSkeleton key={index} />
             ))
@@ -117,10 +121,10 @@ export const ServicesPage = () => {
         <DeleteServiceDialog
           serviceName={deletingService.name}
           onConfirm={() => {
-            handleDeleteService(deletingService.id); // Exclui o serviço
-            setDeletingService(null); // Fecha o modal
+            handleDeleteService(deletingService.id);
+            setDeletingService(null);
           }}
-          onCancel={() => setDeletingService(null)} // Fecha o modal sem excluir
+          onCancel={() => setDeletingService(null)}
         />
       )}
     </div>

@@ -1,11 +1,7 @@
 import { ServicesPage } from "./services";
 
 const Page = () => {
-  return (
-    <div>
-      <ServicesPage />
-    </div>
-  );
+  return <ServicesPage />;
 };
 
 export default Page;

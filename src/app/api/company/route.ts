@@ -1,3 +1,4 @@
+import { Employee } from "./../../../../types/company";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 
@@ -13,7 +14,7 @@ export const GET = auth(async function GET(req) {
     }
 
     const userResponse = await fetch(
-      `${process.env.BACKEND_URL}/user/email/${email}`,
+      `${process.env.BACKEND_URL}/employee/email/${email}`,
       {
         method: "GET",
         headers: {
@@ -28,14 +29,17 @@ export const GET = auth(async function GET(req) {
     }
 
     const userData = await userResponse.json();
-    console.log("👤 ID do usuário:", userData?.id);
+    console.log("👤 ID do usuário:", userData?.company.name);
 
-    const companyResponse = await fetch(`${process.env.BACKEND_URL}/company`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const companyResponse = await fetch(
+      `${process.env.BACKEND_URL}/company/name/${userData?.company.name}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     console.log("🔄 Status da resposta de /company:", companyResponse.status);
 
