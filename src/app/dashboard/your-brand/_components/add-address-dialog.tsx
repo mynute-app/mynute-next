@@ -23,8 +23,13 @@ import {
   FiMail,
 } from "react-icons/fi";
 import { useAddAddressForm } from "./actions/useAddAddressForm";
+import { Branch } from "../../../../../types/company";
 
-export const AddAddressDialog = () => {
+type AddBranchDialogProps = {
+  onCreate: (branch: Branch) => void;
+};
+
+export const AddAddressDialog = ({ onCreate }: AddBranchDialogProps) => {
   const { form, handleSubmit } = useAddAddressForm();
   const { register, handleSubmit: submitHandler, setValue, formState } = form;
   const { errors } = formState;
@@ -32,11 +37,13 @@ export const AddAddressDialog = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const onSubmit = async (data: any) => {
-    await handleSubmit(data);
-    setIsOpen(false);
+    const createdBranch = await handleSubmit(data);
+    if (createdBranch) {
+      onCreate(createdBranch);
+      setIsOpen(false);
+    }
   };
 
-  // Função para buscar endereço pelo CEP
   const fetchAddressByCEP = async (cep: any) => {
     if (cep.length === 8) {
       try {

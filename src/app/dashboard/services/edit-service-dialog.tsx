@@ -32,14 +32,11 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
-// Esquema de validação Zod
-const addServiceSchema = z.object({
+// Schema Zod
+const editServiceSchema = z.object({
   name: z.string().min(1, "O título é obrigatório."),
   description: z.string().min(1, "A descrição é obrigatória."),
-  duration: z.preprocess(
-    val => String(val),
-    z.string().min(1, "A duração é obrigatória.")
-  ),
+  duration: z.preprocess(val => String(val), z.string().min(1)),
   buffer: z.preprocess(val => (val ? String(val) : ""), z.string().optional()),
   price: z.preprocess(val => String(val), z.string().optional()),
   location: z.string().optional(),
@@ -47,40 +44,35 @@ const addServiceSchema = z.object({
   hidden: z.boolean().optional(),
 });
 
-type EditServiceFormValues = z.infer<typeof addServiceSchema>;
+export type EditServiceFormValues = z.infer<typeof editServiceSchema>;
 
-type EditServiceDialogProps = {
+type Props = {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
   service: EditServiceFormValues & { id: string };
-  onSave: (updatedService: EditServiceFormValues & { id: string }) => void;
-  onCancel: () => void;
+  onSave: (updated: EditServiceFormValues & { id: string }) => void;
 };
 
 export const EditServiceDialog = ({
+  isOpen,
+  onOpenChange,
   service,
   onSave,
-  onCancel,
-}: EditServiceDialogProps) => {
-  const { register, handleSubmit, formState } = useForm<EditServiceFormValues>({
-    resolver: zodResolver(addServiceSchema),
-    defaultValues: {
-      name: service.name,
-      description: service.description, // Adicionado
-      duration: service.duration,
-      buffer: service.buffer,
-      price: service.price,
-      location: service.location,
-      category: service.category,
-      hidden: service.hidden,
-    },
+}: Props) => {
+  const form = useForm<EditServiceFormValues>({
+    resolver: zodResolver(editServiceSchema),
+    defaultValues: service,
   });
 
- const onSubmit = async (data: EditServiceFormValues) => {
-   console.log("submetendo...", data); // 👈 Testa se esse log aparece
+  const { register, handleSubmit, formState } = form;
 
- };
+  const onSubmit = (data: EditServiceFormValues) => {
+    onSave({ ...data, id: service.id });
+    onOpenChange(false);
+  };
 
   return (
-    <Dialog open={true} onOpenChange={onCancel}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl rounded-lg">
         <DialogHeader>
           <DialogTitle>Editar Serviço</DialogTitle>
@@ -88,131 +80,90 @@ export const EditServiceDialog = ({
             Altere os detalhes do serviço abaixo.
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-          {/* Título */}
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="flex items-start gap-4">
-            <div className="relative w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
               <FiImage className="w-6 h-6 text-gray-400" />
             </div>
             <div className="flex-1">
-              <Label htmlFor="title">Título do Serviço*</Label>
+              <Label htmlFor="name">Título*</Label>
               <Input
-                id="title"
-                placeholder="Digite o título do serviço"
+                id="name"
                 {...register("name")}
+                autoFocus
+                placeholder="Nome do serviço"
               />
               {formState.errors.name && (
-                <p className="text-sm text-red-500">
+                <p className="text-red-500 text-sm">
                   {formState.errors.name.message}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Duração */}
           <div className="flex items-center gap-3">
             <FiClock className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
-              <Label htmlFor="duration">Duração (minutos)*</Label>
-              <Input
-                id="duration"
-                placeholder="Digite a duração"
-                {...register("duration")}
-              />
+              <Label htmlFor="duration">Duração*</Label>
+              <Input id="duration" {...register("duration")} />
               {formState.errors.duration && (
-                <p className="text-sm text-red-500">
+                <p className="text-red-500 text-sm">
                   {formState.errors.duration.message}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Tempo de Espera */}
           <div className="flex items-center gap-3">
             <FiClock className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
               <Label htmlFor="buffer">Tempo de Espera</Label>
-              <Input
-                id="buffer"
-                placeholder="Digite o tempo de espera (opcional)"
-                {...register("buffer")}
-              />
-              {formState.errors.buffer && (
-                <p className="text-sm text-red-500">
-                  {formState.errors.buffer.message}
-                </p>
-              )}
+              <Input id="buffer" {...register("buffer")} />
             </div>
           </div>
 
-          {/* Custo */}
           <div className="flex items-center gap-3">
             <FiDollarSign className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
-              <Label htmlFor="cost">Custo (R$)</Label>
-              <Input
-                id="cost"
-                placeholder="Digite o custo (opcional)"
-                {...register("price")}
-              />
-              {formState.errors.price && (
-                <p className="text-sm text-red-500">
-                  {formState.errors.price.message}
-                </p>
-              )}
+              <Label htmlFor="price">Preço</Label>
+              <Input id="price" {...register("price")} />
             </div>
           </div>
-          {/* Localização */}
+
           <div className="flex items-center gap-3">
             <FiMapPin className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
               <Label htmlFor="location">Localização</Label>
-              <Input
-                id="location"
-                placeholder="Ex.: Online"
-                {...register("location")}
-              />
-              {formState.errors.location && (
-                <p className="text-sm text-red-500">
-                  {formState.errors.location.message}
-                </p>
-              )}
+              <Input id="location" {...register("location")} />
             </div>
           </div>
 
-          {/* Categoria */}
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center gap-3">
             <FiTag className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
               <Label htmlFor="category">Categoria</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="categoria1">Categoria 1</SelectItem>
-                  <SelectItem value="categoria2">Categoria 2</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input id="category" {...register("category")} />
             </div>
           </div>
 
-          {/* Ocultar */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <FiLock className="text-gray-500 w-5 h-5" />
-              <Label htmlFor="hidden">Definir como oculto</Label>
+              <Label htmlFor="hidden">Ocultar serviço</Label>
             </div>
             <Switch id="hidden" {...register("hidden")} />
           </div>
 
           <DialogFooter>
-            <Button variant="ghost" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+            >
               Cancelar
             </Button>
-            <Button type="submit" variant="default">
-              Salvar
-            </Button>
+            <Button type="submit">Salvar</Button>
           </DialogFooter>
         </form>
       </DialogContent>

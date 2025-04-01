@@ -111,12 +111,15 @@ export const ServicesPage = () => {
       {/* Modal de edição */}
       {editingService && (
         <EditServiceDialog
+          isOpen={!!editingService}
           service={editingService}
+          onOpenChange={open => {
+            if (!open) setEditingService(null);
+          }}
           onSave={updatedService => {
-            handleUpdateService(updatedService);
+            handleUpdateService(updatedService); // <- atualiza na lista
             setEditingService(null);
           }}
-          onCancel={() => setEditingService(null)}
         />
       )}
 

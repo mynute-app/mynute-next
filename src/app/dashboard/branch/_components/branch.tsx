@@ -7,10 +7,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BusinessSchema } from "../../../../../schema";
 import * as zod from "zod";
+import { useCompany } from "@/hooks/get-company";
 export const Branch = () => {
-  const companyId = "Abc-Planejados";
-  const { company, loading } = useGetCompany(companyId);
-
+  const { company, loading } = useCompany();
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
     defaultValues: {

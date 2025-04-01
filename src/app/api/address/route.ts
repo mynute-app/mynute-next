@@ -3,17 +3,40 @@ import { auth } from "../../../../auth";
 
 export const POST = auth(async function POST(req) {
   const Authorization = req.auth?.accessToken;
+  const email = req.auth?.user.email;
 
-  if (!Authorization) {
+  if (!Authorization || !email) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   try {
+    const userResponse = await fetch(
+      `${process.env.BACKEND_URL}/employee/email/${email}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization,
+        },
+      }
+    );
+
+    if (!userResponse.ok) {
+      throw new Error("Erro ao buscar os dados do usuário.");
+    }
+
+    const userData = await userResponse.json();
+    const companyId = userData?.company?.id;
+
+    if (!companyId) {
+      throw new Error("Usuário não possui uma empresa associada.");
+    }
+
     const body = await req.json();
 
     const requestBody = {
       city: body.city,
-      company_id: 1, 
+      company_id: companyId, // ← agora usando o ID certo
       complement: body.complement || "",
       country: body.country,
       name: body.name,
@@ -30,7 +53,7 @@ export const POST = auth(async function POST(req) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization, 
+        Authorization,
       },
       body: JSON.stringify(requestBody),
     });
