@@ -12,9 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 
 type DeleteServiceDialogProps = {
-  serviceName: string; // Nome do serviço para exibição
-  onConfirm: () => void; // Função para confirmar a exclusão
-  onCancel: () => void; // Função para cancelar a exclusão
+  serviceName: string; 
+  onConfirm: () => void; 
+  onCancel: () => void;
 };
 
 export const DeleteServiceDialog = ({

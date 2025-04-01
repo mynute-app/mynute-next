@@ -57,3 +57,54 @@ export const PATCH = auth(async function PATCH(req, { params }) {
     );
   }
 });
+
+export const DELETE = auth(async function DELETE(req, { params }) {
+  const Authorization = req.auth?.accessToken;
+  const serviceId = params?.id;
+
+  if (!Authorization) {
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  }
+
+  if (!serviceId) {
+    return NextResponse.json(
+      { message: "ID do serviço não informado." },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/service/${serviceId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization,
+        },
+      }
+    );
+
+    const data = await response.text(); // <- aqui!
+
+    if (!response.ok) {
+      console.error("❌ Erro ao deletar serviço:", data);
+      return NextResponse.json(
+        { message: "Erro ao deletar serviço", error: data },
+        { status: response.status }
+      );
+    }
+
+    console.log("✅ Serviço deletado com sucesso:", data);
+    return NextResponse.json(
+      { message: "Serviço deletado com sucesso" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("❌ Erro interno ao deletar serviço:", error);
+    return NextResponse.json(
+      { message: "Erro interno ao deletar o serviço.", error },
+      { status: 500 }
+    );
+  }
+});
+

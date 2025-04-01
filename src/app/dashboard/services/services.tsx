@@ -11,25 +11,29 @@ import ServiceCardSkeleton from "./ServiceCardSkeleton";
 import ServiceListSkeleton from "./ServiceListSkeleton";
 import { Service } from "../../../../types/company";
 import { useCompany } from "@/hooks/get-company";
+import { useDeleteService } from "./actions/useDeleteServiceForm";
 
 export const ServicesPage = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [deletingService, setDeletingService] = useState<Service | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const { company, loading } = useCompany();
+  const { handleDelete } = useDeleteService();
   useEffect(() => {
     if (company?.services) {
       setServices(company.services);
     }
   }, [company]);
 
-  // Função para atualizar um serviço
   const handleUpdateService = async (updatedService: Service) => {
     console.log("log");
   };
 
   const handleDeleteService = async (id: string) => {
-    console.log("aaee");
+    const success = await handleDelete(id);
+    if (success) {
+      setServices(prev => prev.filter(service => service.id !== id));
+    }
   };
   const handleAddService = (newService: Service) => {
     setServices(prev => [...prev, newService]);
@@ -94,7 +98,6 @@ export const ServicesPage = () => {
                 price={`R$ ${service.price}`}
                 onEdit={() => setEditingService(service)}
                 onDelete={() => {
-                  console.log("Definindo serviço para exclusão:", service);
                   setDeletingService(service);
                 }}
               />
