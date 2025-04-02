@@ -1,6 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useToast } from "@/hooks/use-toast";
+import * as z from "zod"; // ajuste o path se necessário
+import { Branch } from "../../../../../../types/company";
 
 const addressSchema = z.object({
   city: z.string().min(1, "A cidade é obrigatória"),
@@ -18,8 +20,10 @@ const addressSchema = z.object({
     .max(8, "O CEP deve ter 8 dígitos"),
 });
 
+type AddAddressFormValues = z.infer<typeof addressSchema>;
+
 export const useAddAddressForm = () => {
-  const form = useForm({
+  const form = useForm<AddAddressFormValues>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
       city: "",
@@ -35,36 +39,44 @@ export const useAddAddressForm = () => {
     },
   });
 
-  const handleSubmit = async (data: any) => {
-    try {
-      const filteredData = {
-        city: data.city,
-        company_id: data.company_id,
-        complement: data.complement,
-        country: data.country,
-        name: data.name,
-        neighborhood: data.neighborhood,
-        number: data.number,
-        state: data.state,
-        street: data.street,
-        zip_code: data.zip_code,
-      };
+  const { toast } = useToast();
 
+  const handleSubmit = async (
+    data: AddAddressFormValues
+  ): Promise<Branch | null> => {
+    try {
       const response = await fetch("/api/address", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(filteredData),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         throw new Error("Erro ao salvar endereço");
       }
 
-      console.log("Endereço salvo com sucesso!");
+      const createdAddress = await response.json();
+
+      toast({
+        title: "Endereço salvo!",
+        description: "O endereço foi adicionado com sucesso.",
+      });
+
+      form.reset();
+      return createdAddress;
     } catch (error) {
-      console.error("Erro ao salvar endereço:", error);
+      console.error("❌ Erro ao salvar endereço:", error);
+
+      toast({
+        title: "Erro ao salvar endereço",
+        description:
+          "Ocorreu um erro ao tentar salvar o endereço. Tente novamente.",
+        variant: "destructive",
+      });
+
+      return null;
     }
   };
 
