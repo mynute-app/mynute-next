@@ -16,16 +16,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import MemberPlaceholder from "./member-placeholder";
 import { Employee } from "../../../../types/company";
 import { Input } from "@/components/ui/input";
+import { useCompany } from "@/hooks/get-company";
+import { TeamMemberList } from "./team-member-list";
 
 export default function YourTeam() {
-  const { data: session } = useSession();
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [activeTab, setActiveTab] = useState("about");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const companyId = 1;
-  const { company, loading } = useGetCompany(companyId);
+  const { company, loading } = useCompany();
   const employees: Employee[] = company?.employees ?? [];
+  console.log(employees);
+
   const handleSelectMember = (member: TeamMember) => {
     setSelectedMember(member);
     setActiveTab("about");
@@ -73,62 +74,12 @@ export default function YourTeam() {
           </Button>
         </div>
 
-        {/* Search bar */}
-        <div className="relative mb-4">
-          <Input
-            type="text"
-            placeholder="Search"
-            className="w-full p-2 pl-10 rounded border border-gray-300 "
-          />
-          <SearchIcon className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
-        </div>
-
-        <ul className="space-y-2">
-          {/* Verifica se ainda está carregando */}
-          {loading
-            ? Array.from({ length: 5 }).map((_, index) => (
-                <li
-                  key={index}
-                  className="p-2 rounded cursor-pointer bg-gray-100"
-                >
-                  <div className="flex items-center space-x-3">
-                    {/* Skeleton para o avatar */}
-                    <Skeleton className="rounded-full bg-gray-300 w-8 h-8" />
-
-                    {/* Skeleton para nome e cargo */}
-                    <div>
-                      <Skeleton className="h-4 w-32 mb-2" />
-                      <Skeleton className="h-3 w-20" />
-                    </div>
-                  </div>
-                </li>
-              ))
-            : company?.employees?.map((member: any) => (
-                <li
-                  key={member.id}
-                  className={`p-2 rounded cursor-pointer ${
-                    selectedMember?.id === member.id
-                      ? "bg-gray-200"
-                      : "hover:bg-gray-100"
-                  }`}
-                  onClick={() => handleSelectMember(member)}
-                >
-                  <div className="flex items-center space-x-3">
-                    {/* Avatar com a primeira letra do nome */}
-                    <div className="rounded-full bg-gray-300 w-8 h-8 flex items-center justify-center font-bold text-gray-700">
-                      {member.name ? member.name[0] : "?"}
-                    </div>
-                    {/* Informações do funcionário */}
-                    <div>
-                      <p className="font-medium">
-                        {member.name} {member.surname}
-                      </p>
-                      <p className="text-sm text-gray-500">{member.role}</p>
-                    </div>
-                  </div>
-                </li>
-              ))}
-        </ul>
+        <TeamMemberList
+          employees={employees}
+          loading={loading}
+          selectedMember={selectedMember}
+          onSelectMember={handleSelectMember}
+        />
       </div>
 
       {/* Detail View */}

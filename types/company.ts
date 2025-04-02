@@ -30,6 +30,7 @@ export type Employee = {
   email: string;
   phone: string;
   permission: string;
+  role: string;
 };
 export interface Company {
   id: number;

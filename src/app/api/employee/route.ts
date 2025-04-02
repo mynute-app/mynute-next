@@ -3,28 +3,50 @@ import { revalidateTag } from "next/cache";
 import { auth } from "../../../../auth";
 
 export const POST = auth(async function POST(req) {
-  console.log("📡 Criando novo funcionário...");
-
   try {
     const Authorization = req.auth?.accessToken;
+    const email = req.auth?.user.email;
 
-    if (!Authorization) {
+    if (!Authorization || !email) {
       return NextResponse.json({ status: 401, message: "Não autorizado" });
     }
 
     const body = await req.json();
 
+    const userResponse = await fetch(
+      `${process.env.BACKEND_URL}/employee/email/${email}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization,
+        },
+      }
+    );
+
+    if (!userResponse.ok) {
+      throw new Error("Erro ao buscar os dados do usuário.");
+    }
+
+    const userData = await userResponse.json();
+    const companyId = userData?.company?.id;
+
+    if (!companyId) {
+      return NextResponse.json(
+        { status: 400, message: "Usuário sem empresa associada." },
+        { status: 400 }
+      );
+    }
+
     const requestBody = {
-      company_id: 1,
+      company_id: companyId,
       name: body.name,
       surname: body.surname,
       email: body.email,
       phone: body.phone,
       password: body.password,
-      role: body.role || "user",
+      role: "user",
     };
-
-    console.log("📤 Enviando dados para backend:", requestBody);
 
     const response = await fetch(`${process.env.BACKEND_URL}/employee`, {
       method: "POST",
@@ -46,7 +68,7 @@ export const POST = auth(async function POST(req) {
 
     console.log("✅ Funcionário criado com sucesso:", responseData);
 
-    revalidateTag("company"); // 🔥 Invalida o cache para forçar atualização dos dados da empresa
+    revalidateTag("company");
 
     return NextResponse.json(responseData, { status: 201 });
   } catch (error) {
