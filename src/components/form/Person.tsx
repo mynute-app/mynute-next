@@ -2,6 +2,7 @@ import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/context/useWizardStore";
 import { CardCustomProfile } from "../custom/Card-Custom-Profile";
 import { useGetCompany } from "@/hooks/get-one-company";
+import { useCompany } from "@/hooks/get-company";
 
 type TeamMember = {
   id: number;
@@ -14,8 +15,7 @@ export const PersonStep = () => {
   const { setSelectedPerson, selectedPerson } = useWizardStore();
   const router = useRouter();
 
-  const companyId = 1;
-  const { company, loading } = useGetCompany(companyId);
+  const { company, loading } = useCompany();
 
   const handleSelectPerson = (personId: number) => {
     const personIdStr = String(personId);

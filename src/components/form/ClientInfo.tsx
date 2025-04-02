@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useWizardStore } from "@/context/useWizardStore";
 
 export default function ClientInfoForm() {
-  const { clientInfo, setClientInfo } = useWizardStore(); // Pegando Zustand normalmente
+  const { clientInfo, setClientInfo } = useWizardStore();
 
   const handleChange = (field: keyof typeof clientInfo, value: string) => {
     setClientInfo({ [field]: value });

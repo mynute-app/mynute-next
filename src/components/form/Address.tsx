@@ -3,6 +3,7 @@ import { CardCustomAddress } from "../custom/Card-Custom-Address";
 import { useWizardStore } from "@/context/useWizardStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetCompany } from "@/hooks/get-one-company";
+import { useCompany } from "@/hooks/get-company";
 
 type Branch = {
   id: string;
@@ -13,9 +14,8 @@ type Branch = {
 export const AddressStep = () => {
   const { setSelectedAddress, selectedAddress } = useWizardStore();
   const router = useRouter();
-  const companyId = 1;
-  const { company, loading } = useGetCompany(companyId);
-
+  const { company, loading } = useCompany();
+  console.log(company);
   const handleSelectAddress = (addressId: string) => {
     setSelectedAddress(addressId);
     const params = new URLSearchParams(window.location.search);

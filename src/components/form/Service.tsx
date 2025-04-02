@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/context/useWizardStore";
 import { CardService } from "../custom/Card-Service";
-import { useGetCompany } from "@/hooks/get-one-company";
+import { useCompany } from "@/hooks/get-company";
 
 type Service = {
   id: number;
@@ -16,12 +16,10 @@ type Service = {
 export const ServiceStep = () => {
   const { setSelectedService, selectedService } = useWizardStore();
   const router = useRouter();
-
-  const companyId = 1;
-  const { company, loading } = useGetCompany(companyId);
+  const { company, loading } = useCompany();
 
   const handleSelectService = (serviceId: number) => {
-    const serviceIdStr = String(serviceId); 
+    const serviceIdStr = String(serviceId);
     setSelectedService(serviceIdStr);
     const params = new URLSearchParams(window.location.search);
     params.set("service", serviceIdStr);
@@ -46,12 +44,12 @@ export const ServiceStep = () => {
       {company.services?.map((service: Service) => (
         <CardService
           key={service.id}
-          title={service.name} 
+          title={service.name}
           subtitle={service.description || "Descrição indisponível"}
           price={`R$ ${service.price}`}
           duration={`${service.duration} min`}
           onClick={() => handleSelectService(service.id)}
-          isSelected={selectedService === String(service.id)} 
+          isSelected={selectedService === String(service.id)}
         />
       ))}
     </div>
