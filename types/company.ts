@@ -12,11 +12,11 @@ export interface Branch {
 }
 
 export type Service = {
-  id: string;
+  id: any;
   name: string;
   duration: string;
   buffer?: string;
-  price?: string;
+  price?: any;
   description: string;
   location?: string;
   category?: string;

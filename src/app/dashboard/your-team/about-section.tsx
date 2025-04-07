@@ -3,6 +3,7 @@ import { TeamMember } from "../../../../types/TeamMember";
 
 interface AboutSectionProps {
   selectedMember: TeamMember | null;
+  loading?: boolean;
 }
 
 export function AboutSection({ selectedMember }: AboutSectionProps) {

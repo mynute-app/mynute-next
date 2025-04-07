@@ -31,6 +31,7 @@ export default function YourTeam() {
     setSelectedMember(member);
     setActiveTab("about");
   };
+  handleSelectMember;
 
   const handleDeleteMember = (member: TeamMember | null) => {
     if (member) {
@@ -53,7 +54,7 @@ export default function YourTeam() {
       case "integrations":
         return <IntegrationsSection />;
       case "services":
-        return <ServicesSection />;
+        return <ServicesSection selectedMember={selectedMember} />;
       case "working-hours":
         return <WorkingHoursSection />;
       case "breaks":
