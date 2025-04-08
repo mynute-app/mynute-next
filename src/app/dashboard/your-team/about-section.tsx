@@ -6,7 +6,7 @@ interface AboutSectionProps {
   loading?: boolean;
 }
 
-export function AboutSection({ selectedMember }: AboutSectionProps) {
+export function AboutSection({ selectedMember }: any) {
   if (!selectedMember) {
     return <p className="text-gray-500">Nenhum membro selecionado</p>;
   }

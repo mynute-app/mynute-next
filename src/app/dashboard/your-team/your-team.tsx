@@ -18,22 +18,36 @@ import { Employee } from "../../../../types/company";
 import { Input } from "@/components/ui/input";
 import { useCompany } from "@/hooks/get-company";
 import { TeamMemberList } from "./team-member-list";
+import { useGetEmployeeById } from "@/hooks/get-employee-by-id";
 
 export default function YourTeam() {
-  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  //const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [activeTab, setActiveTab] = useState("about");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const { company, loading } = useCompany();
   const employees: Employee[] = company?.employees ?? [];
   console.log(employees);
 
-  const handleSelectMember = (member: TeamMember) => {
-    setSelectedMember(member);
+  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const { employee: selectedEmployeeData, loading: loadingEmployee } =
+    useGetEmployeeById(selectedMemberId);
+
+  const [selectedMember, setSelectedMember] = useState<any | null>(null);
+
+  // Atualiza selectedMember sempre que mudar o dado do hook
+  useEffect(() => {
+    if (selectedEmployeeData) {
+      setSelectedMember(selectedEmployeeData);
+    }
+  }, [selectedEmployeeData]);
+
+  const handleSelectMember = (id: number) => {
+    setSelectedMemberId(id);
     setActiveTab("about");
   };
-  handleSelectMember;
 
-  const handleDeleteMember = (member: TeamMember | null) => {
+  const handleDeleteMember = (member: any | null) => {
     if (member) {
       console.log(`Deleting member: ${member.name}`);
     }
@@ -54,7 +68,12 @@ export default function YourTeam() {
       case "integrations":
         return <IntegrationsSection />;
       case "services":
-        return <ServicesSection selectedMember={selectedMember} />;
+        return (
+          <ServicesSection
+            selectedMember={selectedMember}
+            setSelectedMember={setSelectedMember}
+          />
+        );
       case "working-hours":
         return <WorkingHoursSection />;
       case "breaks":
@@ -79,13 +98,20 @@ export default function YourTeam() {
           employees={employees}
           loading={loading}
           selectedMember={selectedMember}
-          onSelectMember={handleSelectMember}
+          onSelectMember={member => handleSelectMember(member.id)}
         />
       </div>
 
       {/* Detail View */}
-      <div className="w-2/3 p-6 ">
-        {selectedMember ? (
+      <div className="w-2/3 p-6">
+        {loadingEmployee ? (
+          // Loading state
+          <div className="flex flex-col space-y-4">
+            <Skeleton className="w-32 h-8" />
+            <Skeleton className="w-full h-24" />
+          </div>
+        ) : selectedMember ? (
+          // Dados do funcionário carregados
           <>
             <div className="flex items-center justify-between space-x-4 mb-6">
               <div className="flex justify-center items-start gap-4">
@@ -153,8 +179,10 @@ export default function YourTeam() {
             <div>{renderTabContent()}</div>
           </>
         ) : (
-          // <MemberPlaceholder />
-          <div>Nada</div>
+          // Nenhum membro selecionado
+          <div className="text-gray-500">
+            Selecione um membro para ver os detalhes
+          </div>
         )}
       </div>
 

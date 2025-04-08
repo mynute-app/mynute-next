@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "../../../../../auth";
+import { auth } from "../../../../../../auth";
 
 export const GET = auth(async function GET(req, ctx) {
   const Authorization = req.auth?.accessToken;

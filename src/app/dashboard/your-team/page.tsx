@@ -1,4 +1,4 @@
-import YourTeam from "./profile-tour-team";
+import YourTeam from "./your-team";
 
 const Page = () => {
   return <YourTeam />;

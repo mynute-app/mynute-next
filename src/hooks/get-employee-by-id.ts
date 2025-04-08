@@ -12,7 +12,7 @@ export function useGetEmployeeById(id: number | null) {
     const fetchEmployee = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/employee/${id}`);
+        const res = await fetch(`/api/employee/other/${id}`);
         if (!res.ok) throw new Error("Erro ao buscar funcionário");
         const data = await res.json();
         setEmployee(data);

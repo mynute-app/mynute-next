@@ -13,24 +13,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Service } from "../../../../types/company";
 import { TeamMember } from "../../../../types/TeamMember";
 import { toast } from "@/hooks/use-toast";
+import { CheckCircle } from "lucide-react";
 
 type Props = {
-  selectedMember: TeamMember | null;
+  selectedMember: any | null;
+  setSelectedMember: (member: any) => void;
 };
 
-export function ServicesSection({ selectedMember }: Props) {
+export function ServicesSection({ selectedMember, setSelectedMember }: Props) {
   const { company, loading } = useCompany();
   const services: Service[] = company?.services ?? [];
 
+  const linkedServiceIds = new Set(
+    selectedMember?.services?.map((s: Service) => s.id) ?? []
+  );
+
   const handleLinkService = async (serviceId: number) => {
-    if (!selectedMember) {
-      toast({
-        title: "Erro",
-        description: "Selecione um membro antes de vincular o serviço.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!selectedMember) return;
 
     try {
       const res = await fetch(
@@ -42,6 +41,14 @@ export function ServicesSection({ selectedMember }: Props) {
 
       if (!res.ok) throw new Error("Erro ao vincular o serviço");
 
+      const newService = services.find(s => s.id === serviceId);
+      if (newService) {
+        setSelectedMember({
+          ...selectedMember,
+          services: [...(selectedMember.services ?? []), newService],
+        });
+      }
+
       toast({
         title: "Serviço vinculado",
         description: `O serviço foi vinculado ao membro ${selectedMember.name}.`,
@@ -49,6 +56,42 @@ export function ServicesSection({ selectedMember }: Props) {
     } catch (err) {
       toast({
         title: "Erro ao vincular",
+        description: (err as Error).message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUnlinkService = async (serviceId: number) => {
+    if (!selectedMember) return;
+
+    try {
+      const res = await fetch(
+        `/api/employee/${selectedMember.id}/service/${serviceId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!res.ok) throw new Error("Erro ao desvincular o serviço");
+
+      const updatedServices =
+        selectedMember.services?.filter((s: Service) => s.id !== serviceId) ??
+        [];
+
+      setSelectedMember({
+        ...selectedMember,
+        services: updatedServices,
+      });
+
+      toast({
+        title: "Serviço desvinculado",
+        description: `O serviço foi removido do membro ${selectedMember.name}.`,
+        variant: "destructive",
+      });
+    } catch (err) {
+      toast({
+        title: "Erro ao desvincular",
         description: (err as Error).message,
         variant: "destructive",
       });
@@ -83,28 +126,45 @@ export function ServicesSection({ selectedMember }: Props) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {services.map(service => (
-        <Card key={service.id} className="flex flex-col justify-between">
-          <CardHeader>
-            <CardTitle>{service.name}</CardTitle>
-            <CardDescription>
-              {service.duration} min •{" "}
-              {service.price && Number(service.price) > 0
-                ? `R$ ${Number(service.price).toFixed(2)}`
-                : "Gratuito"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => handleLinkService(service.id)}
-            >
-              Vincular Serviço
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
+      {services.map(service => {
+        const isLinked = linkedServiceIds.has(service.id);
+
+        return (
+          <Card key={service.id} className="flex flex-col justify-between">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {isLinked && <CheckCircle className="text-green-500 w-5 h-5" />}
+                {service.name}
+              </CardTitle>
+              <CardDescription>
+                {service.duration} min •{" "}
+                {service.price && Number(service.price) > 0
+                  ? `R$ ${Number(service.price).toFixed(2)}`
+                  : "Gratuito"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLinked ? (
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={() => handleUnlinkService(service.id)}
+                >
+                  Desvincular Serviço
+                </Button>
+              ) : (
+                <Button
+                  variant="default"
+                  className="w-full"
+                  onClick={() => handleLinkService(service.id)}
+                >
+                  Vincular Serviço
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
