@@ -1,4 +1,4 @@
-export interface Branch {
+export type Branch = {
   id: number;
   name: string;
   street: string;
@@ -9,7 +9,7 @@ export interface Branch {
   city: string;
   state: string;
   country: string;
-}
+};
 
 export type Service = {
   id: any;

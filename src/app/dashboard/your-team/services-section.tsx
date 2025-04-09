@@ -11,7 +11,6 @@ import {
 import { useCompany } from "@/hooks/get-company";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Service } from "../../../../types/company";
-import { TeamMember } from "../../../../types/TeamMember";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle } from "lucide-react";
 
@@ -23,7 +22,8 @@ type Props = {
 export function ServicesSection({ selectedMember, setSelectedMember }: Props) {
   const { company, loading } = useCompany();
   const services: Service[] = company?.services ?? [];
-
+  console.log(company);
+  
   const linkedServiceIds = new Set(
     selectedMember?.services?.map((s: Service) => s.id) ?? []
   );

@@ -1,4 +1,3 @@
-// components/your-team/team-member-list.tsx
 "use client";
 
 import { Input } from "@/components/ui/input";

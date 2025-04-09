@@ -4,30 +4,24 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon, SearchIcon } from "lucide-react";
 import AddTeamMemberDialog from "./add-team-member-modal";
 import { BreaksSection } from "./breakssection";
-import { WorkingHoursSection } from "./working-hours-section";
+import { Branch } from "./branch-section";
 import { ServicesSection } from "./services-section";
 import { IntegrationsSection } from "./integration-button";
 import { AboutSection } from "./about-section";
-import { useSession } from "next-auth/react";
 import TeamMemberActions from "./team-member-actions";
-import { useGetCompany } from "@/hooks/get-one-company";
 import { TeamMember } from "../../../../types/TeamMember";
 import { Skeleton } from "@/components/ui/skeleton";
-import MemberPlaceholder from "./member-placeholder";
 import { Employee } from "../../../../types/company";
-import { Input } from "@/components/ui/input";
 import { useCompany } from "@/hooks/get-company";
 import { TeamMemberList } from "./team-member-list";
 import { useGetEmployeeById } from "@/hooks/get-employee-by-id";
 
 export default function YourTeam() {
-  //const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [activeTab, setActiveTab] = useState("about");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { company, loading } = useCompany();
   const employees: Employee[] = company?.employees ?? [];
-  console.log(employees);
 
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
   const { employee: selectedEmployeeData, loading: loadingEmployee } =
@@ -35,7 +29,6 @@ export default function YourTeam() {
 
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
 
-  // Atualiza selectedMember sempre que mudar o dado do hook
   useEffect(() => {
     if (selectedEmployeeData) {
       setSelectedMember(selectedEmployeeData);
@@ -75,7 +68,10 @@ export default function YourTeam() {
           />
         );
       case "working-hours":
-        return <WorkingHoursSection />;
+        return <Branch 
+           selectedMember={selectedMember}
+           setSelectedMember={setSelectedMember}
+         />;
       case "breaks":
         return <BreaksSection />;
       default:
@@ -105,13 +101,11 @@ export default function YourTeam() {
       {/* Detail View */}
       <div className="w-2/3 p-6">
         {loadingEmployee ? (
-          // Loading state
           <div className="flex flex-col space-y-4">
             <Skeleton className="w-32 h-8" />
             <Skeleton className="w-full h-24" />
           </div>
         ) : selectedMember ? (
-          // Dados do funcionário carregados
           <>
             <div className="flex items-center justify-between space-x-4 mb-6">
               <div className="flex justify-center items-start gap-4">
@@ -156,7 +150,7 @@ export default function YourTeam() {
                   activeTab === "services" ? "border-b-2 border-black" : ""
                 }`}
               >
-                Services
+                Serviços
               </button>
               <button
                 onClick={() => setActiveTab("working-hours")}
@@ -164,7 +158,7 @@ export default function YourTeam() {
                   activeTab === "working-hours" ? "border-b-2 border-black" : ""
                 }`}
               >
-                Working hours
+                Filial
               </button>
               <button
                 onClick={() => setActiveTab("breaks")}
@@ -179,14 +173,12 @@ export default function YourTeam() {
             <div>{renderTabContent()}</div>
           </>
         ) : (
-          // Nenhum membro selecionado
           <div className="text-gray-500">
             Selecione um membro para ver os detalhes
           </div>
         )}
       </div>
 
-      {/* Dialog for Adding Team Member */}
       <AddTeamMemberDialog isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />
     </div>
   );
