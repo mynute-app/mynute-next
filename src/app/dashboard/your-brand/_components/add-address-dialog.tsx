@@ -24,6 +24,7 @@ import {
 } from "react-icons/fi";
 import { useAddAddressForm } from "./actions/useAddAddressForm";
 import { Branch } from "../../../../../types/company";
+import { PlusIcon } from "lucide-react";
 
 type AddBranchDialogProps = {
   onCreate: (branch: Branch) => void;
@@ -65,13 +66,8 @@ export const AddAddressDialog = ({ onCreate }: AddBranchDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="p-0 text-white h-10 w-10 bg-primary rounded-full flex justify-center items-center shadow-md hover:bg-gray-800"
-          onClick={() => setIsOpen(true)}
-        >
-          <BsPlus className="w-6 h-6" />
+        <Button variant="outline" className="" onClick={() => setIsOpen(true)}>
+          <PlusIcon />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-xl rounded-lg">

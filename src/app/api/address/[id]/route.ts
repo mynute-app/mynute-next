@@ -12,8 +12,27 @@ export const PATCH = auth(async function PATCH(req, { params }) {
     const body = await req.json();
     const branchId = params?.id;
 
+    const branchFetch = await fetch(
+      `${process.env.BACKEND_URL}/branch/${branchId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization,
+        },
+      }
+    );
+
+    const branchData = await branchFetch.json();
+
+    if (!branchFetch.ok) {
+      return NextResponse.json(
+        { message: "Não foi possível obter a filial", error: branchData },
+        { status: branchFetch.status }
+      );
+    }
+
     const requestBody = {
-      company_id: 1,
+      company_id: branchData.company_id,
       name: body.name,
       street: body.street,
       number: body.number,
@@ -24,8 +43,6 @@ export const PATCH = auth(async function PATCH(req, { params }) {
       state: body.state,
       country: body.country,
     };
-
-    console.log("📤 Enviando dados para API:", requestBody);
 
     const response = await fetch(
       `${process.env.BACKEND_URL}/branch/${branchId}`,
@@ -59,51 +76,6 @@ export const PATCH = auth(async function PATCH(req, { params }) {
     console.error("❌ Erro ao editar filial:", error);
     return NextResponse.json(
       { message: "Erro interno ao editar a filial.", error },
-      { status: 500 }
-    );
-  }
-});
-
-export const DELETE = auth(async function DELETE(req, { params }) {
-  const Authorization = req.auth?.accessToken;
-
-  if (!Authorization) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-  }
-
-  try {
-    const branchId = params?.id;
-
-    console.log(`🗑 Excluindo filial ID: ${branchId}`);
-
-    const response = await fetch(
-      `${process.env.BACKEND_URL}/branch/${branchId}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization, // Token de autenticação
-        },
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Erro ao excluir filial:", response.status, errorData);
-      return NextResponse.json(
-        { message: "Erro ao excluir filial", error: errorData },
-        { status: response.status }
-      );
-    }
-
-    console.log("✅ Filial excluída com sucesso!");
-    return NextResponse.json(
-      { message: "Filial excluída com sucesso!" },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("❌ Erro ao excluir filial:", error);
-    return NextResponse.json(
-      { message: "Erro interno ao excluir filial.", error },
       { status: 500 }
     );
   }

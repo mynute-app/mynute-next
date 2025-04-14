@@ -1,5 +1,5 @@
-import { Branch } from "./_components/branch";
+import BranchManager from "./_components/branch";
 
 export default function Page() {
-  return <Branch />;
+  return <BranchManager />;
 }
