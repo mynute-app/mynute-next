@@ -12,6 +12,11 @@ import { AddressField } from "../../your-brand/_components/address-field";
 import { BusinessSchema } from "../../../../../schema";
 import { AddAddressDialog } from "../../your-brand/_components/add-address-dialog";
 import { Separator } from "@/components/ui/separator";
+import { BranchEmployees } from "./branch-employees";
+import { Employee } from "../../../../../types/company";
+import { EmployeeDetails } from "./employee-details";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 // Tipos
 interface Branch {
@@ -26,6 +31,7 @@ interface Branch {
   state: string;
   country: string;
   services?: number[];
+  employees?: Employee[];
 }
 
 interface Service {
@@ -44,6 +50,9 @@ export default function BranchManager() {
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
 
   const services: Service[] = company?.services ?? [];
 
@@ -69,6 +78,7 @@ export default function BranchManager() {
       setBranches(company.branches);
     }
   }, [company]);
+
   const index = branches.findIndex(b => b.id === selectedBranch?.id);
 
   const handleSelectBranch = async (branch: Branch) => {
@@ -77,6 +87,7 @@ export default function BranchManager() {
       if (updated) {
         setSelectedBranch(updated);
         setSelectedServices(updated.services || []);
+        setSelectedEmployee(null); // limpa seleção anterior
       }
     } catch (error) {
       toast({
@@ -94,7 +105,9 @@ export default function BranchManager() {
     try {
       const res = await fetch(
         `/api/branch/${selectedBranch.id}/service/${serviceId}`,
-        { method: "POST" }
+        {
+          method: "POST",
+        }
       );
 
       if (!res.ok) throw new Error("Erro ao vincular o serviço");
@@ -103,7 +116,6 @@ export default function BranchManager() {
       if (updatedBranch) {
         setSelectedBranch(updatedBranch);
         setSelectedServices(updatedBranch.services || []);
-
         setBranches(prev =>
           prev.map(b => (b.id === updatedBranch.id ? updatedBranch : b))
         );
@@ -128,7 +140,9 @@ export default function BranchManager() {
     try {
       const res = await fetch(
         `/api/branch/${selectedBranch.id}/service/${serviceId}`,
-        { method: "DELETE" }
+        {
+          method: "DELETE",
+        }
       );
 
       if (!res.ok) throw new Error("Erro ao desvincular o serviço");
@@ -137,7 +151,6 @@ export default function BranchManager() {
       if (updatedBranch) {
         setSelectedBranch(updatedBranch);
         setSelectedServices(updatedBranch.services || []);
-
         setBranches(prev =>
           prev.map(b => (b.id === updatedBranch.id ? updatedBranch : b))
         );
@@ -171,7 +184,6 @@ export default function BranchManager() {
   const fetchBranchByName = async (name: string): Promise<Branch | null> => {
     try {
       const res = await fetch(`/api/branch/name/${encodeURIComponent(name)}`);
-
       if (!res.ok) throw new Error("Erro ao buscar filial");
 
       const branchData = await res.json();
@@ -183,6 +195,7 @@ export default function BranchManager() {
               typeof s === "number" ? s : s.id
             )
           : [],
+        employees: branchData.employees ?? [],
       };
     } catch (error) {
       toast({
@@ -199,7 +212,7 @@ export default function BranchManager() {
       {/* Sidebar */}
       <div className="w-1/3 border-r p-4 overflow-y-auto bg-gray-50">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold"> Filiais </h2>
+          <h2 className="text-lg font-semibold">Filiais</h2>
           <AddAddressDialog onCreate={handleAddAddress} />
         </div>
         <Separator className="my-3" />
@@ -234,32 +247,61 @@ export default function BranchManager() {
       <div className="w-2/3 p-6 overflow-y-auto">
         {selectedBranch ? (
           <>
-            <h2 className="text-xl font-semibold mb-4">
-              {selectedBranch.name} – {selectedBranch.street}
-            </h2>
-
-            <AddressField
-              register={register}
-              watch={watch}
-              branch={selectedBranch}
-              onDelete={handleDeleteBranch}
-              index={index}
-            />
-
-            <div className="mt-8">
-              <h3 className="text-lg font-medium mb-2">Serviços vinculados</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
-                {services.map(service => (
-                  <ServiceCard
-                    key={`${service.id}-${selectedServices.join(",")}`}
-                    service={service}
-                    isLinked={selectedServices.includes(service.id)}
-                    onLink={handleLinkService}
-                    onUnlink={handleUnlinkService}
-                  />
-                ))}
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">
+                {selectedBranch.name} – {selectedBranch.street}
+              </h2>
+              {selectedEmployee && (
+                <Button
+                  variant="ghost"
+                  onClick={() => setSelectedEmployee(null)}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Voltar
+                </Button>
+              )}
             </div>
+
+            {selectedEmployee ? (
+              <EmployeeDetails
+                employee={selectedEmployee}
+                onBack={() => setSelectedEmployee(null)}
+              />
+            ) : (
+              <>
+                <AddressField
+                  register={register}
+                  watch={watch}
+                  branch={selectedBranch}
+                  onDelete={handleDeleteBranch}
+                  index={index}
+                />
+
+                <div className="mt-8">
+                  <h3 className="text-lg font-medium mb-2">
+                    Serviços vinculados
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+                    {services.map(service => (
+                      <ServiceCard
+                        key={`${service.id}-${selectedServices.join(",")}`}
+                        service={service}
+                        isLinked={selectedServices.includes(service.id)}
+                        onLink={handleLinkService}
+                        onUnlink={handleUnlinkService}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-10">
+                  <BranchEmployees
+                    employees={selectedBranch.employees}
+                    onSelectEmployee={setSelectedEmployee}
+                  />
+                </div>
+              </>
+            )}
           </>
         ) : (
           <p className="text-muted-foreground text-sm">
