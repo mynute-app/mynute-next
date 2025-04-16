@@ -24,10 +24,7 @@ export function EmployeeDetails({ employee, onBack }: EmployeeDetailsProps) {
         <h2 className="text-xl font-semibold">
           Detalhes de {employee.name} {employee.surname}
         </h2>
-        <Button variant="ghost" onClick={onBack}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar
-        </Button>
+       
       </div>
 
       <div className="space-y-2">

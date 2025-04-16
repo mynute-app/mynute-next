@@ -208,9 +208,9 @@ export default function BranchManager() {
   };
 
   return (
-    <div className="flex h-[80vh] border rounded-lg shadow overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[80vh] border rounded-lg shadow overflow-hidden">
       {/* Sidebar */}
-      <div className="w-1/3 border-r p-4 overflow-y-auto bg-gray-50">
+      <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r p-4 overflow-y-auto bg-gray-50">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Filiais</h2>
           <AddAddressDialog onCreate={handleAddAddress} />
@@ -218,7 +218,7 @@ export default function BranchManager() {
         <Separator className="my-3" />
         {loading ? (
           <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="p-3 rounded-md border bg-white shadow-sm">
                 <Skeleton className="h-4 w-2/3 mb-2" />
                 <Skeleton className="h-3 w-1/2" />
@@ -244,7 +244,7 @@ export default function BranchManager() {
       </div>
 
       {/* Detail View */}
-      <div className="w-2/3 p-6 overflow-y-auto">
+      <div className="w-full md:w-2/3 p-6 overflow-y-auto bg-slate-400">
         {selectedBranch ? (
           <>
             <div className="flex items-center justify-between mb-4">
