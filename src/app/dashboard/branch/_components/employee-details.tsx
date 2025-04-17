@@ -1,49 +1,52 @@
-// components/branch-manager/employee-details.tsx
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+// components/branch-manager/about-section.tsx
+import { ClockIcon, MailIcon, PhoneIcon } from "lucide-react";
+import { Employee } from "../../../../../types/company";
 
-interface Employee {
-  id: number;
-  name: string;
-  surname: string;
-  role?: string;
-  email: string;
-  phone: string;
-  tags?: string[] | null;
+interface AboutSectionProps {
+  selectedMember: Employee | null;
 }
 
-interface EmployeeDetailsProps {
-  employee: Employee;
-  onBack: () => void;
-}
+export function AboutSection({ selectedMember }: AboutSectionProps) {
+  if (!selectedMember) {
+    return <p className="text-gray-500">Nenhum membro selecionado</p>;
+  }
 
-export function EmployeeDetails({ employee, onBack }: EmployeeDetailsProps) {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-4 p-4 bg-white rounded shadow">
+      {/* Nome e Cargo */}
+      <div>
         <h2 className="text-xl font-semibold">
-          Detalhes de {employee.name} {employee.surname}
+          {selectedMember.name} {selectedMember.surname}
         </h2>
-       
+        <p className="text-gray-500 capitalize">
+          Permissão: {selectedMember.role || "Não informada"}
+        </p>
       </div>
 
-      <div className="space-y-2">
-        <p>
-          <strong>Email:</strong> {employee.email}
-        </p>
-        <p>
-          <strong>Telefone:</strong> {employee.phone}
-        </p>
-        {employee.role && (
-          <p>
-            <strong>Cargo:</strong> {employee.role}
-          </p>
-        )}
-        {employee.tags && (
-          <p>
-            <strong>Tags:</strong> {employee.tags.join(", ")}
-          </p>
-        )}
+      {/* Telefone */}
+      {selectedMember.phone ? (
+        <div className="flex items-center space-x-2">
+          <PhoneIcon className="w-5 h-5 text-gray-500" />
+          <span>{selectedMember.phone}</span>
+        </div>
+      ) : (
+        <div className="text-gray-500">Telefone não informado</div>
+      )}
+
+      {/* Email */}
+      {selectedMember.email ? (
+        <div className="flex items-center space-x-2">
+          <MailIcon className="w-5 h-5 text-gray-500" />
+          <span>{selectedMember.email}</span>
+        </div>
+      ) : (
+        <div className="text-gray-500">E-mail não informado</div>
+      )}
+
+      {/* Horário fixo */}
+      <div className="flex items-center space-x-2">
+        <ClockIcon className="w-5 h-5 text-gray-500" />
+        <span>Hoje • 9:00 AM - 5:00 PM (HPDB)</span>
       </div>
     </div>
   );

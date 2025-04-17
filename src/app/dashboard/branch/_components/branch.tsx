@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useCompany } from "@/hooks/get-company";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,10 +14,14 @@ import { BusinessSchema } from "../../../../../schema";
 import { AddAddressDialog } from "../../your-brand/_components/add-address-dialog";
 import { Separator } from "@/components/ui/separator";
 import { BranchEmployees } from "./branch-employees";
-import { Employee } from "../../../../../types/company";
-import { EmployeeDetails } from "./employee-details";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+
+import { Employee } from "../../../../../types/company";
+import { AboutSection } from "../../your-team/about-section";
+import { ServicesSection } from "../../your-team/services-section";
+import { BreaksSection } from "../../your-team/breakssection";
+import { Branch } from "../../your-team/branch-section";
 
 // Tipos
 interface Branch {
@@ -43,6 +48,7 @@ interface Service {
 }
 
 type BranchForm = Omit<Branch, "id" | "services">;
+type Tab = "about" | "services" | "branch" | "breaks";
 
 export default function BranchManager() {
   const { company, loading } = useCompany();
@@ -53,6 +59,7 @@ export default function BranchManager() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null
   );
+  const [employeeTab, setEmployeeTab] = useState<Tab>("about");
 
   const services: Service[] = company?.services ?? [];
 
@@ -101,7 +108,6 @@ export default function BranchManager() {
 
   const handleLinkService = async (serviceId: number) => {
     if (!selectedBranch) return;
-
     try {
       const res = await fetch(
         `/api/branch/${selectedBranch.id}/service/${serviceId}`,
@@ -207,6 +213,33 @@ export default function BranchManager() {
     }
   };
 
+  const renderEmployeeTabContent = () => {
+    if (!selectedEmployee) return null;
+
+    switch (employeeTab) {
+      case "about":
+        return <AboutSection selectedMember={selectedEmployee} />;
+      case "services":
+        return (
+          <ServicesSection
+            selectedMember={selectedEmployee}
+            setSelectedMember={setSelectedEmployee}
+          />
+        );
+      case "branch":
+        return (
+          <Branch
+            selectedMember={selectedEmployee}
+            setSelectedMember={setSelectedEmployee}
+          />
+        );
+      case "breaks":
+        return <BreaksSection />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-[80vh] border rounded-lg shadow overflow-hidden">
       {/* Sidebar */}
@@ -244,7 +277,7 @@ export default function BranchManager() {
       </div>
 
       {/* Detail View */}
-      <div className="w-full md:w-2/3 p-6 overflow-y-auto bg-slate-400">
+      <div className="w-full md:w-2/3 p-6 overflow-y-auto bg-slate-100">
         {selectedBranch ? (
           <>
             <div className="flex items-center justify-between mb-4">
@@ -263,10 +296,53 @@ export default function BranchManager() {
             </div>
 
             {selectedEmployee ? (
-              <EmployeeDetails
-                employee={selectedEmployee}
-                onBack={() => setSelectedEmployee(null)}
-              />
+              <>
+                {/* Employee Tabs */}
+                <div className="flex space-x-4 border-b mb-4">
+                  <button
+                    onClick={() => setEmployeeTab("about")}
+                    className={`py-2 ${
+                      employeeTab === "about"
+                        ? "border-b-2 border-black font-medium"
+                        : ""
+                    }`}
+                  >
+                    Sobre
+                  </button>
+                  <button
+                    onClick={() => setEmployeeTab("services")}
+                    className={`py-2 ${
+                      employeeTab === "services"
+                        ? "border-b-2 border-black font-medium"
+                        : ""
+                    }`}
+                  >
+                    Serviços
+                  </button>
+                  <button
+                    onClick={() => setEmployeeTab("branch")}
+                    className={`py-2 ${
+                      employeeTab === "branch"
+                        ? "border-b-2 border-black font-medium"
+                        : ""
+                    }`}
+                  >
+                    Filial
+                  </button>
+                  <button
+                    onClick={() => setEmployeeTab("breaks")}
+                    className={`py-2 ${
+                      employeeTab === "breaks"
+                        ? "border-b-2 border-black font-medium"
+                        : ""
+                    }`}
+                  >
+                    Breaks
+                  </button>
+                </div>
+
+                {renderEmployeeTabContent()}
+              </>
             ) : (
               <>
                 <AddressField
