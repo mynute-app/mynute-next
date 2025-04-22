@@ -234,7 +234,8 @@ export default function BranchManager() {
           />
         );
       case "breaks":
-        return <BreaksSection />;
+        return <BreaksSection selectedMember={selectedEmployee} />;
+
       default:
         return null;
     }
@@ -277,7 +278,7 @@ export default function BranchManager() {
       </div>
 
       {/* Detail View */}
-      <div className="w-full md:w-2/3 p-6 overflow-y-auto bg-slate-100">
+      <div className="w-full md:w-2/3 p-6 overflow-y-auto bg-slate-800">
         {selectedBranch ? (
           <>
             <div className="flex items-center justify-between mb-4">

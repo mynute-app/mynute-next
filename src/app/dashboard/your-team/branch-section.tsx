@@ -14,7 +14,6 @@ import { toast } from "@/hooks/use-toast";
 import { CheckCircle } from "lucide-react";
 import { Branch as Branchs } from "../../../../types/company";
 
-
 type Props = {
   selectedMember: any | null;
   setSelectedMember: (member: any) => void;
@@ -71,8 +70,7 @@ export function Branch({ selectedMember, setSelectedMember }: Props) {
 
       if (!res.ok) throw new Error("Erro ao desvincular a filial");
 
-      const updatedBranches =
-        branches?.filter(b => b.id !== branchId) ?? [];
+      const updatedBranches = branches?.filter(b => b.id !== branchId) ?? [];
 
       setSelectedMember({
         ...selectedMember,
@@ -120,7 +118,7 @@ export function Branch({ selectedMember, setSelectedMember }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 max-h-[calc(100vh-240px)] overflow-y-auto">
       {branches.map((branch: any) => {
         const isLinked = linkedBranchIds.has(branch.id);
 

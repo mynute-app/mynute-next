@@ -68,12 +68,14 @@ export default function YourTeam() {
           />
         );
       case "working-hours":
-        return <Branch 
-           selectedMember={selectedMember}
-           setSelectedMember={setSelectedMember}
-         />;
+        return (
+          <Branch
+            selectedMember={selectedMember}
+            setSelectedMember={setSelectedMember}
+          />
+        );
       case "breaks":
-        return <BreaksSection />;
+        return <BreaksSection selectedMember={selectedMember} />;
       default:
         return null;
     }
@@ -166,7 +168,7 @@ export default function YourTeam() {
                   activeTab === "breaks" ? "border-b-2 border-black" : ""
                 }`}
               >
-                Breaks
+                Jornada de trabalho
               </button>
             </div>
 
