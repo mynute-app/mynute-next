@@ -7,4 +7,5 @@ export type TeamMember = {
   phone: string;
   tags: any;
   member: string;
+  
 };
