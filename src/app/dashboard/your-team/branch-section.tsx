@@ -22,7 +22,7 @@ type Props = {
 export function Branch({ selectedMember, setSelectedMember }: Props) {
   const { company, loading } = useCompany();
   const branches: Branchs[] = company?.branches ?? [];
-
+  
   const linkedBranchIds = new Set(
     selectedMember?.branches?.map((s: Branchs) => s.id) ?? []
   );

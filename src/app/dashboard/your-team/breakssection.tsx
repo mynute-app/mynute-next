@@ -20,6 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useUpdateWorkSchedule } from "@/hooks/use-update-work-schedule";
 import { useToast } from "@/hooks/use-toast";
+import { ScheduleConfigDropdown } from "./schedule-config-dropdown";
 
 type DiaSemana =
   | "monday"
@@ -226,6 +227,23 @@ export function BreaksSection({ selectedMember }: BreaksSectionProps) {
                         ))}
                       </SelectContent>
                     </Select>
+
+                    <ScheduleConfigDropdown
+                      employeeId={selectedMember?.id} // <-- Aqui você passa o ID do funcionário selecionado
+                      dia={key}
+                      intervalos={[
+                        {
+                          start: converterPara24h(dados.inicio),
+                          end: converterPara24h(dados.fim),
+                          branch_id: 1,
+                        },
+                      ]}
+                      
+                      onChange={novosIntervalos => {
+                        console.log("⏰ Novos intervalos:", novosIntervalos);
+                        // Aqui no futuro você pode setar os novos intervalos no estado do dia específico, se quiser armazenar antes de salvar
+                      }}
+                    />
 
                     <span className="text-muted-foreground">—</span>
 
