@@ -1,3 +1,4 @@
+import { serviceSchema } from './../validations/validation';
 export type Branch = {
   id: number;
   name: string;
@@ -24,6 +25,7 @@ export type Service = {
 };
 
 export type Employee = {
+  work_schedule: any;
   id: number;
   name: string;
   surname: string;
@@ -31,6 +33,8 @@ export type Employee = {
   phone: string;
   permission: string;
   role: string;
+  branches: Branch[];
+  services: Service[];
 };
 export interface Company {
   id: number;

@@ -21,6 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { useUpdateWorkSchedule } from "@/hooks/use-update-work-schedule";
 import { useToast } from "@/hooks/use-toast";
 import { ScheduleConfigDropdown } from "./schedule-config-dropdown";
+import { useGetEmployeeById } from "@/hooks/get-employee-by-id";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type DiaSemana =
   | "monday"
@@ -75,34 +77,55 @@ type BreaksSectionProps = {
 };
 
 export function BreaksSection({ selectedMember }: BreaksSectionProps) {
+  const { employee } = useGetEmployeeById(selectedMember?.id ?? null);
   const { toast } = useToast();
-  const [agenda, setAgenda] = useState<Agenda>(
-    () =>
-      Object.fromEntries(
-        Object.keys(diasSemana).map(dia => [
-          dia,
-          {
-            ativo: [
-              "monday",
-              "tuesday",
-              "wednesday",
-              "thursday",
-              "friday",
-            ].includes(dia),
-            inicio: "7:00 AM",
-            fim: "5:00 PM",
-          },
-        ])
-      ) as Agenda
-  );
+  const [agenda, setAgenda] = useState<Agenda | null>(null);
 
-  const { updateWorkSchedule, loading, success, error } =
-    useUpdateWorkSchedule();
+  const { updateWorkSchedule, loading } = useUpdateWorkSchedule();
+
+  useEffect(() => {
+    if (!employee) return;
+
+    const novoAgenda = Object.fromEntries(
+      Object.keys(diasSemana).map(dia => {
+        const key = dia as DiaSemana;
+        const horarios = employee.work_schedule?.[key];
+
+        if (!horarios || horarios.length === 0) {
+          return [
+            key,
+            {
+              ativo: false,
+              inicio: "7:00 AM",
+              fim: "5:00 PM",
+            },
+          ];
+        }
+
+        const primeiroHorario = horarios[0];
+
+        const inicioFormatado = converterPara12h(primeiroHorario.start);
+        const fimFormatado = converterPara12h(primeiroHorario.end);
+
+        return [
+          key,
+          {
+            ativo: true,
+            inicio: inicioFormatado,
+            fim: fimFormatado,
+          },
+        ];
+      })
+    ) as Agenda;
+
+    setAgenda(novoAgenda);
+  }, [employee]);
 
   const alternarDia = (dia: DiaSemana) => {
+    if (!agenda) return;
     setAgenda(prev => ({
-      ...prev,
-      [dia]: { ...prev[dia], ativo: !prev[dia].ativo },
+      ...prev!,
+      [dia]: { ...prev![dia], ativo: !prev![dia].ativo },
     }));
   };
 
@@ -111,13 +134,15 @@ export function BreaksSection({ selectedMember }: BreaksSectionProps) {
     campo: "inicio" | "fim",
     valor: string
   ) => {
+    if (!agenda) return;
     setAgenda(prev => ({
-      ...prev,
-      [dia]: { ...prev[dia], [campo]: valor },
+      ...prev!,
+      [dia]: { ...prev![dia], [campo]: valor },
     }));
   };
 
   const aplicarParaTodos = (diaBase: DiaSemana) => {
+    if (!agenda) return;
     const { inicio, fim } = agenda[diaBase];
     const novaAgenda: Agenda = { ...agenda };
 
@@ -143,8 +168,15 @@ export function BreaksSection({ selectedMember }: BreaksSectionProps) {
       .padStart(2, "0")}`;
   };
 
+  const converterPara12h = (hora24h: string) => {
+    const [hours, minutes] = hora24h.split(":").map(Number);
+    const suffix = hours >= 12 ? "PM" : "AM";
+    const hour = hours % 12 === 0 ? 12 : hours % 12;
+    return `${hour}:${minutes.toString().padStart(2, "0")} ${suffix}`;
+  };
+
   const salvar = async () => {
-    if (!selectedMember) return;
+    if (!selectedMember || !agenda) return;
 
     const work_schedule = Object.fromEntries(
       Object.entries(agenda).map(([dia, { ativo, inicio, fim }]) => {
@@ -153,7 +185,7 @@ export function BreaksSection({ selectedMember }: BreaksSectionProps) {
           dia,
           [
             {
-              branch_id: 1,
+              branch_id: 1, // Ainda fixo por enquanto
               start: converterPara24h(inicio),
               end: converterPara24h(fim),
             },
@@ -184,6 +216,33 @@ export function BreaksSection({ selectedMember }: BreaksSectionProps) {
       });
     }
   };
+
+  if (!agenda) {
+    return (
+      <div className="p-4 space-y-4">
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-5 w-20" /> {/* Dia da semana */}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-[100px]" /> {/* Início */}
+                <Skeleton className="h-8 w-[16px]" /> {/* Separador "—" */}
+                <Skeleton className="h-8 w-[100px]" /> {/* Fim */}
+                <Skeleton className="h-8 w-[96px]" /> {/* Filial */}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-6">
+          <Skeleton className="h-9 w-full" /> {/* Botão de salvar */}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>
@@ -229,19 +288,13 @@ export function BreaksSection({ selectedMember }: BreaksSectionProps) {
                     </Select>
 
                     <ScheduleConfigDropdown
-                      employeeId={selectedMember?.id} // <-- Aqui você passa o ID do funcionário selecionado
+                      employeeId={selectedMember?.id ?? null}
                       dia={key}
-                      intervalos={[
-                        {
-                          start: converterPara24h(dados.inicio),
-                          end: converterPara24h(dados.fim),
-                          branch_id: 1,
-                        },
-                      ]}
-                      
+                      intervalos={employee?.work_schedule?.[key] ?? []}
+                      branches={employee?.branches ?? []}
+                      services={employee?.services ?? []}
                       onChange={novosIntervalos => {
                         console.log("⏰ Novos intervalos:", novosIntervalos);
-                        // Aqui no futuro você pode setar os novos intervalos no estado do dia específico, se quiser armazenar antes de salvar
                       }}
                     />
 

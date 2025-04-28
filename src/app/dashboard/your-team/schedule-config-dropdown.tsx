@@ -19,7 +19,6 @@ import {
 import { Settings2, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateWorkSchedule } from "@/hooks/use-update-work-schedule";
-import { useCompany } from "@/hooks/get-company";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export type Intervalo = {
@@ -33,7 +32,9 @@ type Props = {
   dia: string;
   intervalos: Intervalo[];
   onChange: (novos: Intervalo[]) => void;
-  employeeId: any;
+  employeeId: number | null; // <- Corrigido aqui
+  branches: { id: number; name: string }[];
+  services: { id: number; name: string }[];
 };
 
 const gerarHorarios = () => {
@@ -58,14 +59,12 @@ export function ScheduleConfigDropdown({
   intervalos,
   onChange,
   employeeId,
+  branches,
+  services,
 }: Props) {
   const [items, setItems] = useState<Intervalo[]>(intervalos);
   const { toast } = useToast();
   const { updateWorkSchedule, loading } = useUpdateWorkSchedule();
-  const { company } = useCompany();
-
-  const branches = company?.branches ?? [];
-  const services = company?.services ?? [];
 
   const handleAdd = () => {
     const novos = [
@@ -115,6 +114,8 @@ export function ScheduleConfigDropdown({
   };
 
   const salvar = async () => {
+    if (!employeeId) return;
+
     try {
       const workSchedule = {
         [dia]: items,
@@ -191,7 +192,7 @@ export function ScheduleConfigDropdown({
                     <SelectValue placeholder="Filial" />
                   </SelectTrigger>
                   <SelectContent>
-                    {branches.map((branch: any) => (
+                    {branches.map(branch => (
                       <SelectItem key={branch.id} value={String(branch.id)}>
                         {branch.name}
                       </SelectItem>
@@ -210,7 +211,7 @@ export function ScheduleConfigDropdown({
               </div>
 
               <div className="flex flex-wrap gap-2 ml-[2px]">
-                {services.map((service: any) => (
+                {services.map(service => (
                   <label
                     key={service.id}
                     className="flex items-center gap-1 text-xs border px-2 py-1 rounded-md cursor-pointer"
