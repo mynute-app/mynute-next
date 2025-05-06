@@ -5,18 +5,41 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 
-export default function PreviewLayout() {
+export default function PreviewLayout({
+  config,
+}: {
+  config: {
+    logo: string | null;
+    bannerColor: string;
+    primaryColor: string;
+  };
+}) {
   return (
-    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#f0f2f5] to-[#e3e5ea] py-10 px-4">
+    <div
+      className="w-full h-full flex items-center justify-center py-10 px-4"
+      style={{
+        background: "linear-gradient(to bottom right, #f0f2f5, #e3e5ea)",
+      }}
+    >
       <div className="bg-white max-w-7xl w-full rounded-xl shadow-2xl overflow-hidden flex flex-col gap-6 border border-gray-200">
-        {/* Banner simulado */}
-        <div className="bg-gray-100 h-40 w-full flex items-center justify-center">
-          <div className="w-20 h-20 bg-gray-300 rounded-md" />
+        {/* Banner com fundo customizado */}
+        <div
+          className="h-40 w-full flex items-center justify-center"
+          style={{ backgroundColor: config.bannerColor }}
+        >
+          {config.logo ? (
+            <img src={config.logo} alt="Logo" className="h-16 object-contain" />
+          ) : (
+            <div className="w-20 h-20 bg-gray-300 rounded-md" />
+          )}
         </div>
 
-        {/* Etapas */}
+        {/* Etapas com cor primária */}
         <div className="flex justify-center items-center gap-4">
-          <div className="bg-gray-900 text-white px-4 py-2 rounded-md font-bold shadow">
+          <div
+            className="text-white px-4 py-2 rounded-md font-bold shadow"
+            style={{ backgroundColor: config.primaryColor }}
+          >
             1
           </div>
           <div className="bg-gray-300 text-gray-500 px-4 py-2 rounded-md font-bold">
@@ -24,16 +47,12 @@ export default function PreviewLayout() {
           </div>
         </div>
 
-        {/* Título */}
         <div className="text-center text-xl font-semibold -mt-4">Endereço</div>
 
-        {/* Cards placeholder */}
+        {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-8">
           {[...Array(4)].map((_, i) => (
-            <Card
-              key={i}
-              className="p-4 space-y-2 shadow-sm border border-gray-200"
-            >
+            <Card key={i} className="p-4 space-y-2 border border-gray-200">
               <div className="flex items-center gap-2">
                 <MapPin className="text-gray-500" size={16} />
                 <div className="h-4 w-16 bg-gray-300 rounded" />
@@ -47,12 +66,15 @@ export default function PreviewLayout() {
 
         <Separator className="my-4" />
 
-        {/* Botões inferiores */}
         <div className="flex justify-between px-8 pb-6">
           <Button variant="outline" disabled>
             Anterior
           </Button>
-          <Button>Próximo</Button>
+          <Button
+            style={{ backgroundColor: config.primaryColor, color: "white" }}
+          >
+            Próximo
+          </Button>
         </div>
       </div>
     </div>

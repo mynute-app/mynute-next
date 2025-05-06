@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BusinessSchema } from "../../../../../schema";
 import { useGetUser } from "@/hooks/get-useUser";
 import PreviewLayout from "./preview-layout";
+import { useState } from "react";
 
 export default function YourBrand() {
   const { user, loading } = useGetUser();
@@ -36,6 +37,16 @@ export default function YourBrand() {
   const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
     console.log("dados", values);
   };
+
+  const [previewConfig, setPreviewConfig] = useState<{
+    logo: string | null;
+    bannerColor: string;
+    primaryColor: string;
+  }>({
+    logo: null,
+    bannerColor: "#f5f5f5",
+    primaryColor: "#000000",
+  });
 
   return (
     <div className=" p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
@@ -105,36 +116,28 @@ export default function YourBrand() {
               </div>
             </CardContent>
           </Card>
-          <BrandLogoUpload />
-          <Separator className="my-4" />
+          <BrandLogoUpload
+            logo={previewConfig.logo}
+            onUploadLogo={base64 =>
+              setPreviewConfig(prev => ({ ...prev, logo: base64 }))
+            }
+            onRemoveLogo={() =>
+              setPreviewConfig(prev => ({ ...prev, logo: null }))
+            }
+          />
+
+          {/* <Separator className="my-4" />
           <BusinessInfoFields
             register={register}
             error={errors.name?.message}
             name={company?.name || ""}
             taxId={company?.tax_id || ""}
             loading={loading}
-          />
-          <Separator className="my-4" />
-          <BusinessInfoFields
-            register={register}
-            error={errors.name?.message}
-            name={company?.name || ""}
-            taxId={company?.tax_id || ""}
-            loading={loading}
-          />
-          <Separator className="my-4" />
-          <BusinessInfoFields
-            register={register}
-            error={errors.name?.message}
-            name={company?.name || ""}
-            taxId={company?.tax_id || ""}
-            loading={loading}
-          />
-          <Separator className="my-4" />
+          /> */}
         </form>
       </div>
       <div className=" w-full md:w-1/2  rounded-md shadow-sm ">
-        <PreviewLayout />
+        <PreviewLayout config={previewConfig} />
       </div>
     </div>
   );
