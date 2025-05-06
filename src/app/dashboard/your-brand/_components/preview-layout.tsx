@@ -12,6 +12,7 @@ export default function PreviewLayout({
     logo: string | null;
     bannerColor: string;
     primaryColor: string;
+    bannerImage: string | null;
   };
 }) {
   return (
@@ -22,19 +23,36 @@ export default function PreviewLayout({
       }}
     >
       <div className="bg-white max-w-7xl w-full rounded-xl shadow-2xl overflow-hidden flex flex-col gap-6 border border-gray-200">
-        {/* Banner com fundo customizado */}
+        {/* Banner com imagem + logo sobreposto */}
         <div
-          className="h-40 w-full flex items-center justify-center"
+          className="h-40 w-full flex items-center justify-center relative"
           style={{ backgroundColor: config.bannerColor }}
         >
-          {config.logo ? (
-            <img src={config.logo} alt="Logo" className="h-16 object-contain" />
-          ) : (
-            <div className="w-20 h-20 bg-gray-300 rounded-md" />
+          {/* Banner no fundo */}
+          {config.bannerImage && (
+            <img
+              src={config.bannerImage}
+              alt="Banner"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+
+          {/* Logo sobreposto */}
+          {config.logo && (
+            <img
+              src={config.logo}
+              alt="Logo"
+              className="relative z-10 h-20 object-contain"
+            />
+          )}
+
+          {/* Placeholder se nenhum dos dois */}
+          {!config.logo && !config.bannerImage && (
+            <div className="w-20 h-20 bg-gray-300 rounded-md z-10" />
           )}
         </div>
 
-        {/* Etapas com cor primária */}
+        {/* Etapas */}
         <div className="flex justify-center items-center gap-4">
           <div
             className="text-white px-4 py-2 rounded-md font-bold shadow"
@@ -47,6 +65,7 @@ export default function PreviewLayout({
           </div>
         </div>
 
+        {/* Título */}
         <div className="text-center text-xl font-semibold -mt-4">Endereço</div>
 
         {/* Cards */}
@@ -66,6 +85,7 @@ export default function PreviewLayout({
 
         <Separator className="my-4" />
 
+        {/* Botões de navegação */}
         <div className="flex justify-between px-8 pb-6">
           <Button variant="outline" disabled>
             Anterior

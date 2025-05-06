@@ -2,21 +2,21 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import * as zod from "zod";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GiBurningTree } from "react-icons/gi";
-import * as zod from "zod";
 import { Separator } from "@/components/ui/separator";
-import BrandLogoUpload from "../brand-logo";
-import { BusinessInfoFields } from "./business-Info-fields";
 import { Skeleton } from "@/components/ui/skeleton";
+
+import BrandLogoUpload from "../brand-logo";
+import BannerImageUpload from "./banner-image-upload";
+import PreviewLayout from "./preview-layout";
 import { BusinessSchema } from "../../../../../schema";
 import { useGetUser } from "@/hooks/get-useUser";
-import PreviewLayout from "./preview-layout";
 import { useState } from "react";
+import ColorSettings from "./color-settings";
+import { BusinessInfoFields } from "./business-Info-fields";
 
 export default function YourBrand() {
   const { user, loading } = useGetUser();
@@ -34,22 +34,24 @@ export default function YourBrand() {
     formState: { errors },
   } = form;
 
-  const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
-    console.log("dados", values);
-  };
-
   const [previewConfig, setPreviewConfig] = useState<{
     logo: string | null;
+    bannerImage: string | null;
     bannerColor: string;
     primaryColor: string;
   }>({
     logo: null,
+    bannerImage: null,
     bannerColor: "#f5f5f5",
     primaryColor: "#000000",
   });
 
+  const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
+    console.log("dados", values);
+  };
+
   return (
-    <div className=" p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
+    <div className="p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
       <div className="w-full md:w-1/2 py-4 max-h-[calc(100vh-100px)] overflow-y-auto">
         <div className="flex justify-between items-center">
           {loading ? (
@@ -58,36 +60,22 @@ export default function YourBrand() {
               <Skeleton className="h-4 w-32" />
             </div>
           ) : (
-            <>
-              <div className="text-xl font-bold flex justify-start items-start flex-col">
-                Sua Marca
-                <div className="text-sm font-thin text-gray-500">
-                  ({company?.name})
-                </div>
-              </div>
-            </>
+            <div className="text-xl font-bold flex flex-col">
+              Sua Marca
+              <span className="text-sm font-thin text-gray-500">
+                ({company?.name})
+              </span>
+            </div>
           )}
-
-          {/* 
-          <Button
-            onClick={handleSubmit(onSubmit)}
-            disabled={!isDirty || isSubmitting}
-            className={`rounded-full ${
-              !isDirty
-                ? "opacity-50 cursor-not-allowed pointer-events-none"
-                : "opacity-100"
-            }`}
-          >
-            {isSubmitting ? "Enviando..." : "Salvar"}
-          </Button> */}
         </div>
+
         <Separator className="my-4" />
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {loading ? (
             <div className="space-y-2">
               <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-10 w-full rounded-md" />{" "}
+              <Skeleton className="h-10 w-full rounded-md" />
             </div>
           ) : (
             <>
@@ -101,21 +89,16 @@ export default function YourBrand() {
             </>
           )}
 
-          <Card>
-            <CardContent className="p-0 relative">
-              <div className="flex items-center justify-center h-40 bg-gray-100 rounded-md">
-                <div className="border-2 rounded-full border-gray-300 p-2 shadow-md">
-                  <GiBurningTree className="size-6" />
-                </div>
-                <Button
-                  variant="outline"
-                  className="absolute bottom-2 right-2 rounded-md shadow-sm"
-                >
-                  <Upload className="mr-2 h-4 w-4" /> Upload banner image
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <BannerImageUpload
+            banner={previewConfig.bannerImage}
+            onUploadBanner={base64 =>
+              setPreviewConfig(prev => ({ ...prev, bannerImage: base64 }))
+            }
+            onRemoveBanner={() =>
+              setPreviewConfig(prev => ({ ...prev, bannerImage: null }))
+            }
+          />
+
           <BrandLogoUpload
             logo={previewConfig.logo}
             onUploadLogo={base64 =>
@@ -125,18 +108,25 @@ export default function YourBrand() {
               setPreviewConfig(prev => ({ ...prev, logo: null }))
             }
           />
-
-          {/* <Separator className="my-4" />
+          <Separator className="my-4" />
           <BusinessInfoFields
             register={register}
             error={errors.name?.message}
             name={company?.name || ""}
             taxId={company?.tax_id || ""}
             loading={loading}
-          /> */}
+          />
+          <ColorSettings
+            bannerColor={previewConfig.bannerColor}
+            primaryColor={previewConfig.primaryColor}
+            onChange={(field, value) =>
+              setPreviewConfig(prev => ({ ...prev, [field]: value }))
+            }
+          />
         </form>
       </div>
-      <div className=" w-full md:w-1/2  rounded-md shadow-sm ">
+
+      <div className="w-full md:w-1/2 rounded-md shadow-sm">
         <PreviewLayout config={previewConfig} />
       </div>
     </div>
