@@ -15,6 +15,7 @@ import { BusinessInfoFields } from "./business-Info-fields";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BusinessSchema } from "../../../../../schema";
 import { useGetUser } from "@/hooks/get-useUser";
+import PreviewLayout from "./preview-layout";
 
 export default function YourBrand() {
   const { user, loading } = useGetUser();
@@ -38,7 +39,7 @@ export default function YourBrand() {
 
   return (
     <div className=" p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
-      <div className="w-full md:w-1/2 py-4">
+      <div className="w-full md:w-1/2 py-4 max-h-[calc(100vh-100px)] overflow-y-auto">
         <div className="flex justify-between items-center">
           {loading ? (
             <div className="space-y-2">
@@ -114,10 +115,27 @@ export default function YourBrand() {
             loading={loading}
           />
           <Separator className="my-4" />
+          <BusinessInfoFields
+            register={register}
+            error={errors.name?.message}
+            name={company?.name || ""}
+            taxId={company?.tax_id || ""}
+            loading={loading}
+          />
+          <Separator className="my-4" />
+          <BusinessInfoFields
+            register={register}
+            error={errors.name?.message}
+            name={company?.name || ""}
+            taxId={company?.tax_id || ""}
+            loading={loading}
+          />
+          <Separator className="my-4" />
         </form>
       </div>
-
-      <div className="bg-gray-800 w-full md:w-1/2  p-4">alogo</div>
+      <div className=" w-full md:w-1/2  rounded-md shadow-sm ">
+        <PreviewLayout />
+      </div>
     </div>
   );
 }
