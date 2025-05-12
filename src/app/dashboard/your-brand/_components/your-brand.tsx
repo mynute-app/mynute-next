@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
@@ -14,13 +15,18 @@ import BannerImageUpload from "./banner-image-upload";
 import PreviewLayout from "./preview-layout";
 import { BusinessSchema } from "../../../../../schema";
 import { useGetUser } from "@/hooks/get-useUser";
-import { useState } from "react";
 import ColorSettings from "./color-settings";
 import { BusinessInfoFields } from "./business-Info-fields";
+import { useCompanyDesign } from "@/hooks/use-company-design";
+import ThemeSelector from "./ThemeSelector";
 
 export default function YourBrand() {
   const { user, loading } = useGetUser();
   const company = user?.company;
+
+  const { config: loadedConfig, loading: designLoading } =
+    useCompanyDesign("1");
+
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
     defaultValues: {
@@ -34,24 +40,52 @@ export default function YourBrand() {
     formState: { errors },
   } = form;
 
-  const [previewConfig, setPreviewConfig] = useState<{
-    logo: string | null;
-    bannerImage: string | null;
-    bannerColor: string;
-    primaryColor: string;
-  }>({
-    logo: null,
-    bannerImage: null,
+  const [previewConfig, setPreviewConfig] = useState({
+    logo: null as string | null,
+    bannerImage: null as string | null,
     bannerColor: "#f5f5f5",
     primaryColor: "#000000",
+    dark_mode: false,
   });
 
+  useEffect(() => {
+    if (loadedConfig) {
+      setPreviewConfig(loadedConfig);
+    }
+  }, [loadedConfig]);
+
   const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
-    console.log("dados", values);
+    console.log("Form data", values);
+    console.log("Preview config", previewConfig);
+
+    await fetch("http://localhost:3333/company/1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        design: {
+          colors: {
+            primary: previewConfig.primaryColor,
+            secondary: previewConfig.bannerColor,
+            tertiary: "#34a853",
+            quaternary: "#fbbc05",
+          },
+          images: {
+            logo_url: previewConfig.logo,
+            banner_url: previewConfig.bannerImage,
+            background_url: "",
+            favicon_url: "",
+          },
+          font: "Roboto, sans-serif",
+          dark_mode: previewConfig.dark_mode,
+          custom_css: "",
+        },
+      }),
+    });
   };
 
   return (
     <div className="p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
+      {/* Painel de edição */}
       <div className="w-full md:w-1/2 py-4 max-h-[calc(100vh-100px)] overflow-y-auto">
         <div className="flex justify-between items-center">
           {loading ? (
@@ -89,6 +123,7 @@ export default function YourBrand() {
             </>
           )}
 
+          {/* Upload de Banner */}
           <BannerImageUpload
             banner={previewConfig.bannerImage}
             onUploadBanner={base64 =>
@@ -99,6 +134,7 @@ export default function YourBrand() {
             }
           />
 
+          {/* Upload de Logo */}
           <BrandLogoUpload
             logo={previewConfig.logo}
             onUploadLogo={base64 =>
@@ -108,7 +144,10 @@ export default function YourBrand() {
               setPreviewConfig(prev => ({ ...prev, logo: null }))
             }
           />
+
           <Separator className="my-4" />
+
+          {/* Informações básicas */}
           <BusinessInfoFields
             register={register}
             error={errors.name?.message}
@@ -116,6 +155,8 @@ export default function YourBrand() {
             taxId={company?.tax_id || ""}
             loading={loading}
           />
+
+          {/* Cores personalizadas */}
           <ColorSettings
             bannerColor={previewConfig.bannerColor}
             primaryColor={previewConfig.primaryColor}
@@ -123,9 +164,30 @@ export default function YourBrand() {
               setPreviewConfig(prev => ({ ...prev, [field]: value }))
             }
           />
+
+          <Separator className="my-4" />
+
+          <ThemeSelector
+            value={previewConfig.dark_mode}
+            onChange={theme =>
+              setPreviewConfig(prev => ({ ...prev, dark_mode: theme }))
+            }
+          />
+
+          <Separator className="my-4" />
+
+          <div className="pt-6">
+            <button
+              type="submit"
+              className="bg-primary text-white rounded-md px-4 py-2"
+            >
+              Salvar alterações
+            </button>
+          </div>
         </form>
       </div>
 
+      {/* Painel de visualização */}
       <div className="w-full md:w-1/2 rounded-md shadow-sm">
         <PreviewLayout config={previewConfig} />
       </div>

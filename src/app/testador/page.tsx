@@ -1,6 +1,3 @@
-import { CalendarEventForm } from "../testador/CalendarEventForm";
-import UserAvatar from "./user";
-
 const Page = () => {
   return (
     <div className="container mx-auto p-4 bg-slate-500">
