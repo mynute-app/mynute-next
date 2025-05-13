@@ -132,7 +132,7 @@
   ],
   "brands": [
     {
-      "id": 1,
+      "id": "1",
       "businessId": "3398",
       "logo": "/banner.webp",
       "bannerImage": "/banner.webp",
@@ -140,7 +140,6 @@
       "primaryColor": "#000000"
     }
   ],
-
   "company": [
     {
       "id": "1",
@@ -148,20 +147,14 @@
       "email": "contato@kaki.com",
       "design": {
         "colors": {
-          "primary": "#f4a261",
-          "secondary": "#e76f51",
-          "tertiary": "#2a9d8f",
-          "quaternary": "#264653"
+          "primary": "#1b041a",
+          "secondary": "#01040e"
         },
         "images": {
           "logo_url": "/logo-kaki.png",
-          "banner_url": "/banner.webp",
-          "background_url": "/bg-pattern.png",
-          "favicon_url": "/favicon.ico"
+          "banner_url": null
         },
-        "font": "Inter, sans-serif",
-        "dark_mode": false,
-        "custom_css": ".custom-class { padding: 10px; }"
+        "dark_mode": false
       }
     }
   ]

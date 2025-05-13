@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -11,8 +12,8 @@ import { CardInformation } from "./Customer-Information";
 import { AddressStep } from "../form/Address";
 import { BusinessStep } from "../form/Business";
 import { useToast } from "@/hooks/use-toast";
-import { useBrandByBusinessId } from "@/hooks/use-brand-by-businessId";
 import { Skeleton } from "../ui/skeleton";
+import { useCompanyDesign } from "@/hooks/use-company-design";
 
 const steps = [
   { id: 1, title: "Endereço" },
@@ -24,7 +25,7 @@ const steps = [
 ];
 
 const Wizard: React.FC = () => {
-  const { brand, loading: brandLoading } = useBrandByBusinessId();
+  const { config: brand, loading: brandLoading } = useCompanyDesign("1");
 
   const {
     currentStep,
@@ -40,6 +41,7 @@ const Wizard: React.FC = () => {
   } = useWizardStore();
   const [error, setError] = useState<string>("");
   const { toast } = useToast();
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const addressId = params.get("addressId");
@@ -116,20 +118,15 @@ const Wizard: React.FC = () => {
             throw new Error("Erro ao criar evento no calendário.");
           }
 
-          console.log("✅ Evento criado com sucesso!");
-
-          // 🚀 **Correção no envio do e-mail**
           if (!clientInfo.email || !clientInfo.fullName || !clientInfo.phone) {
             throw new Error("Os dados do cliente estão incompletos.");
           }
 
           const emailData = {
-            fullName: clientInfo.fullName, // Nome do cliente
-            email: clientInfo.email, // E-mail do cliente
-            phone: clientInfo.phone, // Telefone do cliente
+            fullName: clientInfo.fullName,
+            email: clientInfo.email,
+            phone: clientInfo.phone,
           };
-
-          console.log("📩 Enviando e-mail com os dados:", emailData);
 
           const emailResponse = await fetch("/api/send", {
             method: "POST",
@@ -141,14 +138,11 @@ const Wizard: React.FC = () => {
 
           if (!emailResponse.ok) {
             const errorResponse = await emailResponse.json();
-            console.error("❌ Erro ao enviar e-mail:", errorResponse);
             throw new Error("Erro ao enviar o e-mail de confirmação.");
           }
 
-          console.log("✅ E-mail de confirmação enviado!");
           alert("E-mail de confirmação enviado com sucesso!");
         } catch (error) {
-          console.error("❌ Erro:", error);
           alert("Não foi possível processar sua solicitação. Tente novamente.");
         }
 
@@ -168,11 +162,9 @@ const Wizard: React.FC = () => {
     }
   };
 
-  console.log(brand, "logo aqui");
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">
       <div className="relative shadow-xl h-[180px] overflow-hidden rounded-t-lg">
-        {/* Banner como imagem de fundo, se existir */}
         {brand?.bannerImage ? (
           <Image
             src={brand.bannerImage}
@@ -181,17 +173,14 @@ const Wizard: React.FC = () => {
             className="object-cover"
           />
         ) : (
-          // Cor de fundo caso não haja banner
           <div
             className="absolute inset-0"
             style={{ backgroundColor: brand?.bannerColor || "#f5f5f5" }}
           />
         )}
 
-        {/* Overlay decorativo (pode ajustar opacidade se quiser menor ou maior destaque) */}
         <div className="absolute inset-0 bg-white opacity-15" />
 
-        {/* Logo centralizado */}
         <div className="flex justify-center items-center h-full relative z-10">
           {brandLoading ? (
             <Skeleton className="w-[150px] h-[120px] rounded-md" />
@@ -222,7 +211,6 @@ const Wizard: React.FC = () => {
               )
               .map(step => {
                 const isLeft = step.id < currentStep;
-                const isRight = step.id > currentStep;
 
                 return (
                   <div
@@ -277,11 +265,13 @@ const Wizard: React.FC = () => {
         <div className="flex-1 bg-white p-2 rounded-lg shadow-md mb-4 overflow-y-auto">
           {renderStepContent()}
         </div>
+
         <div className="mt-auto flex justify-between ">
           <Button onClick={prevStep} disabled={currentStep === 1}>
             Anterior
           </Button>
           <Button
+            onClick={validateAndProceed}
             style={{ backgroundColor: brand?.primaryColor, color: "white" }}
           >
             {currentStep === steps.length ? "Finalizar" : "Próximo"}

@@ -29,9 +29,6 @@ export default function YourBrand() {
 
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
-    defaultValues: {
-      name: "",
-    },
   });
 
   const {
@@ -58,35 +55,42 @@ export default function YourBrand() {
     console.log("Form data", values);
     console.log("Preview config", previewConfig);
 
-    await fetch("http://localhost:3333/company/1", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        design: {
-          colors: {
-            primary: previewConfig.primaryColor,
-            secondary: previewConfig.bannerColor,
-            tertiary: "#34a853",
-            quaternary: "#fbbc05",
-          },
-          images: {
-            logo_url: previewConfig.logo,
-            banner_url: previewConfig.bannerImage,
-            background_url: "",
-            favicon_url: "",
-          },
-          font: "Roboto, sans-serif",
-          dark_mode: previewConfig.dark_mode,
-          custom_css: "",
+    const patchBody = {
+      design: {
+        colors: {
+          primary: previewConfig.primaryColor,
+          secondary: previewConfig.bannerColor,
         },
-      }),
-    });
+        images: {
+          logo_url: previewConfig.logo,
+          banner_url: previewConfig.bannerImage,
+        },
+        dark_mode: previewConfig.dark_mode,
+      },
+    };
+
+    try {
+      const response = await fetch("http://localhost:3333/company/1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patchBody),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar a configuração da empresa.");
+      }
+
+      console.log("✅ Configuração atualizada com sucesso!");
+    } catch (error) {
+      console.error("❌ Erro no PATCH:", error);
+    }
   };
 
   return (
     <div className="p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
       {/* Painel de edição */}
-      <div className="w-full md:w-1/2 py-4 max-h-[calc(100vh-100px)] overflow-y-auto">
+
+      <div className="w-full md:w-1/2 py-4 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
         <div className="flex justify-between items-center">
           {loading ? (
             <div className="space-y-2">
@@ -123,7 +127,6 @@ export default function YourBrand() {
             </>
           )}
 
-          {/* Upload de Banner */}
           <BannerImageUpload
             banner={previewConfig.bannerImage}
             onUploadBanner={base64 =>
@@ -134,7 +137,6 @@ export default function YourBrand() {
             }
           />
 
-          {/* Upload de Logo */}
           <BrandLogoUpload
             logo={previewConfig.logo}
             onUploadLogo={base64 =>
@@ -147,16 +149,14 @@ export default function YourBrand() {
 
           <Separator className="my-4" />
 
-          {/* Informações básicas */}
-          <BusinessInfoFields
+          {/* <BusinessInfoFields
             register={register}
             error={errors.name?.message}
             name={company?.name || ""}
             taxId={company?.tax_id || ""}
             loading={loading}
-          />
+          /> */}
 
-          {/* Cores personalizadas */}
           <ColorSettings
             bannerColor={previewConfig.bannerColor}
             primaryColor={previewConfig.primaryColor}
@@ -187,7 +187,6 @@ export default function YourBrand() {
         </form>
       </div>
 
-      {/* Painel de visualização */}
       <div className="w-full md:w-1/2 rounded-md shadow-sm">
         <PreviewLayout config={previewConfig} />
       </div>
