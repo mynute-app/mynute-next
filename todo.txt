@@ -1,7 +1,11 @@
-1 = Estou conseguindo criar uma branch (Fiz o unico teste na branch ), onde eu consigo criar um endereço 
-vinculado a outra empresa
+1 = //Todo: Passar o Id da Empresa todos que eu preciso saber a empresa
+          // Branch, service, appointment, employee
+        X-Auth-Token X-Company-ID 
+
+precisa ser passado o Auth-Token no lugar do Authorization
 
 
-2= modal do edit não funciona depois de aberto (não tem click)
+2 = ajustar o layout ( Client), Remover a trava de fluxo
 
-3= Alerta(teste), acredito que quando tendo criar uma nova empresa tudo que foi 
+
+3 = remover o dark mode por enquanto 

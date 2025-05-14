@@ -82,7 +82,10 @@ export const { handlers, auth, signIn } = NextAuth({
           const loginUrl = new URL("http://localhost:4000/employee/login");
           const response = await fetch(loginUrl.toString(), {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "X-Company-ID": "80f335b4-a9c6-4c2a-957a-f67546f04f3b",
+            },
             body: JSON.stringify({ email, password }),
           });
 
@@ -90,7 +93,7 @@ export const { handlers, auth, signIn } = NextAuth({
             throw new Error(`Falha ao autenticar. Código: ${response.status}`);
           }
 
-          const token = response.headers.get("Authorization");
+          const token = response.headers.get("X-Auth-Token");
 
           if (!token) throw new Error("Token não encontrado na resposta.");
 

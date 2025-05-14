@@ -147,12 +147,12 @@
       "email": "contato@kaki.com",
       "design": {
         "colors": {
-          "primary": "#1b041a",
-          "secondary": "#01040e"
+          "primary": "#d214c8",
+          "secondary": "#2c5af2"
         },
         "images": {
           "logo_url": "/logo-kaki.png",
-          "banner_url": null
+          "banner_url": "/banner.webp"
         },
         "dark_mode": false
       }

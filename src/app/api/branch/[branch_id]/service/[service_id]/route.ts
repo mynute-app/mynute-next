@@ -21,6 +21,8 @@ export const POST = auth(async function POST(req, ctx) {
         headers: {
           "Content-Type": "application/json",
           Authorization,
+          "X-Company-ID": "1", //Todo: Passar o Id da Empresa todos que eu preciso saber a empresa
+          // Branch, service, appointment, employee
         },
       }
     );
