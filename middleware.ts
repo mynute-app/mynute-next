@@ -1,9 +1,10 @@
-import { auth } from "./auth";
+// middleware.ts
+import { NextRequest, NextResponse } from "next/server";
 
-export default auth(req => {
-  if (!req.auth && req.nextUrl.pathname !== "/auth/login") {
-    console.log("Redirecting to login");
-    const newUrl = new URL("/auth/login", req.nextUrl.origin);
-    return Response.redirect(newUrl);
-  }
-});
+export function middleware(req: NextRequest) {
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/((?!_next|favicon.ico).*)"],
+};
