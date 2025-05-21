@@ -73,18 +73,38 @@ export const { handlers, auth, signIn } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      authorize: async credentials => {
+      authorize: async (credentials, req) => {
         try {
           const { email, password } = await signInSchema.parseAsync(
             credentials
           );
 
-          const loginUrl = new URL("http://localhost:4000/employee/login");
-          const response = await fetch(loginUrl.toString(), {
+          // ✅ Captura o subdomínio da requisição via header
+          const host = req?.headers?.get("host") || "";
+          const subdomain = host.split(".")[0];
+
+          if (!subdomain) {
+            throw new Error("Subdomínio não identificado na requisição.");
+          }
+
+          // ✅ Busca empresa via rota local (proxy)
+          const companyRes = await fetch(
+            `http://localhost:3000/api/company/subdomain/${subdomain}`,
+            { cache: "no-store" }
+          );
+
+          if (!companyRes.ok) {
+            throw new Error("Empresa não encontrada para o subdomínio.");
+          }
+
+          const company = await companyRes.json();
+
+          // ✅ Realiza login com X-Company-ID
+          const response = await fetch("http://localhost:4000/employee/login", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "X-Company-ID": "f5180756-82ec-48ea-8326-870c9c4200a4",
+              "X-Company-ID": company.id,
             },
             body: JSON.stringify({ email, password }),
           });
@@ -95,9 +115,16 @@ export const { handlers, auth, signIn } = NextAuth({
 
           const token = response.headers.get("X-Auth-Token");
 
-          if (!token) throw new Error("Token não encontrado na resposta.");
+          if (!token) {
+            throw new Error("Token não encontrado na resposta.");
+          }
 
-          return { email, token };
+          return {
+            email,
+            token,
+            companyId: company.id,
+            subdomain,
+          };
         } catch (error) {
           if (error instanceof ZodError) {
             console.error("Erro de validação:", error.errors);
