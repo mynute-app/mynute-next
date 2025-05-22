@@ -10,6 +10,30 @@ export const GET = auth(async function GET(req) {
   }
 
   try {
+    const host = req.headers.get("host") || "";
+    const subdomain = host.split(".")[0];
+
+    if (!subdomain) {
+      return NextResponse.json(
+        { error: "Subdomínio não identificado." },
+        { status: 400 }
+      );
+    }
+
+    const companyRes = await fetch(
+      `${process.env.NEXTAUTH_URL}/api/company/subdomain/${subdomain}`,
+      { cache: "no-store" }
+    );
+
+    if (!companyRes.ok) {
+      return NextResponse.json(
+        { error: "Empresa não encontrada para esse subdomínio." },
+        { status: 404 }
+      );
+    }
+
+    const company = await companyRes.json();
+    console.log(company);
     const response = await fetch(
       `${process.env.BACKEND_URL}/employee/email/${email}`,
       {
@@ -17,19 +41,24 @@ export const GET = auth(async function GET(req) {
         headers: {
           "Content-Type": "application/json",
           Authorization,
+          "X-Company-ID": company.id,
         },
       }
     );
+    console.log("📦 Enviando para backend:");
+    console.log("URL:", `${process.env.BACKEND_URL}/employee/email/${email}`);
+    console.log("Authorization:", Authorization);
+    console.log("Company ID:", company.id);
 
     if (!response.ok) {
       throw new Error("Erro ao buscar os dados do usuário");
     }
 
     const data = await response.json();
-    console.log("QUERO MEU ID");
     return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json({ status: 500 });
+    console.error("Erro:", error);
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 });
 

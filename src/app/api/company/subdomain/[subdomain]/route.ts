@@ -22,7 +22,7 @@ export async function GET(
         },
       }
     );
-
+    console.log(res, 'aqui');
     if (!res.ok) {
       return NextResponse.json(
         { error: "Empresa não encontrada para esse subdomínio" },

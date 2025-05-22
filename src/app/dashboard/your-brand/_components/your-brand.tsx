@@ -86,6 +86,8 @@ export default function YourBrand() {
     }
   };
 
+  console.log(company);
+
   return (
     <div className="p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
       {/* Painel de edição */}

@@ -120,7 +120,7 @@ export function RegisterFormCompany({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className={cn("flex flex-col gap-3", className)}
+      className={cn("flex flex-col gap-2", className)}
       {...props}
     >
       <div className="flex flex-col items-center gap-1 text-center">
@@ -196,6 +196,26 @@ export function RegisterFormCompany({
             }}
           />
           <FormError message={errors.owner_phone?.message} />
+        </div>
+
+        <div className="grid gap-1">
+          <Label htmlFor="trading_name">Nome fantasia</Label>
+          <Input
+            id="trading_name"
+            {...register("trading_name")}
+            placeholder="Agenda"
+          />
+          <FormError message={errors.trading_name?.message} />
+        </div>
+
+        <div className="grid gap-1">
+          <Label htmlFor="start_subdomain">Subdomínio</Label>
+          <Input
+            id="start_subdomain"
+            {...register("start_subdomain")}
+            placeholder="agenda-yourcompany2"
+          />
+          <FormError message={errors.start_subdomain?.message} />
         </div>
 
         {/* Senha */}
