@@ -5,43 +5,49 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 
-export default function PreviewLayout({
-  config,
-}: {
-  config: {
-    logo: string | null;
-    bannerColor: string;
-    primaryColor: string;
-    bannerImage: string | null;
-    dark_mode: boolean;
-  };
-}) {
+type Config = {
+  logo?: string | null;
+  bannerColor?: string;
+  primaryColor?: string;
+  bannerImage?: string | null;
+  dark_mode?: boolean;
+};
+
+export default function PreviewLayout({ config }: { config: Config }) {
+  const {
+    logo = null,
+    bannerColor = "#f5f5f5",
+    primaryColor = "#000000",
+    bannerImage = null,
+    dark_mode = false,
+  } = config;
+
   return (
     <div className="w-full h-full flex items-center justify-center py-10 px-4">
       <div
         className={`max-w-7xl w-full rounded-xl shadow-2xl overflow-hidden flex flex-col gap-6 border border-gray-200 transition-colors duration-300 ${
-          config.dark_mode ? "bg-[#1a1a1a] text-white" : "bg-white text-black"
+          dark_mode ? "bg-[#1a1a1a] text-white" : "bg-white text-black"
         }`}
       >
         <div
           className="h-40 w-full flex items-center justify-center relative"
-          style={{ backgroundColor: config.bannerColor }}
+          style={{ backgroundColor: bannerColor }}
         >
-          {config.bannerImage && (
+          {bannerImage && (
             <img
-              src={config.bannerImage}
+              src={bannerImage}
               alt="Banner"
               className="absolute inset-0 w-full h-full object-cover"
             />
           )}
-          {config.logo && (
+          {logo && (
             <img
-              src={config.logo}
+              src={logo}
               alt="Logo"
               className="relative z-10 h-20 object-contain"
             />
           )}
-          {!config.logo && !config.bannerImage && (
+          {!logo && !bannerImage && (
             <div className="w-20 h-20 bg-gray-300 rounded-md z-10" />
           )}
         </div>
@@ -49,7 +55,7 @@ export default function PreviewLayout({
         <div className="flex justify-center items-center gap-4">
           <div
             className="text-white px-4 py-2 rounded-md font-bold shadow"
-            style={{ backgroundColor: config.primaryColor }}
+            style={{ backgroundColor: primaryColor }}
           >
             1
           </div>
@@ -80,9 +86,7 @@ export default function PreviewLayout({
           <Button variant="outline" disabled>
             Anterior
           </Button>
-          <Button
-            style={{ backgroundColor: config.primaryColor, color: "white" }}
-          >
+          <Button style={{ backgroundColor: primaryColor, color: "white" }}>
             Próximo
           </Button>
         </div>

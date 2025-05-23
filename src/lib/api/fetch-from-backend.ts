@@ -1,4 +1,3 @@
-import { PATCH } from './../../app/api/address/[id]/route';
 import { NextRequest } from "next/server";
 import { getCompanyFromRequest } from "./get-company-from-request";
 

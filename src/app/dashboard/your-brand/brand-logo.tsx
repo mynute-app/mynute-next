@@ -1,36 +1,46 @@
+"use client";
+
+import { useState } from "react";
 import { PiBuildingApartment } from "react-icons/pi";
 import { RiLandscapeLine, RiDeleteBin6Line } from "react-icons/ri";
 import React from "react";
 
-type BrandLogoUploadProps = {
-  logo: string | null;
-  onUploadLogo: (dataUrl: string) => void;
-  onRemoveLogo: () => void;
+type Props = {
+  initialLogoUrl?: string | null;
+  onFileChange?: (file: File | null) => void;
 };
 
-const BrandLogoUpload: React.FC<BrandLogoUploadProps> = ({
-  logo,
-  onUploadLogo,
-  onRemoveLogo,
-}) => {
+const BrandLogoUpload: React.FC<Props> = ({ initialLogoUrl, onFileChange }) => {
+  const [logoPreview, setLogoPreview] = useState<string | null>(
+    initialLogoUrl ?? null
+  );
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        if (reader.result) onUploadLogo(reader.result.toString());
+        if (reader.result) {
+          setLogoPreview(reader.result.toString());
+          onFileChange?.(file);
+        }
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoPreview(null);
+    onFileChange?.(null);
   };
 
   return (
     <div className="flex flex-row justify-start items-center gap-4">
       {/* Preview ou ícone padrão */}
       <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full border border-gray-300 overflow-hidden">
-        {logo ? (
+        {logoPreview ? (
           <img
-            src={logo}
+            src={logoPreview}
             alt="Logo preview"
             className="w-full h-full object-cover"
           />
@@ -57,10 +67,10 @@ const BrandLogoUpload: React.FC<BrandLogoUploadProps> = ({
             Upload logo
           </label>
 
-          {logo && (
+          {logoPreview && (
             <button
               type="button"
-              onClick={onRemoveLogo}
+              onClick={handleRemoveLogo}
               className="text-red-600 border border-red-300 rounded-full px-4 py-1 text-sm hover:bg-red-50 transition items-center gap-2 inline-flex"
             >
               <RiDeleteBin6Line />

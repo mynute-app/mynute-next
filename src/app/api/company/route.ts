@@ -1,38 +1,33 @@
 import { Employee } from "./../../../../types/company";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
+import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 
 export const GET = auth(async function GET(req) {
-  console.log("📡 Fazendo requisição direta para /company...");
+  console.log("📡 Buscando dados da empresa com base no usuário...");
 
   try {
+    const token = req.auth?.accessToken;
     const email = req.auth?.user.email;
-    const Authorization = req.auth?.accessToken;
 
-    if (!Authorization) {
-      return NextResponse.json({ status: 401 });
+    if (!token || !email) {
+      return NextResponse.json({ status: 401, message: "Não autorizado" });
     }
 
-    const userResponse = await fetch(
-      `${process.env.BACKEND_URL}/employee/email/${email}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization,
-        },
-      }
-    );
+    const user = await fetchFromBackend(req, `/employee/email/${email}`, token);
 
-    if (!userResponse.ok) {
-      throw new Error("Erro ao buscar os dados do usuário");
+    const companyId = user?.company_id;
+    console.log("", companyId);
+    if (!companyId) {
+      return NextResponse.json(
+        { status: 400, message: "Usuário sem empresa associada." },
+        { status: 400 }
+      );
     }
 
-    const userData = await userResponse.json();
-    console.log("👤 ID do usuário:", userData?.company.name);
-
+    // Passo 2: buscar empresa pelo ID
     const companyResponse = await fetch(
-      `${process.env.BACKEND_URL}/company/name/${userData?.company.name}`,
+      `${process.env.BACKEND_URL}/company/${companyId}`,
       {
         method: "GET",
         headers: {
@@ -40,22 +35,24 @@ export const GET = auth(async function GET(req) {
         },
       }
     );
-
-    console.log("🔄 Status da resposta de /company:", companyResponse.status);
-
-    const companyData = await companyResponse.json();
-
+    console.log("", companyResponse);
     if (!companyResponse.ok) {
-      throw new Error("Erro ao buscar os dados da empresa");
+      const error = await companyResponse.text();
+      console.error("❌ Erro ao buscar empresa:", error);
+      return NextResponse.json({ error }, { status: companyResponse.status });
     }
 
-    return NextResponse.json(companyData);
+    const company = await companyResponse.json();
+
+    console.log("✅ Empresa encontrada:", company);
+
+    return NextResponse.json(company);
   } catch (error) {
-    console.error("❌ Erro ao buscar dados da empresa:", error);
-    return NextResponse.json({
-      status: 500,
-      error: "Erro interno do servidor",
-    });
+    console.error("❌ Erro ao buscar empresa:", error);
+    return NextResponse.json(
+      { status: 500, error: "Erro interno ao buscar empresa." },
+      { status: 500 }
+    );
   }
 });
 

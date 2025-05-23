@@ -1,38 +1,46 @@
 "use client";
 
-import { Upload } from "lucide-react";
-import { RiDeleteBin6Line } from "react-icons/ri";
-import { GiBurningTree } from "react-icons/gi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Upload } from "lucide-react";
+import { useState } from "react";
+import { GiBurningTree } from "react-icons/gi";
+import { RiDeleteBin6Line } from "react-icons/ri";
 
 type Props = {
-  banner: string | null;
-  onUploadBanner: (dataUrl: string) => void;
-  onRemoveBanner: () => void;
+  initialBannerUrl?: string | null;
+  onFileChange?: (file: File | null) => void;
 };
 
 export default function BannerImageUpload({
-  banner,
-  onUploadBanner,
-  onRemoveBanner,
+  initialBannerUrl,
+  onFileChange,
 }: Props) {
+  const [banner, setBanner] = useState<string | null>(initialBannerUrl ?? null);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        if (reader.result) onUploadBanner(reader.result.toString());
+        if (reader.result) {
+          setBanner(reader.result.toString());
+          onFileChange?.(file); // Envia o arquivo para o pai
+        }
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemoveBanner = () => {
+    setBanner(null);
+    onFileChange?.(null); // Limpa o arquivo no pai
   };
 
   return (
     <Card>
       <CardContent className="p-0 relative">
         <div className="flex items-center justify-center h-40 bg-gray-100 rounded-md overflow-hidden relative">
-          {/* Preview do banner */}
           {banner ? (
             <img
               src={banner}
@@ -45,9 +53,7 @@ export default function BannerImageUpload({
             </div>
           )}
 
-          {/* Botões sobrepostos */}
           <div className="absolute bottom-2 right-2 flex gap-2 z-20">
-            {/* Upload Button (igual ao logo) */}
             <label
               htmlFor="upload-banner"
               className="cursor-pointer text-gray-700 border border-gray-300 rounded-full px-4 py-1 text-sm hover:bg-gray-100 transition items-center gap-2 inline-flex"
@@ -61,7 +67,7 @@ export default function BannerImageUpload({
                 type="button"
                 variant="destructive"
                 className="rounded-full px-4 py-1 text-sm"
-                onClick={onRemoveBanner}
+                onClick={handleRemoveBanner}
               >
                 <RiDeleteBin6Line className="mr-2 h-4 w-4" />
                 Remover
@@ -69,7 +75,6 @@ export default function BannerImageUpload({
             )}
           </div>
 
-          {/* input fora do label (igual ao logo) */}
           <input
             id="upload-banner"
             type="file"

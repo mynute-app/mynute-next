@@ -31,12 +31,11 @@ import { useGetUser } from "@/hooks/get-useUser";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, loading } = useGetUser();
-  console.log(user)
   const data = {
     user: {
       name: user?.name,
       email: user?.email,
-      avatar: user?.avatar || "/avatars/shadcn.jpg",
+      avatar: user?.avatar || "",
     },
     navMain: [
       {

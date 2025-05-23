@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
@@ -17,15 +17,20 @@ import { BusinessSchema } from "../../../../../schema";
 import { useGetUser } from "@/hooks/get-useUser";
 import ColorSettings from "./color-settings";
 import { BusinessInfoFields } from "./business-Info-fields";
-import { useCompanyDesign } from "@/hooks/use-company-design";
 import ThemeSelector from "./ThemeSelector";
+import { useCompany } from "@/hooks/get-company";
+import { useToast } from "@/hooks/use-toast";
+import { useUpdateCompanyDesignImages } from "@/hooks/useUpdateCompanyDesignImages";
 
 export default function YourBrand() {
   const { user, loading } = useGetUser();
-  const company = user?.company;
+  const { updateImages, loading: isUploading } = useUpdateCompanyDesignImages();
+  const { toast } = useToast();
+  const { company, loading: loadingCompany } = useCompany();
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
 
-  const { config: loadedConfig, loading: designLoading } =
-    useCompanyDesign("1");
+  console.log(company);
 
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
@@ -37,64 +42,35 @@ export default function YourBrand() {
     formState: { errors },
   } = form;
 
-  const [previewConfig, setPreviewConfig] = useState({
-    logo: null as string | null,
-    bannerImage: null as string | null,
-    bannerColor: "#f5f5f5",
-    primaryColor: "#000000",
-    dark_mode: false,
-  });
-
-  useEffect(() => {
-    if (loadedConfig) {
-      setPreviewConfig(loadedConfig);
-    }
-  }, [loadedConfig]);
-
-  const onSubmit = async (values: zod.infer<typeof BusinessSchema>) => {
-    console.log("Form data", values);
-    console.log("Preview config", previewConfig);
-
-    const patchBody = {
-      design: {
-        colors: {
-          primary: previewConfig.primaryColor,
-          secondary: previewConfig.bannerColor,
-        },
-        images: {
-          logo_url: previewConfig.logo,
-          banner_url: previewConfig.bannerImage,
-        },
-        dark_mode: previewConfig.dark_mode,
-      },
-    };
-
+  const handleUpload = async () => {
     try {
-      const response = await fetch("http://localhost:3333/company/1", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patchBody),
+      await updateImages({
+        logo: logoFile ?? undefined,
+        banner: bannerFile ?? undefined,
       });
 
-      if (!response.ok) {
-        throw new Error("Erro ao atualizar a configuração da empresa.");
-      }
-
-      console.log("✅ Configuração atualizada com sucesso!");
-    } catch (error) {
-      console.error("❌ Erro no PATCH:", error);
+      toast({
+        title: "✅ Imagens atualizadas com sucesso!",
+        variant: "default",
+      });
+    } catch (err) {
+      toast({
+        title: "❌ Erro ao atualizar imagens",
+        description: (err as Error).message,
+        variant: "destructive",
+      });
     }
   };
 
-  console.log(company);
+  // const renderCount = useRef(0);
+  // renderCount.current += 1;
+  // console.log("esse componente re-renderizou", renderCount.current, "vezes");
 
   return (
     <div className="p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
-      {/* Painel de edição */}
-
       <div className="w-full md:w-1/2 py-4 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
         <div className="flex justify-between items-center">
-          {loading ? (
+          {loadingCompany ? (
             <div className="space-y-2">
               <Skeleton className="h-6 w-48" />
               <Skeleton className="h-4 w-32" />
@@ -103,7 +79,7 @@ export default function YourBrand() {
             <div className="text-xl font-bold flex flex-col">
               Sua Marca
               <span className="text-sm font-thin text-gray-500">
-                ({company?.name})
+                {company.legal_name}
               </span>
             </div>
           )}
@@ -111,18 +87,19 @@ export default function YourBrand() {
 
         <Separator className="my-4" />
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {loading ? (
+        <form onSubmit={handleSubmit(handleUpload)} className="space-y-4">
+          {loadingCompany || loading ? (
             <div className="space-y-2">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-10 w-full rounded-md" />
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-10 w-full" />
             </div>
           ) : (
             <>
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                value={user?.email}
+                value={user?.email ?? ""}
                 readOnly
                 className="bg-gray-200 text-gray-500 cursor-not-allowed opacity-70 border-none focus:ring-0"
               />
@@ -130,23 +107,13 @@ export default function YourBrand() {
           )}
 
           <BannerImageUpload
-            banner={previewConfig.bannerImage}
-            onUploadBanner={base64 =>
-              setPreviewConfig(prev => ({ ...prev, bannerImage: base64 }))
-            }
-            onRemoveBanner={() =>
-              setPreviewConfig(prev => ({ ...prev, bannerImage: null }))
-            }
+            initialBannerUrl={company?.design?.images?.banner_url}
+            onFileChange={setBannerFile}
           />
 
           <BrandLogoUpload
-            logo={previewConfig.logo}
-            onUploadLogo={base64 =>
-              setPreviewConfig(prev => ({ ...prev, logo: base64 }))
-            }
-            onRemoveLogo={() =>
-              setPreviewConfig(prev => ({ ...prev, logo: null }))
-            }
+            initialLogoUrl={company?.design?.images?.logo_url}
+            onFileChange={setLogoFile}
           />
 
           <Separator className="my-4" />
@@ -159,22 +126,22 @@ export default function YourBrand() {
             loading={loading}
           /> */}
 
-          <ColorSettings
+          {/* <ColorSettings
             bannerColor={previewConfig.bannerColor}
             primaryColor={previewConfig.primaryColor}
             onChange={(field, value) =>
               setPreviewConfig(prev => ({ ...prev, [field]: value }))
             }
-          />
+          /> */}
 
           <Separator className="my-4" />
-
+          {/* 
           <ThemeSelector
             value={previewConfig.dark_mode}
             onChange={theme =>
               setPreviewConfig(prev => ({ ...prev, dark_mode: theme }))
             }
-          />
+          /> */}
 
           <Separator className="my-4" />
 
@@ -190,7 +157,15 @@ export default function YourBrand() {
       </div>
 
       <div className="w-full md:w-1/2 rounded-md shadow-sm">
-        <PreviewLayout config={previewConfig} />
+        <PreviewLayout
+          config={{
+            logo: company?.design?.images?.logo_url,
+            bannerImage: company?.design?.images?.banner_url,
+            bannerColor: company?.design?.colors?.secondary,
+            primaryColor: company?.design?.colors?.primary,
+            dark_mode: company?.design?.dark_mode,
+          }}
+        />
       </div>
     </div>
   );
