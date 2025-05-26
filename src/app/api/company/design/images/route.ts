@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "../../../../../../auth"
+import { auth } from "../../../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 
 export const PATCH = auth(async function PATCH(req) {
@@ -26,7 +26,7 @@ export const PATCH = auth(async function PATCH(req) {
     const formData = await req.formData();
 
     const uploadForm = new FormData();
-
+    console.log();
     const fileFields = ["logo", "banner", "favicon", "background"];
     fileFields.forEach(field => {
       const file = formData.get(field);
@@ -35,13 +35,14 @@ export const PATCH = auth(async function PATCH(req) {
       }
     });
 
-    // Requisição PATCH para o backend
+    console.log("Token", token);
+    console.log("Company ID:", companyId);
     const res = await fetch(
       `${process.env.BACKEND_URL}/company/${companyId}/design/images`,
       {
         method: "PATCH",
         headers: {
-          Authorization: token,
+          "X-Auth-Token": token,
           "X-Company-ID": companyId,
         },
         body: uploadForm,

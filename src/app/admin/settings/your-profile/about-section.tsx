@@ -1,11 +1,12 @@
 import { ClockIcon, LinkIcon, MailIcon, PhoneIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { User } from "../../../../../types/user";
 
 export const AboutSection = ({
   user,
   loading,
 }: {
-  user: any;
+  user: User;
   loading: boolean;
 }) => {
   if (loading) {

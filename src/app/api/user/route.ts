@@ -10,9 +10,9 @@ export const GET = auth(async function GET(req) {
   }
   try {
     const user = await fetchFromBackend(req, `/employee/email/${email}`, token);
+    console.log("USer", user);
     return Response.json(user);
   } catch (error) {
-    console.error("Erro na requisição:", error);
     return Response.json({ error: "Erro interno" }, { status: 500 });
   }
 });

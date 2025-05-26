@@ -15,7 +15,11 @@ export default function ProfileTabs() {
   const renderTabContent = () => {
     switch (activeTab) {
       case "about":
-        return <AboutSection user={user} loading={loading} />;
+        return user ? (
+          <AboutSection user={user} loading={loading} />
+        ) : (
+          <div>Carregando...</div>
+        );
       case "integrations":
         return <IntegrationsSection />;
       case "services":

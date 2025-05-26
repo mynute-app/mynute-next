@@ -1,39 +1,27 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
+import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 
 export const POST = auth(async function POST(req) {
   try {
-    const body = await req.json();
-
+    const token = req.auth?.accessToken;
     const email = req.auth?.user.email;
-    const Authorization = req.auth?.accessToken;
 
-    if (!email || !Authorization) {
+    if (!email || !token) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const userResponse = await fetch(
-      `${process.env.BACKEND_URL}/employee/email/${email}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization,
-        },
-      }
-    );
+    const user = await fetchFromBackend(req, `/employee/email/${email}`, token);
 
-    if (!userResponse.ok) {
-      throw new Error("Erro ao buscar os dados do usuário.");
-    }
-
-    const userData = await userResponse.json();
-    const companyId = userData?.company?.id;
-
+    const companyId = user?.company_id;
     if (!companyId) {
-      throw new Error("Usuário não possui uma empresa associada.");
+      return NextResponse.json(
+        { message: "Usuário sem empresa associada" },
+        { status: 400 }
+      );
     }
 
+    const body = await req.json();
     const requestBody = {
       name: body.name,
       description: body.description,
@@ -42,20 +30,11 @@ export const POST = auth(async function POST(req) {
       company_id: companyId,
     };
 
-    const response = await fetch(`${process.env.BACKEND_URL}/service`, {
+    const createdService = await fetchFromBackend(req, "/service", token, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization,
-      },
-      body: JSON.stringify(requestBody),
+      body: requestBody,
     });
 
-    if (!response.ok) {
-      throw new Error("Erro ao criar o serviço.");
-    }
-
-    const createdService = await response.json();
     return NextResponse.json(createdService, { status: 201 });
   } catch (error) {
     console.error("❌ Erro ao criar o serviço:", error);

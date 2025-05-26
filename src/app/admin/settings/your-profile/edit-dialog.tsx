@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { UserProfileForm } from "./edit-about-section";
 import { useUpdateUser } from "@/hooks/update-userUser";
+import { User } from "../../../../../types/user";
 
 export const EditDialog = ({
   user,
@@ -17,7 +18,7 @@ export const EditDialog = ({
   isOpen,
   onClose,
 }: {
-  user: any;
+  user: User;
   onSave: (updatedUser: any) => void;
   isOpen: boolean;
   onClose: () => void;

@@ -49,7 +49,7 @@ export type EditServiceFormValues = z.infer<typeof editServiceSchema>;
 type Props = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  service: EditServiceFormValues & { id: string };
+  service: (EditServiceFormValues & { id: string }) | null;
   onSave: (updated: EditServiceFormValues & { id: string }) => void;
 };
 
@@ -59,6 +59,7 @@ export const EditServiceDialog = ({
   service,
   onSave,
 }: Props) => {
+  if (!service) return null;
   const form = useForm<EditServiceFormValues>({
     resolver: zodResolver(editServiceSchema),
     defaultValues: service,
@@ -116,14 +117,6 @@ export const EditServiceDialog = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <FiClock className="text-gray-500 w-5 h-5 mt-7" />
-            <div className="flex-1">
-              <Label htmlFor="buffer">Tempo de Espera</Label>
-              <Input id="buffer" {...register("buffer")} />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
             <FiDollarSign className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
               <Label htmlFor="price">Preço</Label>
@@ -131,23 +124,7 @@ export const EditServiceDialog = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <FiMapPin className="text-gray-500 w-5 h-5 mt-7" />
-            <div className="flex-1">
-              <Label htmlFor="location">Localização</Label>
-              <Input id="location" {...register("location")} />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <FiTag className="text-gray-500 w-5 h-5 mt-7" />
-            <div className="flex-1">
-              <Label htmlFor="category">Categoria</Label>
-              <Input id="category" {...register("category")} />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 pt-2">
             <div className="flex items-center gap-3">
               <FiLock className="text-gray-500 w-5 h-5" />
               <Label htmlFor="hidden">Ocultar serviço</Label>

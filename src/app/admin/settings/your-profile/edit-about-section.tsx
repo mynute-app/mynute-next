@@ -1,14 +1,10 @@
-import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useGetUser } from "@/hooks/get-useUser";
 import { Button } from "@/components/ui/button";
 
-// Define o schema de validação usando Zod
 const userProfileSchema = z.object({
   name: z.string().min(1, "Name is required"),
   surname: z.string().min(1, "Surname is required"),
@@ -16,8 +12,10 @@ const userProfileSchema = z.object({
 
 type UserProfileFormValues = z.infer<typeof userProfileSchema>;
 
-export const UserProfileForm = ({ onSubmit }: any) => {
-  const { user, loading } = useGetUser();
+interface UserProfileFormProps {
+  onSubmit: (data: UserProfileFormValues) => void;
+}
+export const UserProfileForm = ({ onSubmit }: UserProfileFormProps) => {
   const { control, handleSubmit } = useForm<UserProfileFormValues>({
     resolver: zodResolver(userProfileSchema),
     defaultValues: {

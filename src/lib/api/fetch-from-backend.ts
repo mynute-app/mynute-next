@@ -39,7 +39,9 @@ export async function fetchFromBackend<T = any>(
         "Content-Type": "application/json",
         "X-Auth-Token": authToken,
         "X-Company-ID": company.id,
-        ...(company.schema_name && { "X-Company-Schema": company.schema_name }),
+        ...(company.schema_name && {
+          "X-Company-Schema": company.schema_name,
+        }),
         ...(options.headers || {}),
       },
       cache: options.cache ?? "no-store",
@@ -54,5 +56,11 @@ export async function fetchFromBackend<T = any>(
     );
   }
 
-  return response.json();
+  const contentType = response.headers.get("content-type");
+  if (contentType?.includes("application/json")) {
+    return response.json();
+  }
+
+  // Se não houver JSON, retorna vazio (ou undefined)
+  return {} as T;
 }
