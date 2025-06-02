@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 
-export const useCompany = () => {
+export const useCompany = (id?: string) => {
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        const response = await fetch(`/api/company`);
+        const endpoint = id ? `/api/company/${id}` : `/api/company`;
+        const response = await fetch(endpoint);
         const data = await response.json();
         setCompany(data);
       } catch (error) {
@@ -19,7 +20,7 @@ export const useCompany = () => {
     };
 
     fetchCompanyData();
-  }, []);
+  }, [id]);
 
   return { company, loading };
 };

@@ -25,7 +25,7 @@ export default function BannerImageUpload({
       reader.onloadend = () => {
         if (reader.result) {
           setBanner(reader.result.toString());
-          onFileChange?.(file); // Envia o arquivo para o pai
+          onFileChange?.(file);
         }
       };
       reader.readAsDataURL(file);

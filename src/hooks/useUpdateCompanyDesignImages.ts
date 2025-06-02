@@ -1,22 +1,21 @@
   import { useState } from "react";
-
   type Params = {
     logo?: File;
     banner?: File;
     favicon?: File;
     background?: File;
+    companyId?: string; // Add companyId parameter
   };
 
   export function useUpdateCompanyDesignImages() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
-
-    const updateImages = async ({
+    const [success, setSuccess] = useState(false);    const updateImages = async ({
       logo,
       banner,
       favicon,
       background,
+      companyId,
     }: Params) => {
       setLoading(true);
       setError(null);
@@ -28,6 +27,7 @@
         if (banner) formData.append("banner", banner);
         if (favicon) formData.append("favicon", favicon);
         if (background) formData.append("background", background);
+        if (companyId) formData.append("companyId", companyId);
 
         const res = await fetch("/api/company/design/images", {
           method: "PATCH",

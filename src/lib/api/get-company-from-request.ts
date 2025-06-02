@@ -1,4 +1,6 @@
+// lib/get-company-from-request.ts
 import { NextRequest } from "next/server";
+import { getCachedCompany, setCachedCompany } from "@/lib/cache/company-cache";
 
 export async function getCompanyFromRequest(req: NextRequest) {
   const host = req.headers.get("host") || "";
@@ -6,6 +8,11 @@ export async function getCompanyFromRequest(req: NextRequest) {
 
   if (!subdomain) {
     throw new Error("Subdomínio não identificado.");
+  }
+
+  const cached = getCachedCompany(subdomain);
+  if (cached) {
+    return cached;
   }
 
   const baseUrl = process.env.NEXTAUTH_URL || req.nextUrl.origin;
@@ -19,5 +26,13 @@ export async function getCompanyFromRequest(req: NextRequest) {
   }
 
   const company = await res.json();
-  return company;
+
+  const minimal = {
+    id: company.id,
+    schema_name: company.schema_name ?? undefined,
+  };
+
+  setCachedCompany(subdomain, minimal);
+
+  return minimal;
 }

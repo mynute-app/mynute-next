@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
+import { getCompanyIdFromSubdomain } from "@/utils/subdomain";
 
 export const PATCH = auth(async function PATCH(req) {
   try {
@@ -11,22 +12,51 @@ export const PATCH = auth(async function PATCH(req) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    // Busca o usuário e obtém o ID da empresa
-    const user = await fetchFromBackend(req, `/employee/email/${email}`, token);
-    const companyId = user?.company_id;
+    // Get form data from request
+    const formData = await req.formData();
+    
+    // Try to get the company ID from multiple sources
+    // 1. From the form data (explicitly passed)
+    // 2. From the subdomain
+    // 3. From the user's company association
+    
+    let companyId = null;
+    
+    // 1. Check if companyId is explicitly provided in the request
+    const requestedCompanyId = formData.get('companyId');
+    if (requestedCompanyId && typeof requestedCompanyId === 'string') {
+      companyId = requestedCompanyId;
+      console.log("Using company ID from request:", companyId);
+    }
+    
+    // 2. If not found, try to get from subdomain
+    if (!companyId) {
+      const host = req.headers.get("host");
+      if (host) {
+        const subdomainId = await getCompanyIdFromSubdomain(host);
+        if (subdomainId) {
+          companyId = subdomainId;
+          console.log("Using company ID from subdomain:", companyId);
+        }
+      }
+    }
+    
+    // 3. If still not found, get from user's company association
+    if (!companyId) {
+      const user = await fetchFromBackend(req, `/employee/email/${email}`, token);
+      companyId = user?.company_id;
+      console.log("Using company ID from user association:", companyId);
+    }
 
     if (!companyId) {
       return NextResponse.json(
-        { message: "Usuário sem empresa associada" },
+        { message: "Não foi possível determinar a empresa" },
         { status: 400 }
       );
     }
 
-    // Converte o corpo em formData
-    const formData = await req.formData();
-
+    // Prepare the upload form
     const uploadForm = new FormData();
-    console.log();
     const fileFields = ["logo", "banner", "favicon", "background"];
     fileFields.forEach(field => {
       const file = formData.get(field);

@@ -1,41 +1,35 @@
-import { NextResponse } from "next/server";
-import { auth } from "../../../../../auth";
+import { NextRequest, NextResponse } from "next/server";
+import { getCompanyIdFromSubdomain } from "@/utils/subdomain";
 
-export const GET = auth(async function GET(req, { params }) {
-  console.log("📡 Fazendo requisição para obter dados da empresa...");
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  // Use the provided ID from params, or try to get it from subdomain
+  let { id } = params;
 
-  try {
-    const companyId = params?.id;
-    const Authorization = req.auth?.accessToken;
+  // If the ID is "current", try to get the company ID from the subdomain
+  if (id === "current") {
+    const host = request.headers.get("host");
+    const subdomainId = await getCompanyIdFromSubdomain(host || "");
 
-    if (!Authorization) {
-      return NextResponse.json({ status: 401, message: "Não autorizado" });
+    if (!subdomainId) {
+      return NextResponse.json(
+        { error: "No company ID found in subdomain" },
+        { status: 404 }
+      );
     }
 
-    const companyResponse = await fetch(
-      `${process.env.BACKEND_URL}/company/name/${companyId}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization,
-        }, // 🔥 Adicionando tag para invalidar o cache dinamicamente
-      }
-    );
-
-    console.log("🔄 Status da resposta de /company:", companyResponse.status);
-
-    if (!companyResponse.ok) {
-      throw new Error("Erro ao buscar os dados da empresa");
-    }
-
-    const companyData = await companyResponse.json();
-    return NextResponse.json(companyData);
-  } catch (error) {
-    console.error("❌ Erro ao buscar dados da empresa:", error);
-    return NextResponse.json({
-      status: 500,
-      error: "Erro interno do servidor",
-    });
+    id = subdomainId;
   }
-});
+
+  const company = await fetch(`${process.env.BACKEND_URL}/company/${id}`).then(
+    res => res.json()
+  );
+
+  if (!company) {
+    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(company);
+}

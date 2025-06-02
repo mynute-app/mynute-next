@@ -2,51 +2,40 @@ import { Employee } from "./../../../../types/company";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
+import { getCompanyFromRequest } from "@/lib/api/get-company-from-request";
 
 export const GET = auth(async function GET(req) {
-  console.log("📡 Buscando dados da empresa com base no usuário...");
+  console.log("📡 Buscando dados da empresa com base no subdomínio...");
 
   try {
     const token = req.auth?.accessToken;
-    const email = req.auth?.user.email;
 
-    if (!token || !email) {
-      return NextResponse.json({ status: 401, message: "Não autorizado" });
+    if (!token) {
+      return NextResponse.json({ status: 401, message: "Não autorizadoasdas" });
     }
 
-    const user = await fetchFromBackend(req, `/employee/email/${email}`, token);
+    // Pegando a empresa do subdomínio
+    const company = await getCompanyFromRequest(req);
 
-    const companyId = user?.company_id;
-    console.log("", companyId);
-    if (!companyId) {
+    if (!company?.id) {
       return NextResponse.json(
-        { status: 400, message: "Usuário sem empresa associada." },
+        { status: 400, message: "Empresa não encontrada via subdomínio." },
         { status: 400 }
       );
     }
 
-    // Passo 2: buscar empresa pelo ID
     const companyResponse = await fetch(
-      `${process.env.BACKEND_URL}/company/${companyId}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      `${process.env.BACKEND_URL}/company/${company.id}`
     );
-    console.log("", companyResponse);
+
     if (!companyResponse.ok) {
       const error = await companyResponse.text();
       console.error("❌ Erro ao buscar empresa:", error);
       return NextResponse.json({ error }, { status: companyResponse.status });
     }
 
-    const company = await companyResponse.json();
-
-    console.log("✅ Empresa encontrada:", company);
-
-    return NextResponse.json(company);
+    const companyData = await companyResponse.json();
+    return NextResponse.json(companyData);
   } catch (error) {
     console.error("❌ Erro ao buscar empresa:", error);
     return NextResponse.json(

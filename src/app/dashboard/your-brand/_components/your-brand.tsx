@@ -21,16 +21,23 @@ import ThemeSelector from "./ThemeSelector";
 import { useCompany } from "@/hooks/get-company";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateCompanyDesignImages } from "@/hooks/useUpdateCompanyDesignImages";
+import { useLoadCompany } from "@/hooks/useLoadCompany";
+import { useCompanyFromSubdomain } from "@/hooks/use-company-from-subdomain";
+import { useSubdomain } from "@/hooks/use-subdomain";
 
 export default function YourBrand() {
-  const { user, loading } = useGetUser();
   const { updateImages, loading: isUploading } = useUpdateCompanyDesignImages();
   const { toast } = useToast();
-  const { company, loading: loadingCompany } = useCompany();
+  
+  const { companyId } = useSubdomain();
+  
+  const { company, loading: loadingCompany } = useCompany(companyId || undefined);
+  
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
 
-  console.log(company);
+  console.log("Current company from subdomain ID:", companyId);
+  console.log("Company data:", company);
 
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
@@ -41,12 +48,12 @@ export default function YourBrand() {
     handleSubmit,
     formState: { errors },
   } = form;
-
   const handleUpload = async () => {
     try {
       await updateImages({
         logo: logoFile ?? undefined,
         banner: bannerFile ?? undefined,
+        companyId: companyId || undefined, 
       });
 
       toast({
@@ -61,15 +68,9 @@ export default function YourBrand() {
       });
     }
   };
-
-  // const renderCount = useRef(0);
-  // renderCount.current += 1;
-  // console.log("esse componente re-renderizou", renderCount.current, "vezes");
-
   return (
     <div className="p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
-      <div className="w-full md:w-1/2 py-4 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
-        <div className="flex justify-between items-center">
+      <div className="w-full md:w-1/2 py-4 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">        <div className="flex justify-between items-center">
           {loadingCompany ? (
             <div className="space-y-2">
               <Skeleton className="h-6 w-48" />
@@ -79,7 +80,8 @@ export default function YourBrand() {
             <div className="text-xl font-bold flex flex-col">
               Sua Marca
               <span className="text-sm font-thin text-gray-500">
-                {company.legal_name}
+                {company?.legal_name}
+                {companyId && <span className="ml-2">(ID: {companyId})</span>}
               </span>
             </div>
           )}
@@ -88,24 +90,6 @@ export default function YourBrand() {
         <Separator className="my-4" />
 
         <form onSubmit={handleSubmit(handleUpload)} className="space-y-4">
-          {loadingCompany || loading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : (
-            <>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={user?.email ?? ""}
-                readOnly
-                className="bg-gray-200 text-gray-500 cursor-not-allowed opacity-70 border-none focus:ring-0"
-              />
-            </>
-          )}
-
           <BannerImageUpload
             initialBannerUrl={company?.design?.images?.banner_url}
             onFileChange={setBannerFile}
@@ -154,18 +138,22 @@ export default function YourBrand() {
             </button>
           </div>
         </form>
-      </div>
-
-      <div className="w-full md:w-1/2 rounded-md shadow-sm">
-        <PreviewLayout
-          config={{
-            logo: company?.design?.images?.logo_url,
-            bannerImage: company?.design?.images?.banner_url,
-            bannerColor: company?.design?.colors?.secondary,
-            primaryColor: company?.design?.colors?.primary,
-            dark_mode: company?.design?.dark_mode,
-          }}
-        />
+      </div>      <div className="w-full md:w-1/2 rounded-md shadow-sm">
+        {loadingCompany ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <Skeleton className="w-full h-[600px] rounded-md" />
+          </div>
+        ) : (
+          <PreviewLayout
+            config={{
+              logo: company?.design?.images?.logo_url,
+              bannerImage: company?.design?.images?.banner_url,
+              bannerColor: company?.design?.colors?.secondary,
+              primaryColor: company?.design?.colors?.primary,
+              dark_mode: company?.design?.dark_mode,
+            }}
+          />
+        )}
       </div>
     </div>
   );
