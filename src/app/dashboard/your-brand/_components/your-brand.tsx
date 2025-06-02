@@ -1,12 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
-
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -14,30 +11,30 @@ import BrandLogoUpload from "../brand-logo";
 import BannerImageUpload from "./banner-image-upload";
 import PreviewLayout from "./preview-layout";
 import { BusinessSchema } from "../../../../../schema";
-import { useGetUser } from "@/hooks/get-useUser";
-import ColorSettings from "./color-settings";
-import { BusinessInfoFields } from "./business-Info-fields";
-import ThemeSelector from "./ThemeSelector";
-import { useCompany } from "@/hooks/get-company";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateCompanyDesignImages } from "@/hooks/useUpdateCompanyDesignImages";
-import { useLoadCompany } from "@/hooks/useLoadCompany";
-import { useCompanyFromSubdomain } from "@/hooks/use-company-from-subdomain";
-import { useSubdomain } from "@/hooks/use-subdomain";
+import { useCompanyWithFallback } from "@/hooks/use-company-with-fallback";
 
 export default function YourBrand() {
   const { updateImages, loading: isUploading } = useUpdateCompanyDesignImages();
   const { toast } = useToast();
-  
-  const { companyId } = useSubdomain();
-  
-  const { company, loading: loadingCompany } = useCompany(companyId || undefined);
-  
+
+  // Use our new hook with fallbacks
+  const {
+    company,
+    companyId,
+    loading: loadingCompany,
+    hasData,
+  } = useCompanyWithFallback();
+
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
 
-  console.log("Current company from subdomain ID:", companyId);
-  console.log("Company data:", company);
+  // Log company data for debugging
+  useEffect(() => {
+    console.log("Company data with fallbacks:", company);
+    console.log("Has company data:", hasData);
+  }, [company, hasData]);
 
   const form = useForm<zod.infer<typeof BusinessSchema>>({
     resolver: zodResolver(BusinessSchema),
@@ -48,12 +45,13 @@ export default function YourBrand() {
     handleSubmit,
     formState: { errors },
   } = form;
+
   const handleUpload = async () => {
     try {
       await updateImages({
         logo: logoFile ?? undefined,
         banner: bannerFile ?? undefined,
-        companyId: companyId || undefined, 
+        companyId: companyId || undefined,
       });
 
       toast({
@@ -68,9 +66,11 @@ export default function YourBrand() {
       });
     }
   };
+
   return (
     <div className="p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
-      <div className="w-full md:w-1/2 py-4 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">        <div className="flex justify-between items-center">
+      <div className="w-full md:w-1/2 py-4 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
+        <div className="flex justify-between items-center">
           {loadingCompany ? (
             <div className="space-y-2">
               <Skeleton className="h-6 w-48" />
@@ -80,7 +80,7 @@ export default function YourBrand() {
             <div className="text-xl font-bold flex flex-col">
               Sua Marca
               <span className="text-sm font-thin text-gray-500">
-                {company?.legal_name}
+                {company.name}
                 {companyId && <span className="ml-2">(ID: {companyId})</span>}
               </span>
             </div>
@@ -91,12 +91,12 @@ export default function YourBrand() {
 
         <form onSubmit={handleSubmit(handleUpload)} className="space-y-4">
           <BannerImageUpload
-            initialBannerUrl={company?.design?.images?.banner_url}
+            initialBannerUrl={company.bannerUrl}
             onFileChange={setBannerFile}
           />
 
           <BrandLogoUpload
-            initialLogoUrl={company?.design?.images?.logo_url}
+            initialLogoUrl={company.logoUrl}
             onFileChange={setLogoFile}
           />
 
@@ -105,14 +105,14 @@ export default function YourBrand() {
           {/* <BusinessInfoFields
             register={register}
             error={errors.name?.message}
-            name={company?.name || ""}
-            taxId={company?.tax_id || ""}
-            loading={loading}
+            name={company.name || ""}
+            taxId={company.taxId || ""}
+            loading={loadingCompany}
           /> */}
 
           {/* <ColorSettings
-            bannerColor={previewConfig.bannerColor}
-            primaryColor={previewConfig.primaryColor}
+            bannerColor={company.secondaryColor}
+            primaryColor={company.primaryColor}
             onChange={(field, value) =>
               setPreviewConfig(prev => ({ ...prev, [field]: value }))
             }
@@ -121,7 +121,7 @@ export default function YourBrand() {
           <Separator className="my-4" />
           {/* 
           <ThemeSelector
-            value={previewConfig.dark_mode}
+            value={company.darkMode}
             onChange={theme =>
               setPreviewConfig(prev => ({ ...prev, dark_mode: theme }))
             }
@@ -133,12 +133,15 @@ export default function YourBrand() {
             <button
               type="submit"
               className="bg-primary text-white rounded-md px-4 py-2"
+              disabled={isUploading}
             >
-              Salvar alterações
+              {isUploading ? "Salvando..." : "Salvar alterações"}
             </button>
           </div>
         </form>
-      </div>      <div className="w-full md:w-1/2 rounded-md shadow-sm">
+      </div>
+
+      <div className="w-full md:w-1/2 rounded-md shadow-sm">
         {loadingCompany ? (
           <div className="w-full h-full flex items-center justify-center">
             <Skeleton className="w-full h-[600px] rounded-md" />
@@ -146,11 +149,11 @@ export default function YourBrand() {
         ) : (
           <PreviewLayout
             config={{
-              logo: company?.design?.images?.logo_url,
-              bannerImage: company?.design?.images?.banner_url,
-              bannerColor: company?.design?.colors?.secondary,
-              primaryColor: company?.design?.colors?.primary,
-              dark_mode: company?.design?.dark_mode,
+              logo: company.logoUrl,
+              bannerImage: company.bannerUrl,
+              bannerColor: company.secondaryColor,
+              primaryColor: company.primaryColor,
+              dark_mode: company.darkMode,
             }}
           />
         )}
