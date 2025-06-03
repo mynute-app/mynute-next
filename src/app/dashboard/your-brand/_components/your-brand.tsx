@@ -1,71 +1,83 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as zod from "zod";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-
-import BrandLogoUpload from "../brand-logo";
-import BannerImageUpload from "./banner-image-upload";
-import PreviewLayout from "./preview-layout";
-import { BusinessSchema } from "../../../../../schema";
-import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from "react";
+import { useCompany } from "@/hooks/get-company";
 import { useUpdateCompanyDesignImages } from "@/hooks/useUpdateCompanyDesignImages";
-import { useCompanyWithFallback } from "@/hooks/use-company-with-fallback";
+import { useToast } from "@/hooks/use-toast";
+import BannerImageUpload from "./banner-image-upload";
+import BrandLogoUpload from "../brand-logo";
+import PreviewLayout from "./preview-layout";
+import ColorSettings from "./color-settings"; // ⬅️ certifique-se que esse nome está correto
 
 export default function YourBrand() {
-  const { updateImages, loading: isUploading } = useUpdateCompanyDesignImages();
-  const { toast } = useToast();
-
-  // Use our new hook with fallbacks
-  const {
-    company,
-    companyId,
-    loading: loadingCompany,
-    hasData,
-  } = useCompanyWithFallback();
-
+  const { company, loading: loadingCompany } = useCompany();
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Log company data for debugging
-  useEffect(() => {
-    console.log("Company data with fallbacks:", company);
-    console.log("Has company data:", hasData);
-  }, [company, hasData]);
-
-  const form = useForm<zod.infer<typeof BusinessSchema>>({
-    resolver: zodResolver(BusinessSchema),
+  const [colorConfig, setColorConfig] = useState({
+    primary: "#000000",
+    secondary: "#FFFFFF",
+    tertiary: "#CCCCCC",
+    quaternary: "#999999",
   });
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = form;
+  const { updateImages } = useUpdateCompanyDesignImages();
+  const { toast } = useToast();
 
-  const handleUpload = async () => {
-    try {
-      await updateImages({
-        logo: logoFile ?? undefined,
-        banner: bannerFile ?? undefined,
-        companyId: companyId || undefined,
-      });
-
-      toast({
-        title: "✅ Imagens atualizadas com sucesso!",
-        variant: "default",
-      });
-    } catch (err) {
-      toast({
-        title: "❌ Erro ao atualizar imagens",
-        description: (err as Error).message,
-        variant: "destructive",
+  useEffect(() => {
+    if (company?.design?.colors) {
+      setColorConfig({
+        primary: company.design.colors.primary || "#000000",
+        secondary: company.design.colors.secondary || "#FFFFFF",
+        tertiary: company.design.colors.tertiary || "#CCCCCC",
+        quaternary: company.design.colors.quaternary || "#999999",
       });
     }
+  }, [company]);
+
+  const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!company?.id) {
+      toast({
+        title: "Erro",
+        description: "ID da empresa não encontrado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const response = await updateImages({
+        logo: logoFile ?? undefined,
+        banner: bannerFile ?? undefined,
+        companyId: company.id,
+        colors: colorConfig,
+      });
+
+      toast({
+        title: "Sucesso",
+        description: "Marca atualizada com sucesso!",
+      });
+
+      console.log("Resposta da API:", response);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar",
+        description: error.message || "Erro inesperado.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
+
+  const companyId = company?.id;
 
   return (
     <div className="p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
@@ -80,7 +92,7 @@ export default function YourBrand() {
             <div className="text-xl font-bold flex flex-col">
               Sua Marca
               <span className="text-sm font-thin text-gray-500">
-                {company.name}
+                {company?.legal_name}
                 {companyId && <span className="ml-2">(ID: {companyId})</span>}
               </span>
             </div>
@@ -89,43 +101,21 @@ export default function YourBrand() {
 
         <Separator className="my-4" />
 
-        <form onSubmit={handleSubmit(handleUpload)} className="space-y-4">
+        <form onSubmit={handleUpload} className="space-y-4">
           <BannerImageUpload
-            initialBannerUrl={company.bannerUrl}
+            initialBannerUrl={company?.design?.images?.banner?.url || ""}
             onFileChange={setBannerFile}
           />
 
           <BrandLogoUpload
-            initialLogoUrl={company.logoUrl}
+            initialLogoUrl={company?.design?.images?.logo?.url || ""}
             onFileChange={setLogoFile}
           />
 
-          <Separator className="my-4" />
-
-          {/* <BusinessInfoFields
-            register={register}
-            error={errors.name?.message}
-            name={company.name || ""}
-            taxId={company.taxId || ""}
-            loading={loadingCompany}
-          /> */}
-
-          {/* <ColorSettings
-            bannerColor={company.secondaryColor}
-            primaryColor={company.primaryColor}
-            onChange={(field, value) =>
-              setPreviewConfig(prev => ({ ...prev, [field]: value }))
-            }
-          /> */}
-
-          <Separator className="my-4" />
-          {/* 
-          <ThemeSelector
-            value={company.darkMode}
-            onChange={theme =>
-              setPreviewConfig(prev => ({ ...prev, dark_mode: theme }))
-            }
-          /> */}
+          <ColorSettings
+            colors={colorConfig}
+            onChange={newColors => setColorConfig(newColors)}
+          />
 
           <Separator className="my-4" />
 
@@ -149,11 +139,11 @@ export default function YourBrand() {
         ) : (
           <PreviewLayout
             config={{
-              logo: company.logoUrl,
-              bannerImage: company.bannerUrl,
-              bannerColor: company.secondaryColor,
-              primaryColor: company.primaryColor,
-              dark_mode: company.darkMode,
+              logo: company?.design?.images?.logo?.url || "",
+              bannerImage: company?.design?.images?.banner?.url || "",
+              bannerColor: colorConfig.secondary,
+              primaryColor: colorConfig.primary,
+              dark_mode: false,
             }}
           />
         )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PiBuildingApartment } from "react-icons/pi";
 import { RiLandscapeLine, RiDeleteBin6Line } from "react-icons/ri";
 import React from "react";
@@ -14,6 +14,11 @@ const BrandLogoUpload: React.FC<Props> = ({ initialLogoUrl, onFileChange }) => {
   const [logoPreview, setLogoPreview] = useState<string | null>(
     initialLogoUrl ?? null
   );
+
+  // 🔁 Atualiza logoPreview se a prop mudar após o fetch
+  useEffect(() => {
+    setLogoPreview(initialLogoUrl ?? null);
+  }, [initialLogoUrl]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,7 +41,6 @@ const BrandLogoUpload: React.FC<Props> = ({ initialLogoUrl, onFileChange }) => {
 
   return (
     <div className="flex flex-row justify-start items-center gap-4">
-      {/* Preview ou ícone padrão */}
       <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full border border-gray-300 overflow-hidden">
         {logoPreview ? (
           <img
@@ -49,7 +53,6 @@ const BrandLogoUpload: React.FC<Props> = ({ initialLogoUrl, onFileChange }) => {
         )}
       </div>
 
-      {/* Texto e botões */}
       <div>
         <div className="text-start">
           <p className="text-sm text-gray-700 font-medium">Brand logo</p>

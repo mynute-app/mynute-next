@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GiBurningTree } from "react-icons/gi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 
@@ -17,6 +17,10 @@ export default function BannerImageUpload({
   onFileChange,
 }: Props) {
   const [banner, setBanner] = useState<string | null>(initialBannerUrl ?? null);
+
+  useEffect(() => {
+    setBanner(initialBannerUrl ?? null);
+  }, [initialBannerUrl]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,7 +38,7 @@ export default function BannerImageUpload({
 
   const handleRemoveBanner = () => {
     setBanner(null);
-    onFileChange?.(null); // Limpa o arquivo no pai
+    onFileChange?.(null);
   };
 
   return (

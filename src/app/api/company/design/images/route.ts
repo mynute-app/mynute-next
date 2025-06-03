@@ -12,40 +12,40 @@ export const PATCH = auth(async function PATCH(req) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    // Get form data from request
+    // Recebe os arquivos como multipart/form-data
     const formData = await req.formData();
-    
-    // Try to get the company ID from multiple sources
-    // 1. From the form data (explicitly passed)
-    // 2. From the subdomain
-    // 3. From the user's company association
-    
-    let companyId = null;
-    
-    // 1. Check if companyId is explicitly provided in the request
-    const requestedCompanyId = formData.get('companyId');
-    if (requestedCompanyId && typeof requestedCompanyId === 'string') {
+
+    // Tenta determinar o ID da empresa
+    let companyId: string | null = null;
+
+    // 1. Tenta via formData (cliente pode enviar diretamente)
+    const requestedCompanyId = formData.get("companyId");
+    if (requestedCompanyId && typeof requestedCompanyId === "string") {
       companyId = requestedCompanyId;
-      console.log("Using company ID from request:", companyId);
+      console.log("➡️ Company ID via formData:", companyId);
     }
-    
-    // 2. If not found, try to get from subdomain
+
+    // 2. Tenta via subdomínio
     if (!companyId) {
       const host = req.headers.get("host");
       if (host) {
         const subdomainId = await getCompanyIdFromSubdomain(host);
         if (subdomainId) {
           companyId = subdomainId;
-          console.log("Using company ID from subdomain:", companyId);
+          console.log("➡️ Company ID via subdomínio:", companyId);
         }
       }
     }
-    
-    // 3. If still not found, get from user's company association
+
+    // 3. Tenta via associação do usuário
     if (!companyId) {
-      const user = await fetchFromBackend(req, `/employee/email/${email}`, token);
+      const user = await fetchFromBackend(
+        req,
+        `/employee/email/${email}`,
+        token
+      );
       companyId = user?.company_id;
-      console.log("Using company ID from user association:", companyId);
+      console.log("➡️ Company ID via associação do usuário:", companyId);
     }
 
     if (!companyId) {
@@ -55,7 +55,7 @@ export const PATCH = auth(async function PATCH(req) {
       );
     }
 
-    // Prepare the upload form
+    // Prepara o formulário com os arquivos recebidos
     const uploadForm = new FormData();
     const fileFields = ["logo", "banner", "favicon", "background"];
     fileFields.forEach(field => {
@@ -65,8 +65,7 @@ export const PATCH = auth(async function PATCH(req) {
       }
     });
 
-    console.log("Token", token);
-    console.log("Company ID:", companyId);
+    // Chama o backend com os arquivos e cabeçalhos necessários
     const res = await fetch(
       `${process.env.BACKEND_URL}/company/${companyId}/design/images`,
       {
@@ -87,7 +86,7 @@ export const PATCH = auth(async function PATCH(req) {
     const result = await res.json();
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Erro no PATCH /company/design/images:", error);
+    console.error("❌ Erro interno:", error);
     return NextResponse.json(
       { error: "Erro interno ao enviar imagens" },
       { status: 500 }
