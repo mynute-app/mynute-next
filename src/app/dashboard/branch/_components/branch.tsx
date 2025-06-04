@@ -243,7 +243,7 @@ export default function BranchManager() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[80vh] border rounded-lg shadow overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[90vh] border rounded-lg shadow overflow-hidden">
       {/* Sidebar */}
       <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r p-4 overflow-y-auto bg-gray-50">
         <div className="flex justify-between items-center">
@@ -279,7 +279,7 @@ export default function BranchManager() {
       </div>
 
       {/* Detail View */}
-      <div className="w-full md:w-2/3 p-6 overflow-y-auto bg-slate-800">
+      <div className="w-full md:w-2/3 p-6 overflow-y-auto">
         {selectedBranch ? (
           <>
             <div className="flex items-center justify-between mb-4">
