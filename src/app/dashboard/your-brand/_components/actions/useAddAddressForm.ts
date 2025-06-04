@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
-import * as z from "zod"; // ajuste o path se necessário
+import * as z from "zod";
 import { Branch } from "../../../../../../types/company";
 
 const addressSchema = z.object({
@@ -45,7 +45,7 @@ export const useAddAddressForm = () => {
     data: AddAddressFormValues
   ): Promise<Branch | null> => {
     try {
-      const response = await fetch("/api/address", {
+      const response = await fetch("/api/branch", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

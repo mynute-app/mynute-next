@@ -1,36 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
+import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 
 export const GET = auth(async function GET(req, ctx) {
   try {
-    const Authorization = req.auth?.accessToken;
+    const token = req.auth?.accessToken;
 
-    if (!Authorization) {
+    if (!token) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
     const { name } = ctx.params as { name: string };
 
-    const backendResponse = await fetch(
-      `${process.env.BACKEND_URL}/branch/name/${encodeURIComponent(name)}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization,
-        },
-      }
+    // Busca os dados da filial pelo nome usando fetchFromBackend
+    const branchData = await fetchFromBackend(
+      req,
+      `/branch/name/${encodeURIComponent(name)}`,
+      token
     );
 
-    const responseData = await backendResponse.json();
-
-    if (!backendResponse.ok) {
-      console.error("❌ Erro ao buscar filial:", responseData);
-      return NextResponse.json(responseData, {
-        status: backendResponse.status,
-      });
-    }
-
-    return NextResponse.json(responseData, { status: 200 });
+    return NextResponse.json(branchData, { status: 200 });
   } catch (error) {
     console.error("❌ Erro interno ao buscar filial:", error);
     return NextResponse.json(

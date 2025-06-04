@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ServiceCard } from "./service-card";
 import { AddressField } from "../../your-brand/_components/address-field";
 import { BusinessSchema } from "../../../../../schema";
-import { AddAddressDialog } from "../../your-brand/_components/add-address-dialog";
+import { AddAddressDialog } from "./add-address-dialog";
 import { Separator } from "@/components/ui/separator";
 import { BranchEmployees } from "./branch-employees";
 import { Button } from "@/components/ui/button";
@@ -87,14 +87,14 @@ export default function BranchManager() {
   }, [company]);
 
   const index = branches.findIndex(b => b.id === selectedBranch?.id);
-
   const handleSelectBranch = async (branch: Branch) => {
     try {
-      const updated = await fetchBranchByName(branch.name);
+      // Busca a filial pelo ID para obter os dados mais atualizados
+      const updated = await fetchBranchById(branch.id);
       if (updated) {
         setSelectedBranch(updated);
         setSelectedServices(updated.services || []);
-        setSelectedEmployee(null); // limpa seleção anterior
+        setSelectedEmployee(null);
       }
     } catch (error) {
       toast({
@@ -105,7 +105,6 @@ export default function BranchManager() {
       });
     }
   };
-
   const handleLinkService = async (serviceId: number) => {
     if (!selectedBranch) return;
     try {
@@ -118,7 +117,8 @@ export default function BranchManager() {
 
       if (!res.ok) throw new Error("Erro ao vincular o serviço");
 
-      const updatedBranch = await fetchBranchByName(selectedBranch.name);
+      // Busca a filial pelo ID para obter os dados mais atualizados
+      const updatedBranch = await fetchBranchById(selectedBranch.id);
       if (updatedBranch) {
         setSelectedBranch(updatedBranch);
         setSelectedServices(updatedBranch.services || []);
@@ -139,7 +139,6 @@ export default function BranchManager() {
       });
     }
   };
-
   const handleUnlinkService = async (serviceId: number) => {
     if (!selectedBranch) return;
 
@@ -153,7 +152,8 @@ export default function BranchManager() {
 
       if (!res.ok) throw new Error("Erro ao desvincular o serviço");
 
-      const updatedBranch = await fetchBranchByName(selectedBranch.name);
+      // Busca a filial pelo ID para obter os dados mais atualizados
+      const updatedBranch = await fetchBranchById(selectedBranch.id);
       if (updatedBranch) {
         setSelectedBranch(updatedBranch);
         setSelectedServices(updatedBranch.services || []);
@@ -186,11 +186,10 @@ export default function BranchManager() {
   const handleAddAddress = (newAddress: any) => {
     setBranches(prev => [...prev, newAddress]);
   };
-
   const fetchBranchByName = async (name: string): Promise<Branch | null> => {
     try {
       const res = await fetch(`/api/branch/name/${encodeURIComponent(name)}`);
-      if (!res.ok) throw new Error("Erro ao buscar filial");
+      if (!res.ok) throw new Error("Erro ao buscar filial por nome");
 
       const branchData = await res.json();
 
@@ -207,6 +206,32 @@ export default function BranchManager() {
       toast({
         title: "Erro",
         description: "Não foi possível atualizar os dados da filial.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  const fetchBranchById = async (id: number): Promise<Branch | null> => {
+    try {
+      const res = await fetch(`/api/branch/${id}`);
+      if (!res.ok) throw new Error("Erro ao buscar filial por ID");
+
+      const branchData = await res.json();
+
+      return {
+        ...branchData,
+        services: Array.isArray(branchData.services)
+          ? branchData.services.map((s: any) =>
+              typeof s === "number" ? s : s.id
+            )
+          : [],
+        employees: branchData.employees ?? [],
+      };
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível buscar os dados da filial por ID.",
         variant: "destructive",
       });
       return null;
