@@ -89,7 +89,6 @@ export default function BranchManager() {
   const index = branches.findIndex(b => b.id === selectedBranch?.id);
   const handleSelectBranch = async (branch: Branch) => {
     try {
-      // Busca a filial pelo ID para obter os dados mais atualizados
       const updated = await fetchBranchById(branch.id);
       if (updated) {
         setSelectedBranch(updated);
@@ -105,6 +104,8 @@ export default function BranchManager() {
       });
     }
   };
+
+  
   const handleLinkService = async (serviceId: number) => {
     if (!selectedBranch) return;
     try {
@@ -185,31 +186,6 @@ export default function BranchManager() {
 
   const handleAddAddress = (newAddress: any) => {
     setBranches(prev => [...prev, newAddress]);
-  };
-  const fetchBranchByName = async (name: string): Promise<Branch | null> => {
-    try {
-      const res = await fetch(`/api/branch/name/${encodeURIComponent(name)}`);
-      if (!res.ok) throw new Error("Erro ao buscar filial por nome");
-
-      const branchData = await res.json();
-
-      return {
-        ...branchData,
-        services: Array.isArray(branchData.services)
-          ? branchData.services.map((s: any) =>
-              typeof s === "number" ? s : s.id
-            )
-          : [],
-        employees: branchData.employees ?? [],
-      };
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar os dados da filial.",
-        variant: "destructive",
-      });
-      return null;
-    }
   };
 
   const fetchBranchById = async (id: number): Promise<Branch | null> => {

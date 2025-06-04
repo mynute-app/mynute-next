@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../../../auth";
+import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 
 export const POST = auth(async function POST(req, ctx) {
   try {
-    const Authorization = req.auth?.accessToken;
-
-    if (!Authorization) {
+    const token = req.auth?.accessToken;
+    if (!token) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
@@ -14,27 +14,15 @@ export const POST = auth(async function POST(req, ctx) {
       service_id: string;
     };
 
-    const backendResponse = await fetch(
-      `${process.env.BACKEND_URL}/branch/${branch_id}/service/${service_id}`,
+    // Usando fetchFromBackend para vincular serviço à filial
+    const responseData = await fetchFromBackend(
+      req,
+      `/branch/${branch_id}/service/${service_id}`,
+      token,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization,
-          "X-Company-ID": "1", //Todo: Passar o Id da Empresa todos que eu preciso saber a empresa
-          // Branch, service, appointment, employee
-        },
       }
     );
-
-    const responseData = await backendResponse.json();
-
-    if (!backendResponse.ok) {
-      console.error("❌ Erro ao vincular serviço:", responseData);
-      return NextResponse.json(responseData, {
-        status: backendResponse.status,
-      });
-    }
 
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
@@ -47,38 +35,36 @@ export const POST = auth(async function POST(req, ctx) {
 });
 
 export const DELETE = auth(async function DELETE(req, ctx) {
-  const Authorization = req.auth?.accessToken;
+  try {
+    const token = req.auth?.accessToken;
 
-  if (!Authorization) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-  }
-
-  const { branch_id, service_id } = ctx.params as {
-    branch_id: string;
-    service_id: string;
-  };
-
-  const backendResponse = await fetch(
-    `${process.env.BACKEND_URL}/branch/${branch_id}/service/${service_id}`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization,
-      },
+    if (!token) {
+      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
-  );
 
-  if (!backendResponse.ok) {
-    const responseData = await backendResponse.json();
-    return NextResponse.json(responseData, {
-      status: backendResponse.status,
-    });
+    const { branch_id, service_id } = ctx.params as {
+      branch_id: string;
+      service_id: string;
+    };
+
+    // Usando fetchFromBackend para desvincular serviço da filial
+    await fetchFromBackend(
+      req,
+      `/branch/${branch_id}/service/${service_id}`,
+      token,
+      {
+        method: "DELETE",
+      }
+    );
+    return NextResponse.json(
+      { message: "Serviço desvinculado com sucesso" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("❌ Erro interno:", error);
+    return NextResponse.json(
+      { message: "Erro interno ao desvincular o serviço da filial" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(
-    { message: "Serviço desvinculado com sucesso" },
-    { status: 200 }
-  );
 });
-
