@@ -23,6 +23,7 @@ export default function YourTeam() {
   const { company, loading } = useCompany();
   const employees: Employee[] = company?.employees ?? [];
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  
   const { employee: selectedEmployeeData, loading: loadingEmployee } =
     useGetEmployeeById(selectedMemberId);
 

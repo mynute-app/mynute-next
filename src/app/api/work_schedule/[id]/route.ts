@@ -1,37 +1,23 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
+import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 
 export const PATCH = auth(async function PATCH(req, ctx) {
   try {
-    const Authorization = req.auth?.accessToken;
+    const token = req.auth?.accessToken;
 
-    if (!Authorization) {
+    if (!token) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
     const { id } = ctx.params as { id: string };
     const body = await req.json();
 
-    const backendResponse = await fetch(
-      `${process.env.BACKEND_URL}/employee/${id}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization,
-        },
-        body: JSON.stringify(body),
-      }
-    );
-
-    const responseData = await backendResponse.json();
-
-    if (!backendResponse.ok) {
-      console.error("❌ Erro ao atualizar o work_schedule:", responseData);
-      return NextResponse.json(responseData, {
-        status: backendResponse.status,
-      });
-    }
+    // Usando fetchFromBackend para atualizar os horários de trabalho
+    const responseData = await fetchFromBackend(req, `/employee/${id}`, token, {
+      method: "PATCH",
+      body: body,
+    });
 
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {

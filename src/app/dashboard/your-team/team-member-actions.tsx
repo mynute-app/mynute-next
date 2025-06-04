@@ -29,7 +29,7 @@ function TeamMemberActions({
         className="hover:bg-slate-200 rounded-full p-2 cursor-pointer transition-all duration-300"
         onClick={() => setEditDialogOpen(true)}
       >
-        <MdOutlineModeEdit className="size-5" />
+        {/* <MdOutlineModeEdit className="size-5" /> */}
       </div>
 
       {/* Modal de edição */}

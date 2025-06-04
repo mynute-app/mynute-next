@@ -1,39 +1,25 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { auth } from "../../../../auth";
+import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 
 export const POST = auth(async function POST(req) {
   try {
-    const Authorization = req.auth?.accessToken;
+    const token = req.auth?.accessToken;
     const email = req.auth?.user.email;
 
-    if (!Authorization || !email) {
-      return NextResponse.json({ status: 401, message: "Não autorizado" });
+    if (!token || !email) {
+      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
     const body = await req.json();
 
-    const userResponse = await fetch(
-      `${process.env.BACKEND_URL}/employee/email/${email}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization,
-        },
-      }
-    );
+    const user = await fetchFromBackend(req, `/employee/email/${email}`, token);
 
-    if (!userResponse.ok) {
-      throw new Error("Erro ao buscar os dados do usuário.");
-    }
-
-    const userData = await userResponse.json();
-    const companyId = userData?.company?.id;
-
+    const companyId = user?.company_id;
     if (!companyId) {
       return NextResponse.json(
-        { status: 400, message: "Usuário sem empresa associada." },
+        { message: "Usuário sem empresa associada" },
         { status: 400 }
       );
     }
@@ -48,34 +34,22 @@ export const POST = auth(async function POST(req) {
       role: "user",
     };
 
-    const response = await fetch(`${process.env.BACKEND_URL}/employee`, {
+    // Usando fetchFromBackend para criar o funcionário
+    const createdEmployee = await fetchFromBackend(req, "/employee", token, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization,
-      },
-      body: JSON.stringify(requestBody),
+      body: requestBody,
     });
 
-    console.log("🔄 Status da resposta de /employee:", response.status);
-
-    const responseData = await response.json();
-
-    if (!response.ok) {
-      console.error("❌ Erro na resposta do backend:", responseData);
-      return NextResponse.json(responseData, { status: response.status });
-    }
-
-    console.log("✅ Funcionário criado com sucesso:", responseData);
+    console.log("✅ Funcionário criado com sucesso:", createdEmployee);
 
     revalidateTag("company");
 
-    return NextResponse.json(responseData, { status: 201 });
+    return NextResponse.json(createdEmployee, { status: 201 });
   } catch (error) {
     console.error("❌ Erro ao criar funcionário:", error);
-    return NextResponse.json({
-      status: 500,
-      error: "Erro interno ao criar o funcionário",
-    });
+    return NextResponse.json(
+      { message: "Erro interno ao criar o funcionário" },
+      { status: 500 }
+    );
   }
 });

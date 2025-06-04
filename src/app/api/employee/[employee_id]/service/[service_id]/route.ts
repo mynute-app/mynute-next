@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../../../auth";
+import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 
 export const POST = auth(async function POST(req, ctx) {
   try {
-    const Authorization = req.auth?.accessToken;
+    const token = req.auth?.accessToken;
 
-    if (!Authorization) {
+    if (!token) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
@@ -14,25 +15,15 @@ export const POST = auth(async function POST(req, ctx) {
       service_id: string;
     };
 
-    const backendResponse = await fetch(
-      `${process.env.BACKEND_URL}/employee/${employee_id}/service/${service_id}`,
+    // Usando fetchFromBackend para vincular serviço ao funcionário
+    const responseData = await fetchFromBackend(
+      req,
+      `/employee/${employee_id}/service/${service_id}`,
+      token,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization,
-        },
       }
     );
-
-    const responseData = await backendResponse.json();
-
-    if (!backendResponse.ok) {
-      console.error("❌ Erro na API do backend:", responseData);
-      return NextResponse.json(responseData, {
-        status: backendResponse.status,
-      });
-    }
 
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
