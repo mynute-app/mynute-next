@@ -18,13 +18,13 @@ export function useUpdateCompanyDesignImages() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
   const updateImages = async ({
     logo,
     banner,
     favicon,
     background,
     companyId,
+    colors,
   }: Params) => {
     setLoading(true);
     setError(null);
@@ -38,6 +38,11 @@ export function useUpdateCompanyDesignImages() {
       if (favicon) formData.append("favicon", favicon);
       if (background) formData.append("background", background);
       if (companyId) formData.append("companyId", companyId); // opcional, backend tem fallback
+      // Adicionando cores ao FormData
+      if (colors) {
+        // Transformar o objeto colors em JSON e enviar como uma string
+        formData.append("colors", JSON.stringify(colors));
+      }
 
       const res = await fetch("/api/company/design/images", {
         method: "PATCH",

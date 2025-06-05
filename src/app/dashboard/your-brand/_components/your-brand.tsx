@@ -8,13 +8,15 @@ import { useUpdateCompanyDesignImages } from "@/hooks/useUpdateCompanyDesignImag
 import { useToast } from "@/hooks/use-toast";
 import BannerImageUpload from "./banner-image-upload";
 import BrandLogoUpload from "../brand-logo";
+import BackgroundImageUpload from "./background-image-upload";
 import PreviewLayout from "./preview-layout";
-import ColorSettings from "./color-settings"; // ⬅️ certifique-se que esse nome está correto
+import ColorSettings from "./color-settings"; // certifique-se que esse nome está correto
 
 export default function YourBrand() {
   const { company, loading: loadingCompany } = useCompany();
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const [colorConfig, setColorConfig] = useState({
@@ -56,6 +58,7 @@ export default function YourBrand() {
       const response = await updateImages({
         logo: logoFile ?? undefined,
         banner: bannerFile ?? undefined,
+        background: backgroundFile ?? undefined,
         companyId: company.id,
         colors: colorConfig,
       });
@@ -110,6 +113,13 @@ export default function YourBrand() {
           <BrandLogoUpload
             initialLogoUrl={company?.design?.images?.logo?.url || ""}
             onFileChange={setLogoFile}
+          />
+
+          <BackgroundImageUpload
+            initialBackgroundUrl={
+              company?.design?.images?.background?.url || ""
+            }
+            onFileChange={setBackgroundFile}
           />
 
           <ColorSettings
