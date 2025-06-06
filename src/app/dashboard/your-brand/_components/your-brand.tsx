@@ -11,9 +11,11 @@ import BrandLogoUpload from "../brand-logo";
 import BackgroundImageUpload from "./background-image-upload";
 import PreviewLayout from "./preview-layout";
 import ColorSettings from "./color-settings"; // certifique-se que esse nome está correto
+import { CompanyDesignDisplay } from "@/components/dashboard/CompanyDesignDisplay";
 
 export default function YourBrand() {
   const { company, loading: loadingCompany } = useCompany();
+
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
@@ -28,18 +30,7 @@ export default function YourBrand() {
 
   const { updateImages } = useUpdateCompanyDesignImages();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (company?.design?.colors) {
-      setColorConfig({
-        primary: company.design.colors.primary || "#000000",
-        secondary: company.design.colors.secondary || "#FFFFFF",
-        tertiary: company.design.colors.tertiary || "#CCCCCC",
-        quaternary: company.design.colors.quaternary || "#999999",
-      });
-    }
-  }, [company]);
-
+  console.log("Dados da empresa no componente:", company);
   const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -53,7 +44,6 @@ export default function YourBrand() {
     }
 
     setIsUploading(true);
-
     try {
       const response = await updateImages({
         logo: logoFile ?? undefined,
@@ -68,7 +58,7 @@ export default function YourBrand() {
         description: "Marca atualizada com sucesso!",
       });
 
-      console.log("Resposta da API:", response);
+      console.log("Resposta da API recebida no componente:", response);
     } catch (error: any) {
       toast({
         title: "Erro ao atualizar",
@@ -110,22 +100,22 @@ export default function YourBrand() {
             onFileChange={setBannerFile}
           />
 
-          <BrandLogoUpload
+          {/* <BrandLogoUpload
             initialLogoUrl={company?.design?.images?.logo?.url || ""}
             onFileChange={setLogoFile}
-          />
-
+          /> */}
+          {/* 
           <BackgroundImageUpload
             initialBackgroundUrl={
               company?.design?.images?.background?.url || ""
             }
             onFileChange={setBackgroundFile}
-          />
+          /> */}
 
-          <ColorSettings
+          {/* <ColorSettings
             colors={colorConfig}
             onChange={newColors => setColorConfig(newColors)}
-          />
+          /> */}
 
           <Separator className="my-4" />
 
@@ -147,15 +137,23 @@ export default function YourBrand() {
             <Skeleton className="w-full h-[600px] rounded-md" />
           </div>
         ) : (
-          <PreviewLayout
-            config={{
-              logo: company?.design?.images?.logo?.url || "",
-              bannerImage: company?.design?.images?.banner?.url || "",
-              bannerColor: colorConfig.secondary,
-              primaryColor: colorConfig.primary,
-              dark_mode: false,
-            }}
-          />
+          <>
+            <PreviewLayout
+              config={{
+                logo: company?.design?.images?.logo?.url || "",
+                bannerImage: company?.design?.images?.banner?.url || "",
+                bannerColor: colorConfig.secondary,
+                primaryColor: colorConfig.primary,
+                dark_mode: false,
+              }}
+            />
+            <div className="mt-6 p-4">
+              <h3 className="text-lg font-semibold mb-4">
+                Detalhes do Design Atual
+              </h3>
+              {/* <CompanyDesignDisplay companyId={company?.id} /> */}
+            </div>
+          </>
         )}
       </div>
     </div>

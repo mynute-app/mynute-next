@@ -12,6 +12,13 @@ export const PATCH = auth(async function PATCH(req) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
+    // Log dos headers para debug
+    const headers = Object.fromEntries(req.headers);
+    console.log("📝 Headers recebidos:", headers);
+    const host = req.headers.get("host") || "sem host";
+    console.log("🌐 Host recebido no servidor:", host);
+    console.log("🌐 Subdomínio extraído:", host.split(".")[0]);
+
     // Recebe os arquivos como multipart/form-data
     const formData = await req.formData();
 
@@ -29,10 +36,15 @@ export const PATCH = auth(async function PATCH(req) {
     if (!companyId) {
       const host = req.headers.get("host");
       if (host) {
+        const subdomain = host.split(".")[0];
+        console.log("🌐 Subdomínio extraído no servidor:", subdomain);
+
         const subdomainId = await getCompanyIdFromSubdomain(host);
         if (subdomainId) {
           companyId = subdomainId;
           console.log("➡️ Company ID via subdomínio:", companyId);
+        } else {
+          console.log("⚠️ Não foi possível obter companyId do subdomínio");
         }
       }
     }
@@ -63,27 +75,41 @@ export const PATCH = auth(async function PATCH(req) {
       if (file && typeof file !== "string") {
         uploadForm.append(field, file);
       }
-    });
+    }); // Processa o campo colors, se existir
+    const colorsString = formData.get("colors");
+    if (colorsString && typeof colorsString === "string") {
+      try {
+        const colors = JSON.parse(colorsString);
+        console.log("🎨 Cores recebidas:", colors);
+
+        // Adiciona as cores ao formulário para enviar ao backend
+        uploadForm.append("colors", colorsString);
+      } catch (e) {
+        console.error("❌ Erro ao processar as cores:", e);
+      }
+    }
 
     // Chama o backend com os arquivos e cabeçalhos necessários
-    const res = await fetch(
-      `${process.env.BACKEND_URL}/company/${companyId}/design/images`,
-      {
-        method: "PATCH",
-        headers: {
-          "X-Auth-Token": token,
-          "X-Company-ID": companyId,
-        },
-        body: uploadForm,
-      }
-    );
+    const backendUrl = `${process.env.BACKEND_URL}/company/${companyId}/design/images`;
+    console.log("📤 Enviando para backend:", backendUrl);
+
+    const res = await fetch(backendUrl, {
+      method: "PATCH",
+      headers: {
+        "X-Auth-Token": token,
+        "X-Company-ID": companyId,
+      },
+      body: uploadForm,
+    });
 
     if (!res.ok) {
       const errorText = await res.text();
+      console.error("❌ Erro na resposta do backend:", res.status, errorText);
       return NextResponse.json({ error: errorText }, { status: res.status });
     }
 
     const result = await res.json();
+    console.log("✅ Resposta do backend:", result);
     return NextResponse.json(result);
   } catch (error) {
     console.error("❌ Erro interno:", error);

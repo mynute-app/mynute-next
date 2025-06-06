@@ -44,7 +44,25 @@ export function useUpdateCompanyDesignImages() {
         formData.append("colors", JSON.stringify(colors));
       }
 
-      const res = await fetch("/api/company/design/images", {
+      const apiUrl = "/api/company/design/images";
+      console.log("Enviando requisição PATCH para:", apiUrl);
+
+      // Captura informações do host/subdomínio
+      const host = window.location.hostname;
+      const subdomain = host.split(".")[0];
+      console.log("🌐 Host atual:", host);
+      console.log("🌐 Subdomínio em uso:", subdomain);
+
+      console.log("FormData enviado:", {
+        logo: logo ? logo.name : null,
+        banner: banner ? banner.name : null,
+        favicon: favicon ? favicon.name : null,
+        background: background ? background.name : null,
+        companyId,
+        colors,
+      });
+
+      const res = await fetch(apiUrl, {
         method: "PATCH",
         body: formData,
       });
@@ -57,12 +75,13 @@ export function useUpdateCompanyDesignImages() {
         } catch (_) {}
         throw new Error(errorMessage);
       }
-
       const result = await res.json();
+      console.log("Resposta da API:", result);
       setSuccess(true);
       return result;
     } catch (err: any) {
       const message = err?.message || "Erro inesperado.";
+      console.error("Erro na requisição:", err);
       setError(message);
       throw new Error(message);
     } finally {

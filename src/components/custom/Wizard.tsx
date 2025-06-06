@@ -13,7 +13,7 @@ import { AddressStep } from "../form/Address";
 import { BusinessStep } from "../form/Business";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "../ui/skeleton";
-import { useCompanyDesign } from "@/hooks/use-company-design";
+import { useCompany } from "@/hooks/get-company";
 
 const steps = [
   { id: 1, title: "Endereço" },
@@ -25,7 +25,7 @@ const steps = [
 ];
 
 const Wizard: React.FC = () => {
-  const { config: brand, loading: brandLoading } = useCompanyDesign("1");
+  const { company, loading: brandLoading } = useCompany();
 
   const {
     currentStep,
@@ -164,10 +164,11 @@ const Wizard: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">
+      {" "}
       <div className="relative shadow-xl h-[180px] overflow-hidden rounded-t-lg">
-        {brand?.bannerImage ? (
+        {company?.design?.images?.banner?.url ? (
           <Image
-            src={brand.bannerImage}
+            src={company.design.images.banner.url}
             alt="Banner da empresa"
             fill
             className="object-cover"
@@ -175,19 +176,22 @@ const Wizard: React.FC = () => {
         ) : (
           <div
             className="absolute inset-0"
-            style={{ backgroundColor: brand?.bannerColor || "#f5f5f5" }}
+            style={{
+              backgroundColor: company?.design?.colors?.primary || "#f5f5f5",
+            }}
           />
         )}
 
         <div className="absolute inset-0 bg-white opacity-15" />
 
         <div className="flex justify-center items-center h-full relative z-10">
+          {" "}
           {brandLoading ? (
             <Skeleton className="w-[150px] h-[120px] rounded-md" />
-          ) : brand?.logo ? (
+          ) : company?.design?.images?.logo?.url ? (
             <div className="w-[150px] h-[120px] relative">
               <Image
-                src={brand.logo}
+                src={company.design.images.logo.url}
                 alt="Logo da empresa"
                 fill
                 className="object-contain"
@@ -198,7 +202,6 @@ const Wizard: React.FC = () => {
           )}
         </div>
       </div>
-
       <div className="flex-1 flex flex-col p-2 bg-gray-100 overflow-hidden">
         <div className="flex justify-center items-center mb-2 mt-2">
           <ul className="flex justify-center space-x-4 items-center relative z-10">
@@ -224,7 +227,7 @@ const Wizard: React.FC = () => {
                       style={{
                         backgroundColor:
                           step.id === currentStep
-                            ? brand?.primaryColor
+                            ? company?.design?.colors?.primary
                             : undefined,
                         color: step.id === currentStep ? "white" : undefined,
                         maskImage:
@@ -269,10 +272,13 @@ const Wizard: React.FC = () => {
         <div className="mt-auto flex justify-between ">
           <Button onClick={prevStep} disabled={currentStep === 1}>
             Anterior
-          </Button>
+          </Button>{" "}
           <Button
             onClick={validateAndProceed}
-            style={{ backgroundColor: brand?.primaryColor, color: "white" }}
+            style={{
+              backgroundColor: company?.design?.colors?.primary,
+              color: "white",
+            }}
           >
             {currentStep === steps.length ? "Finalizar" : "Próximo"}
           </Button>
