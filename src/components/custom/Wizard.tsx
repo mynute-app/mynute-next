@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useWizardStore } from "@/context/useWizardStore";
 import { PersonStep } from "../form/Person";
 import { ServiceStep } from "../form/Service";
@@ -15,17 +16,22 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "../ui/skeleton";
 import { useCompany } from "@/hooks/get-company";
 
-const steps = [
-  { id: 1, title: "Endereço" },
-  { id: 2, title: "Profissionais" },
-  { id: 3, title: "Serviço" },
-  { id: 4, title: "Data e Hora" },
-  { id: 5, title: "Informação" },
-  { id: 6, title: "Confirmação" },
+const tabs = [
+  { id: "endereco", title: "Endereço", component: <AddressStep /> },
+  { id: "profissionais", title: "Profissionais", component: <PersonStep /> },
+  { id: "servico", title: "Serviço", component: <ServiceStep /> },
+  { id: "data", title: "Data e Hora", component: <CardCalendar /> },
+  { id: "informacao", title: "Informação", component: <CardInformation /> },
+  {
+    id: "confirmacao",
+    title: "Confirmação",
+    component: <div>Componente para o Passo 6: Confirmação</div>,
+  },
 ];
 
 const Wizard: React.FC = () => {
   const { company, loading: brandLoading } = useCompany();
+  const [activeTab, setActiveTab] = useState("endereco");
 
   const {
     currentStep,
@@ -41,7 +47,6 @@ const Wizard: React.FC = () => {
   } = useWizardStore();
   const [error, setError] = useState<string>("");
   const { toast } = useToast();
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const addressId = params.get("addressId");
@@ -50,54 +55,34 @@ const Wizard: React.FC = () => {
     const date = params.get("date");
 
     if (!addressId) {
-      setCurrentStep(1);
+      setActiveTab("endereco");
     } else if (addressId && !person) {
-      setCurrentStep(2);
+      setActiveTab("profissionais");
     } else if (addressId && person && !service) {
-      setCurrentStep(3);
+      setActiveTab("servico");
     } else if (addressId && person && service && !date) {
-      setCurrentStep(4);
+      setActiveTab("data");
     } else if (addressId && person && service && date) {
-      setCurrentStep(5);
+      setActiveTab("informacao");
     }
-  }, [setCurrentStep]);
-
-  const renderStepContent = (): JSX.Element | null => {
-    switch (currentStep) {
-      case 1:
-        return <AddressStep />;
-      case 2:
-        return <PersonStep />;
-      case 3:
-        return <ServiceStep />;
-      case 4:
-        return <CardCalendar />;
-      case 5:
-        return <CardInformation />;
-      case 6:
-        return <div>Componente para o Passo 6: Confirmação</div>;
-      default:
-        return null;
-    }
-  };
-
+  }, []);
   const validateAndProceed = async () => {
     try {
-      if (currentStep === 1 && !selectedAddress) {
+      if (activeTab === "endereco" && !selectedAddress) {
         throw new Error("Por favor, selecione um endereço.");
-      } else if (currentStep === 2 && !selectedPerson) {
+      } else if (activeTab === "profissionais" && !selectedPerson) {
         throw new Error("Por favor, selecione uma pessoa.");
-      } else if (currentStep === 3 && !selectedService) {
+      } else if (activeTab === "servico" && !selectedService) {
         throw new Error("Por favor, selecione um serviço.");
       } else if (
-        currentStep === 4 &&
+        activeTab === "data" &&
         (!selectedCalendarDate?.start.dateTime ||
           !selectedCalendarDate?.end.dateTime)
       ) {
         throw new Error("Por favor, selecione um dia e uma hora.");
       }
 
-      if (currentStep === steps.length) {
+      if (activeTab === "confirmacao") {
         const postData = {
           summary: "Agendamento",
           description: `Cliente: ${clientInfo.fullName}`,
@@ -150,7 +135,11 @@ const Wizard: React.FC = () => {
       }
 
       setError("");
-      nextStep();
+      // Move to next tab
+      const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
+      if (currentIndex < tabs.length - 1) {
+        setActiveTab(tabs[currentIndex + 1].id);
+      }
     } catch (e) {
       if (e instanceof Error) {
         toast({
@@ -162,9 +151,14 @@ const Wizard: React.FC = () => {
     }
   };
 
+  const goToPreviousTab = () => {
+    const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
+    if (currentIndex > 0) {
+      setActiveTab(tabs[currentIndex - 1].id);
+    }
+  };
   return (
     <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden">
-      {" "}
       <div className="relative shadow-xl h-[180px] overflow-hidden rounded-t-lg">
         {company?.design?.images?.banner?.url ? (
           <Image
@@ -185,7 +179,6 @@ const Wizard: React.FC = () => {
         <div className="absolute inset-0 bg-white opacity-15" />
 
         <div className="flex justify-center items-center h-full relative z-10">
-          {" "}
           {brandLoading ? (
             <Skeleton className="w-[150px] h-[120px] rounded-md" />
           ) : company?.design?.images?.logo?.url ? (
@@ -202,87 +195,67 @@ const Wizard: React.FC = () => {
           )}
         </div>
       </div>
+
       <div className="flex-1 flex flex-col p-2 bg-gray-100 overflow-hidden">
-        <div className="flex justify-center items-center mb-2 mt-2">
-          <ul className="flex justify-center space-x-4 items-center relative z-10">
-            {steps
-              .filter(
-                step =>
-                  step.id === currentStep ||
-                  step.id === currentStep - 1 ||
-                  step.id === currentStep + 1
-              )
-              .map(step => {
-                const isLeft = step.id < currentStep;
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex-1 flex flex-col"
+        >
+          <div className="flex justify-center mb-4 mt-2">
+            <TabsList className="grid w-full max-w-4xl grid-cols-6 bg-white shadow-md">
+              {tabs.map(tab => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="text-xs md:text-sm font-medium"
+                  style={{
+                    backgroundColor:
+                      activeTab === tab.id
+                        ? company?.design?.colors?.primary
+                        : undefined,
+                    color: activeTab === tab.id ? "white" : undefined,
+                  }}
+                >
+                  {tab.title}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
-                return (
-                  <div
-                    className="flex justify-center items-center flex-col gap-3"
-                    key={step.id}
-                  >
-                    <li
-                      className={`flex items-center justify-center h-8 w-8 md:w-10 md:h-10 rounded-md border-2 border-white shadow-lg ${
-                        step.id !== currentStep && "bg-gray-300 text-gray-700"
-                      }`}
-                      style={{
-                        backgroundColor:
-                          step.id === currentStep
-                            ? company?.design?.colors?.primary
-                            : undefined,
-                        color: step.id === currentStep ? "white" : undefined,
-                        maskImage:
-                          step.id !== currentStep
-                            ? isLeft
-                              ? "linear-gradient(to left, black, transparent)"
-                              : "linear-gradient(to right, black, transparent)"
-                            : "none",
-                        WebkitMaskImage:
-                          step.id !== currentStep
-                            ? isLeft
-                              ? "linear-gradient(to left, black, transparent)"
-                              : "linear-gradient(to right, black, transparent)"
-                            : "none",
-                        transform:
-                          step.id === currentStep ? "scale(1.3)" : "scale(1)",
-                        transition: "transform 0.3s ease, mask-image 0.3s ease",
-                      }}
-                    >
-                      <span className="text-sm md:text-lg font-semibold">
-                        {step.id}
-                      </span>
-                    </li>
+          <Separator className="my-2" />
 
-                    {step.id === currentStep && (
-                      <h1 className="text-sm md:text-lg font-bold">
-                        {steps.find(step => step.id === currentStep)?.title}
-                      </h1>
-                    )}
-                  </div>
-                );
-              })}
-          </ul>
-        </div>
+          <div className="flex-1 overflow-hidden">
+            {tabs.map(tab => (
+              <TabsContent
+                key={tab.id}
+                value={tab.id}
+                className="flex-1 bg-white p-4 rounded-lg shadow-md overflow-y-auto h-full"
+              >
+                {tab.component}
+              </TabsContent>
+            ))}
+          </div>
 
-        <Separator className="my-2" />
-
-        <div className="flex-1 bg-white p-2 rounded-lg shadow-md mb-4 overflow-y-auto">
-          {renderStepContent()}
-        </div>
-
-        <div className="mt-auto flex justify-between ">
-          <Button onClick={prevStep} disabled={currentStep === 1}>
-            Anterior
-          </Button>{" "}
-          <Button
-            onClick={validateAndProceed}
-            style={{
-              backgroundColor: company?.design?.colors?.primary,
-              color: "white",
-            }}
-          >
-            {currentStep === steps.length ? "Finalizar" : "Próximo"}
-          </Button>
-        </div>
+          <div className="mt-auto flex justify-between p-2">
+            <Button
+              onClick={goToPreviousTab}
+              disabled={activeTab === tabs[0].id}
+              variant="outline"
+            >
+              Anterior
+            </Button>
+            <Button
+              onClick={validateAndProceed}
+              style={{
+                backgroundColor: company?.design?.colors?.primary,
+                color: "white",
+              }}
+            >
+              {activeTab === "confirmacao" ? "Finalizar" : "Próximo"}
+            </Button>
+          </div>
+        </Tabs>
       </div>
     </div>
   );
