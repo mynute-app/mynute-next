@@ -19,39 +19,13 @@ import {
   ChevronRight,
   ChevronLeft,
 } from "lucide-react";
-
-// Mock components - replace with your actual components
-const AddressStep = () => (
-  <div className="p-8 text-center">Componente de Endereço</div>
-);
-const PersonStep = () => (
-  <div className="p-8 text-center">Componente de Profissionais</div>
-);
-const ServiceStep = () => (
-  <div className="p-8 text-center">Componente de Serviço</div>
-);
-const CardCalendar = () => (
-  <div className="p-8 text-center">Componente de Data e Hora</div>
-);
-const CardInformation = () => (
-  <div className="p-8 text-center">Componente de Informação</div>
-);
+import { ServiceStep } from "../form/Service";
+import { AddressStep } from "../form/Address";
+import { CardCalendar } from "./Card-Calendar";
+import { PersonStep } from "../form/Person";
+import { CardInformation } from "./Customer-Information";
 
 const steps = [
-  {
-    id: "endereco",
-    title: "Endereço",
-    description: "Selecione o local",
-    icon: MapPin,
-    component: <AddressStep />,
-  },
-  {
-    id: "profissionais",
-    title: "Profissionais",
-    description: "Escolha o profissional",
-    icon: Users,
-    component: <PersonStep />,
-  },
   {
     id: "servico",
     title: "Serviço",
@@ -66,6 +40,21 @@ const steps = [
     icon: Calendar,
     component: <CardCalendar />,
   },
+  {
+    id: "endereco",
+    title: "Endereço",
+    description: "Selecione o local",
+    icon: MapPin,
+    component: <AddressStep />,
+  },
+  {
+    id: "profissionais",
+    title: "Profissionais",
+    description: "Escolha o profissional",
+    icon: Users,
+    component: <PersonStep />,
+  },
+
   {
     id: "informacao",
     title: "Informação",
@@ -107,13 +96,12 @@ const mockCompany = {
 };
 
 const BookingWizard: React.FC = () => {
-  const [activeStep, setActiveStep] = useState("endereco");
+  const [activeStep, setActiveStep] = useState("servico");
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const { toast } = useToast();
-  const company = mockCompany; // Replace with your actual company hook
-  const brandLoading = false; // Replace with your actual loading state
+  const company = mockCompany;
+  const brandLoading = false;
 
-  // Mock validation states - replace with your actual validation logic
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
@@ -280,7 +268,7 @@ const BookingWizard: React.FC = () => {
                 >
                   <div
                     className={`
-          relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-200 hover:shadow-lg
+          relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 hover:shadow-lg
           ${
             status === "completed"
               ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
