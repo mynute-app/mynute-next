@@ -11,18 +11,11 @@ import {
   companyRegisterSchema,
   CompanyRegisterSchema,
 } from "../../../../schema/company-register";
-import { toast } from "@/hooks/use-toast";
 import { useCreateCompany } from "@/hooks/create-company";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { FormError } from "./form/form-error";
-import {
-  formatCNPJ,
-  formatPhone,
-  preparePhoneToSubmit,
-  unmask,
-} from "@/utils/format-cnpj";
+import { formatCNPJ, formatPhone } from "@/utils/format-cnpj";
 
 export function RegisterFormCompany({
   className,
@@ -31,90 +24,20 @@ export function RegisterFormCompany({
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors, isSubmitting },
     setValue,
     setError,
   } = useForm<CompanyRegisterSchema>({
     resolver: zodResolver(companyRegisterSchema),
   });
-  console.log("📛 Errors:", errors);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const router = useRouter();
   const { submit } = useCreateCompany();
 
   const onSubmit = async (data: CompanyRegisterSchema) => {
-    try {
-      const cleanData = {
-        ...data,
-        tax_id: unmask(data.tax_id),
-        owner_phone: preparePhoneToSubmit(data.owner_phone),
-      };
-
-      await submit(cleanData);
-
-      toast({
-        title: "Empresa cadastrada com sucesso!",
-        description: "Você será redirecionado para o login.",
-      });
-
-      router.push("/auth/employee");
-    } catch (err) {
-      const errorMessage = (err as Error).message;
-      const normalizedMessage = errorMessage.toLowerCase();
-
-      const constraintMap: Record<
-        string,
-        { field: keyof CompanyRegisterSchema; message: string }
-      > = {
-        uni_companies_name: {
-          field: "name",
-          message: "Já existe uma empresa com esse nome.",
-        },
-        uni_companies_tax_id: {
-          field: "tax_id",
-          message: "Já existe uma empresa com esse CNPJ.",
-        },
-        idx_employees_email: {
-          field: "owner_email",
-          message: "Já existe uma conta com esse e-mail.",
-        },
-        idx_employees_phone: {
-          field: "owner_phone",
-          message: "Já existe uma conta com esse telefone.",
-        },
-      };
-
-      const matchedConstraint = Object.entries(constraintMap).find(
-        ([constraint]) =>
-          normalizedMessage.includes("duplicate key") &&
-          normalizedMessage.includes(constraint)
-      );
-
-      if (matchedConstraint) {
-        const [, { field, message }] = matchedConstraint;
-
-        setError(field, {
-          type: "manual",
-          message,
-        });
-
-        toast({
-          title: "Erro ao cadastrar empresa",
-          description: message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro ao cadastrar empresa",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
-    }
+    await submit(data, setError);
   };
 
   return (
