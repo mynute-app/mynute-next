@@ -68,6 +68,36 @@ export async function POST(req: Request) {
       response: backendJson,
     });
     if (backendResponse.ok) {
+      // Enviar email de boas-vindas após criar a empresa com sucesso
+      try {
+        const emailResponse = await fetch(
+          `${
+            process.env.NEXTAUTH_URL || "http://localhost:3000"
+          }/api/send/welcome-company`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ownerName: `${body.owner_name} ${body.owner_surname}`,
+              companyName: body.name,
+              email: body.owner_email,
+              subdomain: body.start_subdomain,
+            }),
+          }
+        );
+
+        if (!emailResponse.ok) {
+          console.warn(
+            "⚠️ Falha ao enviar email de boas-vindas, mas empresa foi criada com sucesso"
+          );
+        } else {
+          console.log("✅ Email de boas-vindas enviado com sucesso");
+        }
+      } catch (emailError) {
+        console.error("❌ Erro ao enviar email de boas-vindas:", emailError);
+        // Não falha a criação da empresa se o email falhar
+      }
+
       return NextResponse.json(
         { message: "Empresa cadastrada com sucesso", data: backendJson },
         { status: 201 }
