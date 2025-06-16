@@ -55,7 +55,7 @@ export function LoginFormEmployee({
     });
 
     if (result?.error) {
-      setError("Falha no login. Verifique suas credenciais.");
+      setError("Usuário não verificado ou senha incorreta.");
     } else {
       router.push("/dashboard/your-brand");
     }
