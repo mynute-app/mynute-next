@@ -22,7 +22,7 @@ export async function GET(
 
     id = subdomainId;
   }
-
+  console.log("📡 Fetching company data for ID:", id);
   const company = await fetch(`${process.env.BACKEND_URL}/company/${id}`).then(
     res => res.json()
   );

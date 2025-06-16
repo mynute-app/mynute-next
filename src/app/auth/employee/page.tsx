@@ -1,26 +1,16 @@
-import { headers } from "next/headers";
 import { LoginFormEmployee } from "../_components/form-employee";
+import { useSubdomainValidation } from "@/hooks/use-subdomain-validation";
 
 export default async function LoginPage() {
-  const host = headers().get("host") || "";
-  const subdomain = host.split(".")[0]; 
+  const { company, errorComponent } = await useSubdomainValidation();
 
-  if (!subdomain || subdomain === "localhost" || subdomain === "127") {
-    return <div>❌ Subdomínio inválido</div>;
+  if (errorComponent) {
+    return errorComponent;
   }
 
-  const res = await fetch(
-    `http://localhost:3000/api/company/subdomain/${subdomain}`,
-    {
-      cache: "no-store",
-    }
-  );
-
-  if (!res.ok) {
-    return <div>❌ Empresa não encontrada: {subdomain}</div>;
+  if (!company) {
+    return null;
   }
-
-  const company = await res.json();
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">

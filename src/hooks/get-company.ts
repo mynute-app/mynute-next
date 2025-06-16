@@ -47,7 +47,6 @@ export const useCompany = (id?: string) => {
       }
     };
 
-    // If we've failed but not reached max retries, try again after a delay
     if (error && retries < 3) {
       const retryTimer = setTimeout(() => {
         console.log(`Retrying company fetch (attempt ${retries + 1})...`);
