@@ -1,7 +1,5 @@
-import { Employee } from "./../../../../types/company";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
-import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 import { getCompanyFromRequest } from "@/lib/api/get-company-from-request";
 
 export const GET = auth(async function GET(req) {
@@ -69,18 +67,33 @@ export async function POST(req: Request) {
       status: backendResponse.status,
       response: backendJson,
     });
-
     if (backendResponse.ok) {
       return NextResponse.json(
         { message: "Empresa cadastrada com sucesso", data: backendJson },
         { status: 201 }
       );
     }
+    let errorMessage = "Erro ao cadastrar empresa.";
+
+    if (typeof backendJson === "object" && backendJson !== null) {
+      if (backendJson.inner_error) {
+        const innerErrors = Object.values(backendJson.inner_error);
+        if (innerErrors.length > 0) {
+          errorMessage = innerErrors[0] as string;
+        }
+      } else if (backendJson.message) {
+        errorMessage = backendJson.message;
+      } else if (typeof backendJson === "string") {
+        errorMessage = backendJson;
+      }
+    } else if (typeof backendJson === "string") {
+      errorMessage = backendJson;
+    }
 
     return NextResponse.json(
       {
         message: "Erro ao cadastrar empresa.",
-        backendResponse: backendJson,
+        backendResponse: errorMessage,
       },
       { status: backendResponse.status }
     );

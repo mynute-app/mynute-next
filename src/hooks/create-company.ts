@@ -36,9 +36,7 @@ export const useCreateCompany = () => {
       try {
         const json = JSON.parse(text);
         errorMessage = json?.backendResponse || json?.message || text;
-      } catch {
- 
-      }
+      } catch {}
 
       if (!response.ok) {
         throw new Error(errorMessage);
@@ -55,34 +53,64 @@ export const useCreateCompany = () => {
     } catch (err: any) {
       const errorMessage = err.message;
       const normalizedMessage = errorMessage.toLowerCase();
-
       const constraintMap: Record<
         string,
         { field: keyof CompanyRegisterSchema; message: string }
       > = {
+        // Diferentes variações para nome da empresa
         uni_companies_name: {
           field: "name",
           message: "Já existe uma empresa com esse nome.",
         },
+        uni_public_companies_legal_name: {
+          field: "name",
+          message: "Já existe uma empresa com esse nome.",
+        },
+        uni_companies_legal_name: {
+          field: "name",
+          message: "Já existe uma empresa com esse nome.",
+        }, // CNPJ
         uni_companies_tax_id: {
           field: "tax_id",
           message: "Já existe uma empresa com esse CNPJ.",
         },
+        uni_public_companies_tax_id: {
+          field: "tax_id",
+          message: "Já existe uma empresa com esse CNPJ.",
+        },
+        idx_public_companies_tax_id: {
+          field: "tax_id",
+          message: "Já existe uma empresa com esse CNPJ.",
+        },
+        // Email
         idx_employees_email: {
           field: "owner_email",
           message: "Já existe uma conta com esse e-mail.",
         },
+        uni_employees_email: {
+          field: "owner_email",
+          message: "Já existe uma conta com esse e-mail.",
+        },
+        // Telefone
         idx_employees_phone: {
           field: "owner_phone",
           message: "Já existe uma conta com esse telefone.",
         },
+        uni_employees_phone: {
+          field: "owner_phone",
+          message: "Já existe uma conta com esse telefone.",
+        },
       };
-
       const matchedConstraint = Object.entries(constraintMap).find(
         ([constraint]) =>
           normalizedMessage.includes("duplicate key") &&
           normalizedMessage.includes(constraint)
       );
+
+      // Verificar se é erro de subdomínio
+      const isSubdomainError =
+        normalizedMessage.includes("subdomain") &&
+        normalizedMessage.includes("already exists");
 
       if (matchedConstraint) {
         const [, { field, message }] = matchedConstraint;
@@ -92,11 +120,14 @@ export const useCreateCompany = () => {
           message,
         });
 
-        toast({
-          title: "Erro ao cadastrar empresa",
-          description: message,
-          variant: "destructive",
+        // Não mostrar toast para erros de campos específicos
+      } else if (isSubdomainError) {
+        setFormError("start_subdomain", {
+          type: "manual",
+          message: "Este subdomínio já está em uso. Escolha outro.",
         });
+
+        // Não mostrar toast para erros de campos específicos
       } else {
         toast({
           title: "Erro ao cadastrar empresa",
