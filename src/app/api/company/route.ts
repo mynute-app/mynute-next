@@ -1,34 +1,66 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
-import { getCompanyFromRequest } from "@/lib/api/get-company-from-request";
 
 export const GET = auth(async function GET(req) {
-  console.log("📡 Buscando dados da empresa com base no subdomínio...");
+  console.log("📡 Buscando dados da empresa com base no token...");
 
   try {
     const token = req.auth?.accessToken;
+    console.log("🔑 Token de autenticação:", token);
 
     if (!token) {
-      return NextResponse.json({ status: 401, message: "Não autorizadoasdas" });
+      return NextResponse.json({ status: 401, message: "Não autorizado" });
     }
 
-    // Pegando a empresa do subdomínio
-    const company = await getCompanyFromRequest(req);
+    // Decodificar o token para pegar o company_id
+    // Assumindo que o token é JWT, vamos decodificar o payload
+    const tokenParts = token.split(".");
+    if (tokenParts.length !== 3) {
+      return NextResponse.json({ status: 401, message: "Token inválido" });
+    }
+    const payload = JSON.parse(Buffer.from(tokenParts[1], "base64").toString());
+    console.log("📋 Payload do token:", payload);
 
-    if (!company?.id) {
+    // O company_id está dentro de payload.data
+    const companyId = payload.data?.company_id;
+    console.log("🏢 Company ID do token:", companyId);
+
+    if (!companyId) {
       return NextResponse.json(
-        { status: 400, message: "Empresa não encontrada via subdomínio." },
+        { status: 400, message: "Company ID não encontrado no token." },
         { status: 400 }
       );
     }
+    console.log("🚀 Fazendo requisição para o backend com:");
+    console.log("🔗 URL:", `${process.env.BACKEND_URL}/company/${companyId}`);
+    console.log("🔑 Token original:", token);
+    console.log("🏢 X-Company-ID Header:", companyId);
 
     const companyResponse = await fetch(
-      `${process.env.BACKEND_URL}/company/${company.id}`
+      `${process.env.BACKEND_URL}/company/${companyId}`,
+      {
+        headers: {
+          "X-Auth-Token": token, // Tentando com X-Auth-Token em vez de Bearer
+          "X-Company-ID": companyId,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("📥 Status da resposta:", companyResponse.status);
+    console.log(
+      "📥 Headers da resposta:",
+      Object.fromEntries(companyResponse.headers)
     );
 
     if (!companyResponse.ok) {
       const error = await companyResponse.text();
       console.error("❌ Erro ao buscar empresa:", error);
+      console.error(
+        "❌ Status completo:",
+        companyResponse.status,
+        companyResponse.statusText
+      );
       return NextResponse.json({ error }, { status: companyResponse.status });
     }
 

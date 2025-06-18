@@ -97,9 +97,7 @@ export const { handlers, auth, signIn } = NextAuth({
             throw new Error("Empresa não encontrada para o subdomínio.");
           }
 
-          const company = await companyRes.json();
-
-          // ✅ Realiza login com X-Company-ID
+          const company = await companyRes.json(); // ✅ Realiza login com X-Company-ID
           const response = await fetch("http://localhost:4000/employee/login", {
             method: "POST",
             headers: {
@@ -109,13 +107,30 @@ export const { handlers, auth, signIn } = NextAuth({
             body: JSON.stringify({ email, password }),
           });
 
+          console.log(
+            "Resposta do employee/login:",
+            response.status,
+            response.statusText
+          );
+
+          // Logando todos os headers da resposta
+          console.log("Headers da resposta employee/login:");
+          response.headers.forEach((value, key) => {
+            console.log(`${key}: ${value}`);
+          });
+
           if (!response.ok) {
             throw new Error(`Falha ao autenticar. Código: ${response.status}`);
           }
 
           const token = response.headers.get("X-Auth-Token");
 
+          console.log("X-Auth-Token recebido:", token);
+
           if (!token) {
+            console.error(
+              "Token X-Auth-Token não encontrado nos headers da resposta"
+            );
             throw new Error("Token não encontrado na resposta.");
           }
 
@@ -139,12 +154,22 @@ export const { handlers, auth, signIn } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        console.log("JWT Callback - User token recebido:", user.token);
         token.accessToken = user.token;
+        console.log(
+          "JWT Callback - Token armazenado no JWT:",
+          token.accessToken
+        );
       }
       return token;
     },
     async session({ session, token }) {
+      console.log("Session Callback - Token do JWT:", token.accessToken);
       session.accessToken = token.accessToken as string;
+      console.log(
+        "Session Callback - AccessToken final na sessão:",
+        session.accessToken
+      );
       return session;
     },
   },

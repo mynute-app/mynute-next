@@ -1,4 +1,4 @@
-import { serviceSchema } from './../validations/validation';
+import { serviceSchema } from "./../validations/validation";
 export type Branch = {
   id: number;
   name: string;
@@ -37,10 +37,27 @@ export type Employee = {
   services: Service[];
 };
 export interface Company {
-  id: number;
-  name: string;
+  id: string; 
+  legal_name: string; 
+  trading_name: string; 
+  name?: string;
   tax_id: string;
+  design?: {
+    colors?: {
+      primary?: string;
+      secondary?: string;
+      tertiary?: string;
+      quaternary?: string;
+    };
+    images?: {
+      logo?: { url?: string };
+      banner?: { url?: string };
+      background?: { url?: string };
+    };
+  };
   branches: Branch[];
   services: Service[];
   employees: Employee[];
+  sectors: any[]; // Baseado no seu log
+  subdomains: any[]; // Baseado no seu log
 }
