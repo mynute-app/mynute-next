@@ -22,13 +22,15 @@ export default function YourBrand() {
       console.log("✅ Dados da empresa carregados:", company);
     }
   }, [company]);
+
   if (loadingCompany) {
     return <YourBrandSkeleton />;
   }
-  // Mostrar erro se houver
+
   if (error) {
     return <YourBrandError error={error} onRetry={handleRetry} />;
   }
+
   if (!company) {
     return <div className="text-gray-500">Empresa não encontrada.</div>;
   }

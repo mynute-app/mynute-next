@@ -35,7 +35,6 @@ export const GET = auth(async function GET(req) {
     console.log("🔗 URL:", `${process.env.BACKEND_URL}/company/${companyId}`);
     console.log("🔑 Token original:", token);
     console.log("🏢 X-Company-ID Header:", companyId);
-
     const companyResponse = await fetch(
       `${process.env.BACKEND_URL}/company/${companyId}`,
       {
@@ -61,6 +60,21 @@ export const GET = auth(async function GET(req) {
         companyResponse.status,
         companyResponse.statusText
       );
+
+      // Se for erro 400 relacionado ao banco, tentar novamente ou retornar um erro mais específico
+      if (companyResponse.status === 400 && error.includes("company_sectors")) {
+        console.warn(
+          "⚠️ Erro relacionado à tabela company_sectors - possível problema temporário no banco"
+        );
+        return NextResponse.json(
+          {
+            error:
+              "Serviço temporariamente indisponível. Tente novamente em alguns segundos.",
+          },
+          { status: 503 }
+        );
+      }
+
       return NextResponse.json({ error }, { status: companyResponse.status });
     }
 
