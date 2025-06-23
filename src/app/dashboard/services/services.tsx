@@ -10,14 +10,14 @@ import { DeleteServiceDialog } from "./delete-service-dailog";
 import ServiceCardSkeleton from "./ServiceCardSkeleton";
 import ServiceListSkeleton from "./ServiceListSkeleton";
 import { Service } from "../../../../types/company";
-import { useCompany } from "@/hooks/get-company";
 import { useDeleteService } from "./actions/useDeleteServiceForm";
+import { useGetCompany } from "@/hooks/get-company";
 
 export const ServicesPage = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [deletingService, setDeletingService] = useState<Service | null>(null);
   const [services, setServices] = useState<Service[]>([]);
-  const { company, loading } = useCompany();
+  const { company, loading, error } = useGetCompany();
   const { handleDelete } = useDeleteService();
   useEffect(() => {
     if (company?.services) {

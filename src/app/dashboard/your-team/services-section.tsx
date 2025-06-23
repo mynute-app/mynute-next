@@ -8,11 +8,11 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { useCompany } from "@/hooks/get-company";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Service } from "../../../../types/company";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle } from "lucide-react";
+import { useGetCompany } from "@/hooks/get-company";
 
 type Props = {
   selectedMember: any | null;
@@ -20,7 +20,7 @@ type Props = {
 };
 
 export function ServicesSection({ selectedMember, setSelectedMember }: Props) {
-  const { company, loading } = useCompany();
+  const { company, loading } = useGetCompany();
   const services: Service[] = company?.services ?? [];
   console.log(company);
   

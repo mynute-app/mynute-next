@@ -9,10 +9,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCompany } from "@/hooks/get-company";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle } from "lucide-react";
 import { Branch as Branchs } from "../../../../types/company";
+import { useGetCompany } from "@/hooks/get-company";
 
 type Props = {
   selectedMember: any | null;
@@ -20,9 +20,9 @@ type Props = {
 };
 
 export function Branch({ selectedMember, setSelectedMember }: Props) {
-  const { company, loading } = useCompany();
+  const { company, loading } = useGetCompany();
   const branches: Branchs[] = company?.branches ?? [];
-  
+
   const linkedBranchIds = new Set(
     selectedMember?.branches?.map((s: Branchs) => s.id) ?? []
   );

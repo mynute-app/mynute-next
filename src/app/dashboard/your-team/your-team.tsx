@@ -12,18 +12,20 @@ import TeamMemberActions from "./team-member-actions";
 import { TeamMember } from "../../../../types/TeamMember";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Employee } from "../../../../types/company";
-import { useCompany } from "@/hooks/get-company";
+
 import { TeamMemberList } from "./team-member-list";
 import { useGetEmployeeById } from "@/hooks/get-employee-by-id";
+import { useGetCompany } from "@/hooks/get-company";
 
 export default function YourTeam() {
   const [activeTab, setActiveTab] = useState("about");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { company, loading } = useCompany();
+  const { company, loading, error } = useGetCompany();
+  console.log("Company data:", company);
   const employees: Employee[] = company?.employees ?? [];
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
-  
+
   const { employee: selectedEmployeeData, loading: loadingEmployee } =
     useGetEmployeeById(selectedMemberId);
 

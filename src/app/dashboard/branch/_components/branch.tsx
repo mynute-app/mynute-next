@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useCompany } from "@/hooks/get-company";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +21,7 @@ import { AboutSection } from "../../your-team/about-section";
 import { ServicesSection } from "../../your-team/services-section";
 import { BreaksSection } from "../../your-team/breakssection";
 import { Branch } from "../../your-team/branch-section";
+import { useGetCompany } from "@/hooks/get-company";
 
 // Tipos
 interface Branch {
@@ -51,7 +51,7 @@ type BranchForm = Omit<Branch, "id" | "services">;
 type Tab = "about" | "services" | "branch" | "breaks";
 
 export default function BranchManager() {
-  const { company, loading } = useCompany();
+  const { company, loading } = useGetCompany();
   const { toast } = useToast();
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -61,7 +61,7 @@ export default function BranchManager() {
   );
   const [employeeTab, setEmployeeTab] = useState<Tab>("about");
 
-  const services: Service[] = company?.services ?? [];
+  const services = company?.services ?? [];
 
   const form = useForm<BranchForm>({
     resolver: zodResolver(BusinessSchema),
@@ -363,7 +363,10 @@ export default function BranchManager() {
                     {services.map(service => (
                       <ServiceCard
                         key={`${service.id}-${selectedServices.join(",")}`}
-                        service={service}
+                        service={{
+                          ...service,
+                          duration: service.duration !== undefined ? Number(service.duration) : undefined,
+                        }}
                         isLinked={selectedServices.includes(service.id)}
                         onLink={handleLinkService}
                         onUnlink={handleUnlinkService}
