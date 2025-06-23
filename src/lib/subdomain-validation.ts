@@ -4,12 +4,47 @@ export interface Company {
   id: string;
   legal_name: string;
   trading_name?: string;
+  tax_id?: string;
   design?: {
-    images?: {
-      banner_url?: string;
+    images?: CompanyImages;
+    colors?: {
+      primary?: string;
+      secondary?: string;
+      tertiary?: string;
+      quaternary?: string;
     };
   };
-  // Adicione outras propriedades conforme necessário
+  sectors?: any[]; // Tipar se necessário
+  subdomains?: {
+    id: string;
+    name: string;
+    company_id: string;
+  }[];
+  employees?: {
+    id: string;
+    company_id: string;
+    name: string;
+    surname: string;
+    email: string;
+    phone: string;
+  }[];
+  branches?: any[]; // Tipar se necessário
+  services?: any[]; // Tipar se necessário
+}
+
+// Subtipos
+export interface CompanyImage {
+  alt?: string;
+  title?: string;
+  caption?: string;
+  url?: string;
+}
+
+export interface CompanyImages {
+  logo?: CompanyImage;
+  banner?: CompanyImage;
+  background?: CompanyImage;
+  favicon?: CompanyImage;
 }
 
 export interface SubdomainValidationResult {

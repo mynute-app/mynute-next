@@ -33,7 +33,7 @@ export default async function LoginPage() {
 
       <div className="relative hidden bg-muted lg:block">
         <img
-          src={company.design?.images?.banner_url || "/placeholder.svg"}
+          src={company.design?.images?.background?.url || "/placeholder.svg"}
           alt="Imagem"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />

@@ -5,7 +5,6 @@ type Params = {
   banner?: File;
   favicon?: File;
   background?: File;
-  companyId?: string;
   colors?: {
     primary?: string;
     secondary?: string;
@@ -23,7 +22,6 @@ export function useUpdateCompanyDesignImages() {
     banner,
     favicon,
     background,
-    companyId,
     colors,
   }: Params) => {
     setLoading(true);
@@ -32,15 +30,13 @@ export function useUpdateCompanyDesignImages() {
 
     try {
       const formData = new FormData();
-
       if (logo) formData.append("logo", logo);
       if (banner) formData.append("banner", banner);
       if (favicon) formData.append("favicon", favicon);
       if (background) formData.append("background", background);
-      if (companyId) formData.append("companyId", companyId); // opcional, backend tem fallback
+
       // Adicionando cores ao FormData
       if (colors) {
-        // Transformar o objeto colors em JSON e enviar como uma string
         formData.append("colors", JSON.stringify(colors));
       }
 
@@ -52,13 +48,11 @@ export function useUpdateCompanyDesignImages() {
       const subdomain = host.split(".")[0];
       console.log("🌐 Host atual:", host);
       console.log("🌐 Subdomínio em uso:", subdomain);
-
       console.log("FormData enviado:", {
         logo: logo ? logo.name : null,
         banner: banner ? banner.name : null,
         favicon: favicon ? favicon.name : null,
         background: background ? background.name : null,
-        companyId,
         colors,
       });
 

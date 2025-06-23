@@ -1,88 +1,57 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
-import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
-import { getCompanyIdFromSubdomain } from "@/utils/subdomain";
 
 export const PATCH = auth(async function PATCH(req) {
+  console.log("📤 Atualizando design da empresa...");
+
   try {
     const token = req.auth?.accessToken;
-    const email = req.auth?.user.email;
+    console.log("🔑 Token de autenticação:", token);
 
-    if (!token || !email) {
+    if (!token) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    // Log dos headers para debug
-    const headers = Object.fromEntries(req.headers);
-    console.log("📝 Headers recebidos:", headers);
-    const host = req.headers.get("host") || "sem host";
-    console.log("🌐 Host recebido no servidor:", host);
-    console.log("🌐 Subdomínio extraído:", host.split(".")[0]);
-
-    // Recebe os arquivos como multipart/form-data
-    const formData = await req.formData();
-
-    // Tenta determinar o ID da empresa
-    let companyId: string | null = null;
-
-    // 1. Tenta via formData (cliente pode enviar diretamente)
-    const requestedCompanyId = formData.get("companyId");
-    if (requestedCompanyId && typeof requestedCompanyId === "string") {
-      companyId = requestedCompanyId;
-      console.log("➡️ Company ID via formData:", companyId);
+    // Decodificar o token para pegar o company_id
+    const tokenParts = token.split(".");
+    if (tokenParts.length !== 3) {
+      return NextResponse.json({ message: "Token inválido" }, { status: 401 });
     }
 
-    // 2. Tenta via subdomínio
-    if (!companyId) {
-      const host = req.headers.get("host");
-      if (host) {
-        const subdomain = host.split(".")[0];
-        console.log("🌐 Subdomínio extraído no servidor:", subdomain);
+    const payload = JSON.parse(Buffer.from(tokenParts[1], "base64").toString());
+    console.log("📋 Payload do token:", payload);
 
-        const subdomainId = await getCompanyIdFromSubdomain(host);
-        if (subdomainId) {
-          companyId = subdomainId;
-          console.log("➡️ Company ID via subdomínio:", companyId);
-        } else {
-          console.log("⚠️ Não foi possível obter companyId do subdomínio");
-        }
-      }
-    }
-
-    // 3. Tenta via associação do usuário
-    if (!companyId) {
-      const user = await fetchFromBackend(
-        req,
-        `/employee/email/${email}`,
-        token
-      );
-      companyId = user?.company_id;
-      console.log("➡️ Company ID via associação do usuário:", companyId);
-    }
+    // O company_id está dentro de payload.data
+    const companyId = payload.data?.company_id;
+    console.log("� Company ID do token:", companyId);
 
     if (!companyId) {
       return NextResponse.json(
-        { message: "Não foi possível determinar a empresa" },
+        { message: "Company ID não encontrado no token" },
         { status: 400 }
       );
     }
 
-    // Prepara o formulário com os arquivos recebidos
+    // Recebe os arquivos como multipart/form-data
+    const formData = await req.formData();
+    console.log("📁 FormData recebido para empresa:", companyId); // Prepara o formulário com os arquivos recebidos
     const uploadForm = new FormData();
     const fileFields = ["logo", "banner", "favicon", "background"];
+
     fileFields.forEach(field => {
       const file = formData.get(field);
       if (file && typeof file !== "string") {
         uploadForm.append(field, file);
+        console.log(`📎 Arquivo ${field} adicionado:`, file.name);
       }
-    }); // Processa o campo colors, se existir
+    });
+
+    // Processa o campo colors, se existir
     const colorsString = formData.get("colors");
     if (colorsString && typeof colorsString === "string") {
       try {
         const colors = JSON.parse(colorsString);
         console.log("🎨 Cores recebidas:", colors);
-
-        // Adiciona as cores ao formulário para enviar ao backend
         uploadForm.append("colors", colorsString);
       } catch (e) {
         console.error("❌ Erro ao processar as cores:", e);
@@ -101,6 +70,8 @@ export const PATCH = auth(async function PATCH(req) {
       },
       body: uploadForm,
     });
+
+    console.log("📥 Status da resposta do backend:", res.status);
 
     if (!res.ok) {
       const errorText = await res.text();
