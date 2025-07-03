@@ -24,7 +24,7 @@ import { AddressStep } from "../form/Address";
 import { CardCalendar } from "./Card-Calendar";
 import { PersonStep } from "../form/Person";
 import { CardInformation } from "./Customer-Information";
-import { useCompany } from "@/hooks/get-company";
+import { useGetCompany } from "@/hooks/get-company";
 
 const steps = [
   {
@@ -83,7 +83,7 @@ const steps = [
 const BookingWizard: React.FC = () => {
   const [activeStep, setActiveStep] = useState("servico");
   const { toast } = useToast();
-  const { company, loading: brandLoading } = useCompany();
+  const { company, loading: brandLoading } = useGetCompany();
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
   const [selectedPerson, setSelectedPerson] = useState<any>(null);
   const [selectedService, setSelectedService] = useState<any>(null);
@@ -290,33 +290,8 @@ const BookingWizard: React.FC = () => {
   const validateAndProceed = async () => {
     try {
       if (activeStep === "confirmacao") {
-        // Final submission logic
-        toast({
-          title: "Sucesso!",
-          description: "Agendamento realizado com sucesso!",
-        });
-        return;
-      }
-
-      // Se não estiver na confirmação, apenas vai para o próximo passo disponível
-      const currentIndex = getCurrentStepIndex();
-      if (currentIndex < steps.length - 1) {
-        const nextStep = steps[currentIndex + 1];
-
-        // Se o próximo passo for informação ou confirmação, verifica se pode acessar
-        if (nextStep.id === "informacao" && !areRequiredStepsCompleted()) {
-          toast({
-            title: "Atenção",
-            description: "Preencha todos os campos obrigatórios primeiro.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (
-          nextStep.id === "confirmacao" &&
-          (!areRequiredStepsCompleted() || !isStepCompleted("informacao"))
-        ) {
+        // Só validar na confirmação final
+        if (!areRequiredStepsCompleted() || !isStepCompleted("informacao")) {
           toast({
             title: "Atenção",
             description: "Complete todas as etapas antes de finalizar.",
@@ -325,7 +300,18 @@ const BookingWizard: React.FC = () => {
           return;
         }
 
-        setActiveStep(nextStep.id);
+        // Final submission logic
+        toast({
+          title: "Sucesso!",
+          description: "Agendamento realizado com sucesso!",
+        });
+        return;
+      }
+
+      // Navegação livre - vai para o próximo passo
+      const currentIndex = getCurrentStepIndex();
+      if (currentIndex < steps.length - 1) {
+        setActiveStep(steps[currentIndex + 1].id);
       }
     } catch (e) {
       if (e instanceof Error) {
@@ -343,44 +329,6 @@ const BookingWizard: React.FC = () => {
     if (currentIndex > 0) {
       setActiveStep(steps[currentIndex - 1].id);
     }
-  };
-  const goToStep = (stepId: string) => {
-    // Debug: log do estado atual
-    console.log("🔍 Tentando ir para:", stepId);
-    console.log("📊 Estado atual:", {
-      selectedAddress,
-      selectedPerson,
-      selectedService,
-      selectedCalendarDate,
-      clientInfo,
-      areRequiredStepsCompleted: areRequiredStepsCompleted(),
-    });
-
-    if (stepId === "informacao" && !areRequiredStepsCompleted()) {
-      console.log("❌ Bloqueado: Campos obrigatórios não preenchidos");
-      toast({
-        title: "Atenção",
-        description: "Preencha todos os campos obrigatórios primeiro.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (
-      stepId === "confirmacao" &&
-      (!areRequiredStepsCompleted() || !isStepCompleted("informacao"))
-    ) {
-      console.log("❌ Bloqueado: Confirmação não disponível");
-      toast({
-        title: "Atenção",
-        description: "Complete todas as etapas antes de finalizar.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    console.log("✅ Navegando para:", stepId);
-    setActiveStep(stepId);
   };
 
   const getStepStatus = (stepId: string) => {
@@ -443,9 +391,20 @@ const BookingWizard: React.FC = () => {
   ]);
 
   return (
-    <div className="flex flex-col w-full max-w-6xl h-screen rounded-lg shadow-lg overflow-hidden bg-white">
-      {/* Header with Banner and Logo */}
-      <div className="relative shadow-xl h-[180px] overflow-hidden rounded-t-lg">
+    <div className="flex flex-col w-full max-w-6xl min-h-screen bg-white md:rounded-lg md:shadow-lg md:overflow-hidden">
+      {/* Estilos para scrollbar */}
+      <style jsx global>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+
+      {/* Header Compacto para Mobile */}
+      <div className="relative h-[80px] md:h-[180px] overflow-hidden md:rounded-t-lg">
         {company?.design?.images?.banner?.url ? (
           <Image
             src={company.design.images.banner.url || "/placeholder.svg"}
@@ -457,18 +416,19 @@ const BookingWizard: React.FC = () => {
           <div
             className="absolute inset-0"
             style={{
-              backgroundColor: company?.design?.colors?.primary || "#f5f5f5",
+              backgroundColor: company?.design?.colors?.primary || "#3B82F6",
             }}
           />
         )}
 
         <div className="absolute inset-0 bg-black/20" />
 
+        {/* Logo menor e mais discreto em mobile */}
         <div className="flex justify-center items-center h-full relative z-10">
           {brandLoading ? (
-            <Skeleton className="w-[150px] h-[120px] rounded-md" />
+            <Skeleton className="w-[60px] h-[40px] md:w-[150px] md:h-[120px] rounded-md" />
           ) : company?.design?.images?.logo?.url ? (
-            <div className="w-[150px] h-[120px] relative">
+            <div className="w-[60px] h-[40px] md:w-[150px] md:h-[120px] relative">
               <Image
                 src={company.design.images.logo.url || "/placeholder.svg"}
                 alt="Logo da empresa"
@@ -477,221 +437,210 @@ const BookingWizard: React.FC = () => {
               />
             </div>
           ) : (
-            <Skeleton className="w-[150px] h-[120px] rounded-md" />
+            <Skeleton className="w-[60px] h-[40px] md:w-[150px] md:h-[120px] rounded-md" />
           )}
         </div>
-      </div>{" "}
-      {/* Progress Steps */}
-      <div className="px-6 py-4 bg-gray-50 border-b">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
-          {steps.map((step, index) => {
-            const status = getStepStatus(step.id);
-            const Icon = step.icon;
-            const isClickable =
-              (step.id !== "informacao" && step.id !== "confirmacao") ||
-              (step.id === "informacao" && areRequiredStepsCompleted()) ||
-              (step.id === "confirmacao" &&
-                areRequiredStepsCompleted() &&
-                isStepCompleted("informacao"));
+      </div>
 
-            return (
-              <div key={step.id} className="flex items-center">
-                <div
-                  className={`flex flex-col items-center transition-all duration-200 ${
-                    isClickable
-                      ? "cursor-pointer hover:scale-105"
-                      : "cursor-not-allowed opacity-50"
-                  } ${
-                    status === "pending" && isClickable
-                      ? "opacity-70 hover:opacity-90"
-                      : ""
-                  }`}
-                  onClick={() => isClickable && goToStep(step.id)}
-                >
-                  <div
-                    className={`
-          relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 ${
-            isClickable ? "hover:shadow-lg" : ""
-          }
-          ${
-            status === "completed"
-              ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
-              : status === "active"
-              ? "border-blue-500 text-blue-500 bg-blue-50 hover:bg-blue-100"
-              : isClickable
-              ? "border-gray-300 text-gray-400 bg-white hover:border-gray-400 hover:text-gray-500"
-              : "border-gray-200 text-gray-300 bg-gray-100"
-          }
-        `}
-                  >
-                    {status === "completed" ? (
-                      <CheckCircle className="w-6 h-6" />
-                    ) : (
-                      <Icon className="w-5 h-5" />
-                    )}
-
-                    {!isClickable && step.id !== activeStep && (
-                      <div className="absolute inset-0 bg-gray-100 bg-opacity-50 rounded-full flex items-center justify-center">
-                        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-2 text-center">
-                    <div
-                      className={`text-sm font-medium transition-colors duration-200 ${
-                        status === "active"
-                          ? "text-blue-600"
-                          : status === "completed"
-                          ? "text-green-600"
-                          : isClickable
-                          ? "text-gray-500 hover:text-gray-700"
-                          : "text-gray-400"
-                      }`}
-                    >
-                      {step.title}
-                    </div>
-                    <div
-                      className={`text-xs ${
-                        isClickable ? "text-gray-500" : "text-gray-400"
-                      } hidden sm:block`}
-                    >
-                      {step.description}
-                      {!isClickable &&
-                        (step.id === "informacao" ||
-                          step.id === "confirmacao") && (
-                          <div className="text-orange-500 text-xs mt-1">
-                            {step.id === "informacao"
-                              ? "Complete os campos obrigatórios"
-                              : "Complete todas as etapas"}
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`flex-1 h-0.5 mx-4 transition-colors duration-200 ${
-                      isStepCompleted(step.id) ? "bg-green-500" : "bg-gray-300"
-                    }`}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>{" "}
-      {/* Step Content */}
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto">
-          {" "}
-          <Card className="m-6 h-[calc(100%-3rem)]">
-            <CardContent className="p-0 h-full">
-              {renderActiveComponent()}
-
-              {/* Botões temporários para testar */}
-              <div className="p-4 border-t bg-gray-50">
-                <h4 className="font-semibold mb-2">
-                  🧪 Teste - Simular Seleções:
-                </h4>
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      setSelectedAddress({ id: 1, name: "Endereço Teste" })
-                    }
-                  >
-                    Simular Endereço
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      setSelectedPerson({ id: 1, name: "João Silva" })
-                    }
-                  >
-                    Simular Profissional
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      setSelectedService({ id: 1, name: "Corte de Cabelo" })
-                    }
-                  >
-                    Simular Serviço
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      setSelectedCalendarDate({
-                        date: "2025-06-13",
-                        time: "14:00",
-                      })
-                    }
-                  >
-                    Simular Data/Hora
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      setClientInfo({
-                        fullName: "Cliente Teste",
-                        email: "teste@email.com",
-                        phone: "123456789",
-                      })
-                    }
-                  >
-                    Simular Info Cliente
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>{" "}
-      {/* Navigation Footer */}
-      <div className="border-t bg-white px-6 py-4">
-        <div className="flex justify-between items-center max-w-4xl mx-auto">
-          <Button
-            onClick={goToPreviousStep}
-            disabled={getCurrentStepIndex() === 0}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Anterior
-          </Button>
-
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">
-              {getCurrentStepIndex() + 1} de {steps.length}
-            </Badge>
-            {areRequiredStepsCompleted() && (
-              <Badge
-                variant="outline"
-                className="text-green-600 border-green-600"
-              >
-                Pronto para finalizar
-              </Badge>
-            )}
+      {/* Progress Steps - Design Mobile First */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        {/* Mobile: Navigation com scroll horizontal */}
+        <div className="block md:hidden px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">
+              {steps.find(s => s.id === activeStep)?.title}
+            </span>
+            <span className="text-xs text-gray-500">
+              {getCurrentStepIndex() + 1}/{steps.length}
+            </span>
           </div>
 
-          <Button
-            onClick={validateAndProceed}
-            className="flex items-center gap-2"
-            style={{
-              backgroundColor: company?.design?.colors?.primary,
-              color: "white",
-            }}
-            disabled={
-              activeStep === "confirmacao" &&
-              (!areRequiredStepsCompleted() || !isStepCompleted("informacao"))
-            }
-          >
-            {activeStep === "confirmacao" ? "Finalizar" : "Próximo"}
-            {activeStep !== "confirmacao" && (
-              <ChevronRight className="w-4 h-4" />
-            )}
-          </Button>
+          {/* Navegação horizontal para mobile */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {steps.map((step, index) => {
+              const status = getStepStatus(step.id);
+              const Icon = step.icon;
+
+              return (
+                <button
+                  key={step.id}
+                  onClick={() => setActiveStep(step.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+                    status === "active"
+                      ? "bg-blue-500 text-white"
+                      : status === "completed"
+                      ? "bg-green-100 text-green-700 border border-green-300"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {status === "completed" ? (
+                    <CheckCircle className="w-3 h-3" />
+                  ) : (
+                    <Icon className="w-3 h-3" />
+                  )}
+                  {step.title}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Desktop: Steps tradicionais com navegação livre */}
+        <div className="hidden md:block px-6 py-4">
+          <div className="flex items-center justify-between max-w-4xl mx-auto">
+            {steps.map((step, index) => {
+              const status = getStepStatus(step.id);
+              const Icon = step.icon;
+
+              return (
+                <div key={step.id} className="flex items-center">
+                  <div
+                    className="flex flex-col items-center transition-all duration-200 cursor-pointer hover:scale-105"
+                    onClick={() => setActiveStep(step.id)}
+                  >
+                    <div
+                      className={`
+                        relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 hover:shadow-lg
+                        ${
+                          status === "completed"
+                            ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
+                            : status === "active"
+                            ? "border-2 border-blue-500 text-blue-500 bg-blue-50 hover:bg-blue-100"
+                            : "border-2 border-gray-300 text-gray-400 bg-white hover:border-blue-300 hover:text-blue-400"
+                        }
+                      `}
+                    >
+                      {status === "completed" ? (
+                        <CheckCircle className="w-6 h-6" />
+                      ) : (
+                        <Icon className="w-5 h-5" />
+                      )}
+                    </div>
+
+                    <div className="mt-2 text-center">
+                      <div
+                        className={`text-sm font-medium transition-colors duration-200 ${
+                          status === "active"
+                            ? "text-blue-600"
+                            : status === "completed"
+                            ? "text-green-600"
+                            : "text-gray-500 hover:text-blue-600"
+                        }`}
+                      >
+                        {step.title}
+                      </div>
+                      <div className="text-xs text-gray-500 hidden lg:block">
+                        {step.description}
+                      </div>
+                    </div>
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div
+                      className={`flex-1 h-0.5 mx-4 transition-colors duration-200 ${
+                        isStepCompleted(step.id)
+                          ? "bg-green-500"
+                          : "bg-gray-300"
+                      }`}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full overflow-y-auto">
+          <div className="p-4 md:p-6 h-full">{renderActiveComponent()}</div>
+        </div>
+      </div>
+
+      {/* Fixed Footer Navigation */}
+      <div className="border-t bg-white sticky bottom-0 z-10">
+        <div className="p-4">
+          {/* Indicador de progresso geral */}
+          <div className="mb-3">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs text-gray-500">Progresso</span>
+              <span className="text-xs text-gray-500">
+                {Math.round(
+                  (steps.filter(step => isStepCompleted(step.id)).length /
+                    (steps.length - 1)) *
+                    100
+                )}
+                % completo
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-1">
+              <div
+                className="bg-blue-500 h-1 rounded-full transition-all duration-300"
+                style={{
+                  width: `${
+                    (steps.filter(step => isStepCompleted(step.id)).length /
+                      (steps.length - 1)) *
+                    100
+                  }%`,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center max-w-4xl mx-auto gap-4">
+            <Button
+              onClick={goToPreviousStep}
+              disabled={getCurrentStepIndex() === 0}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 min-w-[80px]"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Anterior</span>
+              <span className="sm:hidden">Voltar</span>
+            </Button>
+
+            {/* Status badges - adaptativo */}
+            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+              <Badge variant="secondary" className="text-xs order-1 sm:order-2">
+                {getCurrentStepIndex() + 1} de {steps.length}
+              </Badge>
+              {areRequiredStepsCompleted() && (
+                <Badge
+                  variant="outline"
+                  className="text-green-600 border-green-600 text-xs order-2 sm:order-1"
+                >
+                  ✅ Pronto para finalizar!
+                </Badge>
+              )}
+            </div>
+
+            <Button
+              onClick={validateAndProceed}
+              size="sm"
+              className="flex items-center gap-2 min-w-[80px]"
+              style={{
+                backgroundColor: company?.design?.colors?.primary || "#3B82F6",
+                color: "white",
+              }}
+              disabled={
+                activeStep === "confirmacao" &&
+                (!areRequiredStepsCompleted() || !isStepCompleted("informacao"))
+              }
+            >
+              <span className="hidden sm:inline">
+                {activeStep === "confirmacao"
+                  ? "Finalizar Agendamento"
+                  : "Próximo"}
+              </span>
+              <span className="sm:hidden">
+                {activeStep === "confirmacao" ? "Finalizar" : "Avançar"}
+              </span>
+              {activeStep !== "confirmacao" && (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

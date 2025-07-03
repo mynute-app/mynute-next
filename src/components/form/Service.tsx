@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/context/useWizardStore";
 import { CardService } from "../custom/Card-Service";
-import { useCompany } from "@/hooks/get-company";
+import { useGetCompany } from "@/hooks/get-company";
 
 type Service = {
   id: number;
@@ -16,7 +16,7 @@ type Service = {
 export const ServiceStep = () => {
   const { setSelectedService, selectedService } = useWizardStore();
   const router = useRouter();
-  const { company, loading } = useCompany();
+  const { company, loading } = useGetCompany();
 
   const handleSelectService = (serviceId: number) => {
     const serviceIdStr = String(serviceId);

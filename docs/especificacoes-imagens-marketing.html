@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Imagens para o Agenda Kaki - Guia para Design</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f5f5;
+        color: #333;
+        line-height: 1.6;
+        min-height: 100vh;
+        padding: 2rem;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e0e0e0;
+      }
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        padding: 3rem 2rem;
+      }
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+      }
+      .header h2 {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+        font-weight: 400;
+      }
+      .summary-box {
+        background: rgba(255, 255, 255, 0.15);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-top: 1rem;
+        backdrop-filter: blur(10px);
+      }
+      .summary-box h3 {
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+      }
+      .summary-box p {
+        font-size: 1rem;
+        line-height: 1.4;
+      }
+      .content {
+        padding: 2rem;
+      }
+      .image-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 2.5rem;
+        margin-bottom: 3rem;
+        border-left: 4px solid #667eea;
+        border: 1px solid #e9ecef;
+      }
+      .image-section h2 {
+        color: #333;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .create-task {
+        background: #e3f2fd;
+        padding: 1rem 1.2rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        border-left: 4px solid #2196f3;
+        line-height: 1.4;
+      }
+      .create-task strong {
+        color: #1976d2;
+        font-size: 1.1rem;
+      }
+      .specs {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f0f0f0;
+      }
+      .specs h4 {
+        color: #667eea;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+      }
+      .spec-item {
+        background: #f0f4ff;
+        padding: 0.8rem 1.2rem;
+        margin: 0.7rem 0;
+        border-radius: 6px;
+        border-left: 3px solid #667eea;
+        font-weight: 500;
+      }
+      .image-preview {
+        background: #f0f0f0;
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-weight: bold;
+        margin: 1.5rem 0;
+        position: relative;
+        min-height: 200px;
+        font-size: 1.1rem;
+      }
+      .image-preview::after {
+        content: attr(data-size);
+        position: absolute;
+        bottom: -25px;
+        left: 0;
+        font-size: 0.9rem;
+        color: #888;
+        font-weight: normal;
+      }
+      .usage-note {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        padding: 1.2rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        line-height: 1.5;
+      }
+      .usage-note strong {
+        color: #856404;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📸 Imagens para o Agenda Kaki</h1>
+        <h2>Guia simples para Design/Marketing</h2>
+        <p>Lista das imagens que precisamos criar para o mynute.app</p>
+
+        <div class="summary-box">
+          <h3>✅ Resumo do que criar:</h3>
+          <p>
+            <strong>📱 4 imagens com logo mynute.app</strong><br />
+            <strong>🎨 4 imagens genéricas (para outros clientes)</strong><br />
+            <strong>🔧 1 favicon</strong><br />
+            <br />
+            <strong>Total: 9 imagens</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="content">
+        <!-- 1. Imagem de Cadastro de Empresa -->
+        <div class="image-section">
+          <h2>🏢 1. Imagem de Cadastro de Empresa</h2>
+          <p>
+            <strong>Onde aparece:</strong> Formulário onde empresas se cadastram
+            no sistema
+          </p>
+
+          <div class="create-task">
+            <strong>📋 O que criar:</strong> 1 imagem com logo mynute.app
+          </div>
+
+          <div class="specs">
+            <h4>📐 Especificações:</h4>
+            <div class="spec-item">Aparece na metade direita da tela</div>
+            <div class="spec-item">Tamanho mínimo: 800×600 pixels</div>
+            <div class="spec-item">Formatos aceitos: PNG, JPG ou WEBP</div>
+          </div>
+
+          <div
+            class="image-preview"
+            style="width: 400px; height: 250px"
+            data-size="Mínimo: 800×600px"
+          >
+            📷 Sua imagem mynute.app aqui
+          </div>
+
+          <div class="usage-note">
+            <strong>💡 Dica:</strong> Esta imagem promociona o mynute.app para
+            empresas que querem se cadastrar. Deve transmitir profissionalismo e
+            confiança.
+          </div>
+        </div>
+
+        <!-- 2. Imagem de Login de Funcionários -->
+        <div class="image-section">
+          <h2>👥 2. Imagem de Login de Funcionários</h2>
+          <p>
+            <strong>Onde aparece:</strong> Tela onde funcionários fazem login
+          </p>
+
+          <div class="create-task">
+            <strong>📋 O que criar:</strong> 1 imagem com logo mynute.app
+          </div>
+
+          <div class="specs">
+            <h4>📐 Especificações:</h4>
+            <div class="spec-item">Aparece na metade direita da tela</div>
+            <div class="spec-item">Tamanho mínimo: 1200×800 pixels</div>
+            <div class="spec-item">Formatos aceitos: PNG, JPG ou WEBP</div>
+          </div>
+
+          <div
+            class="image-preview"
+            style="width: 480px; height: 300px"
+            data-size="Mínimo: 1200×800px"
+          >
+            🖼️ Sua imagem mynute.app aqui
+          </div>
+
+          <div class="usage-note">
+            <strong>💡 Dica:</strong> Imagem focada em funcionários. Pode
+            mostrar ambiente de trabalho ou tema relacionado ao atendimento.
+          </div>
+        </div>
+
+        <!-- 3. Imagem de Login Geral -->
+        <div class="image-section">
+          <h2>🔐 3. Imagem de Login Geral</h2>
+          <p>
+            <strong>Onde aparece:</strong> Tela de login principal do sistema
+          </p>
+
+          <div class="create-task">
+            <strong>📋 O que criar:</strong> 1 imagem com logo mynute.app
+          </div>
+
+          <div class="specs">
+            <h4>📐 Especificações:</h4>
+            <div class="spec-item">Aparece na metade direita da tela</div>
+            <div class="spec-item">Tamanho mínimo: 1200×800 pixels</div>
+            <div class="spec-item">Formatos aceitos: PNG, JPG ou WEBP</div>
+          </div>
+
+          <div
+            class="image-preview"
+            style="width: 480px; height: 300px"
+            data-size="Mínimo: 1200×800px"
+          >
+            🖼️ Sua imagem mynute.app aqui
+          </div>
+
+          <div class="usage-note">
+            <strong>💡 Dica:</strong> Imagem universal para login. Deve ser
+            acolhedora e transmitir segurança.
+          </div>
+        </div>
+
+        <!-- 4. Imagem de Cadastro de Cliente -->
+        <div class="image-section">
+          <h2>👤 4. Imagem de Cadastro de Cliente</h2>
+          <p>
+            <strong>Onde aparece:</strong> Formulário onde clientes se cadastram
+          </p>
+
+          <div class="create-task">
+            <strong>📋 O que criar:</strong> 1 imagem com logo mynute.app
+          </div>
+
+          <div class="specs">
+            <h4>📐 Especificações:</h4>
+            <div class="spec-item">Aparece na metade direita da tela</div>
+            <div class="spec-item">Tamanho mínimo: 1200×800 pixels</div>
+            <div class="spec-item">Formatos aceitos: PNG, JPG ou WEBP</div>
+          </div>
+
+          <div
+            class="image-preview"
+            style="width: 480px; height: 300px"
+            data-size="Mínimo: 1200×800px"
+          >
+            🖼️ Sua imagem mynute.app aqui
+          </div>
+
+          <div class="usage-note">
+            <strong>💡 Dica:</strong> Focada no cliente final. Deve ser amigável
+            e convidativa para novos usuários.
+          </div>
+        </div>
+
+        <!-- 5. Favicon -->
+        <div class="image-section">
+          <h2>🔖 5. Favicon</h2>
+          <p><strong>Onde aparece:</strong> Ícone da aba do navegador</p>
+
+          <div class="create-task">
+            <strong>📋 O que criar:</strong> 1 favicon com logo mynute.app
+          </div>
+
+          <div class="specs">
+            <h4>📐 Especificações:</h4>
+            <div class="spec-item">Tamanhos: 32×32, 64×64, 128×128 pixels</div>
+            <div class="spec-item">Formato: ICO ou PNG</div>
+            <div class="spec-item">Deve ser legível em tamanho pequeno</div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              gap: 2rem;
+              align-items: center;
+              margin: 1.5rem 0;
+              justify-content: center;
+            "
+          >
+            <div style="text-align: center">
+              <div
+                style="
+                  background: #f0f0f0;
+                  border: 2px dashed #ccc;
+                  border-radius: 8px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: #666;
+                  font-weight: bold;
+                  width: 32px;
+                  height: 32px;
+                  margin: 0 auto 0.5rem;
+                  font-size: 0.7rem;
+                "
+              >
+                🔖
+              </div>
+              <p style="font-size: 0.9rem; color: #666; margin: 0">32×32px</p>
+            </div>
+            <div style="text-align: center">
+              <div
+                style="
+                  background: #f0f0f0;
+                  border: 2px dashed #ccc;
+                  border-radius: 8px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: #666;
+                  font-weight: bold;
+                  width: 64px;
+                  height: 64px;
+                  margin: 0 auto 0.5rem;
+                  font-size: 1rem;
+                "
+              >
+                🔖
+              </div>
+              <p style="font-size: 0.9rem; color: #666; margin: 0">64×64px</p>
+            </div>
+            <div style="text-align: center">
+              <div
+                style="
+                  background: #f0f0f0;
+                  border: 2px dashed #ccc;
+                  border-radius: 8px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: #666;
+                  font-weight: bold;
+                  width: 128px;
+                  height: 128px;
+                  margin: 0 auto 0.5rem;
+                  font-size: 1.5rem;
+                "
+              >
+                🔖
+              </div>
+              <p style="font-size: 0.9rem; color: #666; margin: 0">128×128px</p>
+            </div>
+          </div>
+
+          <div class="usage-note">
+            <strong>💡 Dica:</strong> Versão simplificada do logo que funcione
+            em tamanho muito pequeno.
+          </div>
+        </div>
+
+        <!-- 6. Banner do Booking (versões) -->
+        <div class="image-section">
+          <h2>📅 6. Banner do Sistema de Agendamento</h2>
+          <p>
+            <strong>Onde aparece:</strong> Tela de agendamento para clientes
+          </p>
+
+          <div class="create-task">
+            <strong>📋 O que criar:</strong> 2 versões <br />• 1 banner com logo
+            mynute.app <br />• 1 banner genérico (sem logo específico)
+          </div>
+
+          <div class="specs">
+            <h4>📐 Especificações:</h4>
+            <div class="spec-item">Formato banner horizontal</div>
+            <div class="spec-item">Tamanho: aproximadamente 800×300 pixels</div>
+            <div class="spec-item">Formatos aceitos: PNG, JPG ou WEBP</div>
+          </div>
+
+          <div
+            class="image-preview"
+            style="width: 500px; height: 200px"
+            data-size="Aprox. 800×300px"
+          >
+            📅 Banner de Agendamento
+          </div>
+
+          <div class="usage-note">
+            <strong>💡 Importante:</strong> A versão genérica será usada por
+            outras empresas clientes, então não pode ter marca mynute.app.
+          </div>
+        </div>
+
+        <!-- 7. Logo do Booking (versões) -->
+        <div class="image-section">
+          <h2>🎯 7. Logo do Sistema de Agendamento</h2>
+          <p>
+            <strong>Onde aparece:</strong> Logo pequeno no sistema de
+            agendamento
+          </p>
+
+          <div class="create-task">
+            <strong>📋 O que criar:</strong> 2 versões <br />• 1 logo mynute.app
+            <br />• 1 logo genérico (sem marca específica)
+          </div>
+
+          <div class="specs">
+            <h4>📐 Especificações:</h4>
+            <div class="spec-item">
+              Formato: logo/ícone quadrado ou retangular
+            </div>
+            <div class="spec-item">
+              Tamanho: 200×200 pixels ou 300×150 pixels
+            </div>
+            <div class="spec-item">Formatos aceitos: PNG, SVG</div>
+            <div class="spec-item">Fundo transparente preferível</div>
+          </div>
+
+          <div
+            class="image-preview"
+            style="width: 150px; height: 150px"
+            data-size="200×200px ou 300×150px"
+          >
+            🎯 Logo
+          </div>
+
+          <div class="usage-note">
+            <strong>💡 Importante:</strong> A versão genérica será usada por
+            outras empresas clientes, então deve ser neutra e sem marca
+            mynute.app.
+          </div>
+        </div>
+
+        <!-- Resumo Final -->
+        <div
+          style="
+            background: #e8f5e8;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+            border-left: 4px solid #4caf50;
+          "
+        >
+          <h2 style="color: #2e7d32; margin-bottom: 1rem">
+            ✅ Checklist Final
+          </h2>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+              gap: 1rem;
+            "
+          >
+            <div>
+              <h4 style="color: #2e7d32">Imagens com logo mynute.app:</h4>
+              <ul style="margin-left: 1rem; color: #2e7d32">
+                <li>□ Cadastro de empresa (800×600px)</li>
+                <li>□ Login de funcionários (1200×800px)</li>
+                <li>□ Login geral (1200×800px)</li>
+                <li>□ Cadastro de cliente (1200×800px)</li>
+                <li>□ Favicon (32×32px)</li>
+                <li>□ Banner agendamento mynute.app</li>
+                <li>□ Logo agendamento mynute.app</li>
+              </ul>
+            </div>
+            <div>
+              <h4 style="color: #2e7d32">Imagens genéricas:</h4>
+              <ul style="margin-left: 1rem; color: #2e7d32">
+                <li>□ Banner agendamento genérico</li>
+                <li>□ Logo agendamento genérico</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
