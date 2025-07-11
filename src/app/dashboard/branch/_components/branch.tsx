@@ -4,11 +4,10 @@ import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as zod from "zod";
 
 import { useToast } from "@/hooks/use-toast";
 import { ServiceCard } from "./service-card";
-import { AddressField } from "../../your-brand/_components/address-field";
+import { AddressField } from "./address-field";
 import { BusinessSchema } from "../../../../../schema";
 import { AddAddressDialog } from "./add-address-dialog";
 import { Separator } from "@/components/ui/separator";
@@ -35,17 +34,11 @@ interface Branch {
   city: string;
   state: string;
   country: string;
+  image?: string;
   services?: number[];
   employees?: Employee[];
 }
 
-interface Service {
-  id: number;
-  name: string;
-  description?: string;
-  duration?: number;
-  price?: number;
-}
 
 type BranchForm = Omit<Branch, "id" | "services">;
 type Tab = "about" | "services" | "branch" | "breaks";
@@ -87,6 +80,7 @@ export default function BranchManager() {
   }, [company]);
 
   const index = branches.findIndex(b => b.id === selectedBranch?.id);
+  
   const handleSelectBranch = async (branch: Branch) => {
     try {
       const updated = await fetchBranchById(branch.id);
@@ -105,7 +99,6 @@ export default function BranchManager() {
     }
   };
 
-  
   const handleLinkService = async (serviceId: number) => {
     if (!selectedBranch) return;
     try {
@@ -140,6 +133,7 @@ export default function BranchManager() {
       });
     }
   };
+  
   const handleUnlinkService = async (serviceId: number) => {
     if (!selectedBranch) return;
 
@@ -365,7 +359,10 @@ export default function BranchManager() {
                         key={`${service.id}-${selectedServices.join(",")}`}
                         service={{
                           ...service,
-                          duration: service.duration !== undefined ? Number(service.duration) : undefined,
+                          duration:
+                            service.duration !== undefined
+                              ? Number(service.duration)
+                              : undefined,
                         }}
                         isLinked={selectedServices.includes(service.id)}
                         onLink={handleLinkService}

@@ -93,12 +93,17 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    console.log("📤 Enviando payload:", body);
+    const payload = {
+      ...body,
+      owner_time_zone: "America/Sao_Paulo",
+    };
+
+    console.log("📤 Enviando payload:", payload);
 
     const backendResponse = await fetch(`${process.env.BACKEND_URL}/company`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
 
     const backendText = await backendResponse.text();
@@ -124,10 +129,11 @@ export async function POST(req: Request) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              ownerName: `${body.owner_name} ${body.owner_surname}`,
-              companyName: body.name,
-              email: body.owner_email,
-              subdomain: body.start_subdomain,
+              ownerName: `${payload.owner_name} ${payload.owner_surname}`,
+              companyName: payload.name,
+              email: payload.owner_email,
+              subdomain: payload.start_subdomain,
+              owner_time_zone: payload.owner_time_zone,
             }),
           }
         );

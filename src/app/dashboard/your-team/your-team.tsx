@@ -16,6 +16,9 @@ import { Employee } from "../../../../types/company";
 import { TeamMemberList } from "./team-member-list";
 import { useGetEmployeeById } from "@/hooks/get-employee-by-id";
 import { useGetCompany } from "@/hooks/get-company";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { useUploadEmployeeImage } from "@/hooks/use-upload-employee-image";
+import { useToast } from "@/hooks/use-toast";
 
 export default function YourTeam() {
   const [activeTab, setActiveTab] = useState("about");
@@ -30,6 +33,12 @@ export default function YourTeam() {
     useGetEmployeeById(selectedMemberId);
 
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
+  const {
+    uploadImage,
+    loading: uploadLoading,
+    error: uploadError,
+  } = useUploadEmployeeImage();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (selectedEmployeeData) {
@@ -50,6 +59,40 @@ export default function YourTeam() {
 
   const handleSaveMember = (updatedUser: TeamMember) => {
     console.log(`Saving member: ${updatedUser.name}`);
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!selectedMember?.id) {
+      toast({
+        title: "Erro",
+        description: "Nenhum funcionário selecionado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const result = await uploadImage(selectedMember.id, file);
+
+      if (result) {
+        // Atualizar o selectedMember com a nova URL da imagem
+        setSelectedMember((prev: any) => ({
+          ...prev,
+          imageUrl: result.imageUrl,
+        }));
+
+        toast({
+          title: "Sucesso",
+          description: "Imagem atualizada com sucesso!",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao fazer upload da imagem",
+        variant: "destructive",
+      });
+    }
   };
 
   const renderTabContent = () => {
@@ -113,9 +156,15 @@ export default function YourTeam() {
           <>
             <div className="flex items-center justify-between space-x-4 mb-6">
               <div className="flex justify-center items-start gap-4">
-                <div className="rounded-full bg-gray-200 w-16 h-16 flex items-center justify-center text-xl font-bold">
-                  {selectedMember?.name?.[0]}
-                </div>
+                <UserAvatar
+                  name={selectedMember?.name}
+                  surname={selectedMember?.surname}
+                  imageUrl={selectedMember?.imageUrl}
+                  size="lg"
+                  editable={true}
+                  loading={uploadLoading}
+                  onImageUpload={handleImageUpload}
+                />
                 <div className="flex justify-start items-start flex-col mt-2">
                   <h1 className="text-2xl font-semibold">
                     {selectedMember?.name} {selectedMember?.surname}

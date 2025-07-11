@@ -8,11 +8,10 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { UseFormRegister, UseFormWatch } from "react-hook-form";
-import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { TfiLocationPin } from "react-icons/tfi";
-import { useToast } from "@/hooks/use-toast";
-
+import { useAddressField } from "@/hooks/use-address-field";
+import { ImageField } from "@/components/custom/image-field";
 
 interface Branch {
   id: number;
@@ -25,6 +24,7 @@ interface Branch {
   city: string;
   state: string;
   country: string;
+  image?: string;
 }
 
 interface AddressFieldProps {
@@ -42,115 +42,16 @@ export function AddressField({
   index,
   onDelete,
 }: AddressFieldProps) {
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { toast } = useToast();
-  const hasChanges = [
-    "street",
-    "number",
-    "complement",
-    "neighborhood",
-    "zip_code",
-    "city",
-    "state",
-    "country",
-  ].some(
-    field =>
-      watch(`branches.${index}.${field}`) !== branch[field as keyof Branch]
-  );
-
-  const handleSave = async () => {
-    setIsSaving(true);
-
-    const updatedData = {
-      name: watch(`branches.${index}.name`),
-      street: watch(`branches.${index}.street`),
-      number: watch(`branches.${index}.number`),
-      complement: watch(`branches.${index}.complement`),
-      neighborhood: watch(`branches.${index}.neighborhood`),
-      zip_code: watch(`branches.${index}.zip_code`),
-      city: watch(`branches.${index}.city`),
-      state: watch(`branches.${index}.state`),
-      country: watch(`branches.${index}.country`),
-    };
-
-    try {
-      const response = await fetch(`/api/address/${branch.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedData),
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        console.error(
-          "❌ Erro ao atualizar filial:",
-          response.status,
-          responseData
-        );
-
-        toast({
-          title: "Erro ao atualizar filial",
-          description: "Ocorreu um erro ao tentar atualizar os dados.",
-          variant: "destructive",
-        });
-
-        return;
-      }
-
-      console.log("✅ Filial atualizada com sucesso:", responseData);
-
-      toast({
-        title: "Filial atualizada!",
-        description: "Os dados foram salvos com sucesso.",
-      });
-    } catch (error) {
-      console.error("❌ Erro ao salvar alterações:", error);
-
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as alterações.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    setIsDeleting(true);
-
-    try {
-      const response = await fetch(`/api/address/${branch.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Erro ao excluir filial");
-      }
-
-      toast({
-        title: "Filial excluída!",
-        description: "A filial foi removida com sucesso.",
-      });
-
-      onDelete(branch.id); // Atualiza a lista de filiais no front
-    } catch (error) {
-      console.error("Erro ao excluir filial:", error);
-      toast({
-        title: "Erro ao excluir",
-        description: "Não foi possível excluir a filial.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
-      setIsDialogOpen(false); // Fecha o modal após a ação
-    }
-  };
+  const {
+    isSaving,
+    isDeleting,
+    hasChanges,
+    imagePreview,
+    handleImageChange,
+    handleSave,
+    handleDelete,
+    handleRemoveImage,
+  } = useAddressField(branch, index, onDelete, watch);
 
   return (
     <div>
@@ -166,6 +67,12 @@ export function AddressField({
           <AccordionContent>
             <div className="p-4 rounded-md bg-gray-50 border">
               <div className="grid grid-cols-12 gap-4">
+                <ImageField
+                  imagePreview={imagePreview}
+                  onImageChange={handleImageChange}
+                  onRemoveImage={handleRemoveImage}
+                />
+
                 <div className="col-span-4">
                   <Label htmlFor={`branches.${index}.zip_code`}>CEP</Label>
                   <Input
@@ -211,7 +118,6 @@ export function AddressField({
                     className="bg-white shadow"
                   />
                 </div>
-
 
                 <div className="col-span-4">
                   <Label htmlFor={`branches.${index}.neighborhood`}>

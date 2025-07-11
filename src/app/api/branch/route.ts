@@ -1,30 +1,23 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
+import { getAuthDataFromRequest } from "@/utils/decode-jwt";
 
 export const POST = auth(async function POST(req) {
   try {
-    const token = req.auth?.accessToken;
-    const email = req.auth?.user.email;
+    const authData = getAuthDataFromRequest(req);
 
-    if (!email || !token) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-    }
-
-    const user = await fetchFromBackend(req, `/employee/email/${email}`, token);
-
-    const companyId = user?.company_id;
-    if (!companyId) {
+    if (!authData.isValid) {
       return NextResponse.json(
-        { message: "Usuário sem empresa associada" },
-        { status: 400 }
+        { message: authData.error || "Token inválido" },
+        { status: 401 }
       );
     }
-
     const body = await req.json();
+
     const requestBody = {
       city: body.city,
-      company_id: companyId,
+      company_id: authData.companyId,
       complement: body.complement || "",
       country: body.country,
       name: body.name,
@@ -32,22 +25,28 @@ export const POST = auth(async function POST(req) {
       number: body.number,
       state: body.state,
       street: body.street,
+      time_zone: body.timezone || "America/Sao_Paulo",
       zip_code: body.zip_code,
     };
 
-    console.log("📤 Enviando dados para API:", requestBody);
+    const createdBranch = await fetchFromBackend(
+      req,
+      "/branch",
+      authData.token!,
+      {
+        method: "POST",
+        body: requestBody,
+      }
+    );
 
-    const createdBranch = await fetchFromBackend(req, "/branch", token, {
-      method: "POST",
-      body: requestBody,
-    });
-
-    console.log("✅ Endereço criado com sucesso:", createdBranch);
     return NextResponse.json(createdBranch, { status: 201 });
   } catch (error) {
-    console.error("❌ Erro ao criar o endereço:", error);
+    console.error("❌ Erro detalhado ao criar o endereço:", error);
     return NextResponse.json(
-      { message: "Erro interno ao criar o endereço." },
+      {
+        message: "Erro interno ao criar o endereço.",
+        error: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

@@ -6,7 +6,6 @@ import { Branch } from "../../../../../../types/company";
 
 const addressSchema = z.object({
   city: z.string().min(1, "A cidade é obrigatória"),
-  company_id: z.number().default(1),
   complement: z.string().optional(),
   country: z.string().min(1, "O país é obrigatório"),
   name: z.string().min(1, "O nome é obrigatório"),
@@ -14,6 +13,7 @@ const addressSchema = z.object({
   number: z.string().min(1, "O número é obrigatório"),
   state: z.string().min(1, "O estado é obrigatório"),
   street: z.string().min(1, "A rua é obrigatória"),
+  timezone: z.string().default("America/Sao_Paulo"),
   zip_code: z
     .string()
     .min(8, "O CEP deve ter 8 dígitos")
@@ -27,7 +27,6 @@ export const useAddAddressForm = () => {
     resolver: zodResolver(addressSchema),
     defaultValues: {
       city: "",
-      company_id: 1,
       complement: "",
       country: "Brasil",
       name: "",
@@ -35,6 +34,7 @@ export const useAddAddressForm = () => {
       number: "",
       state: "",
       street: "",
+      timezone: "America/Sao_Paulo",
       zip_code: "",
     },
   });
@@ -45,6 +45,8 @@ export const useAddAddressForm = () => {
     data: AddAddressFormValues
   ): Promise<Branch | null> => {
     try {
+      console.log("📋 Dados do formulário:", data);
+
       const response = await fetch("/api/branch", {
         method: "POST",
         headers: {
@@ -54,10 +56,13 @@ export const useAddAddressForm = () => {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Erro da API:", response.status, errorText);
         throw new Error("Erro ao salvar endereço");
       }
 
       const createdAddress = await response.json();
+      console.log("✅ Endereço criado:", createdAddress);
 
       toast({
         title: "Endereço salvo!",

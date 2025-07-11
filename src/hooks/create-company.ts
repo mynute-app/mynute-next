@@ -41,6 +41,7 @@ export const useCreateCompany = () => {
       if (!response.ok) {
         throw new Error(errorMessage);
       }
+      
 
       toast({
         title: "Empresa cadastrada com sucesso!",
