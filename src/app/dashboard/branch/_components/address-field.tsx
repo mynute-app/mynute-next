@@ -11,7 +11,9 @@ import { UseFormRegister, UseFormWatch } from "react-hook-form";
 import { Trash2 } from "lucide-react";
 import { TfiLocationPin } from "react-icons/tfi";
 import { useAddressField } from "@/hooks/use-address-field";
+import { useBranchImage } from "@/hooks/use-branch-image";
 import { ImageField } from "@/components/custom/image-field";
+import { Separator } from "@/components/ui/separator";
 
 interface Branch {
   id: number;
@@ -42,18 +44,21 @@ export function AddressField({
   index,
   onDelete,
 }: AddressFieldProps) {
+  // Hook para funcionalidades gerais (salvar, deletar, detectar mudanças)
+  const { isSaving, isDeleting, hasChanges, handleSave, handleDelete } =
+    useAddressField(branch, index, onDelete, watch);
+
+  // Hook específico para imagens da filial
   const {
-    isSaving,
-    isDeleting,
-    hasChanges,
     imagePreview,
-    handleImageChange,
-    handleSave,
-    handleDelete,
-    handleRemoveImage,
     isUploading,
     isRemoving,
-  } = useAddressField(branch, index, onDelete, watch);
+    handleImageChange,
+    handleRemoveImage,
+  } = useBranchImage({
+    branchId: branch.id,
+    currentImage: branch.image,
+  });
 
   return (
     <div>
@@ -68,7 +73,7 @@ export function AddressField({
 
           <AccordionContent>
             <div className="p-4 rounded-md bg-gray-50 border">
-              <div className="grid grid-cols-12 gap-4">
+              <div className="grid gap-4 mb-4 w-96">
                 <ImageField
                   label="Imagem da Filial"
                   imagePreview={imagePreview}
@@ -77,7 +82,9 @@ export function AddressField({
                   isUploading={isUploading}
                   isRemoving={isRemoving}
                 />
-
+              </div>
+              <Separator className="mb-4" />
+              <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-4">
                   <Label htmlFor={`branches.${index}.zip_code`}>CEP</Label>
                   <Input

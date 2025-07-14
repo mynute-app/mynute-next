@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../../../auth";
-import { getCompanyFromRequest } from "@/lib/api/get-company-from-request";
+import { getAuthDataFromRequest } from "@/utils/decode-jwt";
 
-export const POST = auth(async function POST(req, ctx) {
+export const PATCH = auth(async function PATCH(req, ctx) {
   try {
     console.log("🔍 Iniciando upload de imagem da filial...");
 
-    const token = req.auth?.accessToken;
-    console.log("🔑 Token:", token ? "Presente" : "Ausente");
+    const authData = getAuthDataFromRequest(req);
 
-    if (!token) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    if (!authData.isValid) {
+      return NextResponse.json(
+        { message: authData.error || "Token inválido" },
+        { status: 401 }
+      );
     }
 
     const { branch_id } = ctx.params as {
@@ -60,22 +62,15 @@ export const POST = auth(async function POST(req, ctx) {
     const backendFormData = new FormData();
     backendFormData.append("profile", profileImage);
 
-    // Obter company data via subdomain
-    const company = await getCompanyFromRequest(req);
-    console.log("🏢 Company:", company);
-
     // Fazer a requisição para o backend
     const backendUrl = `${process.env.BACKEND_URL}/branch/${branch_id}/design/images`;
     console.log("🔗 URL completa:", backendUrl);
 
     const response = await fetch(backendUrl, {
-      method: "POST",
+      method: "PATCH",
       headers: {
-        "X-Auth-Token": token,
-        "X-Company-ID": company.id,
-        ...(company.schema_name && {
-          "X-Company-Schema": company.schema_name,
-        }),
+        "X-Auth-Token": authData.token!,
+        "X-Company-ID": authData.companyId!,
       },
       body: backendFormData,
     });
@@ -124,21 +119,20 @@ export const DELETE = auth(async function DELETE(req, ctx) {
   try {
     console.log("🗑️ Iniciando remoção de imagem da filial...");
 
-    const token = req.auth?.accessToken;
-    console.log("🔑 Token:", token ? "Presente" : "Ausente");
+    // Uma linha só - busca token do NextAuth, decodifica e retorna tudo
+    const authData = getAuthDataFromRequest(req);
 
-    if (!token) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    if (!authData.isValid) {
+      return NextResponse.json(
+        { message: authData.error || "Token inválido" },
+        { status: 401 }
+      );
     }
 
     const { branch_id } = ctx.params as {
       branch_id: string;
     };
     console.log("🏢 Branch ID:", branch_id);
-
-    // Obter company data via subdomain
-    const company = await getCompanyFromRequest(req);
-    console.log("🏢 Company:", company);
 
     // Fazer a requisição DELETE para o backend
     const backendUrl = `${process.env.BACKEND_URL}/branch/${branch_id}/design/images`;
@@ -147,11 +141,8 @@ export const DELETE = auth(async function DELETE(req, ctx) {
     const response = await fetch(backendUrl, {
       method: "DELETE",
       headers: {
-        "X-Auth-Token": token,
-        "X-Company-ID": company.id,
-        ...(company.schema_name && {
-          "X-Company-Schema": company.schema_name,
-        }),
+        "X-Auth-Token": authData.token!,
+        "X-Company-ID": authData.companyId!,
       },
     });
 
