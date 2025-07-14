@@ -51,6 +51,8 @@ export function AddressField({
     handleSave,
     handleDelete,
     handleRemoveImage,
+    isUploading,
+    isRemoving,
   } = useAddressField(branch, index, onDelete, watch);
 
   return (
@@ -68,9 +70,12 @@ export function AddressField({
             <div className="p-4 rounded-md bg-gray-50 border">
               <div className="grid grid-cols-12 gap-4">
                 <ImageField
+                  label="Imagem da Filial"
                   imagePreview={imagePreview}
                   onImageChange={handleImageChange}
                   onRemoveImage={handleRemoveImage}
+                  isUploading={isUploading}
+                  isRemoving={isRemoving}
                 />
 
                 <div className="col-span-4">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useImageField } from "@/hooks/use-image-field";
 
 interface Branch {
   id: number;
@@ -24,11 +25,15 @@ export function useAddressField(
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    branch.image || null
-  );
   const { toast } = useToast();
+
+  // Hook para gerenciar imagem
+  const imageField = useImageField({
+    initialImage: branch.image,
+    uploadEndpoint: `/api/branch/${branch.id}/design/images`,
+    deleteEndpoint: `/api/branch/${branch.id}/design/images`,
+    autoUpload: true,
+  });
 
   const hasChanges = [
     "street",
@@ -43,69 +48,6 @@ export function useAddressField(
     field =>
       watch(`branches.${index}.${field}`) !== branch[field as keyof Branch]
   );
-
-  const handleImageChange = async (file: File | null) => {
-    if (file) {
-      // Mostrar preview imediatamente
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      // Fazer upload automático
-      try {
-        toast({
-          title: "Enviando imagem...",
-          description: "A imagem está sendo enviada para o servidor.",
-        });
-
-        const formData = new FormData();
-        formData.append("profile", file);
-
-        const response = await fetch(`/api/branch/${branch.id}/design/images`, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.message || "Erro ao fazer upload da imagem"
-          );
-        }
-
-        const result = await response.json();
-        console.log("✅ Imagem da filial enviada com sucesso:", result);
-
-        // Atualizar o preview com a nova URL da imagem se retornada
-        if (result.image_url) {
-          setImagePreview(result.image_url);
-        }
-
-        toast({
-          title: "Imagem enviada!",
-          description: "A imagem da filial foi atualizada com sucesso.",
-        });
-
-        // Resetar o arquivo após upload bem-sucedido
-        setImageFile(null);
-      } catch (error) {
-        console.error("❌ Erro ao fazer upload da imagem:", error);
-        toast({
-          title: "Erro no upload",
-          description: "Não foi possível enviar a imagem da filial.",
-          variant: "destructive",
-        });
-
-        // Em caso de erro, reverter o preview
-        setImagePreview(branch.image || null);
-      }
-    } else {
-      setImagePreview(branch.image || null);
-      setImageFile(null);
-    }
-  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -169,34 +111,6 @@ export function useAddressField(
     }
   };
 
-  const handleRemoveImage = async () => {
-    try {
-      const response = await fetch(`/api/branch/${branch.id}/design/images`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao remover a imagem");
-      }
-
-      setImagePreview(null);
-      setImageFile(null);
-
-      toast({
-        title: "Imagem removida!",
-        description: "A imagem da filial foi removida com sucesso.",
-      });
-    } catch (error) {
-      console.error("❌ Erro ao remover imagem:", error);
-      toast({
-        title: "Erro ao remover",
-        description: "Não foi possível remover a imagem da filial.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleDelete = async () => {
     setIsDeleting(true);
 
@@ -234,11 +148,12 @@ export function useAddressField(
     isDialogOpen,
     setIsDialogOpen,
     hasChanges,
-    imageFile,
-    imagePreview,
-    handleImageChange,
+    imagePreview: imageField.imagePreview,
+    handleImageChange: imageField.handleImageChange,
     handleSave,
     handleDelete,
-    handleRemoveImage,
+    handleRemoveImage: imageField.removeImage,
+    isUploading: imageField.isUploading,
+    isRemoving: imageField.isRemoving,
   };
 }
