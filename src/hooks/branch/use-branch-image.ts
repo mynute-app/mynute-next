@@ -6,12 +6,14 @@ interface UseBranchImageProps {
   branchId: number;
   currentImage?: string;
   imageType?: string; // Novo parâmetro para especificar o tipo da imagem
+  onSuccess?: () => void; // Callback para executar após sucesso
 }
 
 export function useBranchImage({
   branchId,
   currentImage,
   imageType = "profile", // Default para "profile"
+  onSuccess, // Novo callback
 }: UseBranchImageProps) {
   const { data: session } = useSession();
   const [imagePreview, setImagePreview] = useState<string | null>(
@@ -77,6 +79,11 @@ export function useBranchImage({
         title: "Sucesso!",
         description: `Imagem ${imageType} da filial atualizada com sucesso`,
       });
+
+      // Chamar callback de sucesso se fornecido
+      if (onSuccess) {
+        onSuccess();
+      }
 
       return true;
     } catch (error) {
@@ -144,6 +151,11 @@ export function useBranchImage({
         title: "Sucesso!",
         description: `Imagem ${imageType} da filial removida com sucesso`,
       });
+
+      // Chamar callback de sucesso se fornecido
+      if (onSuccess) {
+        onSuccess();
+      }
 
       return true;
     } catch (error) {

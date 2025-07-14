@@ -46,7 +46,11 @@ export function AddressField({
   onDelete,
 }: AddressFieldProps) {
   // Hook para buscar dados completos da filial
-  const { data: branchData, isLoading: isLoadingBranch } = useGetBranch({
+  const {
+    data: branchData,
+    isLoading: isLoadingBranch,
+    refetch: refetchBranch,
+  } = useGetBranch({
     branchId: branch.id,
     enabled: true,
   });
@@ -61,6 +65,7 @@ export function AddressField({
       branchId: branch.id,
       currentImage: undefined, // Não passa imagem inicial
       imageType: "profile", // Especifica que é imagem de profile
+      onSuccess: refetchBranch, // Callback para atualizar dados após upload/delete
     });
 
   // Imagem da filial vinda da API (tem prioridade para exibição)
