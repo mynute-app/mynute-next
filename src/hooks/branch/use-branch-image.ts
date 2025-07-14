@@ -5,11 +5,13 @@ import { toast } from "@/hooks/use-toast";
 interface UseBranchImageProps {
   branchId: number;
   currentImage?: string;
+  imageType?: string; // Novo parâmetro para especificar o tipo da imagem
 }
 
 export function useBranchImage({
   branchId,
   currentImage,
+  imageType = "profile", // Default para "profile"
 }: UseBranchImageProps) {
   const { data: session } = useSession();
   const [imagePreview, setImagePreview] = useState<string | null>(
@@ -36,9 +38,9 @@ export function useBranchImage({
 
       // Preparar FormData
       const formData = new FormData();
-      formData.append("profile", file);
+      formData.append(imageType, file); // Usa o imageType como nome do campo
 
-      console.log("🔄 Enviando imagem para filial:", branchId);
+      console.log(`🔄 Enviando imagem ${imageType} para filial:`, branchId);
 
       // Fazer requisição para nossa rota PATCH padronizada
       const response = await fetch(`/api/branch/${branchId}/design/images`, {
@@ -73,7 +75,7 @@ export function useBranchImage({
 
       toast({
         title: "Sucesso!",
-        description: "Imagem da filial atualizada com sucesso",
+        description: `Imagem ${imageType} da filial atualizada com sucesso`,
       });
 
       return true;
@@ -106,15 +108,18 @@ export function useBranchImage({
     try {
       setIsRemoving(true);
 
-      console.log("🗑️ Removendo imagem da filial:", branchId);
+      console.log(`🗑️ Removendo imagem ${imageType} da filial:`, branchId);
 
-      // Fazer requisição DELETE para nossa rota padronizada
-      const response = await fetch(`/api/branch/${branchId}/design/images`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-      });
+      // Fazer requisição DELETE para a nova rota com image_type
+      const response = await fetch(
+        `/api/branch/${branchId}/design/images/${imageType}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        }
+      );
 
       console.log("📡 Status da resposta:", response.status);
 
@@ -137,7 +142,7 @@ export function useBranchImage({
 
       toast({
         title: "Sucesso!",
-        description: "Imagem da filial removida com sucesso",
+        description: `Imagem ${imageType} da filial removida com sucesso`,
       });
 
       return true;

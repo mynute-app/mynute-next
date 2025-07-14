@@ -27,6 +27,7 @@ export function useAddressField(
   const { toast } = useToast();
 
   const hasChanges = [
+    "name",
     "street",
     "number",
     "complement",

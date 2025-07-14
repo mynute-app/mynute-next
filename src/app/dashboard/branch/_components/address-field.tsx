@@ -12,6 +12,7 @@ import { Trash2 } from "lucide-react";
 import { TfiLocationPin } from "react-icons/tfi";
 import { useAddressField } from "@/hooks/branch/use-address-field";
 import { useBranchImage } from "@/hooks/branch/use-branch-image";
+import { useGetBranch } from "@/hooks/branch/use-get-branch";
 import { ImageField } from "@/components/custom/image-field";
 import { Separator } from "@/components/ui/separator";
 
@@ -44,21 +45,26 @@ export function AddressField({
   index,
   onDelete,
 }: AddressFieldProps) {
+  // Hook para buscar dados completos da filial
+  const { data: branchData, isLoading: isLoadingBranch } = useGetBranch({
+    branchId: branch.id,
+    enabled: true,
+  });
+
   // Hook para funcionalidades gerais (salvar, deletar, detectar mudanças)
   const { isSaving, isDeleting, hasChanges, handleSave, handleDelete } =
     useAddressField(branch, index, onDelete, watch);
 
-  // Hook específico para imagens da filial
-  const {
-    imagePreview,
-    isUploading,
-    isRemoving,
-    handleImageChange,
-    handleRemoveImage,
-  } = useBranchImage({
-    branchId: branch.id,
-    currentImage: branch.image,
-  });
+  // Hook para upload/delete de imagens (sem passar currentImage para não sobrescrever)
+  const { isUploading, isRemoving, handleImageChange, handleRemoveImage } =
+    useBranchImage({
+      branchId: branch.id,
+      currentImage: undefined, // Não passa imagem inicial
+      imageType: "profile", // Especifica que é imagem de profile
+    });
+
+  // Imagem da filial vinda da API (tem prioridade para exibição)
+  const imagePreview = branchData?.design?.images?.profile?.url || null;
 
   return (
     <div>
@@ -79,12 +85,31 @@ export function AddressField({
                   imagePreview={imagePreview}
                   onImageChange={handleImageChange}
                   onRemoveImage={handleRemoveImage}
-                  isUploading={isUploading}
+                  isUploading={isUploading || isLoadingBranch}
                   isRemoving={isRemoving}
+                  placeholder={
+                    isLoadingBranch
+                      ? "Carregando imagem..."
+                      : "Adicionar imagem"
+                  }
                 />
               </div>
               <Separator className="mb-4" />
               <div className="grid grid-cols-12 gap-4">
+                {/* Campo Nome da Filial */}
+                <div className="col-span-12">
+                  <Label htmlFor={`branches.${index}.name`}>
+                    Nome da Filial
+                  </Label>
+                  <Input
+                    id={`branches.${index}.name`}
+                    placeholder="Nome da filial"
+                    {...register(`branches.${index}.name`)}
+                    defaultValue={branch.name || ""}
+                    className="bg-white shadow"
+                  />
+                </div>
+
                 <div className="col-span-4">
                   <Label htmlFor={`branches.${index}.zip_code`}>CEP</Label>
                   <Input

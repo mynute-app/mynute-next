@@ -46,21 +46,12 @@ export const PATCH = auth(async function PATCH(req, { params }) {
         { status: 401 }
       );
     }
-
     const body = await req.json();
     const branchId = params?.branch_id;
     console.log("🏢 Atualizando filial:", branchId);
-    console.log("📋 Dados recebidos:", body);
-
-    // Busca dados atuais da filial para obter company_id
-    const branchData = await fetchFromBackend(
-      req,
-      `/branch/${branchId}`,
-      authData.token!
-    );
+    console.log("📋 Dados recebidos:", authData.companyId);
 
     const requestBody = {
-      company_id: authData.companyId, // Usando company_id do token
       name: body.name,
       street: body.street,
       number: body.number,
