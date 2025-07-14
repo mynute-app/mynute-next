@@ -1,24 +1,30 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
+import { getAuthDataFromRequest } from "@/utils/decode-jwt";
 
 export const GET = auth(async function GET(req, { params }) {
   try {
-    const token = req.auth?.accessToken;
+    const authData = getAuthDataFromRequest(req);
 
-    if (!token) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    if (!authData.isValid) {
+      return NextResponse.json(
+        { message: authData.error || "Token inválido" },
+        { status: 401 }
+      );
     }
 
     const branchId = params?.branch_id;
+    console.log("🏢 Buscando filial:", branchId);
 
     // Busca os dados da filial
     const branchData = await fetchFromBackend(
       req,
       `/branch/${branchId}`,
-      token
+      authData.token!
     );
 
+    console.log("✅ Filial encontrada:", branchData);
     return NextResponse.json(branchData, { status: 200 });
   } catch (error) {
     console.error("❌ Erro ao buscar filial:", error);
@@ -31,22 +37,30 @@ export const GET = auth(async function GET(req, { params }) {
 
 export const PATCH = auth(async function PATCH(req, { params }) {
   try {
-    const token = req.auth?.accessToken;
+    // Uma linha só - busca token do NextAuth, decodifica e retorna tudo
+    const authData = getAuthDataFromRequest(req);
 
-    if (!token) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    if (!authData.isValid) {
+      return NextResponse.json(
+        { message: authData.error || "Token inválido" },
+        { status: 401 }
+      );
     }
 
     const body = await req.json();
     const branchId = params?.branch_id;
+    console.log("🏢 Atualizando filial:", branchId);
+    console.log("📋 Dados recebidos:", body);
+
+    // Busca dados atuais da filial para obter company_id
     const branchData = await fetchFromBackend(
       req,
       `/branch/${branchId}`,
-      token
+      authData.token!
     );
 
     const requestBody = {
-      company_id: branchData.company_id,
+      company_id: authData.companyId, // Usando company_id do token
       name: body.name,
       street: body.street,
       number: body.number,
@@ -58,11 +72,13 @@ export const PATCH = auth(async function PATCH(req, { params }) {
       country: body.country,
     };
 
+    console.log("📤 Enviando dados para API backend:", requestBody);
+
     // Atualiza a filial usando o fetchFromBackend
     const updatedBranch = await fetchFromBackend(
       req,
       `/branch/${branchId}`,
-      token,
+      authData.token!,
       {
         method: "PATCH",
         body: requestBody,
@@ -75,6 +91,41 @@ export const PATCH = auth(async function PATCH(req, { params }) {
     console.error("❌ Erro ao editar filial:", error);
     return NextResponse.json(
       { message: "Erro interno ao editar a filial." },
+      { status: 500 }
+    );
+  }
+});
+
+export const DELETE = auth(async function DELETE(req, { params }) {
+  try {
+    const authData = getAuthDataFromRequest(req);
+
+    if (!authData.isValid) {
+      return NextResponse.json(
+        { message: authData.error || "Token inválido" },
+        { status: 401 }
+      );
+    }
+
+    const branchId = params?.branch_id;
+    console.log("🗑️ Deletando filial:", branchId);
+
+    // Deleta a filial usando o fetchFromBackend
+    const deletedBranch = await fetchFromBackend(
+      req,
+      `/branch/${branchId}`,
+      authData.token!,
+      {
+        method: "DELETE",
+      }
+    );
+
+    console.log("✅ Filial deletada com sucesso:", deletedBranch);
+    return NextResponse.json(deletedBranch, { status: 200 });
+  } catch (error) {
+    console.error("❌ Erro ao deletar filial:", error);
+    return NextResponse.json(
+      { message: "Erro interno ao deletar a filial." },
       { status: 500 }
     );
   }

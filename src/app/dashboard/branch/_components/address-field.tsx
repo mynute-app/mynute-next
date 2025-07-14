@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { UseFormRegister, UseFormWatch } from "react-hook-form";
 import { Trash2 } from "lucide-react";
 import { TfiLocationPin } from "react-icons/tfi";
-import { useAddressField } from "@/hooks/use-address-field";
-import { useBranchImage } from "@/hooks/use-branch-image";
+import { useAddressField } from "@/hooks/branch/use-address-field";
+import { useBranchImage } from "@/hooks/branch/use-branch-image";
 import { ImageField } from "@/components/custom/image-field";
 import { Separator } from "@/components/ui/separator";
 

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useImageField } from "@/hooks/use-image-field";
 
 interface Branch {
   id: number;
@@ -26,14 +25,6 @@ export function useAddressField(
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
-
-  // Hook para gerenciar imagem
-  const imageField = useImageField({
-    initialImage: branch.image,
-    uploadEndpoint: `/api/branch/${branch.id}/design/images`,
-    deleteEndpoint: `/api/branch/${branch.id}/design/images`,
-    autoUpload: true,
-  });
 
   const hasChanges = [
     "street",
@@ -66,7 +57,7 @@ export function useAddressField(
         country: watch(`branches.${index}.country`),
       };
 
-      const response = await fetch(`/api/address/${branch.id}`, {
+      const response = await fetch(`/api/branch/${branch.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -115,7 +106,7 @@ export function useAddressField(
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/address/${branch.id}`, {
+      const response = await fetch(`/api/branch/${branch.id}`, {
         method: "DELETE",
       });
 
@@ -148,12 +139,7 @@ export function useAddressField(
     isDialogOpen,
     setIsDialogOpen,
     hasChanges,
-    imagePreview: imageField.imagePreview,
-    handleImageChange: imageField.handleImageChange,
     handleSave,
     handleDelete,
-    handleRemoveImage: imageField.removeImage,
-    isUploading: imageField.isUploading,
-    isRemoving: imageField.isRemoving,
   };
 }
