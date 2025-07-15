@@ -11,12 +11,10 @@ export const useGetCompany = () => {
   useEffect(() => {
     const fetchCompanyData = async (retryCount = 0) => {
       try {
-        // Cancelar requisição anterior se existir
         if (abortControllerRef.current) {
           abortControllerRef.current.abort();
         }
 
-        // Criar novo AbortController
         abortControllerRef.current = new AbortController();
 
         setLoading(true);

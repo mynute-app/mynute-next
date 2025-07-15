@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
+import { getAuthDataFromToken } from "../../../utils/decode-jwt";
+import { fetchFromBackend } from "../../../lib/api/fetch-from-backend";
 
 export const GET = auth(async function GET(req) {
   console.log("📡 Buscando dados da empresa com base no token...");
@@ -12,74 +14,48 @@ export const GET = auth(async function GET(req) {
       return NextResponse.json({ status: 401, message: "Não autorizado" });
     }
 
-    // Decodificar o token para pegar o company_id
-    // Assumindo que o token é JWT, vamos decodificar o payload
-    const tokenParts = token.split(".");
-    if (tokenParts.length !== 3) {
+    // Usar o utilitário para decodificar o token
+    const authData = getAuthDataFromToken(token);
+    console.log("📋 Dados decodificados do token:", authData);
+
+    if (!authData.isValid) {
       return NextResponse.json({ status: 401, message: "Token inválido" });
     }
-    const payload = JSON.parse(Buffer.from(tokenParts[1], "base64").toString());
-    console.log("📋 Payload do token:", payload);
 
-    // O company_id está dentro de payload.data
-    const companyId = payload.data?.company_id;
-    console.log("🏢 Company ID do token:", companyId);
-
-    if (!companyId) {
+    if (!authData.companyId) {
       return NextResponse.json(
         { status: 400, message: "Company ID não encontrado no token." },
         { status: 400 }
       );
     }
-    console.log("🚀 Fazendo requisição para o backend com:");
-    console.log("🔗 URL:", `${process.env.BACKEND_URL}/company/${companyId}`);
-    console.log("🔑 Token original:", token);
-    console.log("🏢 X-Company-ID Header:", companyId);
-    const companyResponse = await fetch(
-      `${process.env.BACKEND_URL}/company/${companyId}`,
-      {
-        headers: {
-          "X-Auth-Token": token, // Tentando com X-Auth-Token em vez de Bearer
-          "X-Company-ID": companyId,
-          "Content-Type": "application/json",
-        },
-      }
-    );
 
-    console.log("📥 Status da resposta:", companyResponse.status);
-    console.log(
-      "📥 Headers da resposta:",
-      Object.fromEntries(companyResponse.headers)
-    );
+    const companyId = authData.companyId;
+    console.log("🏢 Company ID do token:", companyId);
 
-    if (!companyResponse.ok) {
-      const error = await companyResponse.text();
-      console.error("❌ Erro ao buscar empresa:", error);
-      console.error(
-        "❌ Status completo:",
-        companyResponse.status,
-        companyResponse.statusText
+    console.log("🚀 Fazendo requisição para o backend...");
+
+    try {
+      const companyData = await fetchFromBackend(
+        req,
+        `/company/${companyId}`,
+        token
       );
 
-      // Se for erro 400 relacionado ao banco, tentar novamente ou retornar um erro mais específico
-      if (companyResponse.status === 400 && error.includes("company_sectors")) {
-        console.warn(
-          "⚠️ Erro relacionado à tabela company_sectors - possível problema temporário no banco"
-        );
-        return NextResponse.json(
-          {
-            error:
-              "Serviço temporariamente indisponível. Tente novamente em alguns segundos.",
-          },
-          { status: 503 }
-        );
-      }
+      console.log("✅ Dados da empresa obtidos com sucesso");
+      return NextResponse.json(companyData);
+    } catch (fetchError) {
+      console.error("❌ Erro ao buscar empresa:", fetchError);
 
-      return NextResponse.json({ error }, { status: companyResponse.status });
+      return NextResponse.json(
+        {
+          error:
+            fetchError instanceof Error
+              ? fetchError.message
+              : "Erro ao buscar empresa",
+        },
+        { status: 500 }
+      );
     }
-
-    const companyData = await companyResponse.json();
-    return NextResponse.json(companyData);
   } catch (error) {
     console.error("❌ Erro ao buscar empresa:", error);
     return NextResponse.json(
@@ -100,25 +76,19 @@ export async function POST(req: Request) {
 
     console.log("📤 Enviando payload:", payload);
 
-    const backendResponse = await fetch(`${process.env.BACKEND_URL}/company`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const backendText = await backendResponse.text();
-    let backendJson;
     try {
-      backendJson = JSON.parse(backendText);
-    } catch {
-      backendJson = backendText;
-    }
+      const backendData = await fetchFromBackend(
+        req as any,
+        "/company",
+        "", // POST não precisa de token de auth
+        {
+          method: "POST",
+          body: payload,
+        }
+      );
 
-    console.log("📥 Resposta do Backend:", {
-      status: backendResponse.status,
-      response: backendJson,
-    });
-    if (backendResponse.ok) {
+      console.log("✅ Empresa cadastrada com sucesso");
+
       // Enviar email de boas-vindas após criar a empresa com sucesso
       try {
         const emailResponse = await fetch(
@@ -151,34 +121,23 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json(
-        { message: "Empresa cadastrada com sucesso", data: backendJson },
+        { message: "Empresa cadastrada com sucesso", data: backendData },
         { status: 201 }
       );
-    }
-    let errorMessage = "Erro ao cadastrar empresa.";
+    } catch (fetchError) {
+      console.error("❌ Erro ao cadastrar empresa:", fetchError);
 
-    if (typeof backendJson === "object" && backendJson !== null) {
-      if (backendJson.inner_error) {
-        const innerErrors = Object.values(backendJson.inner_error);
-        if (innerErrors.length > 0) {
-          errorMessage = innerErrors[0] as string;
-        }
-      } else if (backendJson.message) {
-        errorMessage = backendJson.message;
-      } else if (typeof backendJson === "string") {
-        errorMessage = backendJson;
-      }
-    } else if (typeof backendJson === "string") {
-      errorMessage = backendJson;
+      return NextResponse.json(
+        {
+          message: "Erro ao cadastrar empresa.",
+          error:
+            fetchError instanceof Error
+              ? fetchError.message
+              : "Erro desconhecido",
+        },
+        { status: 500 }
+      );
     }
-
-    return NextResponse.json(
-      {
-        message: "Erro ao cadastrar empresa.",
-        backendResponse: errorMessage,
-      },
-      { status: backendResponse.status }
-    );
   } catch (error) {
     console.error("❌ Erro no servidor:", error);
     return NextResponse.json(
