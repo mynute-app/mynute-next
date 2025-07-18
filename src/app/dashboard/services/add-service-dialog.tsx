@@ -31,7 +31,7 @@ import {
   FiImage,
   FiAlignLeft,
 } from "react-icons/fi";
-import { useAddServiceForm } from "./actions/useAddServiceForm";
+import { useAddServiceForm } from "../../../hooks/service/useAddServiceForm";
 import { Textarea } from "@/components/ui/textarea";
 import { Service } from "../../../../types/company";
 

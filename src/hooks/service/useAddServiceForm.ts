@@ -2,7 +2,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
-import { Service } from "../../../../../types/company";
+import { Service } from "../../../types/company";
 
 const addServiceSchema = z.object({
   name: z.string().min(1, "O título é obrigatório."),
@@ -48,7 +48,7 @@ export const useAddServiceForm = () => {
         throw new Error("Erro ao criar o serviço.");
       }
 
-      const createdService = await response.json(); 
+      const createdService = await response.json();
 
       toast({
         title: "Serviço criado!",
@@ -70,7 +70,6 @@ export const useAddServiceForm = () => {
       return null;
     }
   };
-
 
   return { form, handleSubmit };
 };

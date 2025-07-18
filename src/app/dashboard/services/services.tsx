@@ -10,14 +10,14 @@ import { DeleteServiceDialog } from "./delete-service-dailog";
 import ServiceCardSkeleton from "./ServiceCardSkeleton";
 import ServiceListSkeleton from "./ServiceListSkeleton";
 import { Service } from "../../../../types/company";
-import { useDeleteService } from "./actions/useDeleteServiceForm";
+import { useDeleteService } from "../../../hooks/service/useDeleteServiceForm";
 import { useGetCompany } from "@/hooks/get-company";
 
 export const ServicesPage = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [deletingService, setDeletingService] = useState<Service | null>(null);
   const [services, setServices] = useState<Service[]>([]);
-  const { company, loading, error } = useGetCompany();
+  const { company, loading } = useGetCompany();
   const { handleDelete } = useDeleteService();
   useEffect(() => {
     if (company?.services) {
@@ -26,6 +26,7 @@ export const ServicesPage = () => {
   }, [company]);
 
   const handleUpdateService = async (updatedService: Service) => {
+    // Apenas atualiza o estado local com o serviço já processado
     setServices(prev =>
       prev.map(service =>
         service.id === updatedService.id ? updatedService : service
