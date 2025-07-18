@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,6 +26,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useEditService } from "@/hooks/services/use-edit-service";
+import { useServiceImage } from "@/hooks/services/use-service-image";
 
 const editServiceSchema = z.object({
   name: z.string().min(1, "O nome é obrigatório."),
@@ -50,14 +51,25 @@ export const EditServiceDialog = ({
   service,
   onSave,
 }: Props) => {
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Hook para atualizar serviço
   const { isUpdating, updateService } = useEditService();
 
-  const { register, handleSubmit, formState, reset, setValue } =
+  // Hook para gerenciar imagens
+  const {
+    imagePreview,
+    isUploading,
+    isRemoving,
+    handleImageChange,
+    handleRemoveImage,
+  } = useServiceImage({
+    serviceId: service?.id || "",
+    currentImage: service?.imageUrl,
+    imageType: "main",
+  });
+
+  const { register, handleSubmit, formState, reset } =
     useForm<EditServiceFormValues>({
       resolver: zodResolver(editServiceSchema),
     });
@@ -72,37 +84,12 @@ export const EditServiceDialog = ({
         price: String(service.price || ""),
         imageUrl: service.imageUrl || "",
       });
-      // Configurar preview da imagem existente
-      setImagePreview(service.imageUrl || null);
-      setSelectedFile(null);
     }
   }, [service, reset]);
 
-  const handleImageChange = (file: File | null) => {
-    setSelectedFile(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const result = e.target?.result as string;
-        setImagePreview(result);
-        setValue("imageUrl", result);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setImagePreview(service?.imageUrl || null);
-      setValue("imageUrl", service?.imageUrl || "");
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setImagePreview(null);
-    setSelectedFile(null);
-    setValue("imageUrl", "");
-  };
-
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
+    if (file) {
       handleImageChange(file);
     }
   };
@@ -115,7 +102,7 @@ export const EditServiceDialog = ({
     if (!service) return;
 
     try {
-      // Chamar o hook para atualizar o serviço
+      // Atualizar os dados básicos do serviço
       const updatedService = await updateService({
         id: service.id,
         name: data.name,
@@ -125,12 +112,8 @@ export const EditServiceDialog = ({
       });
 
       if (updatedService) {
-        // Se há arquivo de imagem, manter a preview atual para não perder
-        // TODO: Implementar upload de imagem em endpoint separado
-        if (selectedFile) {
-          console.log("Arquivo de imagem para upload posterior:", selectedFile);
-          updatedService.imageUrl = imagePreview || undefined;
-        }
+        // Adicionar a URL da imagem atual (o hook já gerencia upload/remoção)
+        updatedService.imageUrl = imagePreview || undefined;
 
         // Enviar o serviço atualizado para o componente pai
         onSave(updatedService);
@@ -195,9 +178,14 @@ export const EditServiceDialog = ({
                     e.stopPropagation();
                     handleRemoveImage();
                   }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                  disabled={isRemoving}
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
                 >
-                  <FiX className="w-3 h-3" />
+                  {isRemoving ? (
+                    <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <FiX className="w-3 h-3" />
+                  )}
                 </button>
               )}
             </div>
@@ -281,12 +269,20 @@ export const EditServiceDialog = ({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isUpdating}
+              disabled={isUpdating || isUploading}
             >
               Cancelar
             </Button>
-            <Button type="submit" variant="default" disabled={isUpdating}>
-              {isUpdating ? "Salvando..." : "Salvar"}
+            <Button
+              type="submit"
+              variant="default"
+              disabled={isUpdating || isUploading}
+            >
+              {isUpdating
+                ? "Salvando dados..."
+                : isUploading
+                ? "Enviando imagem..."
+                : "Salvar"}
             </Button>
           </DialogFooter>
         </form>
