@@ -26,7 +26,11 @@ export const ServicesPage = () => {
   }, [company]);
 
   const handleUpdateService = async (updatedService: Service) => {
-    console.log("log");
+    setServices(prev =>
+      prev.map(service =>
+        service.id === updatedService.id ? updatedService : service
+      )
+    );
   };
 
   const handleDeleteService = async (id: string) => {
@@ -108,21 +112,26 @@ export const ServicesPage = () => {
         </div>
       </div>
 
-      {/* Modal de edição */}
-      <EditServiceDialog
-        isOpen={!!editingService}
-        service={editingService}
-        onOpenChange={open => {
-          if (!open) setEditingService(null);
-        }}
-        onSave={updatedService => {
-          handleUpdateService(updatedService);
-          setEditingService(null);
-        }}
-      />
+      {/* Modais - renderizar apenas um por vez */}
+      {editingService && (
+        <EditServiceDialog
+          isOpen={!!editingService}
+          service={editingService}
+          onOpenChange={open => {
+            if (!open) {
+              setEditingService(null);
+            }
+          }}
+          onSave={updatedService => {
+            handleUpdateService(updatedService);
+            setEditingService(null);
+          }}
+        />
+      )}
 
       {deletingService && (
         <DeleteServiceDialog
+          isOpen={!!deletingService}
           serviceName={deletingService.name}
           onConfirm={() => {
             handleDeleteService(deletingService.id);

@@ -1,6 +1,7 @@
 import { HiOutlineMenuAlt1, HiOutlineDotsVertical } from "react-icons/hi";
 import { FiUser } from "react-icons/fi";
 import { BsUpload } from "react-icons/bs";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +47,17 @@ const ServiceCard = ({
   onDelete,
 }: ServiceCardProps) => {
   const colorClass = getFixedColor(name);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const handleEdit = () => {
+    setDropdownOpen(false);
+    onEdit?.();
+  };
+
+  const handleDelete = () => {
+    setDropdownOpen(false);
+    onDelete?.();
+  };
 
   return (
     <div
@@ -75,7 +87,7 @@ const ServiceCard = ({
           Share
         </button>
 
-        <DropdownMenu>
+        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <button className="rounded-full bg-gray-100 p-2 hover:bg-gray-200 transition">
               <HiOutlineDotsVertical />
@@ -87,11 +99,11 @@ const ServiceCard = ({
             side="bottom"
             sideOffset={5}
           >
-            <DropdownMenuItem onClick={onEdit}>
+            <DropdownMenuItem onClick={handleEdit}>
               <MdOutlineModeEdit className="ml-1" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>
+            <DropdownMenuItem onClick={handleDelete}>
               <GoTrash className="ml-1" />
               Delete
             </DropdownMenuItem>

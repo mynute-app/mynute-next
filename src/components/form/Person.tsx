@@ -1,8 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/context/useWizardStore";
 import { CardCustomProfile } from "../custom/Card-Custom-Profile";
-import { useGetCompany } from "@/hooks/get-one-company";
-import { useCompany } from "@/hooks/get-company";
+import { useGetCompany } from "@/hooks/get-company";
 
 type TeamMember = {
   id: number;
@@ -15,7 +14,7 @@ export const PersonStep = () => {
   const { setSelectedPerson, selectedPerson } = useWizardStore();
   const router = useRouter();
 
-  const { company, loading } = useCompany();
+  const { company, loading } = useGetCompany();
 
   const handleSelectPerson = (personId: number) => {
     const personIdStr = String(personId);
@@ -40,7 +39,7 @@ export const PersonStep = () => {
 
   return (
     <div className="h-auto overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 custom-scrollbar p-2">
-      {company.employees?.map((member: TeamMember) => (
+      {company?.employees?.map((member: TeamMember) => (
         <CardCustomProfile
           key={member.id}
           title={member.name}

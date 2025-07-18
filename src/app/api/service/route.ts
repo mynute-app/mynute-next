@@ -1,22 +1,26 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
+import { getAuthDataFromToken } from "../../../utils/decode-jwt";
 
 export const POST = auth(async function POST(req) {
   try {
     const token = req.auth?.accessToken;
-    const email = req.auth?.user.email;
 
-    if (!email || !token) {
+    if (!token) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const user = await fetchFromBackend(req, `/employee/email/${email}`, token);
+    // Usar o utilitário para decodificar o token
+    const authData = getAuthDataFromToken(token);
 
-    const companyId = user?.company_id;
-    if (!companyId) {
+    if (!authData.isValid) {
+      return NextResponse.json({ message: "Token inválido" }, { status: 401 });
+    }
+
+    if (!authData.companyId) {
       return NextResponse.json(
-        { message: "Usuário sem empresa associada" },
+        { message: "Company ID não encontrado no token" },
         { status: 400 }
       );
     }
@@ -27,19 +31,33 @@ export const POST = auth(async function POST(req) {
       description: body.description,
       price: Number(body.price),
       duration: Number(body.duration),
-      company_id: companyId,
+      company_id: authData.companyId,
     };
 
-    const createdService = await fetchFromBackend(req, "/service", token, {
-      method: "POST",
-      body: requestBody,
-    });
+    try {
+      const createdService = await fetchFromBackend(req, "/service", token, {
+        method: "POST",
+        body: requestBody,
+      });
 
-    return NextResponse.json(createdService, { status: 201 });
+      return NextResponse.json(createdService, { status: 201 });
+    } catch (fetchError) {
+      console.error("❌ Erro ao criar o serviço:", fetchError);
+
+      return NextResponse.json(
+        {
+          error:
+            fetchError instanceof Error
+              ? fetchError.message
+              : "Erro ao criar serviço",
+        },
+        { status: 500 }
+      );
+    }
   } catch (error) {
-    console.error("❌ Erro ao criar o serviço:", error);
+    console.error("❌ Erro no servidor:", error);
     return NextResponse.json(
-      { message: "Erro interno ao criar o serviço." },
+      { message: "Erro interno do servidor" },
       { status: 500 }
     );
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -9,39 +9,18 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  FiClock,
-  FiDollarSign,
-  FiImage,
-  FiLock,
-  FiMapPin,
-  FiTag,
-} from "react-icons/fi";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 
-// Schema Zod
+// Schema simplificado
 const editServiceSchema = z.object({
-  name: z.string().min(1, "O título é obrigatório."),
+  name: z.string().min(1, "O nome é obrigatório."),
   description: z.string().min(1, "A descrição é obrigatória."),
-  duration: z.preprocess(val => String(val), z.string().min(1)),
-  buffer: z.preprocess(val => (val ? String(val) : ""), z.string().optional()),
-  price: z.preprocess(val => String(val), z.string().optional()),
-  location: z.string().optional(),
-  category: z.string().optional(),
-  hidden: z.boolean().optional(),
+  duration: z.string().min(1, "A duração é obrigatória."),
+  price: z.string().optional(),
 });
 
 export type EditServiceFormValues = z.infer<typeof editServiceSchema>;
@@ -59,77 +38,87 @@ export const EditServiceDialog = ({
   service,
   onSave,
 }: Props) => {
-  if (!service) return null;
-  const form = useForm<EditServiceFormValues>({
-    resolver: zodResolver(editServiceSchema),
-    defaultValues: service,
-  });
+  const { register, handleSubmit, formState, reset } =
+    useForm<EditServiceFormValues>({
+      resolver: zodResolver(editServiceSchema),
+    });
 
-  const { register, handleSubmit, formState } = form;
+  // Reset form quando o serviço muda
+  useEffect(() => {
+    if (service) {
+      reset({
+        name: service.name || "",
+        description: service.description || "",
+        duration: String(service.duration || ""),
+        price: String(service.price || ""),
+      });
+    }
+  }, [service, reset]);
 
   const onSubmit = (data: EditServiceFormValues) => {
-    onSave({ ...data, id: service.id });
-    onOpenChange(false);
+    if (service) {
+      onSave({ ...data, id: service.id });
+    }
   };
 
+  if (!service) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl rounded-lg">
+    <Dialog
+      open={isOpen}
+      onOpenChange={open => {
+        if (!open) {
+          onOpenChange(false);
+        }
+      }}
+    >
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Editar Serviço</DialogTitle>
-          <DialogDescription>
-            Altere os detalhes do serviço abaixo.
-          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-              <FiImage className="w-6 h-6 text-gray-400" />
-            </div>
-            <div className="flex-1">
-              <Label htmlFor="name">Título*</Label>
-              <Input
-                id="name"
-                {...register("name")}
-                autoFocus
-                placeholder="Nome do serviço"
-              />
-              {formState.errors.name && (
-                <p className="text-red-500 text-sm">
-                  {formState.errors.name.message}
-                </p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="name">Nome*</Label>
+            <Input
+              id="name"
+              {...register("name")}
+              placeholder="Nome do serviço"
+            />
+            {formState.errors.name && (
+              <p className="text-red-500 text-sm">
+                {formState.errors.name.message}
+              </p>
+            )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <FiClock className="text-gray-500 w-5 h-5 mt-7" />
-            <div className="flex-1">
-              <Label htmlFor="duration">Duração*</Label>
-              <Input id="duration" {...register("duration")} />
-              {formState.errors.duration && (
-                <p className="text-red-500 text-sm">
-                  {formState.errors.duration.message}
-                </p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="description">Descrição*</Label>
+            <Input
+              id="description"
+              {...register("description")}
+              placeholder="Descrição do serviço"
+            />
+            {formState.errors.description && (
+              <p className="text-red-500 text-sm">
+                {formState.errors.description.message}
+              </p>
+            )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <FiDollarSign className="text-gray-500 w-5 h-5 mt-7" />
-            <div className="flex-1">
-              <Label htmlFor="price">Preço</Label>
-              <Input id="price" {...register("price")} />
-            </div>
+          <div>
+            <Label htmlFor="duration">Duração (minutos)*</Label>
+            <Input id="duration" {...register("duration")} />
+            {formState.errors.duration && (
+              <p className="text-red-500 text-sm">
+                {formState.errors.duration.message}
+              </p>
+            )}
           </div>
 
-          <div className="flex items-center gap-4 pt-2">
-            <div className="flex items-center gap-3">
-              <FiLock className="text-gray-500 w-5 h-5" />
-              <Label htmlFor="hidden">Ocultar serviço</Label>
-            </div>
-            <Switch id="hidden" {...register("hidden")} />
+          <div>
+            <Label htmlFor="price">Preço</Label>
+            <Input id="price" {...register("price")} />
           </div>
 
           <DialogFooter>

@@ -6,10 +6,11 @@ import * as z from "zod";
 
 // Esquema de validação Zod
 export const editServiceSchema = z.object({
-  title: z.string().min(1, "O título é obrigatório."),
+  name: z.string().min(1, "O nome é obrigatório."),
+  description: z.string().min(1, "A descrição é obrigatória."),
   duration: z.string().min(1, "A duração é obrigatória."),
   buffer: z.string().optional(),
-  cost: z.string().optional(),
+  price: z.string().optional(),
   location: z.string().optional(),
   category: z.string().optional(),
   hidden: z.boolean().optional(),
@@ -36,8 +37,8 @@ export const useEditServiceForm = ({
   const submitHandler = handleSubmit(data => {
     const formattedData = {
       ...data,
-      buffer: data.buffer ?? "", // Garante que seja string
-      cost: data.cost ?? "",
+      buffer: data.buffer ?? "",
+      price: data.price ?? "",
       location: data.location ?? "",
       category: data.category ?? "",
       hidden: data.hidden ?? false,

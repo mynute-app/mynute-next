@@ -12,19 +12,21 @@ import {
 import { Button } from "@/components/ui/button";
 
 type DeleteServiceDialogProps = {
-  serviceName: string; 
-  onConfirm: () => void; 
+  isOpen: boolean;
+  serviceName: string;
+  onConfirm: () => void;
   onCancel: () => void;
 };
 
 export const DeleteServiceDialog = ({
+  isOpen,
   serviceName,
   onConfirm,
   onCancel,
 }: DeleteServiceDialogProps) => {
   return (
-    <Dialog open={true} onOpenChange={onCancel}>
-      <DialogContent className="max-w-md rounded-lg">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Confirmar Exclusão</DialogTitle>
           <DialogDescription>
