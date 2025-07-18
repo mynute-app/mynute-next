@@ -25,10 +25,13 @@ export const DELETE = auth(async function DELETE(req, ctx) {
 
     // Validar tipos de imagem permitidos
     const allowedImageTypes = [
-      "main",
-      "thumbnail", 
+      "profile",
+      "logo",
       "banner",
       "background",
+      "favicon",
+      "main", // Manter para compatibilidade
+      "thumbnail", // Manter para compatibilidade
     ];
     if (!allowedImageTypes.includes(image_type)) {
       return NextResponse.json(

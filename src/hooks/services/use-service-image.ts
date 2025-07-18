@@ -48,7 +48,13 @@ export function useServiceImage({
    * Faz upload da imagem do serviço
    */
   const uploadImage = async (file: File): Promise<boolean> => {
+    console.log("🔍 uploadImage iniciado");
+    console.log("📋 Session:", !!session?.accessToken);
+    console.log("📋 ServiceId:", serviceId);
+    console.log("📋 ImageType:", imageType);
+
     if (!session?.accessToken) {
+      console.log("❌ Token de autenticação não encontrado");
       toast({
         title: "Erro",
         description: "Token de autenticação não encontrado",
@@ -65,6 +71,12 @@ export function useServiceImage({
       formData.append(imageType, file); // Usa o imageType como nome do campo
 
       console.log(`🔄 Enviando imagem ${imageType} para serviço:`, serviceId);
+      console.log("📋 FormData preparado:", {
+        fieldName: imageType,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+      });
 
       // Fazer requisição para nossa rota PATCH padronizada
       const response = await fetch(`/api/service/${serviceId}/design/images`, {
@@ -76,10 +88,22 @@ export function useServiceImage({
       });
 
       console.log("📡 Status da resposta:", response.status);
+      console.log(
+        "📡 Headers da resposta:",
+        Object.fromEntries(response.headers.entries())
+      );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("❌ Erro na resposta:", errorData);
+        console.log("❌ Resposta não OK");
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.error("❌ Erro na resposta (JSON):", errorData);
+        } catch (parseError) {
+          const errorText = await response.text();
+          console.error("❌ Erro na resposta (TEXT):", errorText);
+          errorData = { message: errorText || "Erro desconhecido" };
+        }
 
         toast({
           title: "Erro ao fazer upload",
@@ -89,8 +113,18 @@ export function useServiceImage({
         return false;
       }
 
-      const data = await response.json();
-      console.log("✅ Upload realizado com sucesso:", data);
+      let data;
+      try {
+        data = await response.json();
+        console.log("✅ Upload realizado com sucesso:", data);
+      } catch (parseError) {
+        console.error("❌ Erro ao parsear resposta de sucesso:", parseError);
+        const responseText = await response.text();
+        console.log("📄 Resposta como texto:", responseText);
+
+        // Mesmo com erro de parse, considerar sucesso se status for OK
+        data = { message: "Upload realizado com sucesso" };
+      }
 
       // Atualizar preview da imagem
       if (data.image_url) {
@@ -209,12 +243,18 @@ export function useServiceImage({
    * Handler para mudança de imagem (upload)
    */
   const handleImageChange = async (file: File | null) => {
+    console.log("🔄 handleImageChange chamado com:", file?.name || "null");
+
     // Se file for null, não faz nada (remoção é tratada por handleRemoveImage)
-    if (!file) return;
+    if (!file) {
+      console.log("❌ Arquivo é null, saindo...");
+      return;
+    }
 
     // Validações básicas no frontend
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
+      console.log("❌ Tipo de arquivo inválido:", file.type);
       toast({
         title: "Tipo de arquivo inválido",
         description: "Use apenas JPEG, PNG ou WebP",
@@ -225,6 +265,7 @@ export function useServiceImage({
 
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
+      console.log("❌ Arquivo muito grande:", file.size);
       toast({
         title: "Arquivo muito grande",
         description: "Máximo 5MB permitido",
@@ -233,18 +274,24 @@ export function useServiceImage({
       return;
     }
 
+    console.log("✅ Validações passaram, iniciando upload...");
+
     // Preview temporário enquanto faz upload
     const reader = new FileReader();
     reader.onload = e => {
+      console.log("📸 Preview temporário criado");
       setImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
 
     // Fazer upload
+    console.log("🚀 Chamando uploadImage...");
     const success = await uploadImage(file);
+    console.log("📋 Resultado do upload:", success);
 
     // Se falhou, reverter o preview
     if (!success) {
+      console.log("❌ Upload falhou, revertendo preview");
       setImagePreview(currentImage || null);
     }
   };

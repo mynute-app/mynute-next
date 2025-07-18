@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Service {
@@ -11,6 +12,7 @@ interface Service {
 }
 
 export function useEditService() {
+  const { data: session } = useSession();
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
 
@@ -36,6 +38,7 @@ export function useEditService() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
         },
         body: JSON.stringify(requestBody),
       });

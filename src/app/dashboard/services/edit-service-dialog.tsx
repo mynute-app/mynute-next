@@ -66,7 +66,7 @@ export const EditServiceDialog = ({
   } = useServiceImage({
     serviceId: service?.id || "",
     currentImage: service?.imageUrl,
-    imageType: "main",
+    imageType: "profile", // Usar "profile" conforme a estrutura da API
   });
 
   const { register, handleSubmit, formState, reset } =

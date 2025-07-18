@@ -22,10 +22,34 @@ export const PATCH = auth(async function PATCH(req, ctx) {
 
     // Pegar os dados do FormData
     const formData = await req.formData();
-    const mainImage = formData.get("main") as File;
-    console.log("🖼️ Imagem recebida:", mainImage ? mainImage.name : "Nenhuma");
 
-    if (!mainImage) {
+    // Tentar encontrar uma imagem em qualquer um dos campos possíveis
+    const imageTypes = [
+      "profile",
+      "main",
+      "logo",
+      "banner",
+      "background",
+      "favicon",
+    ];
+    let imageFile: File | null = null;
+    let imageType: string | null = null;
+
+    for (const type of imageTypes) {
+      const file = formData.get(type) as File;
+      if (file) {
+        imageFile = file;
+        imageType = type;
+        break;
+      }
+    }
+
+    console.log(
+      `🖼️ Imagem ${imageType} recebida:`,
+      imageFile ? imageFile.name : "Nenhuma"
+    );
+
+    if (!imageFile) {
       console.log("❌ Nenhuma imagem enviada");
       return NextResponse.json(
         { message: "Nenhuma imagem foi enviada" },
@@ -35,9 +59,9 @@ export const PATCH = auth(async function PATCH(req, ctx) {
 
     // Validar tipo de arquivo
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    console.log("📁 Tipo do arquivo:", mainImage.type);
-    if (!allowedTypes.includes(mainImage.type)) {
-      console.log("❌ Tipo de arquivo não suportado:", mainImage.type);
+    console.log("📁 Tipo do arquivo:", imageFile.type);
+    if (!allowedTypes.includes(imageFile.type)) {
+      console.log("❌ Tipo de arquivo não suportado:", imageFile.type);
       return NextResponse.json(
         { message: "Tipo de arquivo não suportado. Use JPEG, PNG ou WebP" },
         { status: 400 }
@@ -46,9 +70,9 @@ export const PATCH = auth(async function PATCH(req, ctx) {
 
     // Validar tamanho (máximo 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
-    console.log("📏 Tamanho do arquivo:", mainImage.size, "bytes");
-    if (mainImage.size > maxSize) {
-      console.log("❌ Arquivo muito grande:", mainImage.size);
+    console.log("📏 Tamanho do arquivo:", imageFile.size, "bytes");
+    if (imageFile.size > maxSize) {
+      console.log("❌ Arquivo muito grande:", imageFile.size);
       return NextResponse.json(
         { message: "Arquivo muito grande. Máximo 5MB" },
         { status: 400 }
@@ -57,7 +81,7 @@ export const PATCH = auth(async function PATCH(req, ctx) {
 
     // Preparar FormData para enviar para a API backend
     const backendFormData = new FormData();
-    backendFormData.append("main", mainImage);
+    backendFormData.append(imageType!, imageFile); // Usar o tipo correto da imagem
 
     // Fazer a requisição para o backend
     const backendUrl = `${process.env.BACKEND_URL}/service/${id}/design/images`;
