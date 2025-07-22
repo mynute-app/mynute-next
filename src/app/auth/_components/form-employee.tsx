@@ -94,7 +94,7 @@ export function LoginFormEmployee({
           <div className="flex items-center">
             <Label htmlFor="password">Senha</Label>
             <Link
-              href="/forgot-password"
+              href="/auth/forgot-password"
               className="ml-auto text-sm underline-offset-4 hover:underline"
             >
               Esqueceu sua senha?

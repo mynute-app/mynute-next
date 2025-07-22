@@ -27,7 +27,8 @@ export interface User {
   work_schedule: WorkSchedule;
   appointments: any[];
   company_id: string;
-  branches: any[]; 
-  services: any[]; 
+  branches: any[];
+  services: any[];
   roles: Role[];
+  avatar?: string | null; // Optional avatar field
 }

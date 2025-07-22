@@ -33,8 +33,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, loading } = useGetUser();
   const data = {
     user: {
-      name: user?.name,
-      email: user?.email,
+      name: user?.name ?? "",
+      email: user?.email ?? "",
       avatar: user?.avatar || "",
     },
     navMain: [
@@ -59,6 +59,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Filiais",
             url: "/dashboard/branch",
+          },
+        ],
+      },
+      {
+        title: "Configurações",
+        url: "#",
+        icon: Settings2,
+        isActive: false,
+        items: [
+          {
+            title: "Trocar Senha",
+            url: "/dashboard/settings/change-password",
           },
         ],
       },
