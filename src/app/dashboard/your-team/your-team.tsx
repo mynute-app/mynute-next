@@ -12,6 +12,7 @@ import TeamMemberActions from "./team-member-actions";
 import { TeamMember } from "../../../../types/TeamMember";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Employee } from "../../../../types/company";
+import { WorkScheduleManager } from "@/components/work-schedule";
 
 import { TeamMemberList } from "./team-member-list";
 import { useGetEmployeeById } from "@/hooks/get-employee-by-id";
@@ -120,7 +121,39 @@ export default function YourTeam() {
           />
         );
       case "breaks":
-        return <BreaksSection selectedMember={selectedMember} />;
+        return selectedMember ? (
+          <WorkScheduleManager
+            employeeId={selectedMember.id.toString()}
+            initialData={
+              Array.isArray(selectedMember.work_schedule)
+                ? selectedMember.work_schedule
+                : []
+            }
+            branches={
+              Array.isArray(selectedMember.branches)
+                ? selectedMember.branches
+                : []
+            }
+            services={
+              Array.isArray(selectedMember.services)
+                ? selectedMember.services
+                : []
+            }
+            onSuccess={() => {
+              toast({
+                title: "Horários atualizados",
+                description: "A jornada de trabalho foi salva com sucesso.",
+              });
+              // Recarregar dados do funcionário se necessário
+              if (selectedMember?.id) {
+                setSelectedMemberId(selectedMember.id);
+              }
+            }}
+            defaultView="view"
+          />
+        ) : (
+          <p>Selecione um membro para configurar os horários</p>
+        );
       default:
         return null;
     }
@@ -146,7 +179,7 @@ export default function YourTeam() {
       </div>
 
       {/* Detail View */}
-      <div className="w-2/3 p-6">
+      <div className="w-2/3 p-6 bg-fuchsia-500 overflow-y-auto h-full">
         {loadingEmployee ? (
           <div className="flex flex-col space-y-4">
             <Skeleton className="w-32 h-8" />
