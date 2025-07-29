@@ -1,4 +1,3 @@
-
 export type Branch = {
   id: number;
   name: string;
@@ -13,6 +12,7 @@ export type Branch = {
   image?: string;
   services?: number[];
   employees?: Employee[];
+  work_schedule?: any[];
 };
 
 export type Service = {

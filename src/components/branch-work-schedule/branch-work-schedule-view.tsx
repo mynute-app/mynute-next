@@ -1,0 +1,172 @@
+"use client";
+
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Clock, Building2, Calendar } from "lucide-react";
+
+interface BranchWorkScheduleRange {
+  branch_id: string;
+  end_time: string;
+  services: object[];
+  start_time: string;
+  time_zone: string;
+  weekday: number;
+}
+
+interface BranchWorkScheduleViewProps {
+  workRanges: BranchWorkScheduleRange[];
+  branchName?: string;
+  className?: string;
+}
+
+const diasSemana: Record<number, string> = {
+  0: "Domingo",
+  1: "Segunda-feira",
+  2: "Terça-feira",
+  3: "Quarta-feira",
+  4: "Quinta-feira",
+  5: "Sexta-feira",
+  6: "Sábado",
+};
+
+const diasSemanaShort: Record<number, string> = {
+  0: "DOM",
+  1: "SEG",
+  2: "TER",
+  3: "QUA",
+  4: "QUI",
+  5: "SEX",
+  6: "SAB",
+};
+
+export function BranchWorkScheduleView({
+  workRanges,
+  branchName = "Filial",
+  className,
+}: BranchWorkScheduleViewProps) {
+  // Organizar por dia da semana
+  const rangesByDay = workRanges.reduce((acc, range) => {
+    if (!acc[range.weekday]) {
+      acc[range.weekday] = [];
+    }
+    acc[range.weekday].push(range);
+    return acc;
+  }, {} as Record<number, BranchWorkScheduleRange[]>);
+
+  // Ordenar dias da semana (segunda a domingo)
+  const sortedDays = Object.keys(rangesByDay)
+    .map(Number)
+    .sort((a, b) => {
+      // Colocar domingo (0) no final
+      if (a === 0) return 1;
+      if (b === 0) return -1;
+      return a - b;
+    });
+
+  if (workRanges.length === 0) {
+    return (
+      <Card className={className}>
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <Clock className="w-12 h-12 text-muted-foreground mb-4" />
+          <p className="text-sm text-muted-foreground">
+            Nenhum horário de funcionamento configurado para esta filial.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className={`space-y-4 ${className || ""}`}>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="w-5 h-5" />
+            Horários de Funcionamento - {branchName}
+          </CardTitle>
+          <CardDescription>
+            Visualização dos horários configurados para esta filial
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {sortedDays.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhum dia da semana configurado
+              </p>
+            ) : (
+              sortedDays.map(weekday => {
+                const dayRanges = rangesByDay[weekday];
+                return (
+                  <div
+                    key={weekday}
+                    className="flex flex-col md:flex-row md:items-center gap-4 p-4 border rounded-lg"
+                  >
+                    <div className="flex items-center gap-3 min-w-[140px]">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-sm">
+                          {diasSemana[weekday]}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {diasSemanaShort[weekday]}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex-1">
+                      {dayRanges.length === 0 ? (
+                        <Badge variant="secondary" className="text-xs">
+                          Fechado
+                        </Badge>
+                      ) : (
+                        <div className="space-y-2">
+                          {dayRanges.map((range, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-4 flex-wrap"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-muted-foreground" />
+                                <Badge variant="outline" className="text-sm">
+                                  {range.start_time} - {range.end_time}
+                                </Badge>
+                              </div>
+
+                              {range.time_zone && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {range.time_zone}
+                                </Badge>
+                              )}
+
+                              {range.services && range.services.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-muted-foreground">
+                                    Serviços:
+                                  </span>
+                                  <Badge variant="default" className="text-xs">
+                                    {range.services.length} configurados
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

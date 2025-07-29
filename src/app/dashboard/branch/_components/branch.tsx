@@ -12,6 +12,7 @@ import { BusinessSchema } from "../../../../../schema";
 import { AddAddressDialog } from "./add-address-dialog";
 import { Separator } from "@/components/ui/separator";
 import { BranchEmployees } from "./branch-employees";
+import { BranchWorkScheduleManager } from "@/components/branch-work-schedule/branch-work-schedule-manager";
 
 import { Branch } from "../../../../../types/company";
 import { useGetCompany } from "@/hooks/get-company";
@@ -199,6 +200,36 @@ export default function BranchManager() {
                   />
                 ))}
               </div>
+            </div>
+
+            <div className="mt-10">
+              <BranchWorkScheduleManager
+                branchId={selectedBranch.id.toString()}
+                branchName={selectedBranch.name}
+                initialData={selectedBranch.work_schedule || []}
+                services={
+                  Array.isArray(selectedBranch.services)
+                    ? selectedBranch.services.map(serviceId => {
+                        const service = services.find(s => s.id === serviceId);
+                        return service
+                          ? { id: service.id.toString(), name: service.name }
+                          : { id: serviceId.toString(), name: "Serviço" };
+                      })
+                    : []
+                }
+                onSuccess={() => {
+                  toast({
+                    title: "Horários atualizados",
+                    description:
+                      "Os horários da filial foram configurados com sucesso.",
+                  });
+                  // Opcionalmente, recarregar dados da filial
+                  if (selectedBranch?.id) {
+                    handleSelectBranch(selectedBranch);
+                  }
+                }}
+                defaultView="view"
+              />
             </div>
 
             <div className="mt-10">
