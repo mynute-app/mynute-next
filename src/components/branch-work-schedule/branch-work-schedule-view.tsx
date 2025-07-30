@@ -8,9 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Clock, Building2, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, Building2, Calendar, Edit, Trash2 } from "lucide-react";
 
 interface BranchWorkScheduleRange {
+  id?: string;
   branch_id: string;
   end_time: string;
   services: object[];
@@ -23,6 +25,12 @@ interface BranchWorkScheduleViewProps {
   workRanges: BranchWorkScheduleRange[];
   branchName?: string;
   className?: string;
+  isEditable?: boolean;
+  onEdit?: (
+    workRangeId: string,
+    updatedData: Partial<BranchWorkScheduleRange>
+  ) => void;
+  onDelete?: (workRangeId: string) => void;
 }
 
 const diasSemana: Record<number, string> = {
@@ -49,6 +57,9 @@ export function BranchWorkScheduleView({
   workRanges,
   branchName = "Filial",
   className,
+  isEditable = false,
+  onEdit,
+  onDelete,
 }: BranchWorkScheduleViewProps) {
   // Organizar por dia da semana
   const rangesByDay = workRanges.reduce((acc, range) => {
@@ -130,29 +141,67 @@ export function BranchWorkScheduleView({
                           {dayRanges.map((range, index) => (
                             <div
                               key={index}
-                              className="flex items-center gap-4 flex-wrap"
+                              className="flex items-center gap-4 flex-wrap justify-between p-3 border rounded-lg bg-muted/20"
                             >
-                              <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-muted-foreground" />
-                                <Badge variant="outline" className="text-sm">
-                                  {range.start_time} - {range.end_time}
-                                </Badge>
+                              <div className="flex items-center gap-4 flex-wrap">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-muted-foreground" />
+                                  <Badge variant="outline" className="text-sm">
+                                    {range.start_time} - {range.end_time}
+                                  </Badge>
+                                </div>
+
+                                {range.time_zone && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {range.time_zone}
+                                  </Badge>
+                                )}
+
+                                {range.services &&
+                                  range.services.length > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-muted-foreground">
+                                        Serviços:
+                                      </span>
+                                      <Badge
+                                        variant="default"
+                                        className="text-xs"
+                                      >
+                                        {range.services.length} configurados
+                                      </Badge>
+                                    </div>
+                                  )}
                               </div>
 
-                              {range.time_zone && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {range.time_zone}
-                                </Badge>
-                              )}
-
-                              {range.services && range.services.length > 0 && (
+                              {/* Botões de ação (apenas se editável e tiver ID) */}
+                              {isEditable && range.id && (
                                 <div className="flex items-center gap-1">
-                                  <span className="text-xs text-muted-foreground">
-                                    Serviços:
-                                  </span>
-                                  <Badge variant="default" className="text-xs">
-                                    {range.services.length} configurados
-                                  </Badge>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      onEdit?.(range.id!, {
+                                        start_time: range.start_time,
+                                        end_time: range.end_time,
+                                        weekday: range.weekday,
+                                        time_zone: range.time_zone,
+                                      })
+                                    }
+                                    className="flex items-center gap-1 h-7 px-2"
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => onDelete?.(range.id!)}
+                                    className="flex items-center gap-1 h-7 px-2 text-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
                                 </div>
                               )}
                             </div>

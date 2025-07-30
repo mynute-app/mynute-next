@@ -54,3 +54,40 @@ export const POST = auth(async function POST(req, ctx) {
     );
   }
 });
+
+export const GET = auth(async function GET(req, ctx) {
+  try {
+    const token = req.auth?.accessToken;
+
+    if (!token) {
+      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    }
+
+    const { branch_id } = ctx.params as {
+      branch_id: string;
+    };
+
+    console.log("🔍 GET Branch ID:", branch_id);
+
+    const responseData = await fetchFromBackend(
+      req,
+      `/branch/${branch_id}/work_schedule`,
+      token,
+      {
+        method: "GET",
+      }
+    );
+
+    console.log("✅ Sucesso com GET (branch work_schedule):", responseData);
+    return NextResponse.json(responseData, { status: 200 });
+  } catch (error) {
+    console.error("❌ Erro ao buscar work_schedule da branch:", error);
+    return NextResponse.json(
+      {
+        message: "Erro interno do servidor",
+        error: process.env.NODE_ENV === "development" ? error : undefined,
+      },
+      { status: 500 }
+    );
+  }
+});

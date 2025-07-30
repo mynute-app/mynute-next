@@ -24,6 +24,7 @@ export const useBranchWorkSchedule = (props?: UseBranchWorkScheduleProps) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<BranchWorkScheduleRange[] | null>(null);
   const { toast } = useToast();
 
   const createBranchWorkSchedule = async (
@@ -98,16 +99,93 @@ export const useBranchWorkSchedule = (props?: UseBranchWorkScheduleProps) => {
     }
   };
 
+  const getBranchWorkSchedule = async (branchId: string) => {
+    setLoading(true);
+    setError(null);
+    setData(null);
+
+    console.log(
+      "📥 Hook Branch - Iniciando getBranchWorkSchedule para branchId:",
+      branchId
+    );
+
+    try {
+      const response = await fetch(`/api/branch/${branchId}/work_schedule`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Erro ao buscar horário de trabalho da branch"
+        );
+      }
+
+      const result = await response.json();
+
+      console.log("✅ Hook Branch - Dados recebidos:", result);
+
+      // Normalizar os dados - o backend retorna { branch_work_ranges: [...] }
+      let workScheduleRanges = [];
+
+      if (
+        result.branch_work_ranges &&
+        Array.isArray(result.branch_work_ranges)
+      ) {
+        workScheduleRanges = result.branch_work_ranges;
+      } else if (Array.isArray(result.data)) {
+        workScheduleRanges = result.data;
+      } else if (Array.isArray(result)) {
+        workScheduleRanges = result;
+      }
+
+      setData(workScheduleRanges);
+
+      console.log("📋 Hook Branch - Work schedule ranges:", workScheduleRanges);
+
+      return workScheduleRanges;
+    } catch (err: any) {
+      const errorMessage = err.message || "Erro interno do servidor";
+      setError(errorMessage);
+
+      // Não mostrar toast para erro de "not found" - é normal não ter work_schedule
+      if (
+        !errorMessage.toLowerCase().includes("not found") &&
+        !errorMessage.toLowerCase().includes("não encontrado")
+      ) {
+        toast({
+          title: "Erro ao buscar horário da branch",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+
+      console.warn(
+        "⚠️ Hook Branch - Erro ao buscar work_schedule:",
+        errorMessage
+      );
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const reset = () => {
     setSuccess(false);
     setError(null);
+    setData(null);
   };
 
   return {
     createBranchWorkSchedule,
+    getBranchWorkSchedule,
     loading,
     success,
     error,
+    data,
     reset,
   };
 };
