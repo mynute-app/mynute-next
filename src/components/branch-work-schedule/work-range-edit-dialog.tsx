@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,14 +18,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Clock, Save, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Clock, Save, X, Users } from "lucide-react";
+import { useGetCompany } from "@/hooks/get-company";
+import { useWorkRangeServices } from "@/hooks/workSchedule/use-work-range-services";
 
 interface WorkRangeEditDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: WorkRangeEditData) => Promise<void>;
+  onSave: (data: any) => Promise<void>; // Aceita qualquer tipo para flexibilidade
   initialData?: WorkRangeEditData;
   loading?: boolean;
+  disableWeekdayEdit?: boolean; // Nova prop para desabilitar edição do dia da semana
+  branchId: string; // ID da branch - necessário para as rotas
+  workRangeId: string; // ID do work_range - necessário para as rotas
 }
 
 interface WorkRangeEditData {
@@ -33,6 +39,7 @@ interface WorkRangeEditData {
   end_time: string;
   weekday: number;
   time_zone: string;
+  services: string[]; // Array de IDs dos serviços selecionados (como string para o UI)
 }
 
 const diasSemana = [
@@ -66,22 +73,88 @@ export function WorkRangeEditDialog({
   onSave,
   initialData,
   loading = false,
+  disableWeekdayEdit = true, // Por padrão, desabilita edição do dia da semana
+  branchId,
+  workRangeId,
 }: WorkRangeEditDialogProps) {
+  const { company, loading: loadingCompany } = useGetCompany();
+
+  // Hook para gerenciar serviços do work_range
+  const {
+    addServicesToWorkRange,
+    removeServiceFromWorkRange,
+    loading: servicesLoading,
+  } = useWorkRangeServices({
+    onSuccess: () => {
+      console.log("✅ Serviços atualizados com sucesso!");
+    },
+    onError: error => {
+      console.error("❌ Erro ao atualizar serviços:", error);
+    },
+  });
+
+  // Log para debug - mostrar dados recebidos quando abre o dialog
+  if (isOpen && initialData) {
+    const diaLabel =
+      diasSemana.find(dia => dia.value === initialData.weekday)?.label ||
+      "Indefinido";
+    console.log("🔍 Dialog - Dados recebidos para edição:", initialData);
+    console.log(
+      "📅 Dialog - Dia da semana detectado:",
+      diaLabel,
+      "(weekday:",
+      initialData.weekday,
+      ")"
+    );
+  }
+
   const [formData, setFormData] = useState<WorkRangeEditData>(
-    initialData || {
-      start_time: "09:00",
-      end_time: "17:00",
-      weekday: 1,
-      time_zone: "America/Sao_Paulo",
-    }
+    () =>
+      initialData || {
+        start_time: "09:00",
+        end_time: "17:00",
+        weekday: 1,
+        time_zone: "America/Sao_Paulo",
+        services: [],
+      }
   );
+
+  // Atualizar formData quando initialData mudar
+  useEffect(() => {
+    if (initialData) {
+      console.log(
+        "🔄 Dialog - Atualizando formData com novos initialData:",
+        initialData
+      );
+      setFormData(initialData);
+    }
+  }, [initialData]);
 
   const handleSave = async () => {
     try {
-      await onSave(formData);
+      // 1. Salvar dados básicos do work_range (horários, dia, timezone)
+      const basicData = {
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        weekday: formData.weekday,
+        time_zone: formData.time_zone,
+      };
+
+      console.log("💾 Dialog - Salvando dados básicos:", basicData);
+      await onSave(basicData);
+
+      // 2. Atualizar serviços do work_range usando hook específico
+      if (formData.services.length > 0) {
+        console.log("🔄 Dialog - Adicionando serviços:", formData.services);
+        await addServicesToWorkRange(branchId, workRangeId, formData.services);
+      } else {
+        console.log("ℹ️ Dialog - Nenhum serviço selecionado para adicionar");
+      }
+
+      console.log("✅ Dialog - Tudo salvo com sucesso!");
       onClose();
     } catch (error) {
-      console.error("Erro ao salvar:", error);
+      console.error("❌ Dialog - Erro ao salvar:", error);
     }
   };
 
@@ -92,9 +165,46 @@ export function WorkRangeEditDialog({
     }));
   };
 
+  // Funções para gerenciar seleção de serviços
+  const handleServiceToggle = (serviceId: string, checked: boolean) => {
+    if (checked) {
+      setFormData(prev => ({
+        ...prev,
+        services: [...prev.services, serviceId],
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        services: prev.services.filter(id => id !== serviceId),
+      }));
+    }
+  };
+
+  const handleSelectAllServices = (checked: boolean) => {
+    if (checked) {
+      const allServiceIds =
+        company?.services?.map(service => service.id.toString()) || [];
+      setFormData(prev => ({
+        ...prev,
+        services: allServiceIds,
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        services: [],
+      }));
+    }
+  };
+
+  // Verificar se todos os serviços estão selecionados
+  const allServicesSelected =
+    company?.services &&
+    company.services.length > 0 &&
+    formData.services.length === company.services.length;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clock className="w-5 h-5" />
@@ -111,21 +221,30 @@ export function WorkRangeEditDialog({
               Dia da Semana
             </Label>
             <div className="col-span-3">
-              <Select
-                value={formData.weekday.toString()}
-                onValueChange={value => updateField("weekday", parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="z-[10000]">
-                  {diasSemana.map(dia => (
-                    <SelectItem key={dia.value} value={dia.value.toString()}>
-                      {dia.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {disableWeekdayEdit ? (
+                <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm">
+                  {diasSemana.find(dia => dia.value === formData.weekday)
+                    ?.label || "Indefinido"}
+                </div>
+              ) : (
+                <Select
+                  value={formData.weekday.toString()}
+                  onValueChange={value =>
+                    updateField("weekday", parseInt(value))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[10000]">
+                    {diasSemana.map(dia => (
+                      <SelectItem key={dia.value} value={dia.value.toString()}>
+                        {dia.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
 
@@ -201,16 +320,97 @@ export function WorkRangeEditDialog({
               </Select>
             </div>
           </div>
+
+          {/* Campo de Serviços */}
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="services" className="text-right pt-2">
+              <Users className="w-4 h-4 inline mr-1" />
+              Serviços
+            </Label>
+            <div className="col-span-3">
+              {loadingCompany ? (
+                <div className="text-sm text-muted-foreground">
+                  Carregando serviços...
+                </div>
+              ) : company?.services && company.services.length > 0 ? (
+                <div className="space-y-3">
+                  {/* Opção "Selecionar Todos" */}
+                  <div className="flex items-center space-x-2 p-2 border rounded-md bg-muted/50">
+                    <Checkbox
+                      id="select-all-services"
+                      checked={allServicesSelected}
+                      onCheckedChange={handleSelectAllServices}
+                    />
+                    <Label
+                      htmlFor="select-all-services"
+                      className="text-sm font-medium cursor-pointer"
+                    >
+                      Selecionar Todos ({company.services.length})
+                    </Label>
+                  </div>
+
+                  {/* Lista de Serviços - Melhorada para muitos itens */}
+                  <div className="border rounded-md">
+                    <div className="max-h-40 overflow-y-auto p-3">
+                      <div className="grid grid-cols-1 gap-2">
+                        {company.services.map(service => (
+                          <div
+                            key={service.id}
+                            className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded border-b border-muted/30 last:border-b-0"
+                          >
+                            <Checkbox
+                              id={`service-${service.id}`}
+                              checked={formData.services.includes(
+                                service.id.toString()
+                              )}
+                              onCheckedChange={checked =>
+                                handleServiceToggle(
+                                  service.id.toString(),
+                                  checked as boolean
+                                )
+                              }
+                            />
+                            <Label
+                              htmlFor={`service-${service.id}`}
+                              className="text-sm cursor-pointer flex-1 leading-none"
+                            >
+                              {service.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Footer com contador */}
+                    <div className="p-2 bg-muted/20 border-t text-center">
+                      <span className="text-xs text-muted-foreground">
+                        {formData.services.length} de {company.services.length}{" "}
+                        selecionados
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground p-4 border rounded-md text-center">
+                  Nenhum serviço disponível
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={loading || servicesLoading}
+          >
             <X className="w-4 h-4 mr-2" />
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
+          <Button onClick={handleSave} disabled={loading || servicesLoading}>
             <Save className="w-4 h-4 mr-2" />
-            {loading ? "Salvando..." : "Salvar"}
+            {loading || servicesLoading ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
       </DialogContent>

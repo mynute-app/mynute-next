@@ -324,17 +324,27 @@ export function BranchWorkScheduleManager({
         isOpen={editDialog.isOpen}
         onClose={handleCloseEditDialog}
         onSave={handleSaveEdit}
+        branchId={branchId}
+        workRangeId={editDialog.workRangeId || ""}
         initialData={
           editDialog.data
             ? {
                 start_time: editDialog.data.start_time || "09:00",
                 end_time: editDialog.data.end_time || "17:00",
-                weekday: editDialog.data.weekday || 1,
+                weekday: editDialog.data.weekday ?? 1, // Usar ?? em vez de || para preservar weekday 0
                 time_zone: editDialog.data.time_zone || "America/Sao_Paulo",
+                services: Array.isArray(editDialog.data.services)
+                  ? editDialog.data.services.map((service: any) =>
+                      typeof service === "object" && service.id
+                        ? service.id.toString()
+                        : service.toString()
+                    )
+                  : [],
               }
             : undefined
         }
         loading={workRangeLoading}
+        disableWeekdayEdit={true} // Sempre desabilita edição do dia da semana ao editar work_range existente
       />
     </div>
   );
