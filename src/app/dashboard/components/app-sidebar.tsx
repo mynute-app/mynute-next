@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   BookOpen,
   Bot,
+  Calendar,
   Command,
   Frame,
   LifeBuoy,
@@ -39,7 +40,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
     navMain: [
       {
-        title: "Playground",
+        title: "Gestão",
         url: "#",
         icon: SquareTerminal,
         isActive: true,
@@ -59,6 +60,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Filiais",
             url: "/dashboard/branch",
+          },
+        ],
+      },
+      {
+        title: "Agendamentos",
+        url: "#",
+        icon: Calendar,
+        isActive: false,
+        items: [
+          {
+            title: "Novo Agendamento",
+            url: "/dashboard/scheduling/new",
+          },
+          {
+            title: "Visualizar Agendamentos",
+            url: "/dashboard/scheduling/view",
           },
         ],
       },
