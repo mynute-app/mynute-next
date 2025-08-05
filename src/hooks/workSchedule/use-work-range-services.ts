@@ -40,15 +40,14 @@ export const useWorkRangeServices = (props?: UseWorkRangeServicesProps) => {
         JSON.stringify(servicesPayload, null, 2)
       );
 
+      // Envolver array no objeto conforme especificação do backend
+      const requestBody = {
+        services: servicesPayload,
+      };
+
       console.log(
-        "🔍 Hook WorkRangeServices - Formato comparado com documentação:",
-        {
-          documentacao: [{ id: "efaaca83-442c-4156-b339-89228aeea54d" }],
-          nossoPayload: servicesPayload,
-          saoIguais:
-            JSON.stringify([{ id: "efaaca83-442c-4156-b339-89228aeea54d" }]) ===
-            JSON.stringify(servicesPayload),
-        }
+        "🔍 Hook WorkRangeServices - Request body final:",
+        JSON.stringify(requestBody, null, 2)
       );
 
       const response = await fetch(
@@ -58,7 +57,7 @@ export const useWorkRangeServices = (props?: UseWorkRangeServicesProps) => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(servicesPayload),
+          body: JSON.stringify(requestBody),
         }
       );
 
