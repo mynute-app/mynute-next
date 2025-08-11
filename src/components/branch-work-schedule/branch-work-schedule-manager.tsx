@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Eye, Clock, Building2, RefreshCw } from "lucide-react";
+import { Settings, Clock, Building2, RefreshCw } from "lucide-react";
 import { BranchWorkScheduleView } from "./branch-work-schedule-view";
 import { BranchWorkScheduleForm } from "./branch-work-schedule-form";
 import { WorkRangeEditDialog } from "./work-range-edit-dialog";
@@ -38,7 +37,6 @@ export function BranchWorkScheduleManager({
   onSuccess,
   defaultView = "view",
 }: BranchWorkScheduleManagerProps) {
-  const [activeTab, setActiveTab] = useState<string>(defaultView);
   const [workScheduleData, setWorkScheduleData] = useState<
     BranchWorkScheduleRange[]
   >([]);
@@ -143,7 +141,6 @@ export function BranchWorkScheduleManager({
   const normalizedServices = normalizeServices(services);
 
   const handleSuccess = () => {
-    setActiveTab("view");
     // Recarregar dados após sucesso
     loadBranchWorkSchedule();
     onSuccess?.();
@@ -223,92 +220,73 @@ export function BranchWorkScheduleManager({
 
   return (
     <div className="w-full">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5" />
-            <h3 className="text-lg font-medium">
-              Horários da Filial - {branchName}
-            </h3>
-            {loading && (
-              <RefreshCw className="w-4 h-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadBranchWorkSchedule}
-              disabled={loading}
-              className="flex items-center gap-1"
-            >
-              <RefreshCw
-                className={`w-3 h-3 ${loading ? "animate-spin" : ""}`}
-              />
-              Atualizar
-            </Button>
-
-            <TabsList className="grid w-fit grid-cols-2">
-              <TabsTrigger value="view" className="flex items-center gap-2">
-                <Eye className="w-4 h-4" />
-                Visualizar
-              </TabsTrigger>
-              <TabsTrigger value="edit" className="flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                Configurar
-              </TabsTrigger>
-            </TabsList>
-          </div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Building2 className="w-5 h-5" />
+          <h3 className="text-lg font-medium">
+            Horários da Filial - {branchName}
+          </h3>
+          {loading && (
+            <RefreshCw className="w-4 h-4 animate-spin text-muted-foreground" />
+          )}
         </div>
 
-        <TabsContent value="view" className="mt-4">
-          {loading || workRangeLoading ? (
-            <Card>
-              <CardContent className="flex items-center justify-center py-8">
-                <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground mr-2" />
-                <span className="text-muted-foreground">
-                  {loading ? "Carregando horários..." : "Processando..."}
-                </span>
-              </CardContent>
-            </Card>
-          ) : hasWorkSchedule ? (
-            <BranchWorkScheduleView
-              workRanges={workScheduleData}
-              branchName={branchName}
-              onEdit={handleEditWorkRange}
-              onDelete={handleDeleteWorkRange}
-              isEditable={true}
-            />
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8">
-                <Clock className="w-12 h-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">
-                  Nenhum horário configurado
-                </h3>
-                <p className="text-sm text-muted-foreground text-center mb-4">
-                  Configure os horários de funcionamento desta filial para que
-                  os funcionários possam trabalhar aqui.
-                </p>
-                {error && (
-                  <p className="text-xs text-destructive mb-4 text-center">
-                    {error}
-                  </p>
-                )}
-                <Button
-                  onClick={() => setActiveTab("edit")}
-                  className="flex items-center gap-2"
-                >
-                  <Settings className="w-4 h-4" />
-                  Configurar Horários
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadBranchWorkSchedule}
+            disabled={loading}
+            className="flex items-center gap-1"
+          >
+            <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
+            Atualizar
+          </Button>
+        </div>
+      </div>
 
-        <TabsContent value="edit" className="mt-4">
+      {/* Renderização condicional: Configurar se não há dados, Visualizar se há dados */}
+      {loading || workRangeLoading ? (
+        <Card>
+          <CardContent className="flex items-center justify-center py-8">
+            <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground mr-2" />
+            <span className="text-muted-foreground">
+              {loading ? "Carregando horários..." : "Processando..."}
+            </span>
+          </CardContent>
+        </Card>
+      ) : hasWorkSchedule ? (
+        // Mostra visualização quando há dados configurados
+        <div className="mt-4">
+          <BranchWorkScheduleView
+            workRanges={workScheduleData}
+            branchName={branchName}
+            onEdit={handleEditWorkRange}
+            onDelete={handleDeleteWorkRange}
+            isEditable={true}
+          />
+        </div>
+      ) : (
+        // Mostra formulário de configuração quando não há dados
+        <div className="mt-4">
+          <Card className="mb-4">
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <Clock className="w-12 h-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">
+                Configure os horários de funcionamento
+              </h3>
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                Defina os horários de funcionamento desta filial para que os
+                funcionários possam trabalhar aqui.
+              </p>
+              {error && (
+                <p className="text-xs text-destructive mb-4 text-center">
+                  {error}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
           <BranchWorkScheduleForm
             branchId={branchId}
             branchName={branchName}
@@ -316,8 +294,8 @@ export function BranchWorkScheduleManager({
             services={normalizedServices}
             onSuccess={handleSuccess}
           />
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
 
       {/* Dialog de edição */}
       <WorkRangeEditDialog
