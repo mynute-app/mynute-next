@@ -143,10 +143,18 @@ export function WorkRangeEditDialog({
       console.log("💾 Dialog - Salvando dados básicos:", basicData);
       await onSave(basicData);
 
-      // 2. Atualizar serviços do work_range usando hook específico
-      if (formData.services.length > 0) {
+      // 2. Atualizar serviços do work_range apenas se não for um novo registro
+      if (
+        workRangeId &&
+        workRangeId !== "new" &&
+        formData.services.length > 0
+      ) {
         console.log("🔄 Dialog - Adicionando serviços:", formData.services);
         await addServicesToWorkRange(branchId, workRangeId, formData.services);
+      } else if (workRangeId === "new") {
+        console.log(
+          "ℹ️ Dialog - Novo registro - serviços serão tratados posteriormente"
+        );
       } else {
         console.log("ℹ️ Dialog - Nenhum serviço selecionado para adicionar");
       }
@@ -208,10 +216,12 @@ export function WorkRangeEditDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clock className="w-5 h-5" />
-            Editar Horário
+            {workRangeId === "new" ? "Configurar Horário" : "Editar Horário"}
           </DialogTitle>
           <DialogDescription>
-            Modifique os detalhes do horário de funcionamento.
+            {workRangeId === "new"
+              ? "Configure o horário de funcionamento para este dia."
+              : "Modifique os detalhes do horário de funcionamento."}
           </DialogDescription>
         </DialogHeader>
 

@@ -83,6 +83,71 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
     }
   };
 
+  // POST - Criar novo work_range
+  const createWorkRange = async (
+    branchId: string,
+    workRangeData: Partial<WorkRangeData>
+  ) => {
+    setLoading(true);
+    setSuccess(false);
+    setError(null);
+
+    console.log(
+      "➕ Hook WorkRange - Iniciando createWorkRange para branchId:",
+      branchId
+    );
+    console.log(
+      "📋 Hook WorkRange - Data para criar:",
+      JSON.stringify(workRangeData, null, 2)
+    );
+
+    try {
+      const response = await fetch(`/api/branch/${branchId}/work_range`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(workRangeData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao criar work_range");
+      }
+
+      const result = await response.json();
+
+      setSuccess(true);
+      setData(result.data || result);
+
+      toast({
+        title: "Work range criado!",
+        description: "O horário foi criado com sucesso.",
+      });
+
+      console.log("✅ Hook WorkRange - Criado com sucesso:", result);
+
+      props?.onSuccess?.();
+
+      return result;
+    } catch (err: any) {
+      const errorMessage = err.message || "Erro interno do servidor";
+      setError(errorMessage);
+
+      toast({
+        title: "Erro ao criar work_range",
+        description: errorMessage,
+        variant: "destructive",
+      });
+
+      console.error("❌ Hook WorkRange - Erro ao criar:", errorMessage);
+      props?.onError?.(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // PUT - Atualizar work_range
   const updateWorkRange = async (
     branchId: string,
@@ -225,6 +290,7 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
   return {
     // Funções
     getWorkRange,
+    createWorkRange,
     updateWorkRange,
     deleteWorkRange,
     reset,

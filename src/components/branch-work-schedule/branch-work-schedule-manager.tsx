@@ -3,6 +3,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Settings, Clock, Building2, RefreshCw } from "lucide-react";
 import { BranchWorkScheduleView } from "./branch-work-schedule-view";
 import { BranchWorkScheduleForm } from "./branch-work-schedule-form";
@@ -49,10 +59,29 @@ export function BranchWorkScheduleManager({
     workRangeId: null,
     data: null,
   });
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
+    isOpen: boolean;
+    workRangeId: string | null;
+    dayName: string;
+  }>({
+    isOpen: false,
+    workRangeId: null,
+    dayName: "",
+  });
 
   // Hook para gerenciar work schedule da branch
-  const { getBranchWorkSchedule, loading, data, error } =
-    useBranchWorkSchedule();
+  const {
+    getBranchWorkSchedule,
+    createBranchWorkSchedule,
+    loading,
+    data,
+    error,
+  } = useBranchWorkSchedule({
+    onSuccess: () => {
+      // Recarregar dados após criar novo horário
+      loadBranchWorkSchedule();
+    },
+  });
 
   // Hook para gerenciar work_range individual (editar/deletar)
   const {
@@ -68,29 +97,40 @@ export function BranchWorkScheduleManager({
 
   // Função para normalizar os dados vindos do backend
   const normalizeInitialData = (data: any[]): BranchWorkScheduleRange[] => {
+    console.log("🔄 normalizeInitialData - Dados de entrada:", data);
+
     if (!Array.isArray(data)) return [];
 
-    return data.map(item => {
+    return data.map((item, index) => {
+      console.log(`🔍 normalizeInitialData - Processando item ${index}:`, item);
+
       // Extrair apenas a parte do horário das strings ISO
       const extractTime = (isoString: string) => {
-        if (!isoString) return "09:00";
+        if (!isoString) return "";
         try {
           const date = new Date(isoString);
           return date.toTimeString().slice(0, 5); // "HH:MM"
         } catch {
-          return isoString.includes(":") ? isoString.slice(0, 5) : "09:00";
+          return isoString.includes(":") ? isoString.slice(0, 5) : "";
         }
       };
 
-      return {
+      const normalized = {
         id: String(item.id || ""),
         branch_id: String(item.branch_id || branchId),
-        end_time: extractTime(item.end_time || item.end || "17:00"),
-        start_time: extractTime(item.start_time || item.start || "09:00"),
+        end_time: extractTime(item.end_time || item.end || ""),
+        start_time: extractTime(item.start_time || item.start || ""),
         time_zone: String(item.time_zone || "America/Sao_Paulo"),
-        weekday: Number(item.weekday || 1),
+        weekday: Number(item.weekday ?? 1), // Usar ?? ao invés de || para preservar weekday 0
         services: Array.isArray(item.services) ? item.services : [],
       };
+
+      console.log(
+        `✅ normalizeInitialData - Item ${index} normalizado:`,
+        normalized
+      );
+
+      return normalized;
     });
   };
 
@@ -102,6 +142,44 @@ export function BranchWorkScheduleManager({
       id: String(service.id || ""),
       name: String(service.name || "Serviço"),
     }));
+  };
+
+  // Função para gerar todos os dias da semana com dados completos
+  const generateCompleteWeekSchedule = (
+    existingData: BranchWorkScheduleRange[]
+  ): BranchWorkScheduleRange[] => {
+    const weekdays = [
+      { number: 0, name: "Domingo" },
+      { number: 1, name: "Segunda-feira" },
+      { number: 2, name: "Terça-feira" },
+      { number: 3, name: "Quarta-feira" },
+      { number: 4, name: "Quinta-feira" },
+      { number: 5, name: "Sexta-feira" },
+      { number: 6, name: "Sábado" },
+    ];
+
+    return weekdays.map(day => {
+      // Procurar se existe dados para este dia da semana
+      const existingDay = existingData.find(
+        item => item.weekday === day.number
+      );
+
+      if (existingDay) {
+        // Se existe, retorna os dados existentes
+        return existingDay;
+      } else {
+        // Se não existe, cria um registro vazio para permitir edição
+        return {
+          id: "", // ID vazio indica que é um dia não configurado
+          branch_id: branchId,
+          end_time: "",
+          start_time: "",
+          time_zone: "America/Sao_Paulo",
+          weekday: day.number,
+          services: [],
+        } as BranchWorkScheduleRange;
+      }
+    });
   };
 
   // Carregar dados do backend quando o branchId muda
@@ -121,7 +199,23 @@ export function BranchWorkScheduleManager({
       console.log("📥 Manager - Dados recebidos do hook:", data);
       const normalized = normalizeInitialData(data);
       console.log("✨ Manager - Dados normalizados:", normalized);
-      setWorkScheduleData(normalized);
+
+      // Debug específico para domingo
+      const domingoData = normalized.find(item => item.weekday === 0);
+      console.log(
+        "🔍 Manager - Domingo encontrado nos dados normalizados:",
+        domingoData
+      );
+
+      // Gerar semana completa com dados existentes e dias vazios
+      const completeWeek = generateCompleteWeekSchedule(normalized);
+      console.log("📅 Manager - Semana completa gerada:", completeWeek);
+
+      // Debug específico para domingo na semana completa
+      const domingoCompleto = completeWeek.find(item => item.weekday === 0);
+      console.log("🔍 Manager - Domingo na semana completa:", domingoCompleto);
+
+      setWorkScheduleData(completeWeek);
     }
   }, [data]);
 
@@ -131,10 +225,11 @@ export function BranchWorkScheduleManager({
       await getBranchWorkSchedule(branchId);
     } catch (error) {
       console.warn("⚠️ Manager - Erro ao carregar work_schedule:", error);
-      // Se não encontrar, use initialData como fallback
-      if (initialData.length > 0) {
-        setWorkScheduleData(normalizeInitialData(initialData));
-      }
+      // Se não encontrar, use initialData como fallback ou crie semana vazia
+      const fallbackData =
+        initialData.length > 0 ? normalizeInitialData(initialData) : [];
+      const completeWeek = generateCompleteWeekSchedule(fallbackData);
+      setWorkScheduleData(completeWeek);
     }
   };
 
@@ -146,22 +241,64 @@ export function BranchWorkScheduleManager({
     onSuccess?.();
   };
 
-  // Função para deletar um work_range específico
-  const handleDeleteWorkRange = async (workRangeId: string) => {
+  // Função para abrir dialog de confirmação de exclusão
+  const handleDeleteWorkRange = async (
+    workRangeId: string,
+    currentData?: Partial<BranchWorkScheduleRange>
+  ) => {
     if (!workRangeId) return;
 
-    const confirmDelete = window.confirm(
-      "Tem certeza que deseja deletar este horário? Esta ação não pode ser desfeita."
-    );
+    // Descobrir o nome do dia
+    const weekdays = [
+      "Domingo",
+      "Segunda-feira",
+      "Terça-feira",
+      "Quarta-feira",
+      "Quinta-feira",
+      "Sexta-feira",
+      "Sábado",
+    ];
+    const dayName =
+      currentData?.weekday !== undefined
+        ? weekdays[currentData.weekday]
+        : "este dia";
 
-    if (!confirmDelete) return;
+    setDeleteConfirmDialog({
+      isOpen: true,
+      workRangeId,
+      dayName,
+    });
+  };
+
+  // Função para confirmar e executar a exclusão
+  const confirmDeleteWorkRange = async () => {
+    if (!deleteConfirmDialog.workRangeId) return;
 
     try {
-      console.log("🗑️ Manager - Deletando work_range:", workRangeId);
-      await deleteWorkRange(branchId, workRangeId);
+      console.log(
+        "🗑️ Manager - Deletando work_range:",
+        deleteConfirmDialog.workRangeId
+      );
+      await deleteWorkRange(branchId, deleteConfirmDialog.workRangeId);
+
+      // Fechar o dialog
+      setDeleteConfirmDialog({
+        isOpen: false,
+        workRangeId: null,
+        dayName: "",
+      });
     } catch (error) {
       console.error("❌ Manager - Erro ao deletar work_range:", error);
     }
+  };
+
+  // Função para cancelar a exclusão
+  const cancelDelete = () => {
+    setDeleteConfirmDialog({
+      isOpen: false,
+      workRangeId: null,
+      dayName: "",
+    });
   };
 
   // Função para editar um work_range específico (abre dialog)
@@ -169,32 +306,76 @@ export function BranchWorkScheduleManager({
     workRangeId: string,
     currentData: Partial<BranchWorkScheduleRange>
   ) => {
-    if (!workRangeId) return;
-
     console.log(
-      "✏️ Manager - Abrindo dialog para editar work_range:",
+      "✏️ Manager - Abrindo dialog para editar/criar work_range:",
       workRangeId,
       currentData
     );
 
     setEditDialog({
       isOpen: true,
-      workRangeId,
+      workRangeId: workRangeId === "new" ? null : workRangeId, // null para novos
       data: currentData,
     });
   };
 
   // Função para salvar edição via dialog
   const handleSaveEdit = async (updatedData: any) => {
-    if (!editDialog.workRangeId) return;
-
     try {
-      console.log(
-        "💾 Manager - Salvando edição:",
-        editDialog.workRangeId,
-        updatedData
-      );
-      await updateWorkRange(branchId, editDialog.workRangeId, updatedData);
+      if (editDialog.workRangeId) {
+        // Editando work_range existente - usar API individual
+        console.log(
+          "💾 Manager - Salvando edição:",
+          editDialog.workRangeId,
+          updatedData
+        );
+        await updateWorkRange(branchId, editDialog.workRangeId, updatedData);
+      } else {
+        console.log(
+          "🔍 Manager - Verificando existência do dia para weekday:",
+          updatedData.weekday
+        );
+        console.log("📋 Manager - workScheduleData atual:", workScheduleData);
+
+        // Verificar se já existe um registro para este dia da semana (com ou sem horários)
+        const existingDayRecord = workScheduleData.find(
+          day => day.weekday === updatedData.weekday && day.id
+        );
+
+        console.log(
+          "🔍 Manager - Registro existente encontrado:",
+          existingDayRecord
+        );
+
+        if (existingDayRecord) {
+          // Se já existe um registro (mesmo vazio), usar API de atualização individual
+          console.log(
+            "🔄 Manager - Registro do dia já existe, atualizando:",
+            existingDayRecord.id,
+            updatedData
+          );
+          await updateWorkRange(branchId, existingDayRecord.id!, updatedData);
+        } else {
+          // Se não existe nenhum registro, criar novo dia - usar API de work_schedule
+          console.log("➕ Manager - Criando novo dia:", updatedData);
+
+          // Preparar dados no formato esperado pela API de work_schedule
+          const newWorkScheduleData = {
+            branch_work_ranges: [
+              {
+                branch_id: branchId,
+                weekday: updatedData.weekday,
+                start_time: updatedData.start_time,
+                end_time: updatedData.end_time,
+                time_zone: updatedData.time_zone || "America/Sao_Paulo",
+                services: [], // Serviços serão adicionados depois se necessário
+              },
+            ],
+          };
+
+          await createBranchWorkSchedule(branchId, newWorkScheduleData);
+        }
+      }
 
       setEditDialog({
         isOpen: false,
@@ -202,7 +383,7 @@ export function BranchWorkScheduleManager({
         data: null,
       });
     } catch (error) {
-      console.error("❌ Manager - Erro ao salvar edição:", error);
+      console.error("❌ Manager - Erro ao salvar:", error);
       throw error;
     }
   };
@@ -216,7 +397,10 @@ export function BranchWorkScheduleManager({
     });
   };
 
-  const hasWorkSchedule = workScheduleData.length > 0;
+  // Verificar se tem pelo menos um dia configurado (com horários)
+  const hasConfiguredSchedule = workScheduleData.some(
+    day => day.id && day.start_time && day.end_time
+  );
 
   return (
     <div className="w-full">
@@ -255,7 +439,7 @@ export function BranchWorkScheduleManager({
             </span>
           </CardContent>
         </Card>
-      ) : hasWorkSchedule ? (
+      ) : hasConfiguredSchedule ? (
         // Mostra visualização quando há dados configurados
         <div className="mt-4">
           <BranchWorkScheduleView
@@ -303,7 +487,7 @@ export function BranchWorkScheduleManager({
         onClose={handleCloseEditDialog}
         onSave={handleSaveEdit}
         branchId={branchId}
-        workRangeId={editDialog.workRangeId || ""}
+        workRangeId={editDialog.workRangeId || "new"} // "new" para novos registros
         initialData={
           editDialog.data
             ? {
@@ -322,8 +506,38 @@ export function BranchWorkScheduleManager({
             : undefined
         }
         loading={workRangeLoading}
-        disableWeekdayEdit={true} // Sempre desabilita edição do dia da semana ao editar work_range existente
+        disableWeekdayEdit={!!editDialog.workRangeId} // Desabilita apenas quando editando existente
       />
+
+      {/* Dialog de confirmação de exclusão */}
+      <AlertDialog
+        open={deleteConfirmDialog.isOpen}
+        onOpenChange={cancelDelete}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar o horário de funcionamento de{" "}
+              <strong>{deleteConfirmDialog.dayName}</strong>?
+              <br />
+              <br />
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteWorkRange}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Deletar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

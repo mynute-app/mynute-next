@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, Building2, Calendar, Edit, Trash2 } from "lucide-react";
+import { Clock, Building2, Calendar, Edit, Trash2, Plus } from "lucide-react";
 
 interface BranchWorkScheduleRange {
   id?: string;
@@ -30,7 +30,10 @@ interface BranchWorkScheduleViewProps {
     workRangeId: string,
     updatedData: Partial<BranchWorkScheduleRange>
   ) => void;
-  onDelete?: (workRangeId: string) => void;
+  onDelete?: (
+    workRangeId: string,
+    currentData?: Partial<BranchWorkScheduleRange>
+  ) => void;
 }
 
 const diasSemana: Record<number, string> = {
@@ -61,6 +64,9 @@ export function BranchWorkScheduleView({
   onEdit,
   onDelete,
 }: BranchWorkScheduleViewProps) {
+  // Criar array de todos os dias da semana (0-6)
+  const allWeekdays = [1, 2, 3, 4, 5, 6, 0]; // Segunda a Domingo
+
   // Organizar por dia da semana
   const rangesByDay = workRanges.reduce((acc, range) => {
     if (!acc[range.weekday]) {
@@ -69,29 +75,6 @@ export function BranchWorkScheduleView({
     acc[range.weekday].push(range);
     return acc;
   }, {} as Record<number, BranchWorkScheduleRange[]>);
-
-  // Ordenar dias da semana (segunda a domingo)
-  const sortedDays = Object.keys(rangesByDay)
-    .map(Number)
-    .sort((a, b) => {
-      // Colocar domingo (0) no final
-      if (a === 0) return 1;
-      if (b === 0) return -1;
-      return a - b;
-    });
-
-  if (workRanges.length === 0) {
-    return (
-      <Card className={className}>
-        <CardContent className="flex flex-col items-center justify-center py-8">
-          <Clock className="w-12 h-12 text-muted-foreground mb-4" />
-          <p className="text-sm text-muted-foreground">
-            Nenhum horário de funcionamento configurado para esta filial.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className={`space-y-4 ${className || ""}`}>
@@ -107,40 +90,80 @@ export function BranchWorkScheduleView({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {sortedDays.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhum dia da semana configurado
-              </p>
-            ) : (
-              sortedDays.map(weekday => {
-                const dayRanges = rangesByDay[weekday];
-                return (
-                  <div
-                    key={weekday}
-                    className="flex flex-col md:flex-row md:items-center gap-4 p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-3 min-w-[140px]">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium text-sm">
-                          {diasSemana[weekday]}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {diasSemanaShort[weekday]}
-                        </p>
-                      </div>
-                    </div>
+            {allWeekdays.map(weekday => {
+              const dayRanges = rangesByDay[weekday] || [];
+              const hasConfiguredRanges = dayRanges.some(
+                range => range.id && range.start_time && range.end_time
+              );
 
-                    <div className="flex-1">
-                      {dayRanges.length === 0 ? (
+              // Encontrar o registro do dia (pode ter ID mas estar vazio)
+              const dayRecord = dayRanges.find(
+                range => range.weekday === weekday
+              );
+              const emptyDay = dayRanges.find(
+                range => !range.start_time && !range.end_time
+              );
+
+              return (
+                <div
+                  key={weekday}
+                  className="flex flex-col md:flex-row md:items-center gap-4 p-4 border rounded-lg"
+                >
+                  <div className="flex items-center gap-3 min-w-[140px]">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium text-sm">
+                        {diasSemana[weekday]}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {diasSemanaShort[weekday]}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex-1">
+                    {!hasConfiguredRanges ? (
+                      // Dia não configurado - mostrar como fechado com opção de configurar
+                      <div className="flex items-center justify-between">
                         <Badge variant="secondary" className="text-xs">
-                          Fechado
+                          Não configurado
                         </Badge>
-                      ) : (
-                        <div className="space-y-2">
-                          {dayRanges.map((range, index) => (
+                        {isEditable && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              onEdit?.(
+                                dayRecord?.id || "new", // Usar ID existente se houver, senão "new"
+                                {
+                                  weekday: weekday,
+                                  start_time: dayRecord?.start_time || "",
+                                  end_time: dayRecord?.end_time || "",
+                                  time_zone:
+                                    dayRecord?.time_zone || "America/Sao_Paulo",
+                                  branch_id:
+                                    dayRecord?.branch_id || emptyDay?.branch_id,
+                                }
+                              )
+                            }
+                            className="flex items-center gap-1 h-7 px-2"
+                          >
+                            <Plus className="w-3 h-3" />
+                            Configurar
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      // Dia configurado - mostrar horários
+                      <div className="space-y-2">
+                        {dayRanges
+                          .filter(
+                            range =>
+                              range.id && range.start_time && range.end_time
+                          )
+                          .map((range, index) => (
                             <div
-                              key={index}
+                              key={range.id || index}
                               className="flex items-center gap-4 flex-wrap justify-between p-3 border rounded-lg bg-muted/20"
                             >
                               <div className="flex items-center gap-4 flex-wrap">
@@ -188,6 +211,7 @@ export function BranchWorkScheduleView({
                                         end_time: range.end_time,
                                         weekday: range.weekday,
                                         time_zone: range.time_zone,
+                                        services: range.services,
                                       })
                                     }
                                     className="flex items-center gap-1 h-7 px-2"
@@ -197,7 +221,13 @@ export function BranchWorkScheduleView({
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => onDelete?.(range.id!)}
+                                    onClick={() =>
+                                      onDelete?.(range.id!, {
+                                        weekday: range.weekday,
+                                        start_time: range.start_time,
+                                        end_time: range.end_time,
+                                      })
+                                    }
                                     className="flex items-center gap-1 h-7 px-2 text-destructive hover:text-destructive"
                                   >
                                     <Trash2 className="w-3 h-3" />
@@ -206,13 +236,12 @@ export function BranchWorkScheduleView({
                               )}
                             </div>
                           ))}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
-                );
-              })
-            )}
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
