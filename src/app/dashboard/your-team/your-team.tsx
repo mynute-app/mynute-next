@@ -149,7 +149,6 @@ export default function YourTeam() {
                 setSelectedMemberId(selectedMember.id);
               }
             }}
-            defaultView="view"
           />
         ) : (
           <p>Selecione um membro para configurar os horários</p>

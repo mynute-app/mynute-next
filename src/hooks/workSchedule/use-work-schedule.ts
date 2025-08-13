@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 // Tipos baseados na especificação da API
@@ -19,13 +19,76 @@ export interface WorkScheduleData {
 interface UseWorkScheduleProps {
   onSuccess?: () => void;
   onError?: (error: string) => void;
+  autoFetch?: boolean;
+  employeeId?: string;
 }
 
 export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [workScheduleData, setWorkScheduleData] = useState<WorkScheduleRange[]>(
+    []
+  );
   const { toast } = useToast();
+
+  // Buscar dados automaticamente se autoFetch estiver habilitado e employeeId fornecido
+  useEffect(() => {
+    if (props?.autoFetch && props?.employeeId) {
+      fetchWorkSchedule(props.employeeId);
+    }
+  }, [props?.autoFetch, props?.employeeId]);
+
+  const fetchWorkSchedule = async (employeeId: string) => {
+    setFetchLoading(true);
+    setError(null);
+
+    console.log(
+      "🔍 Hook - Buscando work_schedule para employeeId:",
+      employeeId
+    );
+
+    try {
+      const response = await fetch(
+        `/api/employee/${employeeId}/work_schedule`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Erro ao buscar horário de trabalho"
+        );
+      }
+
+      const result = await response.json();
+      console.log("📋 Hook - Dados recebidos:", result);
+
+      // Normalizar dados se necessário
+      const ranges =
+        result.employee_work_ranges || result.data?.employee_work_ranges || [];
+      setWorkScheduleData(ranges);
+
+      return ranges;
+    } catch (err: any) {
+      const errorMessage = err.message || "Erro interno do servidor";
+      setError(errorMessage);
+
+      console.error("❌ Hook - Erro ao buscar work_schedule:", err);
+
+      // Não mostrar toast para erro de busca, deixar o componente decidir
+      props?.onError?.(errorMessage);
+      throw err;
+    } finally {
+      setFetchLoading(false);
+    }
+  };
 
   const createWorkSchedule = async (
     employeeId: string,
@@ -81,6 +144,11 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
         description: "O horário de trabalho foi configurado com sucesso.",
       });
 
+      // Recarregar dados após sucesso
+      if (props?.autoFetch) {
+        await fetchWorkSchedule(employeeId);
+      }
+
       props?.onSuccess?.();
 
       return result;
@@ -108,7 +176,10 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
 
   return {
     createWorkSchedule,
+    fetchWorkSchedule,
+    workScheduleData,
     loading,
+    fetchLoading,
     success,
     error,
     reset,

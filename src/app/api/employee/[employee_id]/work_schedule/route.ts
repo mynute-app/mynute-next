@@ -2,6 +2,43 @@ import { NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 
+export const GET = auth(async function GET(req, ctx) {
+  try {
+    const token = req.auth?.accessToken;
+
+    if (!token) {
+      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    }
+
+    const { employee_id } = ctx.params as {
+      employee_id: string;
+    };
+
+    console.log("🔍 Buscando work_schedule para Employee ID:", employee_id);
+
+    const responseData = await fetchFromBackend(
+      req,
+      `/employee/${employee_id}/work_schedule`,
+      token,
+      {
+        method: "GET",
+      }
+    );
+
+    console.log("✅ Sucesso com GET (employee work_schedule):", responseData);
+    return NextResponse.json(responseData, { status: 200 });
+  } catch (error) {
+    console.error("❌ Erro ao buscar work_schedule do employee:", error);
+    return NextResponse.json(
+      {
+        message: "Erro interno do servidor",
+        error: process.env.NODE_ENV === "development" ? error : undefined,
+      },
+      { status: 500 }
+    );
+  }
+});
+
 export const POST = auth(async function POST(req, ctx) {
   try {
     const token = req.auth?.accessToken;
