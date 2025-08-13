@@ -23,7 +23,11 @@ import { Separator } from "@/components/ui/separator";
 import { Clock, Plus, Trash2, MapPin, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useWorkSchedule, WorkScheduleRange } from "@/hooks/workSchedule/use-work-schedule";
+import {
+  useWorkSchedule,
+  WorkScheduleRange,
+} from "@/hooks/workSchedule/use-work-schedule";
+import { useEmployeeWorkRange } from "@/hooks/workSchedule/use-employee-work-range";
 
 type DiaSemana = {
   weekday: number;
@@ -76,13 +80,25 @@ export function WorkScheduleForm({
   >(new Map());
   const [selectedTimeZone, setSelectedTimeZone] = useState("America/Sao_Paulo");
 
-  const { createWorkSchedule, loading } = useWorkSchedule({
-    onSuccess: () => {
-      onSuccess?.();
-    },
-  });
+  const { createWorkSchedule, addWorkScheduleRanges, loading } =
+    useWorkSchedule({
+      onSuccess: () => {
+        onSuccess?.();
+      },
+    });
+
+  // Hook para criar work_range individual (mantido para compatibilidade)
+  const { createEmployeeWorkRange, loading: createLoading } =
+    useEmployeeWorkRange({
+      onSuccess: () => {
+        onSuccess?.();
+      },
+    });
 
   const { toast } = useToast();
+
+  // Loading combinado
+  const isLoading = loading || createLoading;
 
   // Organizar dados iniciais por dia da semana
   useEffect(() => {
@@ -174,7 +190,7 @@ export function WorkScheduleForm({
   const salvarHorarios = async () => {
     console.log("💾 Componente - Iniciando salvarHorarios");
     console.log("📊 Componente - workRanges atual:", workRanges);
-    
+
     const allRanges: WorkScheduleRange[] = [];
 
     workRanges.forEach(ranges => {
@@ -182,7 +198,10 @@ export function WorkScheduleForm({
       allRanges.push(...ranges);
     });
 
-    console.log("🔍 Componente - allRanges final:", JSON.stringify(allRanges, null, 2));
+    console.log(
+      "🔍 Componente - allRanges final:",
+      JSON.stringify(allRanges, null, 2)
+    );
 
     if (allRanges.length === 0) {
       toast({
@@ -194,15 +213,19 @@ export function WorkScheduleForm({
     }
 
     try {
-      console.log("🚀 Componente - Chamando createWorkSchedule");
-      await createWorkSchedule(employeeId, {
-        employee_work_ranges: allRanges,
+      console.log("🚀 Componente - Usando addWorkScheduleRanges");
+
+      // Usar a nova função que combina existentes com novos
+      await addWorkScheduleRanges(employeeId, allRanges);
+
+      toast({
+        title: "Horários salvos!",
+        description: "Todos os horários foram configurados com sucesso.",
       });
     } catch (error) {
       console.error("❌ Componente - Erro ao salvar horários:", error);
     }
   };
-
   const temHorarios = (weekday: number) => {
     return (
       workRanges.has(weekday) && (workRanges.get(weekday)?.length ?? 0) > 0
@@ -380,11 +403,11 @@ export function WorkScheduleForm({
         {/* Botão de salvar */}
         <Button
           onClick={salvarHorarios}
-          disabled={loading}
+          disabled={isLoading}
           className="w-full"
           size="lg"
         >
-          {loading ? "Salvando..." : "Salvar Horários"}
+          {isLoading ? "Salvando..." : "Salvar Horários"}
         </Button>
       </CardContent>
     </Card>
