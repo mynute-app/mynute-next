@@ -10,6 +10,7 @@ const addEmployeeSchema = z.object({
   phone: z.string().min(10, "O telefone é obrigatório."),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres."),
   role: z.enum(["user", "admin"]).default("user"),
+  timezone: z.string().min(1, "O fuso horário é obrigatório."),
 });
 
 type AddEmployeeFormValues = z.infer<typeof addEmployeeSchema>;
@@ -24,6 +25,7 @@ export const useAddEmployeeForm = () => {
       phone: "",
       password: "",
       role: "user",
+      timezone: "America/Sao_Paulo",
     },
   });
 
@@ -49,6 +51,7 @@ export const useAddEmployeeForm = () => {
       });
 
       form.reset();
+      return true;
     } catch (error) {
       console.error("❌ Erro ao criar o funcionário:", error);
 
@@ -58,6 +61,7 @@ export const useAddEmployeeForm = () => {
           "Ocorreu um erro ao tentar criar o funcionário. Tente novamente.",
         variant: "destructive",
       });
+      return false;
     }
   };
 
