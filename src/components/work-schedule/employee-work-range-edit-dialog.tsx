@@ -19,23 +19,23 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, Save, X, Users, MapPin } from "lucide-react";
+import { Clock, Save, X, Users, Building2 } from "lucide-react";
 import { useGetCompany } from "@/hooks/get-company";
 
-interface WorkRangeEditDialogProps {
+interface EmployeeWorkRangeEditDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: any) => Promise<void>;
-  initialData?: WorkRangeEditData;
+  initialData?: EmployeeWorkRangeEditData;
+  branches?: Array<{ id: string; name: string }>;
+  services?: Array<{ id: string; name: string }>;
   loading?: boolean;
   disableWeekdayEdit?: boolean;
   employeeId: string;
   workRangeId: string;
-  branches?: Array<{ id: string; name: string }>;
-  services?: Array<{ id: string; name: string }>;
 }
 
-interface WorkRangeEditData {
+interface EmployeeWorkRangeEditData {
   start_time: string;
   end_time: string;
   weekday: number;
@@ -74,182 +74,187 @@ export function EmployeeWorkRangeEditDialog({
   onClose,
   onSave,
   initialData,
+  branches = [],
+  services = [],
   loading = false,
   disableWeekdayEdit = true,
   employeeId,
   workRangeId,
-  branches = [],
-  services = [],
-}: WorkRangeEditDialogProps) {
+}: EmployeeWorkRangeEditDialogProps) {
   const { company, loading: loadingCompany } = useGetCompany();
 
-  const [formData, setFormData] = useState<WorkRangeEditData>({
-    start_time: "09:00",
-    end_time: "17:00",
-    weekday: 1,
-    time_zone: "America/Sao_Paulo",
-    branch_id: "",
-    services: [],
-  });
+  // Log para debug - mostrar dados recebidos quando abre o dialog
+  if (isOpen && initialData) {
+    const diaLabel =
+      diasSemana.find(dia => dia.value === initialData.weekday)?.label ||
+      "Indefinido";
+    console.log("🔍 Dialog - Dados recebidos para edição:", initialData);
+    console.log(
+      "� Dialog - Dia da semana detectado:",
+      diaLabel,
+      "(weekday:",
+      initialData.weekday,
+      ")"
+    );
+  }
 
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-
-  // Resetar form quando o dialog abrir/fechar
-  useEffect(() => {
-    if (isOpen && initialData) {
-      console.log("🔄 Dialog - Carregando dados iniciais:", initialData);
-      setFormData({
-        start_time: initialData.start_time || "09:00",
-        end_time: initialData.end_time || "17:00",
-        weekday: initialData.weekday ?? 1,
-        time_zone: initialData.time_zone || "America/Sao_Paulo",
-        branch_id:
-          initialData.branch_id || (branches.length > 0 ? branches[0].id : ""),
-        services: initialData.services || [],
-      });
-      setSelectedServices(initialData.services || []);
-    } else if (isOpen && !initialData) {
-      // Reset para novos
-      setFormData({
+  const [formData, setFormData] = useState<EmployeeWorkRangeEditData>(
+    () =>
+      initialData || {
         start_time: "09:00",
         end_time: "17:00",
         weekday: 1,
         time_zone: "America/Sao_Paulo",
-        branch_id: branches.length > 0 ? branches[0].id : "",
+        branch_id: branches[0]?.id || "",
         services: [],
-      });
-      setSelectedServices([]);
+      }
+  );
+
+  // Atualizar formData quando initialData mudar
+  useEffect(() => {
+    if (initialData) {
+      console.log(
+        "🔄 Dialog - Atualizando formData com novos initialData:",
+        initialData
+      );
+      setFormData(initialData);
     }
-  }, [isOpen, initialData, branches]);
+  }, [initialData]);
 
   const handleSave = async () => {
     try {
-      const dataToSave = {
-        ...formData,
-        employee_id: employeeId,
-        services: selectedServices.map(serviceId => ({ id: serviceId })),
+      // Validar branch_id obrigatório
+      if (!formData.branch_id) {
+        throw new Error("Selecione uma filial");
+      }
+
+      // Dados básicos do work_range (horários, dia, timezone, branch)
+      const basicData = {
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        weekday: formData.weekday,
+        time_zone: formData.time_zone,
+        branch_id: formData.branch_id,
+        services: formData.services, // Incluir serviços no payload básico
       };
 
-      console.log("💾 Dialog - Salvando dados:", dataToSave);
-      await onSave(dataToSave);
+      console.log("💾 Dialog - Salvando dados:", basicData);
+      await onSave(basicData);
+
+      console.log("✅ Dialog - Tudo salvo com sucesso!");
+      onClose();
     } catch (error) {
       console.error("❌ Dialog - Erro ao salvar:", error);
+      throw error; // Re-throw para mostrar erro no toast
     }
   };
 
-  const handleServiceToggle = (serviceId: string, checked: boolean) => {
-    setSelectedServices(prev => {
-      if (checked) {
-        return [...prev, serviceId];
-      } else {
-        return prev.filter(id => id !== serviceId);
-      }
-    });
+  const updateField = (field: keyof EmployeeWorkRangeEditData, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const isEditing = workRangeId !== "new";
-  const title = isEditing ? "Editar Horário" : "Novo Horário";
-  const description = isEditing
-    ? "Atualize as informações do horário de trabalho"
-    : "Configure um novo horário de trabalho";
+  // Funções para gerenciar seleção de serviços
+  const handleServiceToggle = (serviceId: string, checked: boolean) => {
+    if (checked) {
+      setFormData(prev => ({
+        ...prev,
+        services: [...prev.services, serviceId],
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        services: prev.services.filter(id => id !== serviceId),
+      }));
+    }
+  };
+
+  const handleSelectAllServices = (checked: boolean) => {
+    if (checked) {
+      const allServiceIds =
+        company?.services?.map(service => service.id.toString()) || [];
+      setFormData(prev => ({
+        ...prev,
+        services: allServiceIds,
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        services: [],
+      }));
+    }
+  };
+
+  // Verificar se todos os serviços estão selecionados
+  const allServicesSelected =
+    company?.services &&
+    company.services.length > 0 &&
+    formData.services.length === company.services.length;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clock className="w-5 h-5" />
-            {title}
+            {workRangeId === "new" ? "Configurar Horário" : "Editar Horário"}
           </DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogDescription>
+            {workRangeId === "new"
+              ? "Configure o horário de trabalho para este dia."
+              : "Modifique os detalhes do horário de trabalho."}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Dia da Semana */}
-          <div className="space-y-2">
-            <Label>Dia da Semana</Label>
-            <Select
-              value={formData.weekday.toString()}
-              onValueChange={value =>
-                setFormData(prev => ({ ...prev, weekday: parseInt(value) }))
-              }
-              disabled={disableWeekdayEdit}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o dia" />
-              </SelectTrigger>
-              <SelectContent>
-                {diasSemana.map(dia => (
-                  <SelectItem key={dia.value} value={dia.value.toString()}>
-                    {dia.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Horários */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Hora de Início</Label>
-              <Select
-                value={formData.start_time}
-                onValueChange={value =>
-                  setFormData(prev => ({ ...prev, start_time: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {opcoesHorario.map(time => (
-                    <SelectItem key={time} value={time}>
-                      {time}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Hora de Fim</Label>
-              <Select
-                value={formData.end_time}
-                onValueChange={value =>
-                  setFormData(prev => ({ ...prev, end_time: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {opcoesHorario.map(time => (
-                    <SelectItem key={time} value={time}>
-                      {time}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="weekday" className="text-right">
+              Dia da Semana
+            </Label>
+            <div className="col-span-3">
+              {disableWeekdayEdit ? (
+                <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm">
+                  {diasSemana.find(dia => dia.value === formData.weekday)
+                    ?.label || "Indefinido"}
+                </div>
+              ) : (
+                <Select
+                  value={formData.weekday.toString()}
+                  onValueChange={value =>
+                    updateField("weekday", parseInt(value))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[10000]">
+                    {diasSemana.map(dia => (
+                      <SelectItem key={dia.value} value={dia.value.toString()}>
+                        {dia.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
 
-          {/* Filial */}
-          {branches.length > 0 && (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                Filial
-              </Label>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="branch_id" className="text-right">
+              <Building2 className="w-4 h-4 inline mr-1" />
+              Filial
+            </Label>
+            <div className="col-span-3">
               <Select
                 value={formData.branch_id}
-                onValueChange={value =>
-                  setFormData(prev => ({ ...prev, branch_id: value }))
-                }
+                onValueChange={value => updateField("branch_id", value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma filial" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[10000]">
                   {branches.map(branch => (
                     <SelectItem key={branch.id} value={branch.id}>
                       {branch.name}
@@ -258,63 +263,157 @@ export function EmployeeWorkRangeEditDialog({
                 </SelectContent>
               </Select>
             </div>
-          )}
-
-          {/* Fuso Horário */}
-          <div className="space-y-2">
-            <Label>Fuso Horário</Label>
-            <Select
-              value={formData.time_zone}
-              onValueChange={value =>
-                setFormData(prev => ({ ...prev, time_zone: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="America/Sao_Paulo">
-                  São Paulo (GMT-3)
-                </SelectItem>
-                <SelectItem value="America/New_York">
-                  Nova York (GMT-5)
-                </SelectItem>
-                <SelectItem value="Europe/London">Londres (GMT+0)</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
-          {/* Serviços */}
-          {services.length > 0 && (
-            <div className="space-y-3">
-              <Label className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Serviços Disponíveis
-              </Label>
-              <div className="grid grid-cols-1 gap-3 max-h-32 overflow-y-auto border rounded-md p-3">
-                {services.map(service => (
-                  <div key={service.id} className="flex items-center space-x-2">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="start_time" className="text-right">
+              Início
+            </Label>
+            <div className="col-span-3">
+              <Select
+                value={formData.start_time}
+                onValueChange={value => updateField("start_time", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-[10000]">
+                  {opcoesHorario.map(time => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="end_time" className="text-right">
+              Fim
+            </Label>
+            <div className="col-span-3">
+              <Select
+                value={formData.end_time}
+                onValueChange={value => updateField("end_time", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-[10000]">
+                  {opcoesHorario.map(time => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="time_zone" className="text-right">
+              Fuso Horário
+            </Label>
+            <div className="col-span-3">
+              <Select
+                value={formData.time_zone}
+                onValueChange={value => updateField("time_zone", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-[10000]">
+                  <SelectItem value="America/Sao_Paulo">
+                    América/São Paulo (GMT-3)
+                  </SelectItem>
+                  <SelectItem value="America/New_York">
+                    América/Nova York (GMT-5)
+                  </SelectItem>
+                  <SelectItem value="Europe/London">
+                    Europa/Londres (GMT+0)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Campo de Serviços */}
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="services" className="text-right pt-2">
+              <Users className="w-4 h-4 inline mr-1" />
+              Serviços
+            </Label>
+            <div className="col-span-3">
+              {loadingCompany ? (
+                <div className="text-sm text-muted-foreground">
+                  Carregando serviços...
+                </div>
+              ) : company?.services && company.services.length > 0 ? (
+                <div className="space-y-3">
+                  {/* Opção "Selecionar Todos" */}
+                  <div className="flex items-center space-x-2 p-2 border rounded-md bg-muted/50">
                     <Checkbox
-                      id={`service-${service.id}`}
-                      checked={selectedServices.includes(service.id)}
-                      onCheckedChange={checked =>
-                        handleServiceToggle(service.id, checked as boolean)
-                      }
+                      id="select-all-services"
+                      checked={allServicesSelected}
+                      onCheckedChange={handleSelectAllServices}
                     />
                     <Label
-                      htmlFor={`service-${service.id}`}
-                      className="text-sm font-normal cursor-pointer"
+                      htmlFor="select-all-services"
+                      className="text-sm font-medium cursor-pointer"
                     >
-                      {service.name}
+                      Selecionar Todos ({company.services.length})
                     </Label>
                   </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Selecione os serviços que estarão disponíveis neste horário
-              </p>
+
+                  {/* Lista de Serviços */}
+                  <div className="border rounded-md">
+                    <div className="max-h-40 overflow-y-auto p-3">
+                      <div className="grid grid-cols-1 gap-2">
+                        {company.services.map(service => (
+                          <div
+                            key={service.id}
+                            className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded border-b border-muted/30 last:border-b-0"
+                          >
+                            <Checkbox
+                              id={`service-${service.id}`}
+                              checked={formData.services.includes(
+                                service.id.toString()
+                              )}
+                              onCheckedChange={checked =>
+                                handleServiceToggle(
+                                  service.id.toString(),
+                                  checked as boolean
+                                )
+                              }
+                            />
+                            <Label
+                              htmlFor={`service-${service.id}`}
+                              className="text-sm cursor-pointer flex-1 leading-none"
+                            >
+                              {service.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Footer com contador */}
+                    <div className="p-2 bg-muted/20 border-t text-center">
+                      <span className="text-xs text-muted-foreground">
+                        {formData.services.length} de {company.services.length}{" "}
+                        selecionados
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground p-4 border rounded-md text-center">
+                  Nenhum serviço disponível
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         <DialogFooter>
@@ -322,7 +421,10 @@ export function EmployeeWorkRangeEditDialog({
             <X className="w-4 h-4 mr-2" />
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
+          <Button
+            onClick={handleSave}
+            disabled={loading || !formData.branch_id}
+          >
             <Save className="w-4 h-4 mr-2" />
             {loading ? "Salvando..." : "Salvar"}
           </Button>

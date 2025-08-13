@@ -233,7 +233,58 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
         return;
       }
 
-      // 2. Enviar apenas os novos ranges
+      // 2. Buscar horários existentes para validação de sobreposição
+      let existingRanges: WorkScheduleRange[] = [];
+      try {
+        existingRanges = await fetchWorkSchedule(employeeId);
+        console.log(
+          "📊 Hook - Horários existentes para validação:",
+          existingRanges
+        );
+      } catch (error) {
+        console.log("ℹ️ Hook - Nenhum horário existente encontrado");
+        existingRanges = [];
+      }
+
+      // 3. Validar sobreposição de horários no mesmo dia
+      for (const newRange of rangesWithoutId) {
+        const existingInSameDay = existingRanges.filter(
+          existing => existing.weekday === newRange.weekday
+        );
+
+        for (const existing of existingInSameDay) {
+          const newStart = parseInt(newRange.start_time.replace(":", ""));
+          const newEnd = parseInt(newRange.end_time.replace(":", ""));
+          const existingStart = parseInt(existing.start_time.replace(":", ""));
+          const existingEnd = parseInt(existing.end_time.replace(":", ""));
+
+          // Verificar sobreposição
+          if (
+            (newStart >= existingStart && newStart < existingEnd) ||
+            (newEnd > existingStart && newEnd <= existingEnd) ||
+            (newStart <= existingStart && newEnd >= existingEnd)
+          ) {
+            const dayNames: { [key: number]: string } = {
+              0: "Domingo",
+              1: "Segunda",
+              2: "Terça",
+              3: "Quarta",
+              4: "Quinta",
+              5: "Sexta",
+              6: "Sábado",
+            };
+
+            throw new Error(
+              `Conflito de horários na ${dayNames[newRange.weekday]}! ` +
+                `O horário ${newRange.start_time}-${newRange.end_time} sobrepõe com ` +
+                `o horário existente ${existing.start_time}-${existing.end_time}. ` +
+                `Um funcionário não pode ter horários sobrepostos no mesmo dia.`
+            );
+          }
+        }
+      }
+
+      // 4. Enviar apenas os novos ranges (sem conflitos)
       const payload = {
         work_schedule: {
           employee_work_ranges: rangesWithoutId,

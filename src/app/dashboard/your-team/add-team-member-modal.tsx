@@ -25,7 +25,7 @@ export default function AddUserDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="backdrop-blur-md p-6 max-w-lg">
         <DialogTitle className="text-lg font-semibold text-gray-800">
-          Criar Usuário
+          Criar Usuáriosadassasda
         </DialogTitle>
 
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-2">
