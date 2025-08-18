@@ -30,13 +30,20 @@ import {
 interface AddUserDialogProps {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
+  onSuccess?: () => void;
 }
 
 export default function AddUserDialog({
   isOpen,
   setIsOpen,
+  onSuccess,
 }: AddUserDialogProps) {
-  const { form, handleSubmit } = useAddEmployeeForm();
+  const { form, handleSubmit } = useAddEmployeeForm(() => {
+    // Callback executado quando funcionário é criado com sucesso
+    if (onSuccess) {
+      onSuccess();
+    }
+  });
   const {
     register,
     handleSubmit: submitHandler,
@@ -57,31 +64,46 @@ export default function AddUserDialog({
 
   const onSubmit = async (data: any) => {
     console.log("📤 Form data being submitted:", data);
-    const success = await handleSubmit(data);
-    if (success) {
-      console.log("✅ Employee created successfully");
-      setIsOpen(false);
+    console.log("📊 Form errors:", errors);
+    console.log("📊 Form is valid:", Object.keys(errors).length === 0);
+    console.log("📊 Selected timezone:", selectedTimezone);
+
+    // Garantir que o timezone está definido
+    if (!data.timezone || data.timezone === "") {
+      data.timezone = selectedTimezone || "America/Sao_Paulo";
+    }
+
+    console.log("📤 Final data being submitted:", data);
+
+    try {
+      const success = await handleSubmit(data);
+      console.log("📊 Submit result:", success);
+      if (success) {
+        console.log("✅ Employee created successfully");
+        setIsOpen(false);
+      }
+    } catch (error) {
+      console.error("❌ Error in onSubmit:", error);
     }
   };
 
-  // Phone number formatting with +55 prefix
+  // Phone number formatting with +55 prefix for E164 format
   const formatPhoneNumber = (value: string) => {
     // Remove all non-digits
     const digits = value.replace(/\D/g, "");
 
-    // If starts with 55, keep it, otherwise add +55
-    if (digits.startsWith("55")) {
-      const remaining = digits.slice(2);
-      if (remaining.length <= 11) {
-        return `+55 ${remaining}`;
-      }
+    // If starts with 55, keep it, otherwise add 55
+    let formattedDigits;
+    if (digits.startsWith("55") && digits.length <= 13) {
+      formattedDigits = digits;
+    } else if (digits.length <= 11) {
+      formattedDigits = `55${digits}`;
     } else {
-      if (digits.length <= 11) {
-        return `+55 ${digits}`;
-      }
+      return value; // Return as-is if doesn't fit expected pattern
     }
 
-    return value; // Return as-is if doesn't fit expected pattern
+    // Return in E164 format (+55XXXXXXXXXX)
+    return `+${formattedDigits}`;
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,14 +128,30 @@ export default function AddUserDialog({
           <div className="flex items-center gap-3">
             <FiUser className="text-gray-500 w-5 h-5 mt-7" />
             <div className="flex-1">
-              <Label htmlFor="name">Nome completo*</Label>
+              <Label htmlFor="name">Nome*</Label>
               <Input
                 id="name"
-                placeholder="Digite o nome completo"
+                placeholder="Digite o nome"
                 {...register("name")}
               />
               {errors.name && (
                 <p className="text-sm text-red-500">{errors.name.message}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Sobrenome */}
+          <div className="flex items-center gap-3">
+            <FiUser className="text-gray-500 w-5 h-5 mt-7" />
+            <div className="flex-1">
+              <Label htmlFor="surname">Sobrenome*</Label>
+              <Input
+                id="surname"
+                placeholder="Digite o sobrenome"
+                {...register("surname")}
+              />
+              {errors.surname && (
+                <p className="text-sm text-red-500">{errors.surname.message}</p>
               )}
             </div>
           </div>
@@ -142,7 +180,7 @@ export default function AddUserDialog({
               <Label htmlFor="phone">Telefone*</Label>
               <Input
                 id="phone"
-                placeholder="+55 (11) 99999-9999"
+                placeholder="+5511999999999"
                 value={phoneValue}
                 onChange={handlePhoneChange}
               />
@@ -185,7 +223,7 @@ export default function AddUserDialog({
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o cargo" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[10001]">
                     <SelectItem value="user">Usuário</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
                   </SelectContent>
@@ -210,7 +248,7 @@ export default function AddUserDialog({
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o fuso horário" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[10001]">
                     <SelectItem value="America/Sao_Paulo">
                       São Paulo (UTC-3)
                     </SelectItem>

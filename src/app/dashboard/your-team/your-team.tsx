@@ -25,7 +25,7 @@ export default function YourTeam() {
   const [activeTab, setActiveTab] = useState("about");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { company, loading, error } = useGetCompany();
+  const { company, loading, error, refetch } = useGetCompany();
   console.log("Company data:", company);
   const employees: Employee[] = company?.employees ?? [];
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
@@ -201,6 +201,15 @@ export default function YourTeam() {
                   <h1 className="text-2xl font-semibold">
                     {selectedMember?.name} {selectedMember?.surname}
                   </h1>
+                  {/* Debug info */}
+                  {process.env.NODE_ENV === "development" && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      ID: {selectedMember?.id} | Branches:{" "}
+                      {Array.isArray(selectedMember?.branches)
+                        ? selectedMember.branches.length
+                        : 0}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -264,7 +273,13 @@ export default function YourTeam() {
         )}
       </div>
 
-      <AddTeamMemberDialog isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />
+      <AddTeamMemberDialog
+        isOpen={isDialogOpen}
+        setIsOpen={setIsDialogOpen}
+        onSuccess={() => {
+          refetch(); // Recarregar dados da empresa após criar funcionário
+        }}
+      />
     </div>
   );
 }

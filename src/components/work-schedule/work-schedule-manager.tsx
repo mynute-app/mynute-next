@@ -90,6 +90,14 @@ export function WorkScheduleManager({
     },
   });
 
+  // Função para validar UUID
+  const isValidUUID = (uuid: string) => {
+    if (!uuid || uuid.trim() === "") return false;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  };
+
   // Função para normalizar os dados vindos do backend
   const normalizeInitialData = (data: any[]): WorkScheduleRange[] => {
     console.log("🔄 normalizeInitialData - Dados de entrada:", data);
@@ -165,6 +173,17 @@ export function WorkScheduleManager({
         weekday: Number(item.weekday ?? 1), // Usar ?? ao invés de || para preservar weekday 0
         services: Array.isArray(item.services) ? item.services : [],
       };
+
+      // Validar UUIDs obrigatórios
+      if (normalized.employee_id && !isValidUUID(normalized.employee_id)) {
+        console.warn(`⚠️ Employee ID inválido: "${normalized.employee_id}"`);
+        normalized.employee_id = employeeId; // Usar o employeeId do props como fallback
+      }
+
+      if (normalized.branch_id && !isValidUUID(normalized.branch_id)) {
+        console.warn(`⚠️ Branch ID inválido: "${normalized.branch_id}"`);
+        normalized.branch_id = ""; // Limpar branch_id inválido
+      }
 
       console.log(
         `✅ normalizeInitialData - Item ${index} normalizado:`,
@@ -287,6 +306,14 @@ export function WorkScheduleManager({
   const normalizedBranches = normalizeBranches(branches);
   const normalizedServices = normalizeServices(services);
 
+  console.log("🏢 WorkScheduleManager - Employee ID:", employeeId);
+  console.log("🏢 WorkScheduleManager - Branches recebidas:", branches);
+  console.log(
+    "🏢 WorkScheduleManager - Branches normalizadas:",
+    normalizedBranches
+  );
+  console.log("🔧 WorkScheduleManager - Services recebidos:", services);
+
   const handleSuccess = () => {
     // Recarregar dados após sucesso
     loadEmployeeWorkSchedule();
@@ -377,6 +404,28 @@ export function WorkScheduleManager({
   // Função para salvar edição via dialog
   const handleSaveEdit = async (updatedData: any) => {
     try {
+      // Validar dados antes de enviar
+      console.log("🔍 Manager - Validando dados antes de salvar:", updatedData);
+
+      if (!isValidUUID(updatedData.employee_id || employeeId)) {
+        throw new Error("Employee ID inválido");
+      }
+
+      if (updatedData.branch_id && !isValidUUID(updatedData.branch_id)) {
+        console.warn(
+          "⚠️ Branch ID inválido, removendo:",
+          updatedData.branch_id
+        );
+        updatedData.branch_id = ""; // Limpar branch_id inválido
+      }
+
+      // Se branch_id estiver vazio, não pode prosseguir (é obrigatório)
+      if (!updatedData.branch_id || updatedData.branch_id.trim() === "") {
+        throw new Error(
+          "Você deve selecionar uma filial para configurar o horário de trabalho"
+        );
+      }
+
       if (editDialog.workRangeId) {
         // Editando work_range existente - usar API individual
         console.log(
@@ -466,6 +515,11 @@ export function WorkScheduleManager({
     day => day.id && day.start_time && day.end_time
   );
 
+  // Verificar se há branches válidas disponíveis
+  const hasValidBranches =
+    normalizedBranches.length > 0 &&
+    normalizedBranches.some(branch => isValidUUID(branch.id));
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
@@ -493,57 +547,76 @@ export function WorkScheduleManager({
         </div>
       </div>
 
-      {/* Renderização condicional: Configurar se não há dados, Visualizar se há dados */}
-      {loading || workRangeLoading ? (
+      {/* Verificar se há branches válidas */}
+      {!hasValidBranches ? (
         <Card>
-          <CardContent className="flex items-center justify-center py-8">
-            <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground mr-2" />
-            <span className="text-muted-foreground">
-              {loading ? "Carregando horários..." : "Processando..."}
-            </span>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Clock className="w-12 h-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2 text-center">
+              Sem filiais disponíveis
+            </h3>
+            <p className="text-sm text-muted-foreground text-center">
+              Este funcionário precisa estar associado a pelo menos uma filial
+              para configurar horários de trabalho. Vá para a aba "Filial" para
+              associar o funcionário a uma filial primeiro.
+            </p>
           </CardContent>
         </Card>
-      ) : hasConfiguredSchedule ? (
-        // Mostra visualização quando há dados configurados
-        <div className="mt-4">
-          <EmployeeWorkScheduleView
-            workRanges={workScheduleData}
-            employeeName={employeeName}
-            branches={normalizedBranches}
-            onEdit={handleEditWorkRange}
-            onDelete={handleDeleteWorkRange}
-            isEditable={true}
-          />
-        </div>
       ) : (
-        // Mostra formulário de configuração quando não há dados
-        <div className="mt-4">
-          <Card className="mb-4">
-            <CardContent className="flex flex-col items-center justify-center py-8">
-              <Clock className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">
-                Configure a jornada de trabalho
-              </h3>
-              <p className="text-sm text-muted-foreground text-center mb-4">
-                Defina os horários de trabalho deste funcionário para que ele
-                possa atender clientes nas filiais.
-              </p>
-              {error && (
-                <p className="text-xs text-destructive mb-4 text-center">
-                  {error}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+        /* Renderização condicional: Configurar se não há dados, Visualizar se há dados */
+        <>
+          {loading || workRangeLoading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-8">
+                <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground mr-2" />
+                <span className="text-muted-foreground">
+                  {loading ? "Carregando horários..." : "Processando..."}
+                </span>
+              </CardContent>
+            </Card>
+          ) : hasConfiguredSchedule ? (
+            // Mostra visualização quando há dados configurados
+            <div className="mt-4">
+              <EmployeeWorkScheduleView
+                workRanges={workScheduleData}
+                employeeName={employeeName}
+                branches={normalizedBranches}
+                onEdit={handleEditWorkRange}
+                onDelete={handleDeleteWorkRange}
+                isEditable={true}
+              />
+            </div>
+          ) : (
+            // Mostra formulário de configuração quando não há dados
+            <div className="mt-4">
+              <Card className="mb-4">
+                <CardContent className="flex flex-col items-center justify-center py-8">
+                  <Clock className="w-12 h-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">
+                    Configure a jornada de trabalho
+                  </h3>
+                  <p className="text-sm text-muted-foreground text-center mb-4">
+                    Defina os horários de trabalho deste funcionário para que
+                    ele possa atender clientes nas filiais.
+                  </p>
+                  {error && (
+                    <p className="text-xs text-destructive mb-4 text-center">
+                      {error}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
 
-          <WorkScheduleForm
-            employeeId={employeeId}
-            initialData={workScheduleData}
-            branches={normalizedBranches}
-            services={normalizedServices}
-            onSuccess={handleSuccess}
-          />
-        </div>
+              <WorkScheduleForm
+                employeeId={employeeId}
+                initialData={workScheduleData}
+                branches={normalizedBranches}
+                services={normalizedServices}
+                onSuccess={handleSuccess}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {/* Dialog de edição */}

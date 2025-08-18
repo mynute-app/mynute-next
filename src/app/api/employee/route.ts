@@ -32,7 +32,10 @@ export const POST = auth(async function POST(req) {
       phone: body.phone,
       password: body.password,
       role: "user",
+      time_zone: body.timezone,
     };
+
+    console.log("🔍 API - Request body being sent to backend:", requestBody);
 
     // Usando fetchFromBackend para criar o funcionário
     const createdEmployee = await fetchFromBackend(req, "/employee", token, {

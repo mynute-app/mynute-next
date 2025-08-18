@@ -15,7 +15,7 @@ const addEmployeeSchema = z.object({
 
 type AddEmployeeFormValues = z.infer<typeof addEmployeeSchema>;
 
-export const useAddEmployeeForm = () => {
+export const useAddEmployeeForm = (onSuccess?: () => void) => {
   const form = useForm<AddEmployeeFormValues>({
     resolver: zodResolver(addEmployeeSchema),
     defaultValues: {
@@ -33,12 +33,41 @@ export const useAddEmployeeForm = () => {
 
   const handleSubmit = async (data: AddEmployeeFormValues) => {
     try {
+      console.log("🔍 Hook - Data received:", data);
+
+      // Garantir que o telefone está no formato E164
+      let phone = data.phone;
+      if (phone) {
+        // Remove todos os caracteres não numéricos
+        const digits = phone.replace(/\D/g, "");
+
+        // Se não começar com 55, adiciona o código do Brasil
+        if (digits.startsWith("55")) {
+          phone = `+${digits}`;
+        } else {
+          phone = `+55${digits}`;
+        }
+
+        // Verificar se o telefone tem o tamanho correto (13 dígitos total: +55 + 11 dígitos)
+        if (phone.length < 13 || phone.length > 14) {
+          throw new Error("Telefone deve ter o formato +5511999999999");
+        }
+      }
+
+      const requestData = {
+        ...data,
+        phone,
+        timezone: data.timezone || "America/Sao_Paulo",
+      };
+
+      console.log("🔍 Hook - Data being sent to API:", requestData);
+
       const response = await fetch("/api/employee", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestData),
       });
 
       if (!response.ok) {
@@ -51,6 +80,12 @@ export const useAddEmployeeForm = () => {
       });
 
       form.reset();
+
+      // Chamar o callback de sucesso se fornecido
+      if (onSuccess) {
+        onSuccess();
+      }
+
       return true;
     } catch (error) {
       console.error("❌ Erro ao criar o funcionário:", error);
