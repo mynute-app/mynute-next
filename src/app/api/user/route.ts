@@ -1,50 +1,60 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
+import { getAuthDataFromRequest } from "@/utils/decode-jwt";
 
 export const GET = auth(async function GET(req) {
-  const email = req.auth?.user.email;
-  const token = req.auth?.accessToken;
-  if (!token || !email) {
-    return new Response("Unauthorized", { status: 401 });
-  }
   try {
-    const user = await fetchFromBackend(req, `/employee/email/${email}`, token);
-    console.log("USer", user);
-    return Response.json(user);
+    const authData = getAuthDataFromRequest(req);
+
+    if (!authData.isValid || !authData.user?.id || !authData.token) {
+      return NextResponse.json(
+        { message: authData.error || "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
+    // Busca os dados completos do usuário atual pelo ID do token
+    const user = await fetchFromBackend(
+      req,
+      `/employee/${authData.user.id}`,
+      authData.token
+    );
+
+    return NextResponse.json(user);
   } catch (error) {
-    return Response.json({ error: "Erro interno" }, { status: 500 });
+    console.error("Erro no GET /api/user:", error);
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 });
 
 export const PATCH = auth(async function PATCH(req) {
-  const email = req.auth?.user.email;
-  const token = req.auth?.accessToken;
-
-  if (!token || !email) {
-    return NextResponse.json({ status: 401 });
-  }
-
   try {
-    // 1. Busca os dados do usuário pelo email
-    const user = await fetchFromBackend(req, `/user/email/${email}`, token);
+    const authData = getAuthDataFromRequest(req);
 
-    if (!user?.id) {
-      throw new Error("ID do usuário não encontrado");
+    if (!authData.isValid || !authData.user?.id || !authData.token) {
+      return NextResponse.json(
+        { message: authData.error || "Não autorizado" },
+        { status: 401 }
+      );
     }
 
     const body = await req.json();
-    const { name, surname } = body;
+    const { name, surname } = body as { name?: string; surname?: string };
 
-    // 2. Atualiza o nome e sobrenome via PATCH
-    const updatedUser = await fetchFromBackend(req, `/user/${user.id}`, token, {
-      method: "PATCH",
-      body: { name, surname },
-    });
+    const updatedUser = await fetchFromBackend(
+      req,
+      `/employee/${authData.user.id}`,
+      authData.token,
+      {
+        method: "PATCH",
+        body: { name, surname },
+      }
+    );
 
     return NextResponse.json(updatedUser);
   } catch (error) {
     console.error("Erro no PATCH /api/user:", error);
-    return NextResponse.json({ status: 500, error: "Erro interno" });
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 });

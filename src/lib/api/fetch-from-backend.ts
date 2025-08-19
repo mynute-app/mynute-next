@@ -31,9 +31,20 @@ export async function fetchFromBackend<T = any>(
         .join("&")
     : "";
 
-  const response = await fetch(
-    `${process.env.BACKEND_URL}${endpoint}${queryString}`,
-    {
+  const url = `${process.env.BACKEND_URL}${endpoint}${queryString}`;
+
+  // Debug não sensível: logar apenas método, URL e cabeçalhos de tenant
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      `[fetchFromBackend] ${options.method || "GET"} ${url} | X-Company-ID=${
+        company.id
+      } X-Company-Schema=${company.schema_name ?? "-"}`
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
       method: options.method || "GET",
       headers: {
         "Content-Type": "application/json",
@@ -46,11 +57,28 @@ export async function fetchFromBackend<T = any>(
       },
       cache: options.cache ?? "no-store",
       body: options.body ? JSON.stringify(options.body) : undefined,
-    }
-  );
+    });
+  } catch (networkError) {
+    console.error(
+      `[fetchFromBackend] Network error calling ${url} | companyId=${
+        company.id
+      } schema=${company.schema_name ?? "-"}:`,
+      networkError
+    );
+    throw networkError;
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
+    if (process.env.NODE_ENV !== "production") {
+      console.error(
+        `[fetchFromBackend] Backend error ${
+          response.status
+        } on ${url} | companyId=${company.id} schema=${
+          company.schema_name ?? "-"
+        } | body=${errorText}`
+      );
+    }
     throw new Error(
       `Erro ao acessar backend (${response.status}): ${errorText}`
     );
