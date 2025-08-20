@@ -47,7 +47,7 @@ export function RegisterFormCompany({
       {...props}
     >
       <div className="flex flex-col items-center gap-1 text-center">
-        <h1 className="text-2xl font-bold">Crie sua empresa</h1>
+        <h1 className="text-xl font-bold">Crie sua empresa</h1>
         <p className="text-balance text-sm text-muted-foreground">
           Preencha os dados abaixo para cadastrar sua empresa
         </p>
@@ -58,20 +58,6 @@ export function RegisterFormCompany({
           <Label htmlFor="name">Nome da Empresa</Label>
           <Input id="name" {...register("name")} placeholder="Waffle Tech" />
           <FormError message={errors.name?.message} />
-        </div>
-
-        <div className="grid gap-1">
-          <Label htmlFor="tax_id">CNPJ</Label>
-          <Input
-            id="tax_id"
-            placeholder="00.000.000/0000-00"
-            {...register("tax_id")}
-            onChange={e => {
-              const formatted = formatCNPJ(e.target.value);
-              setValue("tax_id", formatted);
-            }}
-          />
-          <FormError message={errors.tax_id?.message} />
         </div>
 
         <div className="flex gap-2">
@@ -96,17 +82,32 @@ export function RegisterFormCompany({
           </div>
         </div>
 
-        <div className="grid gap-1">
-          <Label htmlFor="owner_email">Email</Label>
-          <Input
-            id="owner_email"
-            type="email"
-            {...register("owner_email")}
-            placeholder="john.clark@gmail.com"
-          />
-          <FormError message={errors.owner_email?.message} />
-        </div>
+        <div className="flex gap-2">
+          <div className="grid gap-1 flex-1">
+            <Label htmlFor="owner_email">Email</Label>
+            <Input
+              id="owner_email"
+              type="email"
+              {...register("owner_email")}
+              placeholder="john.clark@gmail.com"
+            />
+            <FormError message={errors.owner_email?.message} />
+          </div>
 
+          <div className="grid gap-1 flex-1">
+            <Label htmlFor="tax_id">CNPJ</Label>
+            <Input
+              id="tax_id"
+              placeholder="00.000.000/0000-00"
+              {...register("tax_id")}
+              onChange={e => {
+                const formatted = formatCNPJ(e.target.value);
+                setValue("tax_id", formatted);
+              }}
+            />
+            <FormError message={errors.tax_id?.message} />
+          </div>
+        </div>
         <div className="grid gap-1">
           <Label htmlFor="owner_phone">Telefone</Label>
           <Input
@@ -120,27 +121,27 @@ export function RegisterFormCompany({
           />
           <FormError message={errors.owner_phone?.message} />
         </div>
+        <div className="flex gap-2">
+          <div className="grid gap-1 flex-1">
+            <Label htmlFor="trading_name">Nome fantasia</Label>
+            <Input
+              id="trading_name"
+              {...register("trading_name")}
+              placeholder="Agenda"
+            />
+            <FormError message={errors.trading_name?.message} />
+          </div>
 
-        <div className="grid gap-1">
-          <Label htmlFor="trading_name">Nome fantasia</Label>
-          <Input
-            id="trading_name"
-            {...register("trading_name")}
-            placeholder="Agenda"
-          />
-          <FormError message={errors.trading_name?.message} />
+          <div className="grid gap-1 flex-1">
+            <Label htmlFor="start_subdomain">Subdomínio</Label>
+            <Input
+              id="start_subdomain"
+              {...register("start_subdomain")}
+              placeholder="agenda-yourcompany2"
+            />
+            <FormError message={errors.start_subdomain?.message} />
+          </div>
         </div>
-
-        <div className="grid gap-1">
-          <Label htmlFor="start_subdomain">Subdomínio</Label>
-          <Input
-            id="start_subdomain"
-            {...register("start_subdomain")}
-            placeholder="agenda-yourcompany2"
-          />
-          <FormError message={errors.start_subdomain?.message} />
-        </div>
-
         {/* Senha */}
         <div className="grid gap-1 relative">
           <Label htmlFor="owner_password">Senha</Label>

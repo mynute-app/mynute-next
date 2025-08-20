@@ -7,6 +7,12 @@ type Options = {
   body?: any;
   headers?: Record<string, string>;
   cache?: RequestCache;
+  /**
+   * When true, do NOT resolve company from subdomain and do NOT send tenant headers.
+   * Use this for endpoints that are global (e.g., company creation, auth, healthchecks).
+   * Defaults to false (i.e., include company context by default).
+   */
+  skipCompanyContext?: boolean;
 };
 
 /**
@@ -18,7 +24,10 @@ export async function fetchFromBackend<T = any>(
   authToken: string,
   options: Options = {}
 ): Promise<T> {
-  const company = await getCompanyFromRequest(req);
+  const useCompanyContext = options.skipCompanyContext !== true;
+  const company = useCompanyContext
+    ? await getCompanyFromRequest(req)
+    : undefined;
 
   const queryString = options.queryParams
     ? "?" +
@@ -35,10 +44,13 @@ export async function fetchFromBackend<T = any>(
 
   // Debug não sensível: logar apenas método, URL e cabeçalhos de tenant
   if (process.env.NODE_ENV !== "production") {
+    const tenantInfo = useCompanyContext
+      ? `X-Company-ID=${company?.id ?? "-"} X-Company-Schema=${
+          company?.schema_name ?? "-"
+        }`
+      : "no-tenant";
     console.log(
-      `[fetchFromBackend] ${options.method || "GET"} ${url} | X-Company-ID=${
-        company.id
-      } X-Company-Schema=${company.schema_name ?? "-"}`
+      `[fetchFromBackend] ${options.method || "GET"} ${url} | ${tenantInfo}`
     );
   }
 
@@ -48,11 +60,13 @@ export async function fetchFromBackend<T = any>(
       method: options.method || "GET",
       headers: {
         "Content-Type": "application/json",
-        "X-Auth-Token": authToken,
-        "X-Company-ID": company.id,
-        ...(company.schema_name && {
-          "X-Company-Schema": company.schema_name,
-        }),
+        ...(authToken ? { "X-Auth-Token": authToken } : {}),
+        ...(useCompanyContext && company?.id
+          ? { "X-Company-ID": company.id }
+          : {}),
+        ...(useCompanyContext && company?.schema_name
+          ? { "X-Company-Schema": company.schema_name }
+          : {}),
         ...(options.headers || {}),
       },
       cache: options.cache ?? "no-store",
@@ -61,8 +75,8 @@ export async function fetchFromBackend<T = any>(
   } catch (networkError) {
     console.error(
       `[fetchFromBackend] Network error calling ${url} | companyId=${
-        company.id
-      } schema=${company.schema_name ?? "-"}:`,
+        company?.id ?? "-"
+      } schema=${company?.schema_name ?? "-"}:`,
       networkError
     );
     throw networkError;
@@ -74,8 +88,8 @@ export async function fetchFromBackend<T = any>(
       console.error(
         `[fetchFromBackend] Backend error ${
           response.status
-        } on ${url} | companyId=${company.id} schema=${
-          company.schema_name ?? "-"
+        } on ${url} | companyId=${company?.id ?? "-"} schema=${
+          company?.schema_name ?? "-"
         } | body=${errorText}`
       );
     }

@@ -8,7 +8,7 @@ export default function RegisterEmployeePage() {
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
       {/* Coluna da esquerda: Formulário */}
       <div className="flex items-center justify-center p-6 md:p-10">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-lg">
           <RegisterFormCompany />
         </div>
       </div>

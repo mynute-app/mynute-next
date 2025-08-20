@@ -84,6 +84,8 @@ export async function POST(req: Request) {
         {
           method: "POST",
           body: payload,
+          // Ao criar empresa, ainda não existe tenant. Não resolva subdomínio e não envie headers de tenant
+          skipCompanyContext: true,
         }
       );
 
