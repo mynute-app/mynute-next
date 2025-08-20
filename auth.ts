@@ -6,67 +6,6 @@ import { signInSchema } from "@/lib/zod";
 export const { handlers, auth, signIn } = NextAuth({
   providers: [
     Credentials({
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      authorize: async credentials => {
-        try {
-          const { email, password } = await signInSchema.parseAsync(
-            credentials
-          );
-
-          console.log("Enviando credenciais para API:", {
-            email,
-            password,
-          });
-
-          const loginUrl = new URL("http://localhost:4000/user/login");
-          const requestOptions: RequestInit = {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          };
-
-          const response = await fetch(loginUrl.toString(), requestOptions);
-
-          console.log("Resposta da API:", response.status, response.statusText);
-
-          // Logando os headers da resposta
-          console.log(
-            "Headers da resposta:",
-            Object.fromEntries(response.headers)
-          );
-
-          if (!response.ok) {
-            throw new Error(`Falha ao autenticar. Código: ${response.status}`);
-          }
-
-          const token = response.headers.get("Authorization");
-
-          if (!token) {
-            console.error(
-              "Token não encontrado no cabeçalho:",
-              response.headers
-            );
-            throw new Error("Token não encontrado na resposta.");
-          }
-
-          console.log("Token recebido:", token);
-
-          return { email, token };
-        } catch (error) {
-          if (error instanceof ZodError) {
-            console.error("Erro de validação:", error.errors);
-            return null;
-          }
-
-          console.error("Erro durante a autenticação:", error);
-          return null;
-        }
-      },
-    }),
-    Credentials({
       id: "employee-login",
       name: "Employee Login",
       credentials: {
@@ -79,7 +18,6 @@ export const { handlers, auth, signIn } = NextAuth({
             credentials
           );
 
-          // ✅ Captura o subdomínio da requisição via header
           const host = req?.headers?.get("host") || "";
           const subdomain = host.split(".")[0];
 
@@ -87,7 +25,6 @@ export const { handlers, auth, signIn } = NextAuth({
             throw new Error("Subdomínio não identificado na requisição.");
           }
 
-          // ✅ Busca empresa via rota local (proxy)
           const companyRes = await fetch(
             `http://localhost:3000/api/company/subdomain/${subdomain}`,
             { cache: "no-store" }
@@ -107,14 +44,6 @@ export const { handlers, auth, signIn } = NextAuth({
             body: JSON.stringify({ email, password }),
           });
 
-          console.log(
-            "Resposta do employee/login:",
-            response.status,
-            response.statusText
-          );
-
-          // Logando todos os headers da resposta
-          console.log("Headers da resposta employee/login:");
           response.headers.forEach((value, key) => {
             console.log(`${key}: ${value}`);
           });
@@ -124,8 +53,6 @@ export const { handlers, auth, signIn } = NextAuth({
           }
 
           const token = response.headers.get("X-Auth-Token");
-
-          console.log("X-Auth-Token recebido:", token);
 
           if (!token) {
             console.error(
@@ -154,21 +81,30 @@ export const { handlers, auth, signIn } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        console.log("JWT Callback - User token recebido:", user.token);
-        token.accessToken = user.token;
-        console.log(
-          "JWT Callback - Token armazenado no JWT:",
-          token.accessToken
-        );
+        const u = user as any;
+        token.accessToken = u.token;
+        token.companyId = u.companyId;
+        token.subdomain = u.subdomain;
+        token.email = u.email ?? token.email;
       }
       return token;
     },
     async session({ session, token }) {
+      (session as any).accessToken = (token as any).accessToken;
+
+      session.user = {
+        ...session.user,
+        email: (token as any).email ?? session.user?.email ?? "",
+      } as any;
       return session;
     },
   },
   pages: {
     signIn: "/auth/login",
+  },
+  // Garante uso de JWT para sessão
+  session: {
+    strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
 });
