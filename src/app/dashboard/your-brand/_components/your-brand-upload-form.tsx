@@ -93,10 +93,10 @@ export default function YourBrandUploadForm({
         onFileChange={setBackgroundFile}
       />
 
-      <ColorSettings
+      {/* <ColorSettings
         colors={colorConfig}
         onChange={newColors => setColorConfig(newColors)}
-      />
+      /> */}
 
       <Separator className="my-4" />
 

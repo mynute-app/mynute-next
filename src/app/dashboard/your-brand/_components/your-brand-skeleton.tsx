@@ -3,9 +3,8 @@ import { Separator } from "@/components/ui/separator";
 
 export default function YourBrandSkeleton() {
   return (
-    <div className="p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col md:flex-row">
-      {/* Lado Esquerdo - Formulário */}
-      <div className="w-full md:w-1/2 py-4 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
+    <div className="p-4 max-h-screen h-screen overflow-y-auto flex gap-4 flex-col ">
+      <div className="w-full md:w-3/4 py-4 max-h-[calc(100vh-100px)] overflow-y-auto pr-2 mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div className="space-y-2">
@@ -64,24 +63,6 @@ export default function YourBrandSkeleton() {
           {/* Botão Salvar */}
           <div className="pt-6">
             <Skeleton className="h-10 w-36 rounded-md" />
-          </div>
-        </div>
-      </div>
-
-      {/* Lado Direito - Preview */}
-      <div className="w-full md:w-1/2 rounded-md shadow-sm">
-        <div className="space-y-4">
-          {/* Preview Principal */}
-          <Skeleton className="w-full h-[500px] rounded-md" />
-
-          {/* Detalhes do Design */}
-          <div className="p-4 space-y-4">
-            <Skeleton className="h-5 w-48" /> {/* "Detalhes do Design Atual" */}
-            <div className="space-y-3">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
           </div>
         </div>
       </div>

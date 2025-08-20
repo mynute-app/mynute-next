@@ -4,48 +4,21 @@ import { getAuthDataFromToken } from "../../../utils/decode-jwt";
 import { fetchFromBackend } from "../../../lib/api/fetch-from-backend";
 
 export const GET = auth(async function GET(req) {
-  console.log("📡 Buscando dados da empresa com base no token...");
-
   try {
     const token = req.auth?.accessToken;
-    console.log("🔑 Token de autenticação:", token);
-
     if (!token) {
       return NextResponse.json({ status: 401, message: "Não autorizado" });
     }
-
-    // Usar o utilitário para decodificar o token
     const authData = getAuthDataFromToken(token);
-    console.log("📋 Dados decodificados do token:", authData);
-
-    if (!authData.isValid) {
-      return NextResponse.json({ status: 401, message: "Token inválido" });
-    }
-
-    if (!authData.companyId) {
-      return NextResponse.json(
-        { status: 400, message: "Company ID não encontrado no token." },
-        { status: 400 }
-      );
-    }
-
     const companyId = authData.companyId;
-    console.log("🏢 Company ID do token:", companyId);
-
-    console.log("🚀 Fazendo requisição para o backend...");
-
     try {
       const companyData = await fetchFromBackend(
         req,
         `/company/${companyId}`,
         token
       );
-
-      console.log("✅ Dados da empresa obtidos com sucesso");
       return NextResponse.json(companyData);
     } catch (fetchError) {
-      console.error("❌ Erro ao buscar empresa:", fetchError);
-
       return NextResponse.json(
         {
           error:

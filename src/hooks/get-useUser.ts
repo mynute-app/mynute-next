@@ -27,17 +27,7 @@ export const useGetUser = () => {
         setLoading(false);
       }
     };
-
-    // Apenas busca após autenticar; evita chamadas antes da sessão
-    if (status === "authenticated") {
-      setLoading(true);
-      fetchUserData();
-    }
-
-    return () => {
-      if (abortRef.current) abortRef.current.abort();
-    };
-  }, [status]);
+  }, []);
 
   return { user, loading };
 };

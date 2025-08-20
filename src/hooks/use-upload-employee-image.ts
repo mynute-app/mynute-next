@@ -1,3 +1,4 @@
+import { PATCH } from './../app/api/user/route';
 import { useState } from "react";
 
 interface UploadImageResponse {
@@ -23,7 +24,7 @@ export function useUploadEmployeeImage() {
       const response = await fetch(
         `/api/employee/${employeeId}/design/images`,
         {
-          method: "POST",
+          method: "PATCH",
           body: formData,
         }
       );

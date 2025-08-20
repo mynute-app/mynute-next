@@ -1,84 +1,34 @@
-import { useEffect, useState, useRef } from "react";
-import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { Company } from "../../types/company";
 
 export const useGetCompany = () => {
   const [company, setCompany] = useState<Company | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { status } = useSession();
 
-  const fetchCompanyData = async (retryCount = 0) => {
+  const fetchCompany = async () => {
     try {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-
-      abortControllerRef.current = new AbortController();
-
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/company?t=${Date.now()}`, {
-        signal: abortControllerRef.current.signal,
-        cache: "no-store",
-      });
+      const res = await fetch("/api/company", { cache: "no-store" });
+      if (!res.ok) throw new Error(`Erro ao buscar empresa: ${res.status}`);
 
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar empresa: ${response.status}`);
-      }
-
-      const data: Company = await response.json();
-      console.log("🏢 Dados da empresa carregados:", data);
+      const data: Company = await res.json();
       setCompany(data);
-      setError(null);
-      setLoading(false); // Sucesso - terminar loading
-    } catch (err) {
-      // Ignorar erros de cancelamento
-      if (err instanceof Error && err.name === "AbortError") {
-        return;
-      }
-
-      console.error("❌ Erro ao buscar dados da empresa:", err);
-
-      // Retry logic para casos de erro temporário
-      if (retryCount < 2) {
-        console.log(`🔄 Tentando novamente... (tentativa ${retryCount + 1}/2)`);
-        // Não parar o loading durante retry
-        retryTimeoutRef.current = setTimeout(() => {
-          fetchCompanyData(retryCount + 1);
-        }, 1000 * (retryCount + 1)); // Backoff progressivo
-        return;
-      }
-
-      // Só parar o loading quando esgotar todas as tentativas
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
+    } catch (e) {
       setCompany(null);
+      setError(e instanceof Error ? e.message : "Erro desconhecido");
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (status === "authenticated") {
-      fetchCompanyData();
-    }
+    fetchCompany();
+  }, []);
 
-    // Cleanup function
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-      }
-    };
-  }, [status]);
-
-  const refetch = () => {
-    fetchCompanyData();
-  };
+  const refetch = () => fetchCompany();
 
   return { company, loading, error, refetch };
 };

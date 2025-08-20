@@ -164,12 +164,6 @@ export const { handlers, auth, signIn } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      console.log("Session Callback - Token do JWT:", token.accessToken);
-      session.accessToken = token.accessToken as string;
-      console.log(
-        "Session Callback - AccessToken final na sessão:",
-        session.accessToken
-      );
       return session;
     },
   },

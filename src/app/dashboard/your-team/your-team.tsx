@@ -178,7 +178,7 @@ export default function YourTeam() {
       </div>
 
       {/* Detail View */}
-      <div className="w-2/3 p-6 bg-fuchsia-500 overflow-y-auto h-full">
+      <div className="w-2/3 p-6 overflow-y-auto h-full">
         {loadingEmployee ? (
           <div className="flex flex-col space-y-4">
             <Skeleton className="w-32 h-8" />

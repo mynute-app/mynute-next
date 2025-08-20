@@ -20,16 +20,6 @@ export const TeamMemberList = ({
 }: TeamMemberListProps) => {
   return (
     <>
-      {/* Search bar */}
-      <div className="relative mb-4">
-        <Input
-          type="text"
-          placeholder="Search"
-          className="w-full p-2 pl-10 rounded border border-gray-300"
-        />
-        <SearchIcon className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
-      </div>
-
       <ul className="space-y-2">
         {loading
           ? Array.from({ length: 5 }).map((_, index) => (
