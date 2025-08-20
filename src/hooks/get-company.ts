@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { Company } from "../../types/company";
 
 export const useGetCompany = () => {
@@ -7,6 +8,7 @@ export const useGetCompany = () => {
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { status } = useSession();
 
   const fetchCompanyData = async (retryCount = 0) => {
     try {
@@ -59,7 +61,9 @@ export const useGetCompany = () => {
   };
 
   useEffect(() => {
-    fetchCompanyData();
+    if (status === "authenticated") {
+      fetchCompanyData();
+    }
 
     // Cleanup function
     return () => {
@@ -70,7 +74,7 @@ export const useGetCompany = () => {
         clearTimeout(retryTimeoutRef.current);
       }
     };
-  }, []);
+  }, [status]);
 
   const refetch = () => {
     fetchCompanyData();
