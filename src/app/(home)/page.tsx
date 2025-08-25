@@ -10,11 +10,11 @@ export default function Page() {
   const { company, loading, error } = useCompanyByName();
 
   const services = useMemo(() => company?.services ?? [], [company]);
+  const brandColor = company?.design?.colors?.primary || undefined;
 
   return (
-    <div>
-      {/* Banner + Logo da Empresa (fixo no topo) */}
-      <section className="fixed top-0 left-0 right-0 z-30 h-40 md:h-56 lg:h-64 overflow-hidden">
+    <div className="h-[100dvh] overflow-auto">
+      <section className="relative w-full h-40 md:h-56 lg:h-64 overflow-hidden bg-background">
         {company?.design?.images?.banner?.url ? (
           <Image
             src={company.design.images.banner.url || "/placeholder.svg"}
@@ -56,9 +56,6 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Espaçador com a mesma altura do banner para evitar sobreposição do conteúdo */}
-      <div className="h-40 md:h-56 lg:h-64" />
-
       <div className="container mx-auto max-w-5xl px-4 py-2">
         <header className="mb-6">
           <h1 className="text-2xl font-semibold tracking-tight">Serviços</h1>
@@ -71,6 +68,7 @@ export default function Page() {
           services={services as any[]}
           loading={loading}
           error={error ?? undefined}
+          brandColor={brandColor}
         />
       </div>
     </div>

@@ -14,9 +14,10 @@ type Props = {
   services: Service[];
   loading?: boolean;
   error?: string;
+  brandColor?: string;
 };
 
-export function ServiceList({ services, loading, error }: Props) {
+export function ServiceList({ services, loading, error, brandColor }: Props) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -59,7 +60,7 @@ export function ServiceList({ services, loading, error }: Props) {
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map(s => (
             <li key={String(s.id)}>
-              <ServiceCard service={s} />
+              <ServiceCard service={s} brandColor={brandColor} />
             </li>
           ))}
         </ul>
