@@ -163,7 +163,8 @@ export default function YourTeam() {
       {/* Sidebar */}
       <div className="w-1/3  p-4 border-r">
         <div className="flex items-center justify-between mb-4">
-          <h2 className=" font-semibold">Meu time</h2>
+          <h2 className=" font-semibold">Meu time</h2>  
+          
           <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
             <PlusIcon />
           </Button>

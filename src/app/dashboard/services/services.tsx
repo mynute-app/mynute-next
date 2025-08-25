@@ -44,11 +44,9 @@ export const ServicesPage = () => {
     setServices(prev => [...prev, newService]);
   };
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen min-h-0 pb-16">
       {/* Sidebar */}
-      <div className="w-1/3 bg-gray-50 p-4 border-r">
-        <h2 className="text-lg font-semibold mb-4">Services & Classes</h2>
-
+      <div className="w-1/4 bg-gray-50 p-4 border-r overflow-y-auto">
         {/* Services Section */}
         <div>
           {loading ? (
@@ -57,11 +55,9 @@ export const ServicesPage = () => {
             <div>
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">
-                  Services ({services.length})
+                  Serviços ({services.length})
                 </h3>
-                <Button variant="ghost" size="sm" className="p-0 text-gray-500">
-                  <PlusIcon className="w-4 h-4" />
-                </Button>
+                <AddServiceDialog onCreate={handleAddService} />
               </div>
               <ul className="mt-2 space-y-1">
                 {services.map(service => (
@@ -79,14 +75,7 @@ export const ServicesPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="w-full p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-sm font-light text-gray-700">
-            Services ({services.length})
-          </h2>
-          <AddServiceDialog onCreate={handleAddService} />
-        </div>
-
+      <div className="flex-1 p-6 overflow-y-auto min-h-0">
         {/* Renderizando cada serviço */}
         <div className="space-y-4">
           {loading ? (

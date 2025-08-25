@@ -57,12 +57,7 @@ export const AddServiceDialog = ({ onCreate }: AddServiceDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="p-0 text-white h-10 w-10 bg-primary rounded-full flex justify-center items-center shadow-md"
-          onClick={() => setIsOpen(true)}
-        >
+        <Button variant="outline" onClick={() => setIsOpen(true)}>
           <BsPlus className="w-6 h-6" />
         </Button>
       </DialogTrigger>
