@@ -14,7 +14,6 @@ import { AddressStep } from "../form/Address";
 import { BusinessStep } from "../form/Business";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "../ui/skeleton";
-import { useCompany } from "@/hooks/get-company";
 
 const tabs = [
   { id: "endereco", title: "Endereço", component: <AddressStep /> },

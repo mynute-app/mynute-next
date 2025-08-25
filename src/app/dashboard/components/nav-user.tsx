@@ -80,7 +80,7 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuItem
               className="cursor-pointer "
-              onClick={() => signOut({ callbackUrl: "/auth/employee" })}
+              onClick={() => signOut({ callbackUrl: "/" })}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Sair
