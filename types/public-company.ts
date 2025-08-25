@@ -58,6 +58,8 @@ export type PublicCompany = {
   sectors?: unknown[];
   subdomains?: SubdomainEntry[];
   employees?: PublicEmployee[];
+  services?: unknown[];
+  branches?: unknown[];
   // Index signature to tolerate extra fields like branches/services when present
   [key: string]: unknown;
 };

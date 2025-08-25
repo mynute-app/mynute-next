@@ -11,54 +11,85 @@ export async function GET(
   { params }: { params: { name?: string } }
 ) {
   try {
-    const providedName = (params?.name ?? "").trim();
+    const providedName = decodeURIComponent((params?.name ?? "").trim());
 
-    // Derive name from host if not provided
-    let companyName = providedName;
-    if (!companyName) {
-      const hostHeader = req.headers.get("host") || req.nextUrl.host || "";
-      // Remove port if present
-      const host = hostHeader.split(":")[0];
-      const firstLabel = host.split(".")[0];
+    // Build candidates: from param and from host, both spaced and hyphenated variants
+    const hostHeader = req.headers.get("host") || req.nextUrl.host || "";
+    const host = hostHeader.split(":")[0];
+    const firstLabel = host.split(".")[0];
 
-      if (!firstLabel || firstLabel.toLowerCase() === "localhost") {
+    const fromHostLabel =
+      firstLabel && firstLabel.toLowerCase() !== "localhost"
+        ? decodeURIComponent(firstLabel)
+        : "";
+
+    const spaced = (s: string) => s.replace(/-/g, " ");
+    const hyphen = (s: string) => s.replace(/\s+/g, "-");
+
+    const candidatesRaw = [
+      providedName,
+      providedName ? spaced(providedName) : "",
+      providedName ? hyphen(providedName) : "",
+      fromHostLabel,
+      fromHostLabel ? spaced(fromHostLabel) : "",
+      fromHostLabel ? hyphen(fromHostLabel) : "",
+    ];
+
+    const candidates = Array.from(
+      new Set(
+        candidatesRaw
+          .map(c => c?.trim())
+          .filter((c): c is string => !!c && c.length > 0)
+      )
+    );
+
+    if (candidates.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Nome da empresa não informado e não foi possível derivar do host.",
+          details: { host: hostHeader },
+        },
+        { status: 400 }
+      );
+    }
+
+    // Try candidates sequentially until one succeeds
+    for (const candidate of candidates) {
+      const url = `${process.env.BACKEND_URL}/company/name/${encodeURIComponent(
+        candidate
+      )}`;
+      const attempt = await fetch(url, {
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+      });
+
+      if (attempt.ok) {
+        const data = await attempt.json();
+        return NextResponse.json(data);
+      }
+      // For non-404 errors, bubble up immediately
+      if (attempt.status !== 404) {
+        let message = `Erro ao buscar empresa (status ${attempt.status})`;
+        try {
+          const payload = await attempt.json();
+          message = payload?.error || message;
+        } catch {}
         return NextResponse.json(
-          {
-            error:
-              "Nome da empresa não informado e não foi possível derivar do host.",
-            details: { host: hostHeader },
-          },
-          { status: 400 }
+          { error: message },
+          { status: attempt.status }
         );
       }
-
-      // Convert subdomain-like label to a display name (abc-planejados -> abc planejados)
-      companyName = decodeURIComponent(firstLabel).replace(/-/g, " ");
     }
 
-    const backendUrl = `${
-      process.env.BACKEND_URL
-    }/company/name/${encodeURIComponent(companyName)}`;
-
-    const res = await fetch(backendUrl, {
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const status = res.status;
-      let message = "Empresa não encontrada para esse nome";
-      try {
-        const data = await res.json();
-        message = data?.error || message;
-      } catch {
-        // ignore body parse errors
-      }
-      return NextResponse.json({ error: message }, { status });
-    }
-
-    const data = await res.json();
-    return NextResponse.json(data);
+    // If all candidates 404'd
+    return NextResponse.json(
+      {
+        error: "Empresa não encontrada para os candidatos de nome informados.",
+        candidates,
+      },
+      { status: 404 }
+    );
   } catch (error) {
     return NextResponse.json(
       { error: "Erro ao buscar empresa por nome", details: String(error) },

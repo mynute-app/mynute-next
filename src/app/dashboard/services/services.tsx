@@ -102,7 +102,6 @@ export const ServicesPage = () => {
                 buffer={`${service.buffer} min`}
                 price={`R$ ${service.price}`}
                 onEdit={() => {
-                  console.log("🔍 ID do serviço selecionado:", service);
                   setEditingService(service);
                 }}
                 onDelete={() => {

@@ -1,20 +1,20 @@
 "use client";
 
 import { useMemo } from "react";
-import { useGetCompany } from "@/hooks/get-company";
+import { useCompanyByName } from "@/hooks/use-company-by-name";
 import { ServiceList } from "@/app/(home)/_components/service-list";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Page() {
-  const { company, loading, error } = useGetCompany();
+  const { company, loading, error } = useCompanyByName();
 
   const services = useMemo(() => company?.services ?? [], [company]);
 
   return (
     <div>
-      {/* Banner + Logo da Empresa */}
-      <section className="relative w-full h-40 md:h-56 lg:h-64 mb-6 overflow-hidden">
+      {/* Banner + Logo da Empresa (fixo no topo) */}
+      <section className="fixed top-0 left-0 right-0 z-30 h-40 md:h-56 lg:h-64 overflow-hidden">
         {company?.design?.images?.banner?.url ? (
           <Image
             src={company.design.images.banner.url || "/placeholder.svg"}
@@ -56,6 +56,9 @@ export default function Page() {
         </div>
       </section>
 
+      {/* Espaçador com a mesma altura do banner para evitar sobreposição do conteúdo */}
+      <div className="h-40 md:h-56 lg:h-64" />
+
       <div className="container mx-auto max-w-5xl px-4 py-2">
         <header className="mb-6">
           <h1 className="text-2xl font-semibold tracking-tight">Serviços</h1>
@@ -65,7 +68,7 @@ export default function Page() {
         </header>
 
         <ServiceList
-          services={services}
+          services={services as any[]}
           loading={loading}
           error={error ?? undefined}
         />
