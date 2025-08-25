@@ -15,7 +15,6 @@ export const useGetCompany = () => {
       if (!res.ok) throw new Error(`Erro ao buscar empresa: ${res.status}`);
 
       const data: Company = await res.json();
-      console.log("Company data fetched:", data);
       setCompany(data);
     } catch (e) {
       setCompany(null);

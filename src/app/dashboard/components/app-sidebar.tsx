@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import {
-  BookOpen,
-  Bot,
   Calendar,
   Command,
   Frame,
@@ -25,19 +23,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { NavMain } from "./nav-main";
-import { NavProjects } from "./nav-projects";
 import { NavSecondary } from "./nav-secondary";
 import { NavUser } from "./nav-user";
-import { useGetUser } from "@/hooks/get-useUser";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user, loading } = useGetUser();
   const data = {
-    user: {
-      name: user?.name ?? "",
-      email: user?.email ?? "",
-      avatar: user?.avatar || "",
-    },
     navMain: [
       {
         title: "Gestão",
@@ -146,11 +136,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );
