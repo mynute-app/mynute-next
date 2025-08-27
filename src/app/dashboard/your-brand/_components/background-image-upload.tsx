@@ -1,10 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Upload } from "lucide-react";
+import { useEffect, useState } from "react";
+import { MdOutlineImage } from "react-icons/md";
+import { RiDeleteBin6Line } from "react-icons/ri";
 
 interface BackgroundImageUploadProps {
   initialBackgroundUrl: string;
@@ -19,15 +20,23 @@ export default function BackgroundImageUpload({
 }: BackgroundImageUploadProps) {
   const [backgroundUrl, setBackgroundUrl] =
     useState<string>(initialBackgroundUrl);
-  const [isHovering, setIsHovering] = useState(false);
+
+  useEffect(() => {
+    setBackgroundUrl(initialBackgroundUrl || "");
+  }, [initialBackgroundUrl]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      const url = URL.createObjectURL(file);
-      setBackgroundUrl(url);
-      onFileChange(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          setBackgroundUrl(reader.result.toString());
+          onFileChange(file);
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -43,85 +52,60 @@ export default function BackgroundImageUpload({
 
   return (
     <div className="space-y-2">
-      <div className="text-lg font-semibold">Imagem de Fundo (Login)</div>
-      <p className="text-sm text-gray-500">
-        Esta imagem será usada como fundo na tela de login
-      </p>
+      <div>
+        <div className="text-lg font-semibold">Imagem de Fundo (Login)</div>
+        <p className="text-sm text-gray-500">
+          Esta imagem será usada como fundo na tela de login
+        </p>
+      </div>
 
-      <Card className="relative overflow-hidden">
-        <CardContent className="p-0">
-          <div
-            className="relative w-full h-52 bg-gray-100 cursor-pointer flex items-center justify-center"
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
-            onClick={() =>
-              document.getElementById("background-upload")?.click()
-            }
-          >
+      <Card>
+        <CardContent className="p-0 relative">
+          <div className="flex items-center justify-center h-96 bg-gray-100 rounded-md overflow-hidden relative">
             {backgroundUrl ? (
-              <>
-                <Image
-                  src={backgroundUrl}
-                  alt="Background image"
-                  fill
-                  className="object-cover"
-                  onLoadingComplete={img => {
-                    URL.revokeObjectURL(backgroundUrl);
-                  }}
-                />
-                {isHovering && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <p className="text-white text-center p-4">
-                      Clique para alterar a imagem de fundo
-                    </p>
-                  </div>
-                )}
-              </>
+              <img
+                src={backgroundUrl}
+                alt="Background"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
             ) : (
-              <div className="text-center p-6">
-                <p>Clique para adicionar uma imagem de fundo</p>
-                <p className="text-sm text-gray-500">
-                  Recomendado: 1920x1080px
-                </p>
+              <div className="border-2 rounded-full border-gray-300 p-2 shadow-md z-10 bg-white">
+                <MdOutlineImage className="size-6 text-gray-700" />
               </div>
             )}
+
+            <div className="absolute bottom-2 right-2 flex gap-2 z-20">
+              <label
+                htmlFor="upload-background"
+                className="cursor-pointer text-gray-700 border border-gray-300 rounded-full px-4 py-1 text-sm hover:bg-gray-100 transition items-center gap-2 inline-flex"
+              >
+                <Upload className="h-4 w-4" />
+                Background
+              </label>
+
+              {backgroundUrl && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="rounded-full px-4 py-1 text-sm"
+                  onClick={handleRemoveBackground}
+                >
+                  <RiDeleteBin6Line className="mr-2 h-4 w-4" />
+                  Remover
+                </Button>
+              )}
+            </div>
+
+            <input
+              id="upload-background"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
           </div>
         </CardContent>
       </Card>
-
-      <div className="flex justify-between">
-        <div>
-          <input
-            type="file"
-            id="background-upload"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              document.getElementById("background-upload")?.click()
-            }
-          >
-            Escolher imagem
-          </Button>
-        </div>
-
-        {backgroundUrl && (
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            onClick={handleRemoveBackground}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Remover
-          </Button>
-        )}
-      </div>
     </div>
   );
 }
