@@ -33,12 +33,7 @@ export default function YourBrand() {
 
         <Separator className="my-4" />
 
-        <YourBrandUploadForm
-          company={company}
-          onUploadSuccess={() => {
-            console.log("Upload realizado com sucesso!");
-          }}
-        />
+        <YourBrandUploadForm company={company} />
       </div>
     </div>
   );
