@@ -7,6 +7,7 @@ import BannerImageUpload from "./banner-image-upload";
 import BrandLogoUpload from "../brand-logo";
 import BackgroundImageUpload from "./background-image-upload";
 import { Company } from "../../../../../types/company";
+import ColorSettings from "./ColorSettings";
 
 interface YourBrandUploadFormProps {
   company: Company;
@@ -20,6 +21,13 @@ export default function YourBrandUploadForm({
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
+
+  const [colorConfig, setColorConfig] = useState({
+    primary: company?.design?.colors?.primary || "#3B82F6",
+    secondary: company?.design?.colors?.secondary || "#EF4444",
+    tertiary: company?.design?.colors?.tertiary || "#10B981",
+    quaternary: company?.design?.colors?.quaternary || "#F59E0B",
+  });
 
   const { deleteImage, isDeleting } = useCompanyImageDelete();
   const { uploadImage, isUploading: isUploadingImage } =
@@ -94,11 +102,15 @@ export default function YourBrandUploadForm({
         onRemoveFromBackend={() => handleDeleteImage("background")}
       />
 
-      {/* ColorSettings pode ser mantido se for necessário salvar separadamente */}
-      {/* <ColorSettings
+      <ColorSettings
         colors={colorConfig}
-        onChange={newColors => setColorConfig(newColors)}
-      /> */}
+        onChange={(newColors: {
+          primary: string;
+          secondary: string;
+          tertiary: string;
+          quaternary: string;
+        }) => setColorConfig(newColors)}
+      />
     </div>
   );
 }
