@@ -9,11 +9,13 @@ import { Trash2 } from "lucide-react";
 interface BackgroundImageUploadProps {
   initialBackgroundUrl: string;
   onFileChange: (file: File | null) => void;
+  onRemoveFromBackend?: () => Promise<void>;
 }
 
 export default function BackgroundImageUpload({
   initialBackgroundUrl,
   onFileChange,
+  onRemoveFromBackend,
 }: BackgroundImageUploadProps) {
   const [backgroundUrl, setBackgroundUrl] =
     useState<string>(initialBackgroundUrl);
@@ -29,7 +31,12 @@ export default function BackgroundImageUpload({
     }
   };
 
-  const handleRemoveBackground = () => {
+  const handleRemoveBackground = async () => {
+    // Se existe uma imagem inicial (do backend), remove do backend primeiro
+    if (initialBackgroundUrl && onRemoveFromBackend) {
+      await onRemoveFromBackend();
+    }
+    // Sempre remove localmente
     setBackgroundUrl("");
     onFileChange(null);
   };

@@ -8,9 +8,14 @@ import React from "react";
 type Props = {
   initialLogoUrl?: string | null;
   onFileChange?: (file: File | null) => void;
+  onRemoveFromBackend?: () => Promise<void>;
 };
 
-const BrandLogoUpload: React.FC<Props> = ({ initialLogoUrl, onFileChange }) => {
+const BrandLogoUpload: React.FC<Props> = ({
+  initialLogoUrl,
+  onFileChange,
+  onRemoveFromBackend,
+}) => {
   const [logoPreview, setLogoPreview] = useState<string | null>(
     initialLogoUrl ?? null
   );
@@ -34,7 +39,12 @@ const BrandLogoUpload: React.FC<Props> = ({ initialLogoUrl, onFileChange }) => {
     }
   };
 
-  const handleRemoveLogo = () => {
+  const handleRemoveLogo = async () => {
+    // Se existe uma imagem inicial (do backend), remove do backend primeiro
+    if (initialLogoUrl && onRemoveFromBackend) {
+      await onRemoveFromBackend();
+    }
+    // Sempre remove localmente
     setLogoPreview(null);
     onFileChange?.(null);
   };

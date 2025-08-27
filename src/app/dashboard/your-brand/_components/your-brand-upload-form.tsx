@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { useUpdateCompanyDesignImages } from "@/hooks/useUpdateCompanyDesignImages";
+import { useCompanyImageDelete } from "@/hooks/use-company-image-delete";
 import { useToast } from "@/hooks/use-toast";
 import BannerImageUpload from "./banner-image-upload";
 import BrandLogoUpload from "../brand-logo";
@@ -32,7 +33,8 @@ export default function YourBrandUploadForm({
   });
 
   const { updateImages } = useUpdateCompanyDesignImages();
-  
+  const { deleteImage, isDeleting } = useCompanyImageDelete();
+
   const { toast } = useToast();
 
   const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -63,7 +65,6 @@ export default function YourBrandUploadForm({
 
       console.log("Resposta da API recebida no componente:", response);
 
-      // Callback para notificar o componente pai
       onUploadSuccess?.();
     } catch (error: any) {
       toast({
@@ -76,21 +77,43 @@ export default function YourBrandUploadForm({
     }
   };
 
+  const handleDeleteImage = async (imageType: string) => {
+    const success = await deleteImage(imageType);
+    if (success) {
+      // Atualizar o estado local após a remoção bem-sucedida
+      switch (imageType) {
+        case "logo":
+          setLogoFile(null);
+          break;
+        case "banner":
+          setBannerFile(null);
+          break;
+        case "background":
+          setBackgroundFile(null);
+          break;
+      }
+      onUploadSuccess?.();
+    }
+  };
+
   return (
     <form onSubmit={handleUpload} className="space-y-4">
       <BannerImageUpload
         initialBannerUrl={company?.design?.images?.banner?.url || ""}
         onFileChange={setBannerFile}
+        onRemoveFromBackend={() => handleDeleteImage("banner")}
       />
 
       <BrandLogoUpload
         initialLogoUrl={company?.design?.images?.logo?.url || ""}
         onFileChange={setLogoFile}
+        onRemoveFromBackend={() => handleDeleteImage("logo")}
       />
 
       <BackgroundImageUpload
         initialBackgroundUrl={company?.design?.images?.background?.url || ""}
         onFileChange={setBackgroundFile}
+        onRemoveFromBackend={() => handleDeleteImage("background")}
       />
 
       {/* <ColorSettings
@@ -104,9 +127,13 @@ export default function YourBrandUploadForm({
         <button
           type="submit"
           className="bg-primary text-white rounded-md px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isUploading}
+          disabled={isUploading || isDeleting}
         >
-          {isUploading ? "Salvando..." : "Salvar alterações"}
+          {isUploading
+            ? "Salvando..."
+            : isDeleting
+            ? "Removendo..."
+            : "Salvar alterações"}
         </button>
       </div>
     </form>

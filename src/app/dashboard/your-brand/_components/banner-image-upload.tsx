@@ -10,11 +10,13 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 type Props = {
   initialBannerUrl?: string | null;
   onFileChange?: (file: File | null) => void;
+  onRemoveFromBackend?: () => Promise<void>;
 };
 
 export default function BannerImageUpload({
   initialBannerUrl,
   onFileChange,
+  onRemoveFromBackend,
 }: Props) {
   const [banner, setBanner] = useState<string | null>(initialBannerUrl ?? null);
 
@@ -36,7 +38,12 @@ export default function BannerImageUpload({
     }
   };
 
-  const handleRemoveBanner = () => {
+  const handleRemoveBanner = async () => {
+    // Se existe uma imagem inicial (do backend), remove do backend primeiro
+    if (initialBannerUrl && onRemoveFromBackend) {
+      await onRemoveFromBackend();
+    }
+    // Sempre remove localmente
     setBanner(null);
     onFileChange?.(null);
   };
