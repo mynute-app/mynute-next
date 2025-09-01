@@ -24,10 +24,8 @@ export const GET = auth(async function GET(req, { params }) {
       authData.token!
     );
 
-    console.log("✅ Filial encontrada:", branchData);
     return NextResponse.json(branchData, { status: 200 });
   } catch (error) {
-    console.error("❌ Erro ao buscar filial:", error);
     return NextResponse.json(
       { message: "Erro interno ao buscar a filial." },
       { status: 500 }

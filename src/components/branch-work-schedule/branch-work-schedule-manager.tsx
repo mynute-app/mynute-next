@@ -507,6 +507,7 @@ export function BranchWorkScheduleManager({
         }
         loading={workRangeLoading}
         disableWeekdayEdit={!!editDialog.workRangeId} // Desabilita apenas quando editando existente
+        onSuccessfulSave={loadBranchWorkSchedule} // Callback para atualizar dados
       />
 
       {/* Dialog de confirmação de exclusão */}

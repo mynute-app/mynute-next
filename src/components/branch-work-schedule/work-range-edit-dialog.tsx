@@ -20,7 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Clock, Save, X, Users } from "lucide-react";
-import { useGetCompany } from "@/hooks/get-company";
+import { useGetBranch } from "@/hooks/branch/use-get-branch";
 import { useWorkRangeServices } from "@/hooks/workSchedule/use-work-range-services";
 
 interface WorkRangeEditDialogProps {
@@ -32,6 +32,7 @@ interface WorkRangeEditDialogProps {
   disableWeekdayEdit?: boolean; // Nova prop para desabilitar edição do dia da semana
   branchId: string; // ID da branch - necessário para as rotas
   workRangeId: string; // ID do work_range - necessário para as rotas
+  onSuccessfulSave?: () => void; // Callback para atualizar dados do pai
 }
 
 interface WorkRangeEditData {
@@ -76,8 +77,12 @@ export function WorkRangeEditDialog({
   disableWeekdayEdit = true, // Por padrão, desabilita edição do dia da semana
   branchId,
   workRangeId,
+  onSuccessfulSave, // Novo callback
 }: WorkRangeEditDialogProps) {
-  const { company, loading: loadingCompany } = useGetCompany();
+  const { data: branchData, isLoading: loadingBranch } = useGetBranch({
+    branchId: branchId,
+    enabled: !!branchId,
+  });
 
   // Hook para gerenciar serviços do work_range
   const {
@@ -87,6 +92,8 @@ export function WorkRangeEditDialog({
   } = useWorkRangeServices({
     onSuccess: () => {
       console.log("✅ Serviços atualizados com sucesso!");
+      // Notificar o componente pai para atualizar dados
+      onSuccessfulSave?.();
     },
     onError: error => {
       console.error("❌ Erro ao atualizar serviços:", error);
@@ -160,6 +167,10 @@ export function WorkRangeEditDialog({
       }
 
       console.log("✅ Dialog - Tudo salvo com sucesso!");
+
+      // 3. Notificar o componente pai para atualizar dados
+      onSuccessfulSave?.();
+
       onClose();
     } catch (error) {
       console.error("❌ Dialog - Erro ao salvar:", error);
@@ -191,7 +202,8 @@ export function WorkRangeEditDialog({
   const handleSelectAllServices = (checked: boolean) => {
     if (checked) {
       const allServiceIds =
-        company?.services?.map(service => service.id.toString()) || [];
+        branchData?.services?.map((service: any) => service.id.toString()) ||
+        [];
       setFormData(prev => ({
         ...prev,
         services: allServiceIds,
@@ -206,9 +218,9 @@ export function WorkRangeEditDialog({
 
   // Verificar se todos os serviços estão selecionados
   const allServicesSelected =
-    company?.services &&
-    company.services.length > 0 &&
-    formData.services.length === company.services.length;
+    branchData?.services &&
+    branchData.services.length > 0 &&
+    formData.services.length === branchData.services.length;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -338,11 +350,11 @@ export function WorkRangeEditDialog({
               Serviços
             </Label>
             <div className="col-span-3">
-              {loadingCompany ? (
+              {loadingBranch ? (
                 <div className="text-sm text-muted-foreground">
                   Carregando serviços...
                 </div>
-              ) : company?.services && company.services.length > 0 ? (
+              ) : branchData?.services && branchData.services.length > 0 ? (
                 <div className="space-y-3">
                   {/* Opção "Selecionar Todos" */}
                   <div className="flex items-center space-x-2 p-2 border rounded-md bg-muted/50">
@@ -355,7 +367,7 @@ export function WorkRangeEditDialog({
                       htmlFor="select-all-services"
                       className="text-sm font-medium cursor-pointer"
                     >
-                      Selecionar Todos ({company.services.length})
+                      Selecionar Todos ({branchData.services.length})
                     </Label>
                   </div>
 
@@ -363,7 +375,7 @@ export function WorkRangeEditDialog({
                   <div className="border rounded-md">
                     <div className="max-h-40 overflow-y-auto p-3">
                       <div className="grid grid-cols-1 gap-2">
-                        {company.services.map(service => (
+                        {branchData.services.map((service: any) => (
                           <div
                             key={service.id}
                             className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded border-b border-muted/30 last:border-b-0"
@@ -394,15 +406,15 @@ export function WorkRangeEditDialog({
                     {/* Footer com contador */}
                     <div className="p-2 bg-muted/20 border-t text-center">
                       <span className="text-xs text-muted-foreground">
-                        {formData.services.length} de {company.services.length}{" "}
-                        selecionados
+                        {formData.services.length} de{" "}
+                        {branchData.services.length} selecionados
                       </span>
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="text-sm text-muted-foreground p-4 border rounded-md text-center">
-                  Nenhum serviço disponível
+                  Nenhum serviço disponível nesta filial
                 </div>
               )}
             </div>
