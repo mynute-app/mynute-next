@@ -6,6 +6,7 @@ import AddTeamMemberDialog from "./add-team-member-modal";
 import { BreaksSection } from "./breakssection";
 import { Branch } from "./branch-section";
 import { ServicesSection } from "./services-section";
+import { WorkRangeServicesSection } from "./work-range-services-section";
 import { IntegrationsSection } from "./integration-button";
 import { AboutSection } from "./about-section";
 import TeamMemberActions from "./team-member-actions";
@@ -113,6 +114,13 @@ export default function YourTeam() {
             setSelectedMember={setSelectedMember}
           />
         );
+      case "work-range-services":
+        return (
+          <WorkRangeServicesSection
+            selectedMember={selectedMember}
+            setSelectedMember={setSelectedMember}
+          />
+        );
       case "working-hours":
         return (
           <Branch
@@ -159,12 +167,12 @@ export default function YourTeam() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen pb-20">
       {/* Sidebar */}
       <div className="w-1/3  p-4 border-r">
         <div className="flex items-center justify-between mb-4">
-          <h2 className=" font-semibold">Meu time</h2>  
-          
+          <h2 className=" font-semibold">Meu time</h2>
+
           <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
             <PlusIcon />
           </Button>
@@ -246,6 +254,16 @@ export default function YourTeam() {
                 }`}
               >
                 Serviços
+              </button>
+              <button
+                onClick={() => setActiveTab("work-range-services")}
+                className={`py-2 ${
+                  activeTab === "work-range-services"
+                    ? "border-b-2 border-black"
+                    : ""
+                }`}
+              >
+                Serviços por Horário
               </button>
               <button
                 onClick={() => setActiveTab("working-hours")}
