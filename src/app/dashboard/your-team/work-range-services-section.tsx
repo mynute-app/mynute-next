@@ -64,36 +64,40 @@ export function WorkRangeServicesSection({
   const [workRanges, setWorkRanges] = useState<any[]>([]);
   const [showServiceManager, setShowServiceManager] = useState<boolean>(false);
 
-  const {
-    getEmployeeWorkRangeServices,
-    addServicesToEmployeeWorkRange,
-    updateEmployeeWorkRangeServices,
-    removeAllEmployeeWorkRangeServices,
-    loading: servicesLoading,
-    data: workRangeServices,
-    error: servicesError,
-  } = useEmployeeWorkRangeServices({
-    onSuccess: () => {
-      toast({
-        title: "Sucesso",
-        description: "Operação realizada com sucesso!",
-      });
-      // Recarregar services do work_range se necessário
-      if (selectedWorkRangeId && selectedMember?.id) {
-        getEmployeeWorkRangeServices(
-          selectedMember.id.toString(),
-          selectedWorkRangeId
-        );
-      }
-    },
-    onError: error => {
-      toast({
-        title: "Erro",
-        description: error,
-        variant: "destructive",
-      });
-    },
-  });
+  // Estados locais para loading
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Comentado temporariamente para evitar erro 405
+  // const {
+  //   // getEmployeeWorkRangeServices, // Comentado temporariamente
+  //   addServicesToEmployeeWorkRange,
+  //   updateEmployeeWorkRangeServices,
+  //   removeAllEmployeeWorkRangeServices,
+  //   loading: servicesLoading,
+  //   data: workRangeServices,
+  //   error: servicesError,
+  // } = useEmployeeWorkRangeServices({
+  //   onSuccess: () => {
+  //     toast({
+  //       title: "Sucesso",
+  //       description: "Operação realizada com sucesso!",
+  //     });
+  //     // TODO: Recarregar services do work_range quando GET estiver funcionando
+  //     // if (selectedWorkRangeId && selectedMember?.id) {
+  //     //   getEmployeeWorkRangeServices(
+  //     //     selectedMember.id.toString(),
+  //     //     selectedWorkRangeId
+  //     //   );
+  //     // }
+  //   },
+  //   onError: error => {
+  //     toast({
+  //       title: "Erro",
+  //       description: error,
+  //       variant: "destructive",
+  //     });
+  //   },
+  // });
 
   // Funções para vincular/desvincular serviços do employee (reutilizadas da aba Serviços)
   const handleLinkService = async (serviceId: number) => {
@@ -187,33 +191,62 @@ export function WorkRangeServicesSection({
         services: schedule.services || [],
       }));
       setWorkRanges(ranges);
+    } else {
+      setWorkRanges([]);
     }
+
+    // Reset seleções quando mudar de funcionário
+    setSelectedWorkRangeId("");
+    setSelectedServiceIds([]);
   }, [selectedMember]);
 
   // Carregar services do work_range quando selecionar um
   useEffect(() => {
     if (selectedWorkRangeId && selectedMember?.id) {
-      getEmployeeWorkRangeServices(
-        selectedMember.id.toString(),
-        selectedWorkRangeId
-      );
-    }
-  }, [selectedWorkRangeId, selectedMember?.id]);
+      // Em vez de fazer uma chamada GET, vamos usar os dados já disponíveis
+      // no selectedMember para evitar erro 405
+      console.log("🔍 Work range selecionado:", selectedWorkRangeId);
 
-  // Atualizar selectedServiceIds quando workRangeServices mudar
-  useEffect(() => {
-    if (
-      workRangeServices?.services &&
-      Array.isArray(workRangeServices.services)
-    ) {
-      const serviceIds = workRangeServices.services.map((service: any) =>
-        service.id.toString()
+      // Buscar os services do work_range nos dados locais
+      const selectedRange = workRanges.find(
+        wr => wr.id.toString() === selectedWorkRangeId
       );
-      setSelectedServiceIds(serviceIds);
+      if (selectedRange?.services && Array.isArray(selectedRange.services)) {
+        const serviceIds = selectedRange.services.map((service: any) =>
+          service.id.toString()
+        );
+        setSelectedServiceIds(serviceIds);
+        console.log("✅ Services carregados dos dados locais:", serviceIds);
+      } else {
+        setSelectedServiceIds([]);
+        console.log("ℹ️ Nenhum service encontrado para este work_range");
+      }
+
+      // TODO: Implementar chamada GET quando o backend estiver pronto
+      // getEmployeeWorkRangeServices(
+      //   selectedMember.id.toString(),
+      //   selectedWorkRangeId
+      // );
     } else {
+      // Limpar seleção quando não há work_range selecionado
       setSelectedServiceIds([]);
     }
-  }, [workRangeServices]);
+  }, [selectedWorkRangeId, selectedMember?.id, workRanges]);
+
+  // Comentado temporariamente até o backend suportar GET
+  // useEffect(() => {
+  //   if (
+  //     workRangeServices?.services &&
+  //     Array.isArray(workRangeServices.services)
+  //   ) {
+  //     const serviceIds = workRangeServices.services.map((service: any) =>
+  //       service.id.toString()
+  //     );
+  //     setSelectedServiceIds(serviceIds);
+  //   } else {
+  //     setSelectedServiceIds([]);
+  //   }
+  // }, [workRangeServices]);
 
   const handleServiceToggle = (serviceId: string) => {
     setSelectedServiceIds(prev => {
@@ -235,14 +268,54 @@ export function WorkRangeServicesSection({
       return;
     }
 
+    setIsLoading(true);
     try {
-      await updateEmployeeWorkRangeServices(
-        selectedMember.id.toString(),
-        selectedWorkRangeId,
-        selectedServiceIds
+      // Fazer chamada direta sem usar o hook para evitar problemas
+      const response = await fetch(
+        `/api/employee/${selectedMember.id}/work_range/${selectedWorkRangeId}/services`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            services: selectedServiceIds.map(id => ({ id })),
+          }),
+        }
       );
+
+      if (!response.ok) {
+        throw new Error("Erro ao salvar services");
+      }
+
+      const result = await response.json();
+      console.log("✅ Services salvos com sucesso:", result);
+
+      // Atualizar dados localmente
+      const updatedWorkRanges = workRanges.map(wr => {
+        if (wr.id.toString() === selectedWorkRangeId) {
+          const updatedServices = employeeServices.filter(service =>
+            selectedServiceIds.includes(service.id.toString())
+          );
+          return { ...wr, services: updatedServices };
+        }
+        return wr;
+      });
+      setWorkRanges(updatedWorkRanges);
+
+      toast({
+        title: "Sucesso",
+        description: "Services configurados com sucesso!",
+      });
     } catch (error) {
       console.error("Erro ao salvar services:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar services do horário",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -256,14 +329,53 @@ export function WorkRangeServicesSection({
       return;
     }
 
+    setIsLoading(true);
     try {
-      await removeAllEmployeeWorkRangeServices(
-        selectedMember.id.toString(),
-        selectedWorkRangeId
+      // Fazer chamada direta para remover todos os services
+      const response = await fetch(
+        `/api/employee/${selectedMember.id}/work_range/${selectedWorkRangeId}/services`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            services: [], // Array vazio para remover todos
+          }),
+        }
       );
+
+      if (!response.ok) {
+        throw new Error("Erro ao remover services");
+      }
+
+      const result = await response.json();
+      console.log("✅ Services removidos com sucesso:", result);
+
       setSelectedServiceIds([]);
+
+      // Atualizar dados localmente
+      const updatedWorkRanges = workRanges.map(wr => {
+        if (wr.id.toString() === selectedWorkRangeId) {
+          return { ...wr, services: [] };
+        }
+        return wr;
+      });
+      setWorkRanges(updatedWorkRanges);
+
+      toast({
+        title: "Sucesso",
+        description: "Todos os services foram removidos do horário!",
+      });
     } catch (error) {
       console.error("Erro ao remover services:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover services do horário",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -384,7 +496,7 @@ export function WorkRangeServicesSection({
                   </Badge>
                 )}
               </div>
-              {servicesLoading && (
+              {isLoading && (
                 <div className="mt-2 text-sm text-muted-foreground">
                   Carregando serviços...
                 </div>
@@ -416,7 +528,7 @@ export function WorkRangeServicesSection({
                   variant="outline"
                   size="sm"
                   onClick={handleRemoveAllServices}
-                  disabled={servicesLoading || selectedServiceIds.length === 0}
+                  disabled={isLoading || selectedServiceIds.length === 0}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Remover Todos
@@ -424,7 +536,7 @@ export function WorkRangeServicesSection({
                 <Button
                   size="sm"
                   onClick={handleSaveServices}
-                  disabled={servicesLoading}
+                  disabled={isLoading}
                 >
                   Salvar Alterações
                 </Button>
@@ -583,15 +695,7 @@ export function WorkRangeServicesSection({
         </Card>
       )}
 
-      {servicesError && (
-        <Card className="border-destructive">
-          <CardContent className="p-4">
-            <div className="text-sm text-destructive">
-              Erro ao carregar serviços: {servicesError}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Removido card de erro temporariamente */}
     </div>
   );
 }
