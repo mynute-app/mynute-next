@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { ServiceCard } from "@/app/(home)/_components/service-card";
 import { ServiceSkeleton } from "@/app/(home)/_components/service-skeleton";
 import { EmptyState } from "@/app/(home)/_components/service-empty";
+import { AppointmentBooking } from "@/app/(home)/_components/appointment-booking";
 import type { Service as CompanyService } from "../../../../types/company";
 
 export type Service = CompanyService;
@@ -19,6 +20,7 @@ type Props = {
 
 export function ServiceList({ services, loading, error, brandColor }: Props) {
   const [query, setQuery] = useState("");
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -29,6 +31,25 @@ export function ServiceList({ services, loading, error, brandColor }: Props) {
         .some(v => String(v).toLowerCase().includes(q))
     );
   }, [services, query]);
+
+  const handleServiceSelect = (service: Service) => {
+    setSelectedService(service);
+  };
+
+  const handleBackToServices = () => {
+    setSelectedService(null);
+  };
+
+  // Se tem um serviço selecionado, mostra a tela de agendamento
+  if (selectedService) {
+    return (
+      <AppointmentBooking
+        service={selectedService}
+        onBack={handleBackToServices}
+        brandColor={brandColor}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -60,7 +81,11 @@ export function ServiceList({ services, loading, error, brandColor }: Props) {
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map(s => (
             <li key={String(s.id)}>
-              <ServiceCard service={s} brandColor={brandColor} />
+              <ServiceCard
+                service={s}
+                brandColor={brandColor}
+                onSelect={handleServiceSelect}
+              />
             </li>
           ))}
         </ul>

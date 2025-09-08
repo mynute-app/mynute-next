@@ -10,9 +10,76 @@ export interface ServiceAvailabilityParams {
   dateForwardEnd: number;
 }
 
+export interface TimeSlot {
+  time: string;
+  employees: string[];
+}
+
+export interface AvailableDate {
+  date: string;
+  branch_id: string;
+  time_slots: TimeSlot[];
+}
+
+export interface DesignColors {
+  primary: string;
+  secondary: string;
+  tertiary: string;
+  quaternary: string;
+}
+
+export interface DesignImage {
+  alt: string;
+  title: string;
+  caption: string;
+  url: string;
+}
+
+export interface DesignImages {
+  profile: DesignImage;
+  logo: DesignImage;
+  banner: DesignImage;
+  background: DesignImage;
+  favicon: DesignImage;
+}
+
+export interface Design {
+  colors: DesignColors;
+  images: DesignImages;
+}
+
+export interface EmployeeInfo {
+  id: string;
+  company_id: string;
+  name: string;
+  surname: string;
+  time_zone: string;
+  total_service_density: number;
+  design: Design;
+}
+
+export interface BranchInfo {
+  id: string;
+  company_id: string;
+  name: string;
+  street: string;
+  number: string;
+  complement: string;
+  neighborhood: string;
+  zip_code: string;
+  city: string;
+  state: string;
+  country: string;
+  time_zone: string;
+  total_service_density: number;
+  design: Design;
+}
+
 export interface ServiceAvailability {
-  // Ajustar esta interface baseada na resposta real da API
-  [key: string]: any;
+  service_id: string;
+  available_dates: AvailableDate[];
+  employee_info: EmployeeInfo[];
+  branch_info: BranchInfo[];
 }
 
 export const useServiceAvailability = () => {

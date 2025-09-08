@@ -43,6 +43,20 @@ export async function GET(
       );
     }
 
+    // Validar se os valores são números válidos
+    const startNum = Number(dateForwardStart);
+    const endNum = Number(dateForwardEnd);
+
+    if (isNaN(startNum) || isNaN(endNum)) {
+      return NextResponse.json(
+        {
+          message:
+            "date_forward_start e date_forward_end devem ser números válidos.",
+        },
+        { status: 400 }
+      );
+    }
+
     // Extrair X-Company-ID do header
     const companyId = req.headers.get("X-Company-ID");
 

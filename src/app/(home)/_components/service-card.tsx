@@ -128,7 +128,7 @@ export function ServiceCard({ service, onSelect, brandColor }: Props) {
           }
           onClick={() => onSelect?.(service)}
         >
-          Selecionar
+          Agendar horário
         </Button>
       </CardContent>
     </Card>
