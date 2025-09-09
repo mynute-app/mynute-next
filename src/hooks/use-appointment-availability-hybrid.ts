@@ -97,42 +97,12 @@ export function useAppointmentAvailabilityHybrid({
     };
   }, [todayTomorrowAvailability?.available_dates]);
 
-  // Filtrar horários por filial e funcionário
-  const getFilteredSlots = (
-    selectedBranch: string | null,
-    selectedEmployee: string | null
-  ) => {
-    const filterSlots = (dateInfo: any) => {
-      if (!selectedBranch && !selectedEmployee) return dateInfo;
-
-      let filtered = { ...dateInfo };
-
-      if (selectedBranch && dateInfo.branch_id !== selectedBranch) {
-        return { ...dateInfo, time_slots: [] };
-      }
-
-      if (selectedEmployee) {
-        filtered.time_slots = dateInfo.time_slots.filter((slot: TimeSlot) =>
-          slot.employees.includes(selectedEmployee)
-        );
-      }
-
-      return filtered;
-    };
-
-    return {
-      today: organizedTodayTomorrow.today.map(filterSlots),
-      tomorrow: organizedTodayTomorrow.tomorrow.map(filterSlots),
-    };
-  };
-
   return {
     // Dados para hoje e amanhã
     availability: todayTomorrowAvailability,
     loading: todayTomorrowLoading,
     error: todayTomorrowError,
     organizedTodayTomorrow,
-    getFilteredSlots,
 
     // Dados completos para o calendário
     allDatesAvailability,
