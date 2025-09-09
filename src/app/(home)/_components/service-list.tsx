@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { ServiceCard } from "@/app/(home)/_components/service-card";
 import { ServiceSkeleton } from "@/app/(home)/_components/service-skeleton";
 import { EmptyState } from "@/app/(home)/_components/service-empty";
-import { AppointmentBooking } from "@/app/(home)/_components/appointment-booking";
+import { AppointmentBooking } from "@/app/(home)/_components/appointment-booking-hybrid";
 import type { Service as CompanyService } from "../../../../types/company";
 
 export type Service = CompanyService;
