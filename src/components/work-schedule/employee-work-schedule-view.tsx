@@ -67,16 +67,10 @@ export function EmployeeWorkScheduleView({
   onEdit,
   onDelete,
 }: EmployeeWorkScheduleViewProps) {
-  // Debug - log dos dados recebidos
-  console.log(
-    "🔍 EmployeeWorkScheduleView - workRanges recebidos:",
-    workRanges
-  );
+
   workRanges.forEach((range, index) => {
     if (range.start_time && range.end_time) {
-      console.log(
-        `📅 Range ${index}: ${range.start_time} - ${range.end_time} (Dia ${range.weekday})`
-      );
+    
     }
   });
 

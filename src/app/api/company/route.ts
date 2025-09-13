@@ -6,9 +6,11 @@ import { fetchFromBackend } from "../../../lib/api/fetch-from-backend";
 export const GET = auth(async function GET(req) {
   try {
     const token = req.auth?.accessToken;
-    console.log("📋 Dados do token:", token);
     if (!token) {
-      return NextResponse.json({ status: 401, message: "Não autorizadoasdasdas" });
+      return NextResponse.json({
+        status: 401,
+        message: "Não autorizadoasdasdas",
+      });
     }
     const authData = getAuthDataFromToken(token);
     const companyId = authData.companyId;

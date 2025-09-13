@@ -173,20 +173,11 @@ export function BranchWorkScheduleForm({
   };
 
   const salvarHorarios = async () => {
-    console.log("💾 Branch Form - Iniciando salvarHorarios");
-    console.log("📊 Branch Form - workRanges atual:", workRanges);
-
     const allRanges: BranchWorkScheduleRange[] = [];
 
     workRanges.forEach(ranges => {
-      console.log("📋 Branch Form - Processando ranges:", ranges);
       allRanges.push(...ranges);
     });
-
-    console.log(
-      "🔍 Branch Form - allRanges final:",
-      JSON.stringify(allRanges, null, 2)
-    );
 
     if (allRanges.length === 0) {
       toast({
@@ -198,7 +189,6 @@ export function BranchWorkScheduleForm({
     }
 
     try {
-      console.log("🚀 Branch Form - Chamando createBranchWorkSchedule");
       await createBranchWorkSchedule(branchId, {
         branch_work_ranges: allRanges,
       });

@@ -42,18 +42,6 @@ export async function fetchFromBackend<T = any>(
 
   const url = `${process.env.BACKEND_URL}${endpoint}${queryString}`;
 
-  // Debug não sensível: logar apenas método, URL e cabeçalhos de tenant
-  if (process.env.NODE_ENV !== "production") {
-    const tenantInfo = useCompanyContext
-      ? `X-Company-ID=${company?.id ?? "-"} X-Company-Schema=${
-          company?.schema_name ?? "-"
-        }`
-      : "no-tenant";
-    console.log(
-      `[fetchFromBackend] ${options.method || "GET"} ${url} | ${tenantInfo}`
-    );
-  }
-
   let response: Response;
   try {
     response = await fetch(url, {

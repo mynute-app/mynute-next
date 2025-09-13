@@ -1,13 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, SearchIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import AddTeamMemberDialog from "./add-team-member-modal";
-import { BreaksSection } from "./breakssection";
 import { Branch } from "./branch-section";
 import { ServicesSection } from "./services-section";
 import { WorkRangeServicesSection } from "./work-range-services-section";
-import { IntegrationsSection } from "./integration-button";
 import { AboutSection } from "./about-section";
 import TeamMemberActions from "./team-member-actions";
 import { TeamMember } from "../../../../types/TeamMember";
@@ -26,8 +24,7 @@ export default function YourTeam() {
   const [activeTab, setActiveTab] = useState("about");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { company, loading, error, refetch } = useGetCompany();
-  console.log("Company data:", company);
+  const { company, loading, refetch } = useGetCompany();
   const employees: Employee[] = company?.employees ?? [];
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
 
@@ -35,11 +32,7 @@ export default function YourTeam() {
     useGetEmployeeById(selectedMemberId);
 
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
-  const {
-    uploadImage,
-    loading: uploadLoading,
-    error: uploadError,
-  } = useUploadEmployeeImage();
+  const { uploadImage, loading: uploadLoading } = useUploadEmployeeImage();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -105,8 +98,6 @@ export default function YourTeam() {
         ) : (
           <p>Selecione um membro para ver os detalhes</p>
         );
-      case "integrations":
-        return <IntegrationsSection />;
       case "services":
         return (
           <ServicesSection
@@ -239,14 +230,7 @@ export default function YourTeam() {
               >
                 Sobre
               </button>
-              <button
-                onClick={() => setActiveTab("integrations")}
-                className={`py-2 ${
-                  activeTab === "integrations" ? "border-b-2 border-black" : ""
-                }`}
-              >
-                Integrations
-              </button>
+
               <button
                 onClick={() => setActiveTab("services")}
                 className={`py-2 ${

@@ -100,25 +100,16 @@ export function WorkScheduleManager({
 
   // Função para normalizar os dados vindos do backend
   const normalizeInitialData = (data: any[]): WorkScheduleRange[] => {
-    console.log("🔄 normalizeInitialData - Dados de entrada:", data);
-
     if (!Array.isArray(data)) return [];
 
     return data.map((item, index) => {
-      console.log(`🔍 normalizeInitialData - Processando item ${index}:`, item);
-
       // Extrair apenas a parte do horário das strings ISO ou formatos variados
       const extractTime = (isoString: string) => {
         if (!isoString) return "";
 
-        console.log(`🕐 extractTime - Processando: "${isoString}"`);
-
         try {
           // Se já está no formato HH:MM, retorna direto
           if (/^\d{2}:\d{2}$/.test(isoString)) {
-            console.log(
-              `✅ extractTime - Já no formato correto: "${isoString}"`
-            );
             return isoString;
           }
 
@@ -131,9 +122,7 @@ export function WorkScheduleManager({
             const date = new Date(isoString);
             if (!isNaN(date.getTime())) {
               const timeString = date.toTimeString().slice(0, 5); // "HH:MM"
-              console.log(
-                `🔄 extractTime - Convertido de ISO: "${isoString}" → "${timeString}"`
-              );
+
               return timeString;
             }
           }
@@ -143,16 +132,11 @@ export function WorkScheduleManager({
             const match = isoString.match(/(\d{1,2}:\d{2})/);
             if (match) {
               const timeString = match[1].padStart(5, "0"); // Garantir formato HH:MM
-              console.log(
-                `🔍 extractTime - Extraído por regex: "${isoString}" → "${timeString}"`
-              );
+
               return timeString;
             }
           }
 
-          console.log(
-            `⚠️ extractTime - Não foi possível processar: "${isoString}"`
-          );
           return "";
         } catch (error) {
           console.error(
@@ -184,14 +168,6 @@ export function WorkScheduleManager({
         console.warn(`⚠️ Branch ID inválido: "${normalized.branch_id}"`);
         normalized.branch_id = ""; // Limpar branch_id inválido
       }
-
-      console.log(
-        `✅ normalizeInitialData - Item ${index} normalizado:`,
-        normalized
-      );
-      console.log(
-        `📊 normalizeInitialData - Horários extraídos: ${normalized.start_time} - ${normalized.end_time}`
-      );
 
       return normalized;
     });
@@ -256,13 +232,8 @@ export function WorkScheduleManager({
     });
   };
 
-  // Carregar dados do backend quando o employeeId muda
   useEffect(() => {
     if (employeeId) {
-      console.log(
-        "🔄 Manager - Carregando work_schedule para funcionário:",
-        employeeId
-      );
       loadEmployeeWorkSchedule();
     }
   }, [employeeId]);
@@ -270,20 +241,13 @@ export function WorkScheduleManager({
   // Atualizar dados quando receber do hook
   useEffect(() => {
     if (hookData) {
-      console.log("📥 Manager - Dados recebidos do hook:", hookData);
       const normalized = normalizeInitialData(hookData);
-      console.log("✨ Manager - Dados normalizados:", normalized);
 
       // Debug específico para domingo
       const domingoData = normalized.find(item => item.weekday === 0);
-      console.log(
-        "🔍 Manager - Domingo encontrado nos dados normalizados:",
-        domingoData
-      );
 
       // Gerar semana completa com dados existentes e dias vazios
       const completeWeek = generateCompleteWeekSchedule(normalized);
-      console.log("📅 Manager - Semana completa gerada:", completeWeek);
 
       setWorkScheduleData(completeWeek);
     }
@@ -305,14 +269,6 @@ export function WorkScheduleManager({
 
   const normalizedBranches = normalizeBranches(branches);
   const normalizedServices = normalizeServices(services);
-
-  console.log("🏢 WorkScheduleManager - Employee ID:", employeeId);
-  console.log("🏢 WorkScheduleManager - Branches recebidas:", branches);
-  console.log(
-    "🏢 WorkScheduleManager - Branches normalizadas:",
-    normalizedBranches
-  );
-  console.log("🔧 WorkScheduleManager - Services recebidos:", services);
 
   const handleSuccess = () => {
     // Recarregar dados após sucesso
@@ -354,10 +310,6 @@ export function WorkScheduleManager({
     if (!deleteConfirmDialog.workRangeId) return;
 
     try {
-      console.log(
-        "🗑️ Manager - Deletando work_range:",
-        deleteConfirmDialog.workRangeId
-      );
       await deleteEmployeeWorkRange(
         employeeId,
         deleteConfirmDialog.workRangeId
@@ -388,12 +340,6 @@ export function WorkScheduleManager({
     workRangeId: string,
     currentData: Partial<WorkScheduleRange>
   ) => {
-    console.log(
-      "✏️ Manager - Abrindo dialog para editar/criar work_range:",
-      workRangeId,
-      currentData
-    );
-
     setEditDialog({
       isOpen: true,
       workRangeId: workRangeId === "new" ? null : workRangeId, // null para novos
@@ -404,9 +350,6 @@ export function WorkScheduleManager({
   // Função para salvar edição via dialog
   const handleSaveEdit = async (updatedData: any) => {
     try {
-      // Validar dados antes de enviar
-      console.log("🔍 Manager - Validando dados antes de salvar:", updatedData);
-
       if (!isValidUUID(updatedData.employee_id || employeeId)) {
         throw new Error("Employee ID inválido");
       }
@@ -427,51 +370,23 @@ export function WorkScheduleManager({
       }
 
       if (editDialog.workRangeId) {
-        // Editando work_range existente - usar API individual
-        console.log(
-          "💾 Manager - Salvando edição:",
-          editDialog.workRangeId,
-          updatedData
-        );
         await updateEmployeeWorkRange(
           employeeId,
           editDialog.workRangeId,
           updatedData
         );
       } else {
-        console.log(
-          "🔍 Manager - Verificando existência do dia para weekday:",
-          updatedData.weekday
-        );
-        console.log("📋 Manager - workScheduleData atual:", workScheduleData);
-
-        // Verificar se já existe um registro para este dia da semana (com ou sem horários)
         const existingDayRecord = workScheduleData.find(
           day => day.weekday === updatedData.weekday && day.id
         );
 
-        console.log(
-          "🔍 Manager - Registro existente encontrado:",
-          existingDayRecord
-        );
-
         if (existingDayRecord) {
-          // Se já existe um registro (mesmo vazio), usar API de atualização individual
-          console.log(
-            "🔄 Manager - Registro do dia já existe, atualizando:",
-            existingDayRecord.id,
-            updatedData
-          );
           await updateEmployeeWorkRange(
             employeeId,
             existingDayRecord.id!,
             updatedData
           );
         } else {
-          // Se não existe nenhum registro, criar novo dia - usar API de work_schedule
-          console.log("➕ Manager - Criando novo dia:", updatedData);
-
-          // Preparar dados no formato esperado pela API de work_schedule
           const newWorkScheduleData = {
             employee_work_ranges: [
               {

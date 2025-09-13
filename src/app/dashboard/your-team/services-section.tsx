@@ -22,7 +22,6 @@ type Props = {
 export function ServicesSection({ selectedMember, setSelectedMember }: Props) {
   const { company, loading } = useGetCompany();
   const services: Service[] = company?.services ?? [];
-  console.log(company);
   
   const linkedServiceIds = new Set(
     selectedMember?.services?.map((s: Service) => s.id) ?? []

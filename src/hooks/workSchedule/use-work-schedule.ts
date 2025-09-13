@@ -72,11 +72,6 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
     setFetchLoading(true);
     setError(null);
 
-    console.log(
-      "🔍 Hook - Buscando work_schedule para employeeId:",
-      employeeId
-    );
-
     try {
       const response = await fetch(
         `/api/employee/${employeeId}/work_schedule`,
@@ -96,7 +91,6 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
       }
 
       const result = await response.json();
-      console.log("📋 Hook - Dados recebidos:", result);
 
       // Normalizar dados se necessário
       const ranges =
@@ -129,24 +123,13 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
     setSuccess(false);
     setError(null);
 
-    console.log(
-      "🚀 Hook - Iniciando createWorkSchedule para employeeId:",
-      employeeId
-    );
-    console.log(
-      "📋 Hook - WorkScheduleData:",
-      JSON.stringify(workScheduleData, null, 2)
-    );
+ 
 
     try {
       const payload = {
         work_schedule: workScheduleData,
       };
 
-      console.log(
-        "📤 Hook - Payload que será enviado:",
-        JSON.stringify(payload, null, 2)
-      );
 
       const response = await fetch(
         `/api/employee/${employeeId}/work_schedule`,
@@ -209,23 +192,14 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
     setSuccess(false);
     setError(null);
 
-    console.log(
-      "➕ Hook - Iniciando addWorkScheduleRanges para employeeId:",
-      employeeId
-    );
-    console.log(
-      "📋 Hook - Novos ranges para adicionar:",
-      JSON.stringify(newRanges, null, 2)
-    );
+   
 
     try {
       // 1. Filtrar apenas os ranges novos (sem ID)
       const rangesWithoutId = newRanges.filter(range => !range.id);
 
-      console.log("� Hook - Ranges novos (sem ID):", rangesWithoutId);
 
       if (rangesWithoutId.length === 0) {
-        console.log("ℹ️ Hook - Nenhum range novo para adicionar");
         toast({
           title: "Nenhum horário novo",
           description: "Todos os horários já existem.",
@@ -237,12 +211,8 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
       let existingRanges: WorkScheduleRange[] = [];
       try {
         existingRanges = await fetchWorkSchedule(employeeId);
-        console.log(
-          "📊 Hook - Horários existentes para validação:",
-          existingRanges
-        );
+    
       } catch (error) {
-        console.log("ℹ️ Hook - Nenhum horário existente encontrado");
         existingRanges = [];
       }
 
@@ -291,11 +261,7 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
         },
       };
 
-      console.log(
-        "📤 Hook - Payload apenas com novos ranges:",
-        JSON.stringify(payload, null, 2)
-      );
-
+    
       const response = await fetch(
         `/api/employee/${employeeId}/work_schedule`,
         {

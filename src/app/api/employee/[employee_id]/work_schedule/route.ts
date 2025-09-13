@@ -14,7 +14,6 @@ export const GET = auth(async function GET(req, ctx) {
       employee_id: string;
     };
 
-    console.log("🔍 Buscando work_schedule para Employee ID:", employee_id);
 
     const responseData = await fetchFromBackend(
       req,
@@ -25,7 +24,6 @@ export const GET = auth(async function GET(req, ctx) {
       }
     );
 
-    console.log("✅ Sucesso com GET (employee work_schedule):", responseData);
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
     console.error("❌ Erro ao buscar work_schedule do employee:", error);
