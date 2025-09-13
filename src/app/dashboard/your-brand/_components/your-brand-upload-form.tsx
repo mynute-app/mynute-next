@@ -22,12 +22,6 @@ export default function YourBrandUploadForm({
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
 
-  const [colorConfig, setColorConfig] = useState({
-    primary: company?.design?.colors?.primary || "#3B82F6",
-    secondary: company?.design?.colors?.secondary || "#EF4444",
-    tertiary: company?.design?.colors?.tertiary || "#10B981",
-    quaternary: company?.design?.colors?.quaternary || "#F59E0B",
-  });
 
   const { deleteImage, isDeleting } = useCompanyImageDelete();
   const { uploadImage, isUploading: isUploadingImage } =
@@ -101,16 +95,7 @@ export default function YourBrandUploadForm({
         }
         onRemoveFromBackend={() => handleDeleteImage("background")}
       />
-
-      <ColorSettings
-        colors={colorConfig}
-        onChange={(newColors: {
-          primary: string;
-          secondary: string;
-          tertiary: string;
-          quaternary: string;
-        }) => setColorConfig(newColors)}
-      />
+    
     </div>
   );
 }

@@ -1,8 +1,6 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { CompanyDesignDisplay } from "@/components/dashboard/CompanyDesignDisplay";
 import { useGetCompany } from "@/hooks/get-company";
 import YourBrandSkeleton from "./your-brand-skeleton";
 import YourBrandUploadForm from "./your-brand-upload-form";

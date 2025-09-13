@@ -1,12 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Company } from "../../types/company";
 
 export const useGetCompany = () => {
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const hasFetched = useRef(false);
 
-  const fetchCompany = async () => {
+  const fetchCompany = useCallback(async () => {
+    // Evita múltiplas chamadas simultâneas
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
     try {
       setLoading(true);
       setError(null);
@@ -19,16 +24,20 @@ export const useGetCompany = () => {
     } catch (e) {
       setCompany(null);
       setError(e instanceof Error ? e.message : "Erro desconhecido");
+      hasFetched.current = false; // Permite tentar novamente em caso de erro
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCompany();
-  }, []);
+  }, [fetchCompany]);
 
-  const refetch = () => fetchCompany();
+  const refetch = useCallback(() => {
+    hasFetched.current = false;
+    return fetchCompany();
+  }, [fetchCompany]);
 
   return { company, loading, error, refetch };
 };
