@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PlusIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import ServiceCard from "./service-card";
 import { AddServiceDialog } from "./add-service-dialog";
 import { EditServiceDialog } from "./edit-service-dialog";

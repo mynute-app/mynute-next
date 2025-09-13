@@ -34,9 +34,10 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <SessionProvider
-          session={session as any}
+          session={session}
           refetchOnWindowFocus={false}
           refetchInterval={0}
+          refetchWhenOffline={false}
         >
           {children}
           <Toaster />
