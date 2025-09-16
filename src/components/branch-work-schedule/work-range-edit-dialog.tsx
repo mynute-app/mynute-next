@@ -33,6 +33,7 @@ interface WorkRangeEditDialogProps {
   branchId: string; // ID da branch - necessário para as rotas
   workRangeId: string; // ID do work_range - necessário para as rotas
   onSuccessfulSave?: () => void; // Callback para atualizar dados do pai
+  branchData?: any; // Dados completos da branch para evitar fetch desnecessário
 }
 
 interface WorkRangeEditData {
@@ -78,11 +79,15 @@ export function WorkRangeEditDialog({
   branchId,
   workRangeId,
   onSuccessfulSave, // Novo callback
+  branchData: externalBranchData,
 }: WorkRangeEditDialogProps) {
   const { data: branchData, isLoading: loadingBranch } = useGetBranch({
     branchId: branchId,
-    enabled: !!branchId,
+    enabled: !externalBranchData, // Só busca se não tiver dados externos
   });
+
+  // Usar dados externos se disponíveis, senão usar dados do hook
+  const currentBranchData = externalBranchData || branchData;
 
   // Hook para gerenciar serviços do work_range
   const {
@@ -91,7 +96,6 @@ export function WorkRangeEditDialog({
     loading: servicesLoading,
   } = useWorkRangeServices({
     onSuccess: () => {
-      console.log("✅ Serviços atualizados com sucesso!");
       // Notificar o componente pai para atualizar dados
       onSuccessfulSave?.();
     },
@@ -105,14 +109,6 @@ export function WorkRangeEditDialog({
     const diaLabel =
       diasSemana.find(dia => dia.value === initialData.weekday)?.label ||
       "Indefinido";
-    console.log("🔍 Dialog - Dados recebidos para edição:", initialData);
-    console.log(
-      "📅 Dialog - Dia da semana detectado:",
-      diaLabel,
-      "(weekday:",
-      initialData.weekday,
-      ")"
-    );
   }
 
   const [formData, setFormData] = useState<WorkRangeEditData>(
@@ -129,10 +125,6 @@ export function WorkRangeEditDialog({
   // Atualizar formData quando initialData mudar
   useEffect(() => {
     if (initialData) {
-      console.log(
-        "🔄 Dialog - Atualizando formData com novos initialData:",
-        initialData
-      );
       setFormData(initialData);
     }
   }, [initialData]);
@@ -147,7 +139,6 @@ export function WorkRangeEditDialog({
         time_zone: formData.time_zone,
       };
 
-      console.log("💾 Dialog - Salvando dados básicos:", basicData);
       await onSave(basicData);
 
       // 2. Atualizar serviços do work_range apenas se não for um novo registro
@@ -156,17 +147,11 @@ export function WorkRangeEditDialog({
         workRangeId !== "new" &&
         formData.services.length > 0
       ) {
-        console.log("🔄 Dialog - Adicionando serviços:", formData.services);
         await addServicesToWorkRange(branchId, workRangeId, formData.services);
       } else if (workRangeId === "new") {
-        console.log(
-          "ℹ️ Dialog - Novo registro - serviços serão tratados posteriormente"
-        );
       } else {
         console.log("ℹ️ Dialog - Nenhum serviço selecionado para adicionar");
       }
-
-      console.log("✅ Dialog - Tudo salvo com sucesso!");
 
       // 3. Notificar o componente pai para atualizar dados
       onSuccessfulSave?.();
@@ -202,8 +187,9 @@ export function WorkRangeEditDialog({
   const handleSelectAllServices = (checked: boolean) => {
     if (checked) {
       const allServiceIds =
-        branchData?.services?.map((service: any) => service.id.toString()) ||
-        [];
+        currentBranchData?.services
+          ?.filter((service: any) => service && service.id) // Filtrar serviços válidos
+          ?.map((service: any) => service.id.toString()) || [];
       setFormData(prev => ({
         ...prev,
         services: allServiceIds,
@@ -217,10 +203,13 @@ export function WorkRangeEditDialog({
   };
 
   // Verificar se todos os serviços estão selecionados
+  const validServices =
+    currentBranchData?.services?.filter(
+      (service: any) => service && service.id
+    ) || [];
   const allServicesSelected =
-    branchData?.services &&
-    branchData.services.length > 0 &&
-    formData.services.length === branchData.services.length;
+    validServices.length > 0 &&
+    formData.services.length === validServices.length;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -350,11 +339,11 @@ export function WorkRangeEditDialog({
               Serviços
             </Label>
             <div className="col-span-3">
-              {loadingBranch ? (
+              {!externalBranchData && loadingBranch ? (
                 <div className="text-sm text-muted-foreground">
                   Carregando serviços...
                 </div>
-              ) : branchData?.services && branchData.services.length > 0 ? (
+              ) : validServices.length > 0 ? (
                 <div className="space-y-3">
                   {/* Opção "Selecionar Todos" */}
                   <div className="flex items-center space-x-2 p-2 border rounded-md bg-muted/50">
@@ -367,7 +356,7 @@ export function WorkRangeEditDialog({
                       htmlFor="select-all-services"
                       className="text-sm font-medium cursor-pointer"
                     >
-                      Selecionar Todos ({branchData.services.length})
+                      Selecionar Todos ({validServices.length})
                     </Label>
                   </div>
 
@@ -375,7 +364,7 @@ export function WorkRangeEditDialog({
                   <div className="border rounded-md">
                     <div className="max-h-40 overflow-y-auto p-3">
                       <div className="grid grid-cols-1 gap-2">
-                        {branchData.services.map((service: any) => (
+                        {validServices.map((service: any) => (
                           <div
                             key={service.id}
                             className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded border-b border-muted/30 last:border-b-0"
@@ -406,8 +395,8 @@ export function WorkRangeEditDialog({
                     {/* Footer com contador */}
                     <div className="p-2 bg-muted/20 border-t text-center">
                       <span className="text-xs text-muted-foreground">
-                        {formData.services.length} de{" "}
-                        {branchData.services.length} selecionados
+                        {formData.services.length} de {validServices.length}{" "}
+                        selecionados
                       </span>
                     </div>
                   </div>

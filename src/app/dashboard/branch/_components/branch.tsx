@@ -179,6 +179,7 @@ export default function BranchManager() {
               branch={selectedBranch}
               onDelete={handleDeleteBranch}
               index={index}
+              branchData={selectedBranch} // Passa os dados da branch para evitar fetch duplicado
             />
 
             <div className="mt-8">
@@ -206,6 +207,7 @@ export default function BranchManager() {
               <BranchWorkScheduleManager
                 branchId={selectedBranch.id.toString()}
                 branchName={selectedBranch.name}
+                branchData={selectedBranch} // Passar dados da branch para otimização
                 initialData={selectedBranch.work_schedule || []}
                 services={
                   Array.isArray(selectedBranch.services)

@@ -42,6 +42,17 @@ export function useAddressField(
   );
 
   const handleSave = async () => {
+    // Validação de segurança
+    if (!branch?.id) {
+      console.error("❌ Erro: branch.id está undefined");
+      toast({
+        title: "Erro ao salvar",
+        description: "ID da filial não encontrado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -84,7 +95,6 @@ export function useAddressField(
         return;
       }
 
-      console.log("✅ Filial atualizada com sucesso:", responseData);
 
       toast({
         title: "Filial atualizada!",
@@ -104,6 +114,17 @@ export function useAddressField(
   };
 
   const handleDelete = async () => {
+    // Validação de segurança
+    if (!branch?.id) {
+      console.error("❌ Erro: branch.id está undefined");
+      toast({
+        title: "Erro ao excluir",
+        description: "ID da filial não encontrado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsDeleting(true);
 
     try {

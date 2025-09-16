@@ -37,6 +37,7 @@ interface BranchWorkScheduleManagerProps {
   services?: Array<{ id: string; name: string }>;
   onSuccess?: () => void;
   defaultView?: "view" | "edit";
+  branchData?: any; // Dados completos da branch para otimização
 }
 
 export function BranchWorkScheduleManager({
@@ -46,6 +47,7 @@ export function BranchWorkScheduleManager({
   services = [],
   onSuccess,
   defaultView = "view",
+  branchData,
 }: BranchWorkScheduleManagerProps) {
   const [workScheduleData, setWorkScheduleData] = useState<
     BranchWorkScheduleRange[]
@@ -97,13 +99,9 @@ export function BranchWorkScheduleManager({
 
   // Função para normalizar os dados vindos do backend
   const normalizeInitialData = (data: any[]): BranchWorkScheduleRange[] => {
-    console.log("🔄 normalizeInitialData - Dados de entrada:", data);
-
     if (!Array.isArray(data)) return [];
 
     return data.map((item, index) => {
-      console.log(`🔍 normalizeInitialData - Processando item ${index}:`, item);
-
       // Extrair apenas a parte do horário das strings ISO
       const extractTime = (isoString: string) => {
         if (!isoString) return "";
@@ -124,11 +122,6 @@ export function BranchWorkScheduleManager({
         weekday: Number(item.weekday ?? 1), // Usar ?? ao invés de || para preservar weekday 0
         services: Array.isArray(item.services) ? item.services : [],
       };
-
-      console.log(
-        `✅ normalizeInitialData - Item ${index} normalizado:`,
-        normalized
-      );
 
       return normalized;
     });
@@ -185,10 +178,6 @@ export function BranchWorkScheduleManager({
   // Carregar dados do backend quando o branchId muda
   useEffect(() => {
     if (branchId) {
-      console.log(
-        "🔄 Manager - Carregando work_schedule para branch:",
-        branchId
-      );
       loadBranchWorkSchedule();
     }
   }, [branchId]);
@@ -196,24 +185,16 @@ export function BranchWorkScheduleManager({
   // Atualizar dados quando receber do hook
   useEffect(() => {
     if (data) {
-      console.log("📥 Manager - Dados recebidos do hook:", data);
       const normalized = normalizeInitialData(data);
-      console.log("✨ Manager - Dados normalizados:", normalized);
 
       // Debug específico para domingo
       const domingoData = normalized.find(item => item.weekday === 0);
-      console.log(
-        "🔍 Manager - Domingo encontrado nos dados normalizados:",
-        domingoData
-      );
 
       // Gerar semana completa com dados existentes e dias vazios
       const completeWeek = generateCompleteWeekSchedule(normalized);
-      console.log("📅 Manager - Semana completa gerada:", completeWeek);
 
       // Debug específico para domingo na semana completa
       const domingoCompleto = completeWeek.find(item => item.weekday === 0);
-      console.log("🔍 Manager - Domingo na semana completa:", domingoCompleto);
 
       setWorkScheduleData(completeWeek);
     }
@@ -275,10 +256,6 @@ export function BranchWorkScheduleManager({
     if (!deleteConfirmDialog.workRangeId) return;
 
     try {
-      console.log(
-        "🗑️ Manager - Deletando work_range:",
-        deleteConfirmDialog.workRangeId
-      );
       await deleteWorkRange(branchId, deleteConfirmDialog.workRangeId);
 
       // Fechar o dialog
@@ -306,12 +283,6 @@ export function BranchWorkScheduleManager({
     workRangeId: string,
     currentData: Partial<BranchWorkScheduleRange>
   ) => {
-    console.log(
-      "✏️ Manager - Abrindo dialog para editar/criar work_range:",
-      workRangeId,
-      currentData
-    );
-
     setEditDialog({
       isOpen: true,
       workRangeId: workRangeId === "new" ? null : workRangeId, // null para novos
@@ -323,42 +294,16 @@ export function BranchWorkScheduleManager({
   const handleSaveEdit = async (updatedData: any) => {
     try {
       if (editDialog.workRangeId) {
-        // Editando work_range existente - usar API individual
-        console.log(
-          "💾 Manager - Salvando edição:",
-          editDialog.workRangeId,
-          updatedData
-        );
         await updateWorkRange(branchId, editDialog.workRangeId, updatedData);
       } else {
-        console.log(
-          "🔍 Manager - Verificando existência do dia para weekday:",
-          updatedData.weekday
-        );
-        console.log("📋 Manager - workScheduleData atual:", workScheduleData);
-
         // Verificar se já existe um registro para este dia da semana (com ou sem horários)
         const existingDayRecord = workScheduleData.find(
           day => day.weekday === updatedData.weekday && day.id
         );
 
-        console.log(
-          "🔍 Manager - Registro existente encontrado:",
-          existingDayRecord
-        );
-
         if (existingDayRecord) {
-          // Se já existe um registro (mesmo vazio), usar API de atualização individual
-          console.log(
-            "🔄 Manager - Registro do dia já existe, atualizando:",
-            existingDayRecord.id,
-            updatedData
-          );
           await updateWorkRange(branchId, existingDayRecord.id!, updatedData);
         } else {
-          // Se não existe nenhum registro, criar novo dia - usar API de work_schedule
-          console.log("➕ Manager - Criando novo dia:", updatedData);
-
           // Preparar dados no formato esperado pela API de work_schedule
           const newWorkScheduleData = {
             branch_work_ranges: [
@@ -488,6 +433,7 @@ export function BranchWorkScheduleManager({
         onSave={handleSaveEdit}
         branchId={branchId}
         workRangeId={editDialog.workRangeId || "new"} // "new" para novos registros
+        branchData={branchData} // Passar dados da branch para otimização
         initialData={
           editDialog.data
             ? {

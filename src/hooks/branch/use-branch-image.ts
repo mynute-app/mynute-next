@@ -26,6 +26,17 @@ export function useBranchImage({
    * Faz upload da imagem da filial
    */
   const uploadImage = async (file: File): Promise<boolean> => {
+    // Validação de segurança
+    if (!branchId) {
+      console.error("❌ Erro: branchId está undefined");
+      toast({
+        title: "Erro",
+        description: "ID da filial não encontrado.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     if (!session?.accessToken) {
       toast({
         title: "Erro",
@@ -42,7 +53,6 @@ export function useBranchImage({
       const formData = new FormData();
       formData.append(imageType, file); // Usa o imageType como nome do campo
 
-      console.log(`🔄 Enviando imagem ${imageType} para filial:`, branchId);
 
       // Fazer requisição para nossa rota PATCH padronizada
       const response = await fetch(`/api/branch/${branchId}/design/images`, {
@@ -53,7 +63,6 @@ export function useBranchImage({
         body: formData,
       });
 
-      console.log("📡 Status da resposta:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -68,7 +77,6 @@ export function useBranchImage({
       }
 
       const data = await response.json();
-      console.log("✅ Upload realizado com sucesso:", data);
 
       // Atualizar preview da imagem
       if (data.image_url) {
@@ -103,6 +111,17 @@ export function useBranchImage({
    * Remove a imagem da filial
    */
   const removeImage = async (): Promise<boolean> => {
+    // Validação de segurança
+    if (!branchId) {
+      console.error("❌ Erro: branchId está undefined");
+      toast({
+        title: "Erro",
+        description: "ID da filial não encontrado.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     if (!session?.accessToken) {
       toast({
         title: "Erro",
@@ -115,7 +134,6 @@ export function useBranchImage({
     try {
       setIsRemoving(true);
 
-      console.log(`🗑️ Removendo imagem ${imageType} da filial:`, branchId);
 
       // Fazer requisição DELETE para a nova rota com image_type
       const response = await fetch(
@@ -128,7 +146,6 @@ export function useBranchImage({
         }
       );
 
-      console.log("📡 Status da resposta:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -142,7 +159,6 @@ export function useBranchImage({
         return false;
       }
 
-      console.log("✅ Imagem removida com sucesso");
 
       // Limpar preview da imagem
       setImagePreview(null);

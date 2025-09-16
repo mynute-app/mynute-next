@@ -36,6 +36,7 @@ interface AddressFieldProps {
   branch: Branch;
   index: number;
   onDelete: (branchId: number) => void;
+  branchData?: any; // Dados completos da branch para evitar fetch desnecessário
 }
 
 export function AddressField({
@@ -44,16 +45,29 @@ export function AddressField({
   branch,
   index,
   onDelete,
+  branchData: externalBranchData,
 }: AddressFieldProps) {
-  // Hook para buscar dados completos da filial
+  // Validação de segurança: se não tiver branch ou ID, não renderiza nada
+  if (!branch || !branch.id) {
+    console.warn("AddressField: branch ou branch.id está undefined", {
+      branch,
+      index,
+    });
+    return null;
+  }
+
+  // Hook para buscar dados completos da filial (só se os dados não foram passados por prop)
   const {
     data: branchData,
     isLoading: isLoadingBranch,
     refetch: refetchBranch,
   } = useGetBranch({
-    branchId: branch.id,
-    enabled: true,
+    branchId: branch?.id,
+    enabled: !externalBranchData && !!branch?.id, // Só busca se não tiver dados externos e se tiver ID válido
   });
+
+  // Usar dados externos se disponíveis, senão usar dados do hook
+  const currentBranchData = externalBranchData || branchData;
 
   // Hook para funcionalidades gerais (salvar, deletar, detectar mudanças)
   const { isSaving, isDeleting, hasChanges, handleSave, handleDelete } =
@@ -62,14 +76,14 @@ export function AddressField({
   // Hook para upload/delete de imagens (sem passar currentImage para não sobrescrever)
   const { isUploading, isRemoving, handleImageChange, handleRemoveImage } =
     useBranchImage({
-      branchId: branch.id,
+      branchId: branch?.id,
       currentImage: undefined, // Não passa imagem inicial
       imageType: "profile", // Especifica que é imagem de profile
-      onSuccess: refetchBranch, // Callback para atualizar dados após upload/delete
+      onSuccess: externalBranchData ? undefined : refetchBranch, // Só recarrega se não tem dados externos
     });
 
   // Imagem da filial vinda da API (tem prioridade para exibição)
-  const imagePreview = branchData?.design?.images?.profile?.url || null;
+  const imagePreview = currentBranchData?.design?.images?.profile?.url || null;
 
   return (
     <div>
@@ -90,10 +104,12 @@ export function AddressField({
                   imagePreview={imagePreview}
                   onImageChange={handleImageChange}
                   onRemoveImage={handleRemoveImage}
-                  isUploading={isUploading || isLoadingBranch}
+                  isUploading={
+                    isUploading || (!externalBranchData && isLoadingBranch)
+                  }
                   isRemoving={isRemoving}
                   placeholder={
-                    isLoadingBranch
+                    !externalBranchData && isLoadingBranch
                       ? "Carregando imagem..."
                       : "Adicionar imagem"
                   }
