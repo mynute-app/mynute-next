@@ -22,7 +22,7 @@ export const ServicesPage = () => {
       setServices(company.services);
     }
   }, [company]);
-
+  console.log("Serviços carregados:", company?.services);
   const handleUpdateService = async (updatedService: Service) => {
     // Apenas atualiza o estado local com o serviço já processado
     setServices(prev =>
@@ -88,6 +88,7 @@ export const ServicesPage = () => {
                 duration={`${service.duration} min`}
                 buffer={`${service.buffer} min`}
                 price={`R$ ${service.price}`}
+                imageUrl={service.design?.images?.profile?.url}
                 onEdit={() => {
                   setEditingService(service);
                 }}

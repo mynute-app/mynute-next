@@ -16,6 +16,7 @@ type ServiceCardProps = {
   duration?: string;
   buffer?: string;
   price?: string;
+  imageUrl?: string;
   onEdit?: () => void;
   onDelete?: () => void;
 };
@@ -43,6 +44,7 @@ const ServiceCard = ({
   duration,
   buffer,
   price,
+  imageUrl,
   onEdit,
   onDelete,
 }: ServiceCardProps) => {
@@ -64,8 +66,16 @@ const ServiceCard = ({
       className={`flex items-center justify-between px-4 py-2 border border-gray-200 rounded-lg hover:shadow-md transition-shadow border-l-4 ${colorClass}`}
     >
       <div className="flex items-center space-x-3">
-        <div className="rounded-full bg-gray-100 w-10 h-10 flex items-center justify-center">
-          <HiOutlineMenuAlt1 />
+        <div className="rounded-full bg-gray-100 w-10 h-10 flex items-center justify-center overflow-hidden">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={name}
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <HiOutlineMenuAlt1 />
+          )}
         </div>
         <div>
           <p className="font-medium text-gray-900">{name}</p>
@@ -78,13 +88,6 @@ const ServiceCard = ({
       <div className="flex items-center space-x-2">
         <button className="rounded-full bg-gray-100 p-2 hover:bg-gray-200 transition">
           <FiUser />
-        </button>
-        <button
-          className="px-3 py-1.5 border text-sm text-gray-700 border-gray-300 hover:bg-gray-100 transition rounded-full
-        flex justify-center items-center gap-2"
-        >
-          <BsUpload />
-          Share
         </button>
 
         <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>

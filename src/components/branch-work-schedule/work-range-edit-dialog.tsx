@@ -188,7 +188,10 @@ export function WorkRangeEditDialog({
     if (checked) {
       const allServiceIds =
         currentBranchData?.services
-          ?.filter((service: any) => service && service.id) // Filtrar serviços válidos
+          ?.filter(
+            (service: any) =>
+              service && (service.id || service.id === 0) && service.name
+          ) // Filtrar serviços válidos
           ?.map((service: any) => service.id.toString()) || [];
       setFormData(prev => ({
         ...prev,
@@ -205,8 +208,10 @@ export function WorkRangeEditDialog({
   // Verificar se todos os serviços estão selecionados
   const validServices =
     currentBranchData?.services?.filter(
-      (service: any) => service && service.id
+      (service: any) =>
+        service && (service.id || service.id === 0) && service.name
     ) || [];
+
   const allServicesSelected =
     validServices.length > 0 &&
     formData.services.length === validServices.length;

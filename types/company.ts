@@ -25,6 +25,36 @@ export type Service = {
   location?: string;
   category?: string;
   hidden?: boolean;
+  design?: {
+    colors?: {
+      primary?: string;
+      secondary?: string;
+      tertiary?: string;
+      quaternary?: string;
+    };
+    images?: {
+      background?: {
+        alt?: string;
+        title?: string;
+        caption?: string;
+        url?: string;
+      };
+      banner?: { alt?: string; title?: string; caption?: string; url?: string };
+      favicon?: {
+        alt?: string;
+        title?: string;
+        caption?: string;
+        url?: string;
+      };
+      logo?: { alt?: string; title?: string; caption?: string; url?: string };
+      profile?: {
+        alt?: string;
+        title?: string;
+        caption?: string;
+        url?: string;
+      };
+    };
+  };
 };
 
 export type Employee = {

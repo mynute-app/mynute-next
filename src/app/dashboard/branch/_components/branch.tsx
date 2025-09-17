@@ -207,7 +207,17 @@ export default function BranchManager() {
               <BranchWorkScheduleManager
                 branchId={selectedBranch.id.toString()}
                 branchName={selectedBranch.name}
-                branchData={selectedBranch} // Passar dados da branch para otimização
+                branchData={{
+                  ...selectedBranch,
+                  services: Array.isArray(selectedBranch.services)
+                    ? selectedBranch.services.map(serviceId => {
+                        const service = services.find(s => s.id === serviceId);
+                        return service
+                          ? { id: service.id, name: service.name }
+                          : { id: serviceId, name: "Serviço" };
+                      })
+                    : [],
+                }} // Passar dados da branch com serviços completos
                 initialData={selectedBranch.work_schedule || []}
                 services={
                   Array.isArray(selectedBranch.services)
