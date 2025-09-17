@@ -280,7 +280,7 @@ export default function YourTeam() {
         isOpen={isDialogOpen}
         setIsOpen={setIsDialogOpen}
         onSuccess={() => {
-          refetch(); // Recarregar dados da empresa após criar funcionário
+          refetch();
         }}
       />
     </div>
