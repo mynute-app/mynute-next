@@ -16,17 +16,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ImageField } from "@/components/custom/image-field";
 import {
   FiClock,
   FiDollarSign,
   FiAlignLeft,
-  FiImage,
   FiCamera,
   FiX,
+  FiUsers,
 } from "react-icons/fi";
 import { useEditService } from "@/hooks/services/use-edit-service";
 import { useServiceImage } from "@/hooks/services/use-service-image";
+import { useGetService } from "@/hooks/services/use-get-service";
 
 const editServiceSchema = z.object({
   name: z.string().min(1, "O nome é obrigatório."),
@@ -67,6 +67,12 @@ export const EditServiceDialog = ({
     serviceId: service?.id || "",
     currentImage: service?.imageUrl,
     imageType: "profile", // Usar "profile" conforme a estrutura da API
+  });
+
+  // Hook para buscar dados completos do serviço (incluindo funcionários)
+  const { service: serviceData, loading: loadingServiceData } = useGetService({
+    serviceId: service?.id || "",
+    enabled: !!service?.id,
   });
 
   const { register, handleSubmit, formState, reset } =
@@ -260,6 +266,52 @@ export const EditServiceDialog = ({
                   {formState.errors.description.message}
                 </p>
               )}
+            </div>
+          </div>
+
+          {/* Funcionários Vinculados */}
+          <div className="flex items-start gap-3">
+            <FiUsers className="text-gray-500 w-5 h-5 mt-3" />
+            <div className="flex-1">
+              <Label>Funcionários Vinculados</Label>
+              <div className="mt-2 p-3 border rounded-md bg-gray-50 max-h-48 overflow-y-auto">
+                {loadingServiceData ? (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="w-5 h-5 border border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                    <span className="ml-2 text-sm text-gray-600">
+                      Carregando funcionários...
+                    </span>
+                  </div>
+                ) : serviceData?.employees &&
+                  serviceData.employees.length > 0 ? (
+                  <div className="space-y-2">
+                    {serviceData.employees.map((employee: any) => (
+                      <div
+                        key={employee.id}
+                        className="flex items-center gap-3 p-2 bg-white rounded border"
+                      >
+                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-medium text-gray-600">
+                            {employee.name?.charAt(0).toUpperCase() || "?"}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {employee.name} {employee.surname}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {employee.role}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    Nenhum funcionário vinculado a este serviço
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
