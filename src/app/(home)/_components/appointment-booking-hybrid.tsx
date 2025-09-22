@@ -31,6 +31,7 @@ interface AppointmentBookingProps {
   service: Service;
   onBack: () => void;
   brandColor?: string;
+  initialAvailabilityData?: any;
 }
 
 interface SelectedSlot {
@@ -58,6 +59,7 @@ export function AppointmentBooking({
   service,
   onBack,
   brandColor,
+  initialAvailabilityData,
 }: AppointmentBookingProps) {
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] =
@@ -74,15 +76,53 @@ export function AppointmentBooking({
   );
   const [showCalendarTimeSlots, setShowCalendarTimeSlots] = useState(false);
 
-  const {
-    availability,
-    loading,
-    error,
-    organizedTodayTomorrow,
-    allDatesAvailability,
-    allDatesLoading,
-    allDatesError,
-  } = useAppointmentAvailabilityHybrid({ service });
+  // Usar dados iniciais do ServiceList (3 dias: hoje, amanhã, depois de amanhã)
+  const availability = initialAvailabilityData;
+  const loading = !initialAvailabilityData;
+  const error = null;
+
+  // Organizar os 3 dias de dados
+  const organizedTodayTomorrow = useMemo(() => {
+    if (!availability?.available_dates) return { today: [], tomorrow: [] };
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const todayStr = today.toISOString().split("T")[0];
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+    const todayData = availability.available_dates.find(
+      (d: any) => d.date === todayStr
+    );
+    const tomorrowData = availability.available_dates.find(
+      (d: any) => d.date === tomorrowStr
+    );
+
+    const formatDateInfo = (dateInfo: any, label: string) => ({
+      ...dateInfo,
+      label,
+      time_slots: [...dateInfo.time_slots].sort((a: any, b: any) =>
+        a.time.localeCompare(b.time)
+      ),
+      formattedDate: new Intl.DateTimeFormat("pt-BR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }).format(new Date(dateInfo.date + "T00:00:00")),
+    });
+
+    return {
+      today: todayData ? [formatDateInfo(todayData, "Hoje")] : [],
+      tomorrow: tomorrowData ? [formatDateInfo(tomorrowData, "Amanhã")] : [],
+    };
+  }, [availability?.available_dates]);
+
+  // Para o calendário, vamos usar os mesmos dados por enquanto
+  const allDatesAvailability = availability;
+  const allDatesLoading = loading;
+  const allDatesError = error;
 
   // Hook para buscar data específica selecionada no calendário
   const {
@@ -105,27 +145,19 @@ export function AppointmentBooking({
     return organizedTodayTomorrow;
   }, [organizedTodayTomorrow]);
 
-  // Obter listas únicas de filiais e funcionários (apenas quando disponível)
+  // Obter listas únicas de filiais e funcionários
   const branches = availability?.branch_info || [];
   const employees = availability?.employee_info || [];
 
-  // Para seleção de funcionários, usar dados da disponibilidade específica se existir
+  // Para seleção de funcionários, usar dados da disponibilidade
   const employeesForSelection = useMemo(() => {
-    if (selectedTimeSlot && specificDateAvailability?.employee_info) {
-      return specificDateAvailability.employee_info;
-    }
-    // Se não tiver dados específicos, usar dados do timeSlot selecionado para buscar funcionários
     if (selectedTimeSlot && availability?.employee_info) {
       return availability.employee_info.filter((emp: any) =>
         selectedTimeSlot.availableEmployees.includes(emp.id)
       );
     }
     return [];
-  }, [
-    selectedTimeSlot,
-    specificDateAvailability?.employee_info,
-    availability?.employee_info,
-  ]);
+  }, [selectedTimeSlot, availability?.employee_info]);
 
   // Obter todas as datas disponíveis para o calendário
   const availableDates = useMemo(() => {

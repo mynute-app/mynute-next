@@ -7,6 +7,7 @@ import { ServiceCard } from "@/app/(home)/_components/service-card";
 import { ServiceSkeleton } from "@/app/(home)/_components/service-skeleton";
 import { EmptyState } from "@/app/(home)/_components/service-empty";
 import { AppointmentBooking } from "@/app/(home)/_components/appointment-booking-hybrid";
+import { useServiceAvailability } from "@/hooks/service/useServiceAvailability";
 import type { Service as CompanyService } from "../../../../types/company";
 
 export type Service = CompanyService;
@@ -16,11 +17,22 @@ type Props = {
   loading?: boolean;
   error?: string;
   brandColor?: string;
+  companyId?: string;
 };
 
-export function ServiceList({ services, loading, error, brandColor }: Props) {
+export function ServiceList({
+  services,
+  loading,
+  error,
+  brandColor,
+  companyId,
+}: Props) {
   const [query, setQuery] = useState("");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [availabilityData, setAvailabilityData] = useState<any>(null);
+
+  const { fetchAvailability, loading: availabilityLoading } =
+    useServiceAvailability();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -32,12 +44,39 @@ export function ServiceList({ services, loading, error, brandColor }: Props) {
     );
   }, [services, query]);
 
-  const handleServiceSelect = (service: Service) => {
+  const handleServiceSelect = async (service: Service) => {
+    console.log("🎯 Serviço clicado:", service);
+
+    if (!companyId) {
+      console.error("❌ Company ID não fornecido");
+      return;
+    }
+
+    try {
+      console.log("🔄 Buscando disponibilidade...");
+
+      const availabilityData = await fetchAvailability({
+        serviceId: service.id,
+        companyId: companyId,
+        timezone: "America/Sao_Paulo",
+        dateForwardStart: 0,
+        dateForwardEnd: 3,
+      });
+
+      console.log("✅ Dados de disponibilidade:", availabilityData);
+
+      // Salvar os dados para mostrar na tela
+      setAvailabilityData(availabilityData);
+    } catch (error) {
+      console.error("❌ Erro ao buscar disponibilidade:", error);
+    }
+
     setSelectedService(service);
   };
 
   const handleBackToServices = () => {
     setSelectedService(null);
+    setAvailabilityData(null);
   };
 
   // Se tem um serviço selecionado, mostra a tela de agendamento
@@ -47,6 +86,7 @@ export function ServiceList({ services, loading, error, brandColor }: Props) {
         service={selectedService}
         onBack={handleBackToServices}
         brandColor={brandColor}
+        initialAvailabilityData={availabilityData}
       />
     );
   }
