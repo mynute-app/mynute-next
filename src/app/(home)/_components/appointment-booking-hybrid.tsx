@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -23,6 +23,8 @@ import { EmployeeSelection } from "@/app/(home)/_components/employee-selection-i
 import { BranchSelection } from "@/app/(home)/_components/branch-selection";
 import { useAppointmentAvailabilityHybrid } from "@/hooks/use-appointment-availability-hybrid";
 import { useAppointmentAvailabilitySpecificDate } from "@/hooks/use-appointment-availability-specific-date";
+import { useServiceAvailabilityAuto } from "@/hooks/service/useServiceAvailability";
+import { useCompanyByName } from "@/hooks/use-company-by-name";
 
 import type { Service } from "../../../../types/company";
 import type { TimeSlot } from "@/hooks/service/useServiceAvailability";
@@ -75,6 +77,17 @@ export function AppointmentBooking({
     null
   );
   const [showCalendarTimeSlots, setShowCalendarTimeSlots] = useState(false);
+  const [shouldFetchCalendarData, setShouldFetchCalendarData] = useState(false);
+
+  // Hook para obter dados da empresa
+  const { company } = useCompanyByName();
+
+  // Efeito para controlar quando buscar dados do calendário
+  useEffect(() => {
+    if (calendarOpen) {
+      setShouldFetchCalendarData(true);
+    }
+  }, [calendarOpen]); // Só depende de calendarOpen
 
   // Usar dados iniciais do ServiceList (3 dias: hoje, amanhã, depois de amanhã)
   const availability = initialAvailabilityData;
@@ -119,23 +132,27 @@ export function AppointmentBooking({
     };
   }, [availability?.available_dates]);
 
-  // Para o calendário, vamos usar os mesmos dados por enquanto
-  const allDatesAvailability = availability;
-  const allDatesLoading = loading;
-  const allDatesError = error;
+  // Para o calendário, buscar 30 dias de uma vez quando necessário
+  const calendarParams = useMemo(() => {
+    if (service && company && shouldFetchCalendarData) {
+      return {
+        serviceId: service.id,
+        companyId: company.id,
+        timezone: "America/Sao_Paulo",
+        dateForwardStart: 0,
+        dateForwardEnd: 31, // Buscar 30 dias de uma vez
+      };
+    }
+    return null;
+  }, [service?.id, company?.id, shouldFetchCalendarData]);
 
-  // Hook para buscar data específica selecionada no calendário
   const {
-    availability: specificDateAvailability,
-    loading: specificDateLoading,
-    error: specificDateError,
-    specificDateData,
-    daysForward,
-  } = useAppointmentAvailabilitySpecificDate({
-    service,
-    selectedDate: calendarSelectedDate,
-    enabled: showCalendarTimeSlots && !!calendarSelectedDate,
-  });
+    availability: allDatesAvailability,
+    loading: allDatesLoading,
+    error: allDatesError,
+  } = useServiceAvailabilityAuto(calendarParams);
+
+  // Hook para buscar dados dos 30 dias quando calendário abrir (removido hook individual)
 
   // Aplicar filtros simples diretamente (sem filtros por enquanto)
   const getFilteredTodayTomorrow = useMemo(() => {
@@ -159,7 +176,7 @@ export function AppointmentBooking({
     return [];
   }, [selectedTimeSlot, availability?.employee_info]);
 
-  // Obter todas as datas disponíveis para o calendário
+  // Obter todas as datas disponíveis para o calendário (dos 30 dias buscados)
   const availableDates = useMemo(() => {
     if (!allDatesAvailability?.available_dates) return [];
     return allDatesAvailability.available_dates.map(
@@ -167,17 +184,30 @@ export function AppointmentBooking({
     );
   }, [allDatesAvailability?.available_dates]);
 
-  // Obter horários para a data selecionada no calendário (usando dados específicos)
+  // Obter horários para a data selecionada no calendário (usando dados dos 30 dias)
   const calendarTimeSlots = useMemo(() => {
-    if (!showCalendarTimeSlots || !specificDateData) {
+    if (
+      !showCalendarTimeSlots ||
+      !calendarSelectedDate ||
+      !allDatesAvailability?.available_dates
+    ) {
       return { timeSlots: [], branchId: "" };
     }
 
-    let timeSlots = specificDateData.time_slots;
+    const selectedDateStr = calendarSelectedDate.toISOString().split("T")[0];
+    const dateData = allDatesAvailability.available_dates.find(
+      (d: any) => d.date === selectedDateStr
+    );
+
+    if (!dateData) {
+      return { timeSlots: [], branchId: "" };
+    }
+
+    let timeSlots = dateData.time_slots;
 
     // Filtrar por filial se selecionada
-    if (selectedBranch && specificDateData.branch_id !== selectedBranch) {
-      return { timeSlots: [], branchId: specificDateData.branch_id };
+    if (selectedBranch && dateData.branch_id !== selectedBranch) {
+      return { timeSlots: [], branchId: dateData.branch_id };
     }
 
     // Filtrar por funcionário se selecionado
@@ -189,11 +219,12 @@ export function AppointmentBooking({
 
     return {
       timeSlots,
-      branchId: specificDateData.branch_id,
+      branchId: dateData.branch_id,
     };
   }, [
     showCalendarTimeSlots,
-    specificDateData,
+    calendarSelectedDate,
+    allDatesAvailability?.available_dates,
     selectedBranch,
     selectedEmployee,
   ]);
@@ -256,6 +287,16 @@ export function AppointmentBooking({
   const handleCalendarDateSelect = (date: Date) => {
     setCalendarSelectedDate(date);
     setShowCalendarTimeSlots(true);
+  };
+
+  const handleCalendarOpenChange = (open: boolean) => {
+    setCalendarOpen(open);
+    if (!open) {
+      // Reset quando fechar o calendário
+      setCalendarSelectedDate(null);
+      setShowCalendarTimeSlots(false);
+      setShouldFetchCalendarData(false);
+    }
   };
 
   const handleConfirmAppointment = () => {
@@ -335,7 +376,10 @@ export function AppointmentBooking({
                 <h3 className="font-medium">Horários disponíveis</h3>
 
                 {/* Botão para abrir calendário */}
-                <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <Dialog
+                  open={calendarOpen}
+                  onOpenChange={handleCalendarOpenChange}
+                >
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
                       <CalendarIcon className="w-4 h-4" />
@@ -354,7 +398,7 @@ export function AppointmentBooking({
                         <Calendar
                           selectedDate={calendarSelectedDate}
                           onDateSelect={handleCalendarDateSelect}
-                          // Não limitamos por availableDates para permitir seleção de qualquer data futura
+                          availableDates={availableDates} // Mostrar quais datas têm horários
                           minDate={minDate}
                           maxDate={maxDate}
                         />
@@ -364,32 +408,46 @@ export function AppointmentBooking({
                       <div>
                         <h4 className="font-medium mb-4">
                           Horários disponíveis
-                          {calendarSelectedDate && daysForward !== null && (
+                          {calendarSelectedDate && (
                             <div className="text-xs text-muted-foreground mt-1">
                               <div>
-                                {daysForward === 0
-                                  ? "Hoje"
-                                  : daysForward === 1
-                                  ? "Amanhã"
-                                  : `${daysForward} dias à frente`}
+                                {(() => {
+                                  const today = new Date();
+                                  const diffTime =
+                                    calendarSelectedDate.getTime() -
+                                    today.getTime();
+                                  const diffDays = Math.ceil(
+                                    diffTime / (1000 * 60 * 60 * 24)
+                                  );
+                                  const daysFromToday = Math.max(
+                                    0,
+                                    Math.min(30, diffDays)
+                                  );
+
+                                  return daysFromToday === 0
+                                    ? "Hoje"
+                                    : daysFromToday === 1
+                                    ? "Amanhã"
+                                    : `${daysFromToday} dias à frente`;
+                                })()}
                               </div>
                               <div className="font-mono mt-1">
-                                API: date_forward_start=0, date_forward_end=
-                                {daysForward + 1}
+                                Dados carregados: 30 dias (API:
+                                date_forward_start=0, date_forward_end=31)
                               </div>
                             </div>
                           )}
                         </h4>
-                        {specificDateLoading ? (
+                        {allDatesLoading ? (
                           <Card>
                             <CardContent className="p-6 text-center">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                               <p className="text-muted-foreground mt-4">
-                                Carregando horários...
+                                Carregando 30 dias de horários...
                               </p>
                             </CardContent>
                           </Card>
-                        ) : specificDateError ? (
+                        ) : allDatesError ? (
                           <Card>
                             <CardContent className="p-6 text-center">
                               <p className="text-destructive">

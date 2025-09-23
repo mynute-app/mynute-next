@@ -231,7 +231,7 @@ export function Calendar({
                   available &&
                     isCurrentMonth &&
                     !selected &&
-                    "bg-green-50 text-green-700 hover:bg-green-100",
+                    "border border-green-300 bg-green-50/30 hover:bg-green-50/50",
                   disabled &&
                     "opacity-30 cursor-not-allowed hover:bg-transparent"
                 )}
