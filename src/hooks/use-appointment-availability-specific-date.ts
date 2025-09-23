@@ -48,8 +48,8 @@ export function useAppointmentAvailabilitySpecificDate({
       serviceId: service.id,
       companyId: company.id,
       timezone: "America/Sao_Paulo",
-      dateForwardStart: daysForward,
-      dateForwardEnd: daysForward + 1, // Buscar apenas essa data específica
+      dateForwardStart: 0, // Sempre começar de hoje
+      dateForwardEnd: daysForward + 1, // Incluir até a data selecionada
     };
   }, [service, company, daysForward]);
 

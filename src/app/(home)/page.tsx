@@ -69,6 +69,7 @@ export default function Page() {
           loading={loading}
           error={error ?? undefined}
           brandColor={brandColor}
+          companyId={company?.id}
         />
       </div>
     </div>

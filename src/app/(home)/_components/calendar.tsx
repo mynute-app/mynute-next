@@ -105,7 +105,8 @@ export function Calendar({
     // Depois da data máxima
     if (maxDate && date > maxDate) return true;
 
-    // Não está na lista de datas disponíveis (se fornecida)
+    // Não está na lista de datas disponíveis (se fornecida e não vazia)
+    // Se availableDates estiver vazio, permite qualquer data futura válida
     if (availableDates.length > 0 && !availableDates.includes(dateString)) {
       return true;
     }
@@ -119,6 +120,10 @@ export function Calendar({
   };
 
   const isDateAvailable = (dateString: string) => {
+    // Se availableDates estiver vazio, considera todas as datas futuras como disponíveis
+    if (availableDates.length === 0) {
+      return true;
+    }
     return availableDates.includes(dateString);
   };
 

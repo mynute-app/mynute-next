@@ -354,7 +354,7 @@ export function AppointmentBooking({
                         <Calendar
                           selectedDate={calendarSelectedDate}
                           onDateSelect={handleCalendarDateSelect}
-                          availableDates={availableDates}
+                          // Não limitamos por availableDates para permitir seleção de qualquer data futura
                           minDate={minDate}
                           maxDate={maxDate}
                         />
@@ -364,11 +364,20 @@ export function AppointmentBooking({
                       <div>
                         <h4 className="font-medium mb-4">
                           Horários disponíveis
-                          {calendarSelectedDate && (
-                            <span className="text-sm text-muted-foreground ml-2">
-                              ({daysForward}{" "}
-                              {daysForward === 1 ? "dia" : "dias"} à frente)
-                            </span>
+                          {calendarSelectedDate && daysForward !== null && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              <div>
+                                {daysForward === 0
+                                  ? "Hoje"
+                                  : daysForward === 1
+                                  ? "Amanhã"
+                                  : `${daysForward} dias à frente`}
+                              </div>
+                              <div className="font-mono mt-1">
+                                API: date_forward_start=0, date_forward_end=
+                                {daysForward + 1}
+                              </div>
+                            </div>
                           )}
                         </h4>
                         {specificDateLoading ? (
