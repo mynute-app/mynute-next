@@ -37,7 +37,8 @@ export function useAppointmentAvailabilitySpecificDate({
     const diffTime = selectedUTC.getTime() - todayUTC.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    return Math.max(0, diffDays); // Não pode ser negativo
+    // Limitado entre 0 e 30 dias
+    return Math.max(0, Math.min(30, diffDays));
   }, [selectedDate]);
 
   // Parâmetros para buscar a data específica

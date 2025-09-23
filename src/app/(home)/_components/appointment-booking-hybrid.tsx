@@ -277,7 +277,7 @@ export function AppointmentBooking({
   const minDate = new Date(); // Hoje
   const maxDate = useMemo(() => {
     const max = new Date();
-    max.setDate(max.getDate() + 90); // 3 meses no futuro
+    max.setDate(max.getDate() + 30); // 30 dias no futuro
     return max;
   }, []);
 

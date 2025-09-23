@@ -79,7 +79,22 @@ export function Calendar({
   }, [currentMonth]);
 
   const goToPreviousMonth = () => {
-    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1));
+    setCurrentMonth(prev => {
+      const newMonth = new Date(prev.getFullYear(), prev.getMonth() - 1);
+      const today = new Date();
+      const currentMonthYear = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      );
+
+      // Não permitir voltar para meses anteriores ao mês atual
+      if (newMonth < currentMonthYear) {
+        return prev; // Mantém o mês atual
+      }
+
+      return newMonth;
+    });
   };
 
   const goToNextMonth = () => {
@@ -129,6 +144,33 @@ export function Calendar({
 
   const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
+  // Verificar se é possível navegar para o mês anterior
+  const canGoToPreviousMonth = useMemo(() => {
+    const today = new Date();
+    const currentMonthYear = new Date(today.getFullYear(), today.getMonth(), 1);
+    const displayedMonthYear = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      1
+    );
+
+    return displayedMonthYear > currentMonthYear;
+  }, [currentMonth]);
+
+  // Verificar se é possível navegar para o próximo mês (baseado em maxDate)
+  const canGoToNextMonth = useMemo(() => {
+    if (!maxDate) return true;
+
+    const nextMonth = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth() + 1,
+      1
+    );
+    const maxMonthYear = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+
+    return nextMonth <= maxMonthYear;
+  }, [currentMonth, maxDate]);
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -139,6 +181,7 @@ export function Calendar({
               variant="ghost"
               size="sm"
               onClick={goToPreviousMonth}
+              disabled={!canGoToPreviousMonth}
               className="h-8 w-8 p-0"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -147,6 +190,7 @@ export function Calendar({
               variant="ghost"
               size="sm"
               onClick={goToNextMonth}
+              disabled={!canGoToNextMonth}
               className="h-8 w-8 p-0"
             >
               <ChevronRight className="h-4 w-4" />
