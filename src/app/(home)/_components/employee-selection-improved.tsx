@@ -61,7 +61,7 @@ export function EmployeeSelection({
   }).format(new Date(selectedTimeSlot.date + "T00:00:00"));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -71,72 +71,20 @@ export function EmployeeSelection({
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+
+        <header className="">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {" "}
             Escolha seu profissional
-          </h2>
-          <p className="text-muted-foreground mt-1">
+          </h1>
+          <p className="text-sm text-muted-foreground">
             Selecione o profissional que realizará seu atendimento
           </p>
-        </div>
+        </header>
       </div>
-
-      {/* Informações do horário selecionado */}
-      <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Calendar className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Data</p>
-                  <p className="font-semibold capitalize">{formattedDate}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Clock className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Horário</p>
-                  <p className="font-semibold">{selectedTimeSlot.time}</p>
-                </div>
-              </div>
-
-              {branch && (
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-primary/10">
-                    <MapPin className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Local</p>
-                    <p className="font-semibold">{branch.name}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Badge variant="secondary" className="px-3 py-1">
-              {availableEmployees.length}{" "}
-              {availableEmployees.length === 1
-                ? "profissional"
-                : "profissionais"}{" "}
-              disponível
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Lista de funcionários disponíveis */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <User className="w-5 h-5 text-primary" />
-          <h3 className="text-xl font-semibold">Profissionais disponíveis</h3>
-        </div>
-
         <div className="grid gap-4">
           {availableEmployees.map(employee => (
             <Card

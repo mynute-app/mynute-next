@@ -93,6 +93,12 @@ export function ServiceList({
 
   return (
     <div className="space-y-4">
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight">Serviços</h1>
+        <p className="text-sm text-muted-foreground">
+          Explore e selecione um serviço para continuar o agendamento.
+        </p>
+      </header>
       <div className="flex items-center gap-3">
         <Input
           value={query}

@@ -57,12 +57,7 @@ export default function Page() {
       </section>
 
       <div className="container mx-auto max-w-5xl px-4 py-2">
-        <header className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight">Serviços</h1>
-          <p className="text-sm text-muted-foreground">
-            Explore e selecione um serviço para continuar o agendamento.
-          </p>
-        </header>
+     
 
         <ServiceList
           services={services as any[]}

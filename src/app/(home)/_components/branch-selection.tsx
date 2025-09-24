@@ -87,14 +87,15 @@ export function BranchSelection({
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+        <header className="">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {" "}
             Escolha o local
-          </h2>
-          <p className="text-muted-foreground mt-1">
+          </h1>
+          <p className="text-sm text-muted-foreground">
             Selecione onde você gostaria de ser atendido
           </p>
-        </div>
+        </header>
       </div>
 
       {/* Informações do agendamento */}

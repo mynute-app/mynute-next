@@ -354,7 +354,7 @@ export function AppointmentBooking({
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Filtros */}
-            <div className="space-y-4">
+            <div className="space-y-4 bg-slate-300">
               {/* Filtros removidos temporariamente para evitar erro de backend */}
 
               {/* Resumo da seleção */}
