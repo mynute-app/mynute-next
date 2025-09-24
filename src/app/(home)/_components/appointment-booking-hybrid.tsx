@@ -21,6 +21,11 @@ import { Calendar } from "@/app/(home)/_components/calendar";
 import { TimeSlotPicker } from "@/app/(home)/_components/time-slot-picker";
 import { EmployeeSelection } from "@/app/(home)/_components/employee-selection-improved";
 import { BranchSelection } from "@/app/(home)/_components/branch-selection";
+import {
+  ClientDetailsForm,
+  ClientData,
+} from "@/app/(home)/_components/client-details-form";
+import { AppointmentConfirmation } from "@/app/(home)/_components/appointment-confirmation";
 import { useAppointmentAvailabilityHybrid } from "@/hooks/use-appointment-availability-hybrid";
 import { useAppointmentAvailabilitySpecificDate } from "@/hooks/use-appointment-availability-specific-date";
 import { useServiceAvailabilityAuto } from "@/hooks/service/useServiceAvailability";
@@ -70,6 +75,9 @@ export function AppointmentBooking({
     useState<SelectedAppointment | null>(null);
   const [showEmployeeSelection, setShowEmployeeSelection] = useState(false);
   const [showBranchSelection, setShowBranchSelection] = useState(false);
+  const [showClientForm, setShowClientForm] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [clientData, setClientData] = useState<ClientData | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -263,7 +271,7 @@ export function AppointmentBooking({
   const handleBranchSelect = (branchId: string) => {
     if (!selectedAppointment) return;
 
-    // Finalizar agendamento com local selecionado
+    // Ir para formulário do cliente ao invés de finalizar
     setSelectedSlot({
       date: selectedAppointment.date,
       time: selectedAppointment.time,
@@ -271,6 +279,7 @@ export function AppointmentBooking({
       employeeId: selectedAppointment.employeeId,
     });
     setShowBranchSelection(false);
+    setShowClientForm(true);
   };
 
   const handleBackToTimeSelection = () => {
@@ -282,6 +291,22 @@ export function AppointmentBooking({
     setShowBranchSelection(false);
     setShowEmployeeSelection(true);
     setSelectedAppointment(null);
+  };
+
+  const handleBackToBranchSelection = () => {
+    setShowClientForm(false);
+    setShowBranchSelection(true);
+  };
+
+  const handleClientFormSubmit = (data: ClientData) => {
+    setClientData(data);
+    setShowClientForm(false);
+    setShowConfirmation(true);
+  };
+
+  const handleBackToClientForm = () => {
+    setShowConfirmation(false);
+    setShowClientForm(true);
   };
 
   const handleCalendarDateSelect = (date: Date) => {
@@ -300,11 +325,12 @@ export function AppointmentBooking({
   };
 
   const handleConfirmAppointment = () => {
-    if (!selectedSlot) return;
+    if (!selectedSlot || !clientData) return;
 
     console.log("Agendamento confirmado:", {
       service,
       slot: selectedSlot,
+      clientData,
       employee: employees.find(
         (emp: any) => emp.id === selectedSlot.employeeId
       ),
@@ -312,6 +338,9 @@ export function AppointmentBooking({
         (branch: any) => branch.id === selectedSlot.branchId
       ),
     });
+
+    // Aqui você pode adicionar a lógica de envio para o backend
+    // Por exemplo: await createAppointment({ service, slot: selectedSlot, clientData })
   };
 
   // Configurar data mínima e máxima para o calendário
@@ -324,7 +353,30 @@ export function AppointmentBooking({
 
   return (
     <div className="space-y-6">
-      {showBranchSelection && selectedAppointment ? (
+      {showConfirmation && selectedSlot && clientData ? (
+        // Tela de confirmação final
+        <AppointmentConfirmation
+          service={service}
+          selectedSlot={selectedSlot}
+          clientData={clientData}
+          branches={branches}
+          employees={employees}
+          brandColor={brandColor}
+          onConfirm={handleConfirmAppointment}
+          onBack={handleBackToClientForm}
+        />
+      ) : showClientForm && selectedSlot ? (
+        // Tela de formulário de dados do cliente
+        <ClientDetailsForm
+          service={service}
+          selectedSlot={selectedSlot}
+          branches={branches}
+          employees={employees}
+          brandColor={brandColor}
+          onSubmit={handleClientFormSubmit}
+          onBack={handleBackToBranchSelection}
+        />
+      ) : showBranchSelection && selectedAppointment ? (
         // Tela de seleção de local
         <BranchSelection
           selectedAppointment={selectedAppointment}
@@ -354,20 +406,8 @@ export function AppointmentBooking({
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Filtros */}
-            <div className="space-y-4 bg-slate-300">
+            <div className="space-y-4">
               {/* Filtros removidos temporariamente para evitar erro de backend */}
-
-              {/* Resumo da seleção */}
-              {selectedSlot && (
-                <AppointmentSummary
-                  service={service}
-                  selectedSlot={selectedSlot}
-                  branches={branches}
-                  employees={employees}
-                  brandColor={brandColor}
-                  onConfirm={handleConfirmAppointment}
-                />
-              )}
             </div>
 
             {/* Horários disponíveis */}
