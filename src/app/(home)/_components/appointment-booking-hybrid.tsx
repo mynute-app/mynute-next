@@ -13,13 +13,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+
 import { ServiceHeader } from "@/app/(home)/_components/service-header";
 import { FilterSidebar } from "@/app/(home)/_components/filter-sidebar";
 import { AppointmentSummary } from "@/app/(home)/_components/appointment-summary";
 import { DateCard } from "@/app/(home)/_components/date-card";
 import { Calendar } from "@/app/(home)/_components/calendar";
 import { TimeSlotPicker } from "@/app/(home)/_components/time-slot-picker";
-import { EmployeeSelection } from "@/app/(home)/_components/employee-selection-improved";
 import { BranchSelection } from "@/app/(home)/_components/branch-selection";
 import {
   ClientDetailsForm,
@@ -33,6 +33,8 @@ import { useCompanyByName } from "@/hooks/use-company-by-name";
 
 import type { Service } from "../../../../types/company";
 import type { TimeSlot } from "@/hooks/service/useServiceAvailability";
+import { EmployeeSelection } from "./employee-selection-improved";
+
 
 interface AppointmentBookingProps {
   service: Service;

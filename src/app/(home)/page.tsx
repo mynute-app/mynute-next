@@ -14,7 +14,7 @@ export default function Page() {
 
   return (
     <div className="h-[100dvh] overflow-auto">
-      <section className="relative w-full h-40 md:h-56 lg:h-64 overflow-hidden bg-background">
+      <section className="relative w-full h-40 md:h-48 lg:h-56 overflow-hidden bg-background ">
         {company?.design?.images?.banner?.url ? (
           <Image
             src={company.design.images.banner.url || "/placeholder.svg"}
@@ -40,7 +40,7 @@ export default function Page() {
           {loading ? (
             <Skeleton className="h-16 w-24 md:h-24 md:w-36 rounded-md" />
           ) : company?.design?.images?.logo?.url ? (
-            <div className="relative h-16 w-28 md:h-24 md:w-40">
+            <div className="relative h-16 w-28 md:h-24 md:w-40 bg-white/20 rounded-md ">
               <Image
                 src={company.design.images.logo.url || "/placeholder.svg"}
                 alt="Logo da empresa"
@@ -57,8 +57,6 @@ export default function Page() {
       </section>
 
       <div className="container mx-auto max-w-5xl px-4 py-2">
-     
-
         <ServiceList
           services={services as any[]}
           loading={loading}

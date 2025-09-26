@@ -1,11 +1,29 @@
-1 = //Todo: Passar o Id da Empresa todos que eu preciso saber a empresa
-          // Branch, service, appointment, employee
-        X-Auth-Token X-Company-ID 
+1 = Ajustar as imagens do Funcionario (ela nao esta sendo aplicada)
 
-precisa ser passado o Auth-Token no lugar do Authorization
+    Obs:  PATCH /api/employee/4011f07b-fc01-40bc-a0ae-1f0f2fef16d2/design/images 405 in 307ms
+    Erro: Funcionario nao consegue vincular o servico a filial dele 
+          PUT /api/employee/4011f07b-fc01-40bc-a0ae-1f0f2fef16d2/work_range/23aea1aa-0433-4a6e-95a9-eef738a56269 200 in 205ms
+          GET /api/employee/4011f07b-fc01-40bc-a0ae-1f0f2fef16d2/work_schedule 200 in 63ms
+          (igual a branch acontece a mesma coisa, ver o Remove dele logo em seguida)
+
+2 = Ajustar as imagens da Filial (por algum motivo tem imagens que vai e tem outras que nao) 
+
+    Erro: 📏 Tamanho do arquivo: 25263 bytes
+    Obs: Precisa atualizar no front para ter algo visual, mesma coisa com o nome da filial.
+
+    2.1  = Precisa conseguir remover um servico, que a filial consegue fazer, dentro do horario da filial
+    (dailog de Edite)
+
+3 = Ajuste de Input dentro do servico, os inputs precisa ser mais descritivo e formatado para os valore
+como  Custo - Duração 
+
+    3.1 = Na Criacao vamos remover o Avatar de imagens
+    3.2 = Ajuste na Image do servico 
+        Erro: 📏 Tamanho do arquivo:
 
 
-2 = ajustar o layout ( Client), Remover a trava de fluxo
+4 = Pegando esse erro aqui, acredito que seja pq o Filial nao esta aberto de sabado, e seu vincular o usuario sem ter horario de Filial correto mostrar o Erro
+[fetchFromBackend] Backend error 500 on http://localhost:4000/employee/d231d1fc-0dac-4f24-a3df-c19763562e0c/work_schedule | companyId=3127a70a-c1c3-47cb-a027-6c33a3db15fc schema=- | body={"description_en":"Internal server error while processing the request","description_br":"Erro interno do servidor ao processar a requisição","http_status":500,"inner_error":{"1":"json: cannot unmarshal string into Go struct field CreateEmployeeWorkRange.employee_work_ranges.services of type DTO.ServiceBase"}}
+❌ Erro ao processar work_schedule: Error: Erro ao acessar backend (500): {"description_en":"Internal server error while processing the request","description_br":"Erro interno do servidor ao processar a requisição","http_status":500,"inner_error":{"1":"json: cannot unmarshal string into Go struct field CreateEmployeeWorkRange.employee_work_ranges.services of type DTO.ServiceBase"}}
 
-
-3 = remover o dark mode por enquanto 
+    

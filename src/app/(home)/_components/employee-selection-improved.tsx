@@ -48,7 +48,7 @@ export function EmployeeSelection({
   const availableEmployees = employees.filter(emp =>
     selectedTimeSlot.availableEmployees.includes(emp.id)
   );
-
+  console.log("Available Employees: 2", employees);
   // Buscar informações da filial
   const branch = branches.find(b => b.id === selectedTimeSlot.branchId);
 
@@ -75,8 +75,8 @@ export function EmployeeSelection({
         <header className="">
           <h1 className="text-2xl font-semibold tracking-tight">
             {" "}
-            Escolha seu profissional
-          </h1>
+            Escolha seu profissional 2
+          </h1> 
           <p className="text-sm text-muted-foreground">
             Selecione o profissional que realizará seu atendimento
           </p>
