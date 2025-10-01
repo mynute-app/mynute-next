@@ -2,17 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useUploadEmployeeImage } from "@/hooks/use-upload-employee-image";
+import { useBranchImage } from "@/hooks/branch/use-branch-image";
 import { useToast } from "@/hooks/use-toast";
 
-interface UserAvatarProps {
+interface BranchAvatarProps {
   name?: string;
-  surname?: string;
   imageUrl?: string;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   editable?: boolean;
-  employeeId?: number | string;
+  branchId?: number | string;
   onImageChange?: (newImageUrl: string | null) => void;
 }
 
@@ -23,23 +22,45 @@ const sizeClasses = {
   xl: "w-24 h-24 text-2xl",
 };
 
-export function UserAvatar({
+export function BranchAvatar({
   name = "",
-  surname = "",
   imageUrl,
   size = "lg",
   className,
   editable = false,
-  employeeId,
+  branchId,
   onImageChange,
-}: UserAvatarProps) {
+}: BranchAvatarProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const { uploadImage, deleteImage, loading } = useUploadEmployeeImage();
-  const { toast } = useToast();
+  // Só usar o hook se tiver branchId válido (número ou UUID string)
+  const shouldUseHook =
+    branchId &&
+    ((typeof branchId === "number" && branchId > 0) ||
+      (typeof branchId === "string" && branchId.trim().length > 0));
 
-  // Reset image error quando imageUrl muda
+  // Só inicializar o hook se tiver ID válido
+  const hookResult = shouldUseHook
+    ? useBranchImage({
+        branchId: branchId, // Passa direto, pode ser number ou string
+        currentImage: imageUrl,
+        imageType: "profile",
+        onSuccess: () => {
+          onImageChange?.(null); // Trigger para atualizar o componente pai
+        },
+      })
+    : {
+        isUploading: false,
+        isRemoving: false,
+        handleImageChange: async () => {},
+        handleRemoveImage: async () => {},
+      };
+
+  const { isUploading, isRemoving, handleImageChange, handleRemoveImage } =
+    hookResult;
+
+  const { toast } = useToast(); // Reset image error quando imageUrl muda
   useEffect(() => {
     if (imageUrl) {
       setImageError(false);
@@ -48,9 +69,11 @@ export function UserAvatar({
 
   // Gera as iniciais do nome
   const getInitials = () => {
-    const firstInitial = name?.[0]?.toUpperCase() || "";
-    const lastInitial = surname?.[0]?.toUpperCase() || "";
-    return firstInitial + lastInitial || "?";
+    const words = name.split(" ");
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name?.[0]?.toUpperCase() || "?";
   };
 
   // Manipula o upload da imagem
@@ -58,32 +81,54 @@ export function UserAvatar({
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
-    if (!file || !editable || !employeeId) {
-      if (!employeeId) {
-        toast({
-          title: "Erro",
-          description: "ID do funcionário não encontrado",
-          variant: "destructive",
-        });
-      }
+    if (!file || !editable) {
+      return;
+    }
+
+    if (!shouldUseHook) {
+      toast({
+        title: "Erro",
+        description: "ID da filial não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar tamanho do arquivo
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast({
+        title: "Erro",
+        description: "Arquivo muito grande. Máximo 5MB permitido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar tipo do arquivo
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Erro",
+        description: "Tipo de arquivo não suportado. Use JPEG, PNG ou WebP.",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
-      const result = await uploadImage(employeeId, file);
+      const success = await handleImageChange(file);
 
-      if (result && result.imageUrl) {
-        // Reset image error state quando uma nova imagem é carregada
+      if (success) {
         setImageError(false);
-        onImageChange?.(result.imageUrl);
         toast({
           title: "Sucesso",
-          description: "Imagem atualizada com sucesso!",
+          description: "Imagem da filial atualizada com sucesso!",
         });
-      } else {
-        throw new Error("URL da imagem não foi retornada");
       }
+      // Se não foi sucesso, o hook já mostrou o toast de erro
     } catch (error) {
+      console.error("❌ Erro ao fazer upload:", error);
       toast({
         title: "Erro",
         description: "Falha ao fazer upload da imagem",
@@ -94,10 +139,10 @@ export function UserAvatar({
 
   // Manipula a remoção da imagem
   const handleDeleteImage = async () => {
-    if (!employeeId) {
+    if (!shouldUseHook) {
       toast({
         title: "Erro",
-        description: "ID do funcionário não encontrado",
+        description: "ID da filial não encontrado",
         variant: "destructive",
       });
       return;
@@ -113,19 +158,12 @@ export function UserAvatar({
     }
 
     try {
-      const success = await deleteImage(employeeId);
-
-      if (success) {
-        // Reset image error state quando a imagem é removida
-        setImageError(false);
-        onImageChange?.(null);
-        toast({
-          title: "Sucesso",
-          description: "Imagem removida com sucesso!",
-        });
-      } else {
-        throw new Error("Falha ao deletar imagem");
-      }
+      await handleRemoveImage();
+      setImageError(false);
+      toast({
+        title: "Sucesso",
+        description: "Imagem da filial removida com sucesso!",
+      });
     } catch (error) {
       console.error("❌ Erro ao deletar imagem:", error);
       toast({
@@ -156,11 +194,12 @@ export function UserAvatar({
   };
 
   const shouldShowImage = imageUrl && !imageError;
+  const loading = isUploading || isRemoving;
 
   return (
     <div
       className={cn(
-        "relative rounded-full flex items-center justify-center font-bold cursor-pointer transition-all duration-200",
+        " relative rounded-xl flex items-center justify-center font-bold cursor-pointer transition-all duration-200 ",
         sizeClasses[size],
         shouldShowImage ? "" : getBackgroundColor(),
         shouldShowImage ? "" : "text-white",
@@ -173,8 +212,8 @@ export function UserAvatar({
       {shouldShowImage ? (
         <img
           src={imageUrl}
-          alt={`${name} ${surname}`}
-          className="w-full h-full rounded-full object-cover"
+          alt={`Filial ${name}`}
+          className="w-full h-full rounded-xl object-cover "
           onError={() => setImageError(true)}
         />
       ) : (
@@ -185,7 +224,7 @@ export function UserAvatar({
       {editable && (
         <>
           {(isHovered || loading) && (
-            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-xl flex items-center justify-center h-24 w-24">
               {loading ? (
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
               ) : (
@@ -193,7 +232,9 @@ export function UserAvatar({
                   {/* Ícone de upload */}
                   <button
                     onClick={() => {
-                      const inputId = `file-input-${employeeId || "default"}`;
+                      const inputId = `file-input-branch-${
+                        branchId || "default"
+                      }`;
                       const fileInput = document.querySelector(
                         `#${inputId}`
                       ) as HTMLInputElement;
@@ -257,7 +298,7 @@ export function UserAvatar({
           )}
 
           <input
-            id={`file-input-${employeeId || "default"}`}
+            id={`file-input-branch-${branchId || "default"}`}
             type="file"
             accept="image/*"
             className="hidden"

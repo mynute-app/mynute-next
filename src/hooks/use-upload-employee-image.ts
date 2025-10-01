@@ -1,4 +1,3 @@
-import { PATCH } from './../app/api/user/route';
 import { useState } from "react";
 
 interface UploadImageResponse {
@@ -30,12 +29,26 @@ export function useUploadEmployeeImage() {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao fazer upload da imagem");
+        let errorMessage = "Erro ao fazer upload da imagem";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          // Se não conseguir fazer parse do JSON, usar mensagem genérica
+          errorMessage = `Erro ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      return data;
+
+      // Extrair a URL da estrutura retornada pelo backend
+      const imageUrl = data.profile?.url || data.imageUrl || null;
+
+      return {
+        imageUrl,
+        message: data.message || "Upload realizado com sucesso",
+      };
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
@@ -53,15 +66,22 @@ export function useUploadEmployeeImage() {
 
     try {
       const response = await fetch(
-        `/api/employee/${employeeId}/design/images`,
+        `/api/employee/${employeeId}/design/images/profile`,
         {
           method: "DELETE",
         }
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao remover a imagem");
+        let errorMessage = "Erro ao remover a imagem";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          // Se não conseguir fazer parse do JSON, usar mensagem genérica
+          errorMessage = `Erro ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       return true;
@@ -69,7 +89,7 @@ export function useUploadEmployeeImage() {
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
       setError(errorMessage);
-      console.error("Erro ao remover imagem:", err);
+      console.error("❌ Hook: Erro ao remover imagem:", err);
       return false;
     } finally {
       setLoading(false);

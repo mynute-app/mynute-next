@@ -1,35 +1,24 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../../../auth";
-import { getAuthDataFromRequest } from "@/utils/decode-jwt";
+import { getCompanyFromRequest } from "@/lib/api/get-company-from-request";
 
 export const PATCH = auth(async function PATCH(req, ctx) {
   try {
-    console.log("🔍 Iniciando upload de imagem da filial...");
+    const token = req.auth?.accessToken;
 
-    const authData = getAuthDataFromRequest(req);
-
-    if (!authData.isValid) {
-      return NextResponse.json(
-        { message: authData.error || "Token inválido" },
-        { status: 401 }
-      );
+    if (!token) {
+      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
     const { branch_id } = ctx.params as {
       branch_id: string;
     };
-    console.log("🏢 Branch ID:", branch_id);
 
     // Pegar os dados do FormData
     const formData = await req.formData();
     const profileImage = formData.get("profile") as File;
-    console.log(
-      "🖼️ Imagem recebida:",
-      profileImage ? profileImage.name : "Nenhuma"
-    );
 
     if (!profileImage) {
-      console.log("❌ Nenhuma imagem enviada");
       return NextResponse.json(
         { message: "Nenhuma imagem foi enviada" },
         { status: 400 }
@@ -38,9 +27,7 @@ export const PATCH = auth(async function PATCH(req, ctx) {
 
     // Validar tipo de arquivo
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    console.log("📁 Tipo do arquivo:", profileImage.type);
     if (!allowedTypes.includes(profileImage.type)) {
-      console.log("❌ Tipo de arquivo não suportado:", profileImage.type);
       return NextResponse.json(
         { message: "Tipo de arquivo não suportado. Use JPEG, PNG ou WebP" },
         { status: 400 }
@@ -49,9 +36,7 @@ export const PATCH = auth(async function PATCH(req, ctx) {
 
     // Validar tamanho (máximo 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
-    console.log("📏 Tamanho do arquivo:", profileImage.size, "bytes");
     if (profileImage.size > maxSize) {
-      console.log("❌ Arquivo muito grande:", profileImage.size);
       return NextResponse.json(
         { message: "Arquivo muito grande. Máximo 5MB" },
         { status: 400 }
@@ -62,56 +47,104 @@ export const PATCH = auth(async function PATCH(req, ctx) {
     const backendFormData = new FormData();
     backendFormData.append("profile", profileImage);
 
+    // Obter company data via subdomain
+    const company = await getCompanyFromRequest(req);
+
     // Fazer a requisição para o backend
     const backendUrl = `${process.env.BACKEND_URL}/branch/${branch_id}/design/images`;
-    console.log("🔗 URL completa:", backendUrl);
 
     const response = await fetch(backendUrl, {
       method: "PATCH",
       headers: {
-        "X-Auth-Token": authData.token!,
-        "X-Company-ID": authData.companyId!,
+        "X-Auth-Token": token,
+        "X-Company-ID": company.id,
       },
       body: backendFormData,
     });
 
-    console.log("📡 Status da resposta:", response.status);
-    console.log(
-      "📡 Headers da resposta:",
-      Object.fromEntries(response.headers.entries())
-    );
-
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error("❌ Erro na API backend:", errorData);
-      console.error("❌ Status:", response.status);
-      console.error("❌ StatusText:", response.statusText);
+      // Capturar especificamente o erro 413
+      if (response.status === 413) {
+        return NextResponse.json(
+          {
+            message:
+              "Arquivo muito grande. O backend não aceita arquivos desse tamanho.",
+            error: "FILE_TOO_LARGE",
+            status: 413,
+          },
+          { status: 413 }
+        );
+      }
+
+      // Tentar pegar a resposta como JSON primeiro
+      let backendError = null;
+      try {
+        backendError = await response.json();
+      } catch (jsonError) {
+        // Se não for JSON, pegar como texto
+        try {
+          backendError = await response.text();
+        } catch (textError) {
+          backendError = { message: "Erro desconhecido do backend" };
+        }
+      }
+
       return NextResponse.json(
         {
-          message: "Erro ao fazer upload da imagem da filial",
-          details: errorData,
+          message:
+            typeof backendError === "string"
+              ? backendError
+              : backendError?.message || "Erro do backend",
+          backendError: backendError,
+          status: response.status,
         },
         { status: response.status }
       );
     }
 
     const responseData = await response.json();
-    console.log("✅ Resposta do backend:", responseData);
 
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
-    console.error("❌ Erro ao processar upload da imagem da filial:", error);
-    console.error(
-      "❌ Stack trace:",
-      error instanceof Error ? error.stack : "Sem stack trace"
-    );
+    const { branch_id } = ctx.params as { branch_id: string };
+
+    if (error instanceof Error && error.message.includes("fetch failed")) {
+      const errorCause = error.cause as any;
+
+      // Verificar se é erro de tamanho de arquivo
+      if (
+        errorCause &&
+        (errorCause.code === "ECONNABORTED" ||
+          errorCause.message?.includes("write ECONNABORTED") ||
+          errorCause.errno === -4079)
+      ) {
+        return NextResponse.json(
+          {
+            message: "Arquivo muito grande. Tente com um arquivo menor.",
+            error: "FILE_TOO_LARGE_CONNECTION",
+            details:
+              "A conexão foi abortada, provavelmente devido ao tamanho do arquivo",
+          },
+          { status: 413 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          message:
+            "Backend não está respondendo. Verifique se o serviço está rodando.",
+          error: "CONNECTION_ERROR",
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       {
-        message: "Erro interno ao fazer upload da imagem da filial",
+        message: "Erro interno do servidor",
         error: error instanceof Error ? error.message : "Erro desconhecido",
       },
       { status: 500 }
     );
   }
 });
-

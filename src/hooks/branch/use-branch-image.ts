@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "@/hooks/use-toast";
 
 interface UseBranchImageProps {
-  branchId: number;
+  branchId: number | string;
   currentImage?: string;
   imageType?: string; // Novo parâmetro para especificar o tipo da imagem
   onSuccess?: () => void; // Callback para executar após sucesso
@@ -26,9 +26,13 @@ export function useBranchImage({
    * Faz upload da imagem da filial
    */
   const uploadImage = async (file: File): Promise<boolean> => {
-    // Validação de segurança
-    if (!branchId) {
-      console.error("❌ Erro: branchId está undefined");
+    // Validação de segurança - aceita number > 0 ou string não vazia
+    if (
+      !branchId ||
+      (typeof branchId === "number" && branchId <= 0) ||
+      (typeof branchId === "string" && branchId.trim().length === 0)
+    ) {
+      console.error("❌ Erro: branchId inválido:", branchId);
       toast({
         title: "Erro",
         description: "ID da filial não encontrado.",
@@ -53,7 +57,6 @@ export function useBranchImage({
       const formData = new FormData();
       formData.append(imageType, file); // Usa o imageType como nome do campo
 
-
       // Fazer requisição para nossa rota PATCH padronizada
       const response = await fetch(`/api/branch/${branchId}/design/images`, {
         method: "PATCH",
@@ -63,14 +66,27 @@ export function useBranchImage({
         body: formData,
       });
 
-
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("❌ Erro na resposta:", errorData);
+        let errorMessage = "Erro interno do servidor";
+
+        try {
+          const errorData = await response.json();
+          console.error("❌ Erro na resposta:", errorData);
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          // Se não conseguir fazer parse do JSON, tenta pegar como texto
+          try {
+            const errorText = await response.text();
+            console.error("❌ Erro na resposta (texto):", errorText);
+            errorMessage = errorText || errorMessage;
+          } catch (textError) {
+            console.error("❌ Erro ao processar resposta de erro:", textError);
+          }
+        }
 
         toast({
           title: "Erro ao fazer upload",
-          description: errorData.message || "Erro interno do servidor",
+          description: errorMessage,
           variant: "destructive",
         });
         return false;
@@ -111,9 +127,13 @@ export function useBranchImage({
    * Remove a imagem da filial
    */
   const removeImage = async (): Promise<boolean> => {
-    // Validação de segurança
-    if (!branchId) {
-      console.error("❌ Erro: branchId está undefined");
+    // Validação de segurança - aceita number > 0 ou string não vazia
+    if (
+      !branchId ||
+      (typeof branchId === "number" && branchId <= 0) ||
+      (typeof branchId === "string" && branchId.trim().length === 0)
+    ) {
+      console.error("❌ Erro: branchId inválido:", branchId);
       toast({
         title: "Erro",
         description: "ID da filial não encontrado.",
@@ -134,7 +154,6 @@ export function useBranchImage({
     try {
       setIsRemoving(true);
 
-
       // Fazer requisição DELETE para a nova rota com image_type
       const response = await fetch(
         `/api/branch/${branchId}/design/images/${imageType}`,
@@ -146,19 +165,31 @@ export function useBranchImage({
         }
       );
 
-
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("❌ Erro na resposta:", errorData);
+        let errorMessage = "Erro interno do servidor";
+
+        try {
+          const errorData = await response.json();
+          console.error("❌ Erro na resposta:", errorData);
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          // Se não conseguir fazer parse do JSON, tenta pegar como texto
+          try {
+            const errorText = await response.text();
+            console.error("❌ Erro na resposta (texto):", errorText);
+            errorMessage = errorText || errorMessage;
+          } catch (textError) {
+            console.error("❌ Erro ao processar resposta de erro:", textError);
+          }
+        }
 
         toast({
           title: "Erro ao remover imagem",
-          description: errorData.message || "Erro interno do servidor",
+          description: errorMessage,
           variant: "destructive",
         });
         return false;
       }
-
 
       // Limpar preview da imagem
       setImagePreview(null);
@@ -190,9 +221,9 @@ export function useBranchImage({
   /**
    * Handler para mudança de imagem (upload)
    */
-  const handleImageChange = async (file: File | null) => {
+  const handleImageChange = async (file: File | null): Promise<boolean> => {
     // Se file for null, não faz nada (remoção é tratada por handleRemoveImage)
-    if (!file) return;
+    if (!file) return false;
 
     // Validações básicas no frontend
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -202,7 +233,7 @@ export function useBranchImage({
         description: "Use apenas JPEG, PNG ou WebP",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     const maxSize = 5 * 1024 * 1024; // 5MB
@@ -212,7 +243,7 @@ export function useBranchImage({
         description: "Máximo 5MB permitido",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     // Preview temporário enquanto faz upload
@@ -229,6 +260,8 @@ export function useBranchImage({
     if (!success) {
       setImagePreview(currentImage || null);
     }
+
+    return success;
   };
 
   /**

@@ -17,7 +17,6 @@ import { TeamMemberList } from "./team-member-list";
 import { useGetEmployeeById } from "@/hooks/get-employee-by-id";
 import { useGetCompany } from "@/hooks/get-company";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { useUploadEmployeeImage } from "@/hooks/use-upload-employee-image";
 import { useToast } from "@/hooks/use-toast";
 
 export default function YourTeam() {
@@ -32,7 +31,6 @@ export default function YourTeam() {
     useGetEmployeeById(selectedMemberId);
 
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
-  const { uploadImage, loading: uploadLoading } = useUploadEmployeeImage();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -56,38 +54,27 @@ export default function YourTeam() {
     console.log(`Saving member: ${updatedUser.name}`);
   };
 
-  const handleImageUpload = async (file: File) => {
-    if (!selectedMember?.id) {
-      toast({
-        title: "Erro",
-        description: "Nenhum funcionário selecionado",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleImageChange = (newImageUrl: string | null) => {
+    // Atualizar o estado local imediatamente para feedback visual rápido
+    setSelectedMember((prev: any) => ({
+      ...prev,
+      design: {
+        ...prev?.design,
+        images: {
+          ...prev?.design?.images,
+          profile: {
+            ...prev?.design?.images?.profile,
+            url: newImageUrl,
+          },
+        },
+      },
+    }));
 
-    try {
-      const result = await uploadImage(selectedMember.id, file);
-
-      if (result) {
-        // Atualizar o selectedMember com a nova URL da imagem
-        setSelectedMember((prev: any) => ({
-          ...prev,
-          imageUrl: result.imageUrl,
-        }));
-
-        toast({
-          title: "Sucesso",
-          description: "Imagem atualizada com sucesso!",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao fazer upload da imagem",
-        variant: "destructive",
-      });
-    }
+    // Recarregar dados da empresa para manter sincronização
+    // Isso garante que a lista lateral também será atualizada
+    setTimeout(() => {
+      refetch();
+    }, 500); // Pequeno delay para não interferir na UX
   };
 
   const renderTabContent = () => {
@@ -191,11 +178,11 @@ export default function YourTeam() {
                 <UserAvatar
                   name={selectedMember?.name}
                   surname={selectedMember?.surname}
-                  imageUrl={selectedMember?.imageUrl}
+                  imageUrl={selectedMember?.design?.images?.profile?.url}
                   size="lg"
                   editable={true}
-                  loading={uploadLoading}
-                  onImageUpload={handleImageUpload}
+                  employeeId={selectedMember?.id}
+                  onImageChange={handleImageChange}
                 />
                 <div className="flex justify-start items-start flex-col mt-2">
                   <h1 className="text-2xl font-semibold">
