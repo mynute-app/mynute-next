@@ -1,4 +1,4 @@
-1 = Ajustar as imagens do Funcionario (ela nao esta sendo aplicada)
+1 = Ajustar as imagens do Funcionario (ela nao esta sendo aplicada) = OK
 
     Obs:  PATCH /api/employee/4011f07b-fc01-40bc-a0ae-1f0f2fef16d2/design/images 405 in 307ms
     Erro: Funcionario nao consegue vincular o servico a filial dele 

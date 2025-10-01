@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useUploadEmployeeImage } from "@/hooks/use-upload-employee-image";
+import { useToast } from "@/hooks/use-toast";
 
 interface UserAvatarProps {
   name?: string;
@@ -9,9 +11,9 @@ interface UserAvatarProps {
   imageUrl?: string;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
-  onImageUpload?: (file: File) => void;
   editable?: boolean;
-  loading?: boolean;
+  employeeId?: number | string;
+  onImageChange?: (newImageUrl: string | null) => void;
 }
 
 const sizeClasses = {
@@ -27,12 +29,22 @@ export function UserAvatar({
   imageUrl,
   size = "lg",
   className,
-  onImageUpload,
   editable = false,
-  loading = false,
+  employeeId,
+  onImageChange,
 }: UserAvatarProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
+
+  const { uploadImage, deleteImage, loading } = useUploadEmployeeImage();
+  const { toast } = useToast();
+
+  // Reset image error quando imageUrl muda
+  useEffect(() => {
+    if (imageUrl) {
+      setImageError(false);
+    }
+  }, [imageUrl]);
 
   // Gera as iniciais do nome
   const getInitials = () => {
@@ -42,10 +54,85 @@ export function UserAvatar({
   };
 
   // Manipula o upload da imagem
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
-    if (file && onImageUpload) {
-      onImageUpload(file);
+    if (!file || !editable || !employeeId) {
+      if (!employeeId) {
+        toast({
+          title: "Erro",
+          description: "ID do funcionário não encontrado",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
+    try {
+      const result = await uploadImage(employeeId, file);
+
+      if (result && result.imageUrl) {
+        // Reset image error state quando uma nova imagem é carregada
+        setImageError(false);
+        onImageChange?.(result.imageUrl);
+        toast({
+          title: "Sucesso",
+          description: "Imagem atualizada com sucesso!",
+        });
+      } else {
+        throw new Error("URL da imagem não foi retornada");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao fazer upload da imagem",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Manipula a remoção da imagem
+  const handleDeleteImage = async () => {
+    if (!employeeId) {
+      toast({
+        title: "Erro",
+        description: "ID do funcionário não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!imageUrl) {
+      toast({
+        title: "Erro",
+        description: "Nenhuma imagem para remover",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const success = await deleteImage(employeeId);
+
+      if (success) {
+        // Reset image error state quando a imagem é removida
+        setImageError(false);
+        onImageChange?.(null);
+        toast({
+          title: "Sucesso",
+          description: "Imagem removida com sucesso!",
+        });
+      } else {
+        throw new Error("Falha ao deletar imagem");
+      }
+    } catch (error) {
+      console.error("❌ Erro ao deletar imagem:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao remover a imagem",
+        variant: "destructive",
+      });
     }
   };
 
@@ -102,35 +189,79 @@ export function UserAvatar({
               {loading ? (
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
               ) : (
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
+                <div className="flex gap-2 relative z-10">
+                  {/* Ícone de upload */}
+                  <button
+                    onClick={() => {
+                      const inputId = `file-input-${employeeId || "default"}`;
+                      const fileInput = document.querySelector(
+                        `#${inputId}`
+                      ) as HTMLInputElement;
+                      fileInput?.click();
+                    }}
+                    className="hover:bg-blue-600 rounded p-1 transition-colors"
+                    title="Alterar imagem"
+                    type="button"
+                  >
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* Ícone de delete se houver imagem */}
+                  {shouldShowImage && (
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleDeleteImage();
+                      }}
+                      className="hover:bg-red-600 rounded p-1 transition-colors"
+                      title="Remover imagem"
+                      type="button"
+                    >
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           )}
 
           <input
+            id={`file-input-${employeeId || "default"}`}
             type="file"
             accept="image/*"
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            className="hidden"
             onChange={handleFileChange}
-            title="Clique para alterar a foto"
             disabled={loading}
           />
         </>
