@@ -117,13 +117,16 @@ export function BranchAvatar({
     }
 
     try {
-      await handleImageChange(file);
-      // Reset image error state quando uma nova imagem é carregada
-      setImageError(false);
-      toast({
-        title: "Sucesso",
-        description: "Imagem da filial atualizada com sucesso!",
-      });
+      const success = await handleImageChange(file);
+
+      if (success) {
+        setImageError(false);
+        toast({
+          title: "Sucesso",
+          description: "Imagem da filial atualizada com sucesso!",
+        });
+      }
+      // Se não foi sucesso, o hook já mostrou o toast de erro
     } catch (error) {
       console.error("❌ Erro ao fazer upload:", error);
       toast({
@@ -196,7 +199,7 @@ export function BranchAvatar({
   return (
     <div
       className={cn(
-        "relative rounded-xl flex items-center justify-center font-bold cursor-pointer transition-all duration-200",
+        " relative rounded-xl flex items-center justify-center font-bold cursor-pointer transition-all duration-200 ",
         sizeClasses[size],
         shouldShowImage ? "" : getBackgroundColor(),
         shouldShowImage ? "" : "text-white",
@@ -210,7 +213,7 @@ export function BranchAvatar({
         <img
           src={imageUrl}
           alt={`Filial ${name}`}
-          className="w-full h-full rounded-xl object-cover"
+          className="w-full h-full rounded-xl object-cover "
           onError={() => setImageError(true)}
         />
       ) : (
@@ -221,7 +224,7 @@ export function BranchAvatar({
       {editable && (
         <>
           {(isHovered || loading) && (
-            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-xl flex items-center justify-center">
+            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-xl flex items-center justify-center h-24 w-24">
               {loading ? (
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
               ) : (

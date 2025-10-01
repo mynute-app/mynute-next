@@ -63,14 +63,40 @@ export const PATCH = auth(async function PATCH(req, ctx) {
     });
 
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error("❌ Erro na API backend:", errorData);
-      console.error("❌ Status:", response.status);
-      console.error("❌ StatusText:", response.statusText);
+      // Capturar especificamente o erro 413
+      if (response.status === 413) {
+        return NextResponse.json(
+          {
+            message:
+              "Arquivo muito grande. O backend não aceita arquivos desse tamanho.",
+            error: "FILE_TOO_LARGE",
+            status: 413,
+          },
+          { status: 413 }
+        );
+      }
+
+      // Tentar pegar a resposta como JSON primeiro
+      let backendError = null;
+      try {
+        backendError = await response.json();
+      } catch (jsonError) {
+        // Se não for JSON, pegar como texto
+        try {
+          backendError = await response.text();
+        } catch (textError) {
+          backendError = { message: "Erro desconhecido do backend" };
+        }
+      }
+
       return NextResponse.json(
         {
-          message: "Erro ao fazer upload da imagem da filial",
-          details: errorData,
+          message:
+            typeof backendError === "string"
+              ? backendError
+              : backendError?.message || "Erro do backend",
+          backendError: backendError,
+          status: response.status,
         },
         { status: response.status }
       );
@@ -80,14 +106,42 @@ export const PATCH = auth(async function PATCH(req, ctx) {
 
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
-    console.error("❌ Erro ao processar upload da imagem da filial:", error);
-    console.error(
-      "❌ Stack trace:",
-      error instanceof Error ? error.stack : "Sem stack trace"
-    );
+    const { branch_id } = ctx.params as { branch_id: string };
+
+    if (error instanceof Error && error.message.includes("fetch failed")) {
+      const errorCause = error.cause as any;
+
+      // Verificar se é erro de tamanho de arquivo
+      if (
+        errorCause &&
+        (errorCause.code === "ECONNABORTED" ||
+          errorCause.message?.includes("write ECONNABORTED") ||
+          errorCause.errno === -4079)
+      ) {
+        return NextResponse.json(
+          {
+            message: "Arquivo muito grande. Tente com um arquivo menor.",
+            error: "FILE_TOO_LARGE_CONNECTION",
+            details:
+              "A conexão foi abortada, provavelmente devido ao tamanho do arquivo",
+          },
+          { status: 413 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          message:
+            "Backend não está respondendo. Verifique se o serviço está rodando.",
+          error: "CONNECTION_ERROR",
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       {
-        message: "Erro interno ao fazer upload da imagem da filial",
+        message: "Erro interno do servidor",
         error: error instanceof Error ? error.message : "Erro desconhecido",
       },
       { status: 500 }

@@ -67,12 +67,26 @@ export function useBranchImage({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("❌ Erro na resposta:", errorData);
+        let errorMessage = "Erro interno do servidor";
+
+        try {
+          const errorData = await response.json();
+          console.error("❌ Erro na resposta:", errorData);
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          // Se não conseguir fazer parse do JSON, tenta pegar como texto
+          try {
+            const errorText = await response.text();
+            console.error("❌ Erro na resposta (texto):", errorText);
+            errorMessage = errorText || errorMessage;
+          } catch (textError) {
+            console.error("❌ Erro ao processar resposta de erro:", textError);
+          }
+        }
 
         toast({
           title: "Erro ao fazer upload",
-          description: errorData.message || "Erro interno do servidor",
+          description: errorMessage,
           variant: "destructive",
         });
         return false;
@@ -152,12 +166,26 @@ export function useBranchImage({
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("❌ Erro na resposta:", errorData);
+        let errorMessage = "Erro interno do servidor";
+
+        try {
+          const errorData = await response.json();
+          console.error("❌ Erro na resposta:", errorData);
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          // Se não conseguir fazer parse do JSON, tenta pegar como texto
+          try {
+            const errorText = await response.text();
+            console.error("❌ Erro na resposta (texto):", errorText);
+            errorMessage = errorText || errorMessage;
+          } catch (textError) {
+            console.error("❌ Erro ao processar resposta de erro:", textError);
+          }
+        }
 
         toast({
           title: "Erro ao remover imagem",
-          description: errorData.message || "Erro interno do servidor",
+          description: errorMessage,
           variant: "destructive",
         });
         return false;
@@ -193,9 +221,9 @@ export function useBranchImage({
   /**
    * Handler para mudança de imagem (upload)
    */
-  const handleImageChange = async (file: File | null) => {
+  const handleImageChange = async (file: File | null): Promise<boolean> => {
     // Se file for null, não faz nada (remoção é tratada por handleRemoveImage)
-    if (!file) return;
+    if (!file) return false;
 
     // Validações básicas no frontend
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -205,7 +233,7 @@ export function useBranchImage({
         description: "Use apenas JPEG, PNG ou WebP",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     const maxSize = 5 * 1024 * 1024; // 5MB
@@ -215,7 +243,7 @@ export function useBranchImage({
         description: "Máximo 5MB permitido",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     // Preview temporário enquanto faz upload
@@ -232,6 +260,8 @@ export function useBranchImage({
     if (!success) {
       setImagePreview(currentImage || null);
     }
+
+    return success;
   };
 
   /**

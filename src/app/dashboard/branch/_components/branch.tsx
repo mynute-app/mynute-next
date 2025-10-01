@@ -183,6 +183,7 @@ export default function BranchManager() {
                       handleSelectBranch(selectedBranch);
                     }
                   }}
+                  className="h-24 w-24"
                 />
                 <div className="flex justify-start items-start flex-col mt-2">
                   <h2 className="text-xl font-semibold">
