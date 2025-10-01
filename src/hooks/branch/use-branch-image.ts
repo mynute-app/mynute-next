@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "@/hooks/use-toast";
 
 interface UseBranchImageProps {
-  branchId: number;
+  branchId: number | string;
   currentImage?: string;
   imageType?: string; // Novo parâmetro para especificar o tipo da imagem
   onSuccess?: () => void; // Callback para executar após sucesso
@@ -26,9 +26,13 @@ export function useBranchImage({
    * Faz upload da imagem da filial
    */
   const uploadImage = async (file: File): Promise<boolean> => {
-    // Validação de segurança
-    if (!branchId) {
-      console.error("❌ Erro: branchId está undefined");
+    // Validação de segurança - aceita number > 0 ou string não vazia
+    if (
+      !branchId ||
+      (typeof branchId === "number" && branchId <= 0) ||
+      (typeof branchId === "string" && branchId.trim().length === 0)
+    ) {
+      console.error("❌ Erro: branchId inválido:", branchId);
       toast({
         title: "Erro",
         description: "ID da filial não encontrado.",
@@ -53,7 +57,6 @@ export function useBranchImage({
       const formData = new FormData();
       formData.append(imageType, file); // Usa o imageType como nome do campo
 
-
       // Fazer requisição para nossa rota PATCH padronizada
       const response = await fetch(`/api/branch/${branchId}/design/images`, {
         method: "PATCH",
@@ -62,7 +65,6 @@ export function useBranchImage({
         },
         body: formData,
       });
-
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -111,9 +113,13 @@ export function useBranchImage({
    * Remove a imagem da filial
    */
   const removeImage = async (): Promise<boolean> => {
-    // Validação de segurança
-    if (!branchId) {
-      console.error("❌ Erro: branchId está undefined");
+    // Validação de segurança - aceita number > 0 ou string não vazia
+    if (
+      !branchId ||
+      (typeof branchId === "number" && branchId <= 0) ||
+      (typeof branchId === "string" && branchId.trim().length === 0)
+    ) {
+      console.error("❌ Erro: branchId inválido:", branchId);
       toast({
         title: "Erro",
         description: "ID da filial não encontrado.",
@@ -134,7 +140,6 @@ export function useBranchImage({
     try {
       setIsRemoving(true);
 
-
       // Fazer requisição DELETE para a nova rota com image_type
       const response = await fetch(
         `/api/branch/${branchId}/design/images/${imageType}`,
@@ -145,7 +150,6 @@ export function useBranchImage({
           },
         }
       );
-
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -158,7 +162,6 @@ export function useBranchImage({
         });
         return false;
       }
-
 
       // Limpar preview da imagem
       setImagePreview(null);

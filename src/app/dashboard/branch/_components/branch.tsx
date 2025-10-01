@@ -13,6 +13,7 @@ import { AddAddressDialog } from "./add-address-dialog";
 import { Separator } from "@/components/ui/separator";
 import { BranchEmployees } from "./branch-employees";
 import { BranchWorkScheduleManager } from "@/components/branch-work-schedule/branch-work-schedule-manager";
+import { BranchAvatar } from "@/components/ui/branch-avatar";
 
 import { Branch } from "../../../../../types/company";
 import { useGetCompany } from "@/hooks/get-company";
@@ -167,10 +168,37 @@ export default function BranchManager() {
       <div className="w-full md:w-2/3 p-6 overflow-y-auto">
         {selectedBranch ? (
           <>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">
-                {selectedBranch.name} – {selectedBranch.street}
-              </h2>
+            <div className="flex items-center justify-between space-x-4 mb-6">
+              <div className="flex justify-center items-start gap-4">
+                <BranchAvatar
+                  name={selectedBranch?.name}
+                  imageUrl={
+                    (selectedBranch as any)?.design?.images?.profile?.url
+                  }
+                  size="lg"
+                  editable={true}
+                  branchId={selectedBranch?.id}
+                  onImageChange={() => {
+                    if (selectedBranch?.id) {
+                      handleSelectBranch(selectedBranch);
+                    }
+                  }}
+                />
+                <div className="flex justify-start items-start flex-col mt-2">
+                  <h2 className="text-xl font-semibold">
+                    {selectedBranch.name}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedBranch.street}, {selectedBranch.city}
+                  </p>
+                  {/* Debug info */}
+                  {process.env.NODE_ENV === "development" && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      ID: {selectedBranch?.id}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <AddressField
@@ -179,7 +207,6 @@ export default function BranchManager() {
               branch={selectedBranch}
               onDelete={handleDeleteBranch}
               index={index}
-              branchData={selectedBranch} // Passa os dados da branch para evitar fetch duplicado
             />
 
             <div className="mt-8">
