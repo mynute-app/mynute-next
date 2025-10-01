@@ -7,14 +7,8 @@ import { Service } from "../../../types/company";
 const addServiceSchema = z.object({
   name: z.string().min(1, "O título é obrigatório."),
   description: z.string().min(1, "A descrição é obrigatória."),
-  price: z
-    .string()
-    .min(1, "O preço é obrigatório.")
-    .transform(val => Number(val)),
-  duration: z
-    .string()
-    .min(1, "A duração é obrigatória.")
-    .transform(val => Number(val)),
+  price: z.any().optional(),
+  duration: z.any().optional(),
 });
 
 type AddServiceFormValues = z.infer<typeof addServiceSchema>;

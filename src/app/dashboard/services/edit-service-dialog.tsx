@@ -23,10 +23,19 @@ import {
   FiCamera,
   FiX,
   FiUsers,
+  FiScissors,
 } from "react-icons/fi";
 import { useEditService } from "@/hooks/services/use-edit-service";
 import { useServiceImage } from "@/hooks/services/use-service-image";
 import { useGetService } from "@/hooks/services/use-get-service";
+import {
+  applyCurrencyMask,
+  applyTimeMask,
+  unmaskCurrency,
+  unmaskTime,
+  formatTimeMask,
+  formatCurrencyMask,
+} from "@/utils/format-masks";
 
 const editServiceSchema = z.object({
   name: z.string().min(1, "O nome é obrigatório."),
@@ -52,6 +61,8 @@ export const EditServiceDialog = ({
   onSave,
 }: Props) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [durationDisplay, setDurationDisplay] = React.useState("");
+  const [priceDisplay, setPriceDisplay] = React.useState("");
 
   // Hook para atualizar serviço
   const { isUpdating, updateService } = useEditService();
@@ -75,7 +86,7 @@ export const EditServiceDialog = ({
     enabled: !!service?.id,
   });
 
-  const { register, handleSubmit, formState, reset } =
+  const { register, handleSubmit, formState, reset, setValue } =
     useForm<EditServiceFormValues>({
       resolver: zodResolver(editServiceSchema),
     });
@@ -83,6 +94,12 @@ export const EditServiceDialog = ({
   // Reset form quando o serviço muda
   useEffect(() => {
     if (service) {
+      const duration = Number(service.duration) || 0;
+      const price = Number(service.price) || 0;
+
+      setDurationDisplay(duration > 0 ? formatTimeMask(duration) : "");
+      setPriceDisplay(price > 0 ? formatCurrencyMask(price) : "");
+
       reset({
         name: service.name || "",
         description: service.description || "",
@@ -104,6 +121,18 @@ export const EditServiceDialog = ({
     fileInputRef.current?.click();
   };
 
+  const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const maskedValue = applyTimeMask(e.target.value);
+    setDurationDisplay(maskedValue);
+    setValue("duration", unmaskTime(maskedValue).toString());
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const maskedValue = applyCurrencyMask(e.target.value);
+    setPriceDisplay(maskedValue);
+    setValue("price", unmaskCurrency(maskedValue).toString());
+  };
+
   const onSubmit = async (data: EditServiceFormValues) => {
     if (!service) return;
 
@@ -113,8 +142,8 @@ export const EditServiceDialog = ({
         id: service.id,
         name: data.name,
         description: data.description,
-        price: data.price || "0",
-        duration: data.duration,
+        price: unmaskCurrency(priceDisplay).toString(),
+        duration: unmaskTime(durationDisplay).toString(),
       });
 
       if (updatedService) {
@@ -198,11 +227,14 @@ export const EditServiceDialog = ({
 
             <div className="flex-1">
               <Label htmlFor="name">Digite o título do serviço*</Label>
-              <Input
-                id="name"
-                placeholder="Digite o título do serviço"
-                {...register("name")}
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  id="name"
+                  placeholder="Digite o título do serviço"
+                  {...register("name")}
+                  className="flex-1"
+                />
+              </div>
               {formState.errors.name && (
                 <p className="text-sm text-red-500">
                   {formState.errors.name.message}
@@ -227,8 +259,9 @@ export const EditServiceDialog = ({
               <Label htmlFor="duration">Duração*</Label>
               <Input
                 id="duration"
-                placeholder="Ex.: 30 minutos"
-                {...register("duration")}
+                placeholder="Ex.: 30 min"
+                value={durationDisplay}
+                onChange={handleDurationChange}
               />
               {formState.errors.duration && (
                 <p className="text-sm text-red-500">
@@ -245,8 +278,9 @@ export const EditServiceDialog = ({
               <Label htmlFor="price">Custo</Label>
               <Input
                 id="price"
-                placeholder="Ex.: R$50"
-                {...register("price")}
+                placeholder="Ex.: R$ 50,00"
+                value={priceDisplay}
+                onChange={handlePriceChange}
               />
             </div>
           </div>

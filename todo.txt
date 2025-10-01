@@ -6,10 +6,10 @@
           GET /api/employee/4011f07b-fc01-40bc-a0ae-1f0f2fef16d2/work_schedule 200 in 63ms
           (igual a branch acontece a mesma coisa, ver o Remove dele logo em seguida)
 
-2 = Ajustar as imagens da Filial (por algum motivo tem imagens que vai e tem outras que nao) 
+2 = Ajustar as imagens da Filial (por algum motivo tem imagens que vai e tem outras que nao)  = OK
 
-    Erro: 📏 Tamanho do arquivo: 25263 bytes
-    Obs: Precisa atualizar no front para ter algo visual, mesma coisa com o nome da filial.
+    Erro: 📏 Tamanho do arquivo: 25263 bytes = OK
+    Obs: Precisa atualizar no front para ter algo visual, mesma coisa com o nome da filial. = OK
 
     2.1  = Precisa conseguir remover um servico, que a filial consegue fazer, dentro do horario da filial
     (dailog de Edite)
