@@ -77,10 +77,9 @@ export const EditServiceDialog = ({
   } = useServiceImage({
     serviceId: service?.id || "",
     currentImage: service?.imageUrl,
-    imageType: "profile", // Usar "profile" conforme a estrutura da API
+    imageType: "profile",
   });
 
-  // Hook para buscar dados completos do serviço (incluindo funcionários)
   const { service: serviceData, loading: loadingServiceData } = useGetService({
     serviceId: service?.id || "",
     enabled: !!service?.id,

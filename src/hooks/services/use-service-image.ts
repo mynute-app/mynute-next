@@ -34,10 +34,8 @@ export function useServiceImage({
   // Atualizar preview quando o serviço for carregado ou currentImage mudar
   useEffect(() => {
     if (service?.imageUrl) {
-      console.log("🖼️ Imagem do serviço encontrada:", service.imageUrl);
       setImagePreview(service.imageUrl);
     } else if (currentImage) {
-      console.log("🖼️ Usando imagem atual:", currentImage);
       setImagePreview(currentImage);
     } else {
       setImagePreview(null);
@@ -48,13 +46,7 @@ export function useServiceImage({
    * Faz upload da imagem do serviço
    */
   const uploadImage = async (file: File): Promise<boolean> => {
-    console.log("🔍 uploadImage iniciado");
-    console.log("📋 Session:", !!session?.accessToken);
-    console.log("📋 ServiceId:", serviceId);
-    console.log("📋 ImageType:", imageType);
-
     if (!session?.accessToken) {
-      console.log("❌ Token de autenticação não encontrado");
       toast({
         title: "Erro",
         description: "Token de autenticação não encontrado",
@@ -70,14 +62,6 @@ export function useServiceImage({
       const formData = new FormData();
       formData.append(imageType, file); // Usa o imageType como nome do campo
 
-      console.log(`🔄 Enviando imagem ${imageType} para serviço:`, serviceId);
-      console.log("📋 FormData preparado:", {
-        fieldName: imageType,
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-      });
-
       // Fazer requisição para nossa rota PATCH padronizada
       const response = await fetch(`/api/service/${serviceId}/design/images`, {
         method: "PATCH",
@@ -87,27 +71,27 @@ export function useServiceImage({
         body: formData,
       });
 
-      console.log("📡 Status da resposta:", response.status);
-      console.log(
-        "📡 Headers da resposta:",
-        Object.fromEntries(response.headers.entries())
-      );
-
       if (!response.ok) {
-        console.log("❌ Resposta não OK");
+        let errorMessage = "Erro interno do servidor";
         let errorData;
+
         try {
           errorData = await response.json();
           console.error("❌ Erro na resposta (JSON):", errorData);
+          errorMessage = errorData.message || errorMessage;
         } catch (parseError) {
-          const errorText = await response.text();
-          console.error("❌ Erro na resposta (TEXT):", errorText);
-          errorData = { message: errorText || "Erro desconhecido" };
+          try {
+            const errorText = await response.text();
+            console.error("❌ Erro na resposta (TEXT):", errorText);
+            errorMessage = errorText || errorMessage;
+          } catch (textError) {
+            console.error("❌ Erro ao processar resposta de erro:", textError);
+          }
         }
 
         toast({
           title: "Erro ao fazer upload",
-          description: errorData.message || "Erro interno do servidor",
+          description: errorMessage,
           variant: "destructive",
         });
         return false;
@@ -116,13 +100,10 @@ export function useServiceImage({
       let data;
       try {
         data = await response.json();
-        console.log("✅ Upload realizado com sucesso:", data);
       } catch (parseError) {
         console.error("❌ Erro ao parsear resposta de sucesso:", parseError);
         const responseText = await response.text();
-        console.log("📄 Resposta como texto:", responseText);
 
-        // Mesmo com erro de parse, considerar sucesso se status for OK
         data = { message: "Upload realizado com sucesso" };
       }
 
@@ -138,7 +119,6 @@ export function useServiceImage({
 
       // Refetch dos dados do serviço para sincronizar o estado
       if (refetch) {
-        console.log("🔄 Refazendo busca dos dados do serviço");
         await refetch();
       }
 
@@ -177,9 +157,6 @@ export function useServiceImage({
     try {
       setIsRemoving(true);
 
-      console.log(`🗑️ Removendo imagem ${imageType} do serviço:`, serviceId);
-
-      // Fazer requisição DELETE para a nova rota com image_type
       const response = await fetch(
         `/api/service/${serviceId}/design/images/${imageType}`,
         {
@@ -189,8 +166,6 @@ export function useServiceImage({
           },
         }
       );
-
-      console.log("📡 Status da resposta:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -204,8 +179,6 @@ export function useServiceImage({
         return false;
       }
 
-      console.log("✅ Imagem removida com sucesso");
-
       // Limpar preview da imagem
       setImagePreview(null);
 
@@ -216,7 +189,6 @@ export function useServiceImage({
 
       // Refetch dos dados do serviço para sincronizar o estado
       if (refetch) {
-        console.log("🔄 Refazendo busca dos dados do serviço após remoção");
         await refetch();
       }
 
@@ -242,58 +214,46 @@ export function useServiceImage({
   /**
    * Handler para mudança de imagem (upload)
    */
-  const handleImageChange = async (file: File | null) => {
-    console.log("🔄 handleImageChange chamado com:", file?.name || "null");
-
+  const handleImageChange = async (file: File | null): Promise<boolean> => {
     // Se file for null, não faz nada (remoção é tratada por handleRemoveImage)
     if (!file) {
-      console.log("❌ Arquivo é null, saindo...");
-      return;
+      return false;
     }
 
     // Validações básicas no frontend
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      console.log("❌ Tipo de arquivo inválido:", file.type);
       toast({
         title: "Tipo de arquivo inválido",
         description: "Use apenas JPEG, PNG ou WebP",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      console.log("❌ Arquivo muito grande:", file.size);
       toast({
         title: "Arquivo muito grande",
         description: "Máximo 5MB permitido",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
-    console.log("✅ Validações passaram, iniciando upload...");
-
-    // Preview temporário enquanto faz upload
     const reader = new FileReader();
     reader.onload = e => {
-      console.log("📸 Preview temporário criado");
       setImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
 
-    // Fazer upload
-    console.log("🚀 Chamando uploadImage...");
     const success = await uploadImage(file);
-    console.log("📋 Resultado do upload:", success);
 
-    // Se falhou, reverter o preview
     if (!success) {
-      console.log("❌ Upload falhou, revertendo preview");
       setImagePreview(currentImage || null);
     }
+
+    return success;
   };
 
   /**

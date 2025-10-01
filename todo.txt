@@ -15,10 +15,10 @@
     (dailog de Edite)
 
 3 = Ajuste de Input dentro do servico, os inputs precisa ser mais descritivo e formatado para os valore
-como  Custo - Duração 
+como  Custo - Duração  = OK
 
-    3.1 = Na Criacao vamos remover o Avatar de imagens
-    3.2 = Ajuste na Image do servico 
+    3.1 = Na Criacao vamos remover o Avatar de imagens =OK
+    3.2 = Ajuste na Image do servico  
         Erro: 📏 Tamanho do arquivo:
 
 
