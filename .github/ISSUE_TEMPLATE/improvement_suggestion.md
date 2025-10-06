@@ -1,9 +1,10 @@
-name: Improvement request
+---
+name: Improvement Suggestion
 about: Propose an improvement or optimization for an existing feature or process
 labels: Improvement
 ---
 
-# 🧩 Improvement Request
+# 🧩 Improvement Suggestion
 
 ## **Description**
 [Provide a clear and concise description of the improvement you propose.]
