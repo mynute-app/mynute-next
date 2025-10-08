@@ -16,20 +16,12 @@ export const POST = auth(async function POST(req, ctx) {
 
     const body = await req.json();
 
-    console.log("📦 Body recebido (branch):", JSON.stringify(body, null, 2));
-
     if (!body.work_schedule || !body.work_schedule.branch_work_ranges) {
       return NextResponse.json(
         { message: "work_schedule com branch_work_ranges é obrigatório" },
         { status: 400 }
       );
     }
-
-    console.log("🔍 Branch ID:", branch_id);
-    console.log(
-      "🗓️ Branch work schedule data:",
-      JSON.stringify(body.work_schedule, null, 2)
-    );
 
     const responseData = await fetchFromBackend(
       req,
@@ -41,7 +33,6 @@ export const POST = auth(async function POST(req, ctx) {
       }
     );
 
-    console.log("✅ Sucesso com POST (branch):", responseData);
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
     console.error("❌ Erro ao processar work_schedule da branch:", error);
@@ -67,8 +58,6 @@ export const GET = auth(async function GET(req, ctx) {
       branch_id: string;
     };
 
-    console.log("🔍 GET Branch ID:", branch_id);
-
     const responseData = await fetchFromBackend(
       req,
       `/branch/${branch_id}/work_schedule`,
@@ -78,7 +67,6 @@ export const GET = auth(async function GET(req, ctx) {
       }
     );
 
-    console.log("✅ Sucesso com GET (branch work_schedule):", responseData);
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
     console.error("❌ Erro ao buscar work_schedule da branch:", error);

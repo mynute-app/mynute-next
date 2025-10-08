@@ -12,12 +12,12 @@ import { BusinessSchema } from "../../../../../schema";
 import { AddAddressDialog } from "./add-address-dialog";
 import { Separator } from "@/components/ui/separator";
 import { BranchEmployees } from "./branch-employees";
-import { BranchWorkScheduleManager } from "@/components/branch-work-schedule/branch-work-schedule-manager";
 import { BranchAvatar } from "@/components/ui/branch-avatar";
 
 import { Branch } from "../../../../../types/company";
 import { useGetCompany } from "@/hooks/get-company";
 import { useBranchApi } from "@/hooks/branch/use-branch-api";
+import { BranchWorkScheduleManager } from "@/components/branch-work-schedule/branch-work-schedule-manager";
 
 type BranchForm = Omit<Branch, "id" | "services">;
 

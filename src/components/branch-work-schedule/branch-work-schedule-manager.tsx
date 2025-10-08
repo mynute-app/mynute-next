@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -13,12 +13,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Clock, Building2, RefreshCw } from "lucide-react";
+import { Building2, RefreshCw, Clock } from "lucide-react";
 import { BranchWorkScheduleView } from "./branch-work-schedule-view";
 import { BranchWorkScheduleForm } from "./branch-work-schedule-form";
 import { WorkRangeEditDialog } from "./work-range-edit-dialog";
 import { useBranchWorkSchedule } from "@/hooks/workSchedule/use-branch-work-schedule";
 import { useWorkRange } from "@/hooks/workSchedule/use-work-range";
+import { DIAS_SEMANA_MAP } from "./constants";
 
 interface BranchWorkScheduleRange {
   id?: string;
@@ -37,41 +38,63 @@ interface BranchWorkScheduleManagerProps {
   services?: Array<{ id: string; name: string }>;
   onSuccess?: () => void;
   defaultView?: "view" | "edit";
-  branchData?: any; // Dados completos da branch para otimização
+  branchData?: any;
 }
+
+const extractTime = (isoString: string): string => {
+  if (!isoString) return "";
+  try {
+    const date = new Date(isoString);
+    return date.toTimeString().slice(0, 5);
+  } catch {
+    return isoString.includes(":") ? isoString.slice(0, 5) : "";
+  }
+};
+
+const normalizeWorkScheduleData = (data: any[]): BranchWorkScheduleRange[] => {
+  if (!Array.isArray(data)) return [];
+
+  return data.map(item => ({
+    id: String(item.id || ""),
+    branch_id: String(item.branch_id),
+    end_time: extractTime(item.end_time || item.end || ""),
+    start_time: extractTime(item.start_time || item.start || ""),
+    time_zone: String(item.time_zone || "America/Sao_Paulo"),
+    weekday: Number(item.weekday ?? 1),
+    services: Array.isArray(item.services) ? item.services : [],
+  }));
+};
+
+const generateCompleteWeekSchedule = (
+  existingData: BranchWorkScheduleRange[],
+  branchId: string
+): BranchWorkScheduleRange[] => {
+  const weekdays = [0, 1, 2, 3, 4, 5, 6];
+
+  return weekdays.map(day => {
+    const existingDay = existingData.find(item => item.weekday === day);
+
+    return (
+      existingDay || {
+        id: "",
+        branch_id: branchId,
+        end_time: "",
+        start_time: "",
+        time_zone: "America/Sao_Paulo",
+        weekday: day,
+        services: [],
+      }
+    );
+  });
+};
 
 export function BranchWorkScheduleManager({
   branchId,
   branchName = "Filial",
   initialData = [],
-  services = [],
   onSuccess,
-  defaultView = "view",
   branchData,
 }: BranchWorkScheduleManagerProps) {
-  const [workScheduleData, setWorkScheduleData] = useState<
-    BranchWorkScheduleRange[]
-  >([]);
-  const [editDialog, setEditDialog] = useState<{
-    isOpen: boolean;
-    workRangeId: string | null;
-    data: Partial<BranchWorkScheduleRange> | null;
-  }>({
-    isOpen: false,
-    workRangeId: null,
-    data: null,
-  });
-  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
-    isOpen: boolean;
-    workRangeId: string | null;
-    dayName: string;
-  }>({
-    isOpen: false,
-    workRangeId: null,
-    dayName: "",
-  });
-
-  // Hook para gerenciar work schedule da branch
   const {
     getBranchWorkSchedule,
     createBranchWorkSchedule,
@@ -80,223 +103,99 @@ export function BranchWorkScheduleManager({
     error,
   } = useBranchWorkSchedule({
     onSuccess: () => {
-      // Recarregar dados após criar novo horário
       loadBranchWorkSchedule();
+      onSuccess?.();
     },
   });
 
-  // Hook para gerenciar work_range individual (editar/deletar)
   const {
     updateWorkRange,
     deleteWorkRange,
     loading: workRangeLoading,
   } = useWorkRange({
-    onSuccess: () => {
-      // Recarregar dados após operação de work_range individual
-      loadBranchWorkSchedule();
-    },
+    onSuccess: () => loadBranchWorkSchedule(),
   });
 
-  // Função para normalizar os dados vindos do backend
-  const normalizeInitialData = (data: any[]): BranchWorkScheduleRange[] => {
-    if (!Array.isArray(data)) return [];
+  const [editDialog, setEditDialog] = useState<{
+    isOpen: boolean;
+    workRangeId: string | null;
+    data: Partial<BranchWorkScheduleRange> | null;
+  }>({ isOpen: false, workRangeId: null, data: null });
 
-    return data.map((item, index) => {
-      // Extrair apenas a parte do horário das strings ISO
-      const extractTime = (isoString: string) => {
-        if (!isoString) return "";
-        try {
-          const date = new Date(isoString);
-          return date.toTimeString().slice(0, 5); // "HH:MM"
-        } catch {
-          return isoString.includes(":") ? isoString.slice(0, 5) : "";
-        }
-      };
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    workRangeId: string | null;
+    dayName: string;
+  }>({ isOpen: false, workRangeId: null, dayName: "" });
 
-      const normalized = {
-        id: String(item.id || ""),
-        branch_id: String(item.branch_id || branchId),
-        end_time: extractTime(item.end_time || item.end || ""),
-        start_time: extractTime(item.start_time || item.start || ""),
-        time_zone: String(item.time_zone || "America/Sao_Paulo"),
-        weekday: Number(item.weekday ?? 1), // Usar ?? ao invés de || para preservar weekday 0
-        services: Array.isArray(item.services) ? item.services : [],
-      };
+  const initialScheduleData = useMemo(() => {
+    const normalized = normalizeWorkScheduleData(initialData);
+    return generateCompleteWeekSchedule(normalized, branchId);
+  }, [initialData, branchId]);
 
-      return normalized;
-    });
-  };
+  const [workScheduleData, setWorkScheduleData] =
+    useState<BranchWorkScheduleRange[]>(initialScheduleData);
 
-  // Função para normalizar services
-  const normalizeServices = (servicesData: any[]) => {
-    if (!Array.isArray(servicesData)) return [];
-
-    return servicesData.map(service => ({
-      id: String(service.id || ""),
-      name: String(service.name || "Serviço"),
-    }));
-  };
-
-  // Função para gerar todos os dias da semana com dados completos
-  const generateCompleteWeekSchedule = (
-    existingData: BranchWorkScheduleRange[]
-  ): BranchWorkScheduleRange[] => {
-    const weekdays = [
-      { number: 0, name: "Domingo" },
-      { number: 1, name: "Segunda-feira" },
-      { number: 2, name: "Terça-feira" },
-      { number: 3, name: "Quarta-feira" },
-      { number: 4, name: "Quinta-feira" },
-      { number: 5, name: "Sexta-feira" },
-      { number: 6, name: "Sábado" },
-    ];
-
-    return weekdays.map(day => {
-      // Procurar se existe dados para este dia da semana
-      const existingDay = existingData.find(
-        item => item.weekday === day.number
-      );
-
-      if (existingDay) {
-        // Se existe, retorna os dados existentes
-        return existingDay;
-      } else {
-        // Se não existe, cria um registro vazio para permitir edição
-        return {
-          id: "", // ID vazio indica que é um dia não configurado
-          branch_id: branchId,
-          end_time: "",
-          start_time: "",
-          time_zone: "America/Sao_Paulo",
-          weekday: day.number,
-          services: [],
-        } as BranchWorkScheduleRange;
-      }
-    });
-  };
-
-  // Carregar dados do backend quando o branchId muda
   useEffect(() => {
-    if (branchId) {
-      loadBranchWorkSchedule();
-    }
+    if (branchId) loadBranchWorkSchedule();
   }, [branchId]);
 
-  // Atualizar dados quando receber do hook
   useEffect(() => {
     if (data) {
-      const normalized = normalizeInitialData(data);
-
-      // Debug específico para domingo
-      const domingoData = normalized.find(item => item.weekday === 0);
-
-      // Gerar semana completa com dados existentes e dias vazios
-      const completeWeek = generateCompleteWeekSchedule(normalized);
-
-      // Debug específico para domingo na semana completa
-      const domingoCompleto = completeWeek.find(item => item.weekday === 0);
-
+      const normalized = normalizeWorkScheduleData(data);
+      const completeWeek = generateCompleteWeekSchedule(normalized, branchId);
       setWorkScheduleData(completeWeek);
     }
-  }, [data]);
+  }, [data, branchId]);
 
-  // Carregar dados usando o hook
-  const loadBranchWorkSchedule = async () => {
+  const loadBranchWorkSchedule = useCallback(async () => {
     try {
       await getBranchWorkSchedule(branchId);
     } catch (error) {
-      console.warn("⚠️ Manager - Erro ao carregar work_schedule:", error);
-      // Se não encontrar, use initialData como fallback ou crie semana vazia
       const fallbackData =
-        initialData.length > 0 ? normalizeInitialData(initialData) : [];
-      const completeWeek = generateCompleteWeekSchedule(fallbackData);
+        initialData.length > 0 ? normalizeWorkScheduleData(initialData) : [];
+      const completeWeek = generateCompleteWeekSchedule(fallbackData, branchId);
       setWorkScheduleData(completeWeek);
     }
-  };
+  }, [branchId, getBranchWorkSchedule, initialData]);
 
-  const normalizedServices = normalizeServices(services);
-
-  const handleSuccess = () => {
-    // Recarregar dados após sucesso
-    loadBranchWorkSchedule();
-    onSuccess?.();
-  };
-
-  // Função para abrir dialog de confirmação de exclusão
-  const handleDeleteWorkRange = async (
-    workRangeId: string,
-    currentData?: Partial<BranchWorkScheduleRange>
-  ) => {
-    if (!workRangeId) return;
-
-    // Descobrir o nome do dia
-    const weekdays = [
-      "Domingo",
-      "Segunda-feira",
-      "Terça-feira",
-      "Quarta-feira",
-      "Quinta-feira",
-      "Sexta-feira",
-      "Sábado",
-    ];
-    const dayName =
-      currentData?.weekday !== undefined
-        ? weekdays[currentData.weekday]
-        : "este dia";
-
-    setDeleteConfirmDialog({
-      isOpen: true,
-      workRangeId,
-      dayName,
-    });
-  };
-
-  // Função para confirmar e executar a exclusão
-  const confirmDeleteWorkRange = async () => {
-    if (!deleteConfirmDialog.workRangeId) return;
-
-    try {
-      await deleteWorkRange(branchId, deleteConfirmDialog.workRangeId);
-
-      // Fechar o dialog
-      setDeleteConfirmDialog({
-        isOpen: false,
-        workRangeId: null,
-        dayName: "",
+  const handleEditWorkRange = useCallback(
+    (workRangeId: string, currentData: Partial<BranchWorkScheduleRange>) => {
+      setEditDialog({
+        isOpen: true,
+        workRangeId: workRangeId === "new" ? null : workRangeId,
+        data: currentData,
       });
-    } catch (error) {
-      console.error("❌ Manager - Erro ao deletar work_range:", error);
-    }
-  };
+    },
+    []
+  );
 
-  // Função para cancelar a exclusão
-  const cancelDelete = () => {
-    setDeleteConfirmDialog({
-      isOpen: false,
-      workRangeId: null,
-      dayName: "",
-    });
-  };
+  const handleDeleteWorkRange = useCallback(
+    (workRangeId: string, currentData?: Partial<BranchWorkScheduleRange>) => {
+      if (!workRangeId) return;
 
-  // Função para editar um work_range específico (abre dialog)
-  const handleEditWorkRange = async (
-    workRangeId: string,
-    currentData: Partial<BranchWorkScheduleRange>
-  ) => {
-    setEditDialog({
-      isOpen: true,
-      workRangeId: workRangeId === "new" ? null : workRangeId, // null para novos
-      data: currentData,
-    });
-  };
+      const dayName =
+        currentData?.weekday !== undefined
+          ? DIAS_SEMANA_MAP[currentData.weekday]
+          : "este dia";
 
-  // Função para salvar edição via dialog
-  const handleSaveEdit = async (updatedData: any) => {
-    try {
+      setDeleteDialog({ isOpen: true, workRangeId, dayName });
+    },
+    []
+  );
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteDialog.workRangeId) return;
+
+    await deleteWorkRange(branchId, deleteDialog.workRangeId);
+    setDeleteDialog({ isOpen: false, workRangeId: null, dayName: "" });
+  }, [deleteDialog.workRangeId, branchId, deleteWorkRange]);
+
+  const handleSaveEdit = useCallback(
+    async (updatedData: any) => {
       if (editDialog.workRangeId) {
         await updateWorkRange(branchId, editDialog.workRangeId, updatedData);
       } else {
-        // Verificar se já existe um registro para este dia da semana (com ou sem horários)
         const existingDayRecord = workScheduleData.find(
           day => day.weekday === updatedData.weekday && day.id
         );
@@ -304,8 +203,7 @@ export function BranchWorkScheduleManager({
         if (existingDayRecord) {
           await updateWorkRange(branchId, existingDayRecord.id!, updatedData);
         } else {
-          // Preparar dados no formato esperado pela API de work_schedule
-          const newWorkScheduleData = {
+          await createBranchWorkSchedule(branchId, {
             branch_work_ranges: [
               {
                 branch_id: branchId,
@@ -313,38 +211,28 @@ export function BranchWorkScheduleManager({
                 start_time: updatedData.start_time,
                 end_time: updatedData.end_time,
                 time_zone: updatedData.time_zone || "America/Sao_Paulo",
-                services: [], // Serviços serão adicionados depois se necessário
+                services: [],
               },
             ],
-          };
-
-          await createBranchWorkSchedule(branchId, newWorkScheduleData);
+          });
         }
       }
 
-      setEditDialog({
-        isOpen: false,
-        workRangeId: null,
-        data: null,
-      });
-    } catch (error) {
-      console.error("❌ Manager - Erro ao salvar:", error);
-      throw error;
-    }
-  };
+      setEditDialog({ isOpen: false, workRangeId: null, data: null });
+    },
+    [
+      editDialog.workRangeId,
+      workScheduleData,
+      branchId,
+      updateWorkRange,
+      createBranchWorkSchedule,
+    ]
+  );
 
-  // Função para fechar dialog
-  const handleCloseEditDialog = () => {
-    setEditDialog({
-      isOpen: false,
-      workRangeId: null,
-      data: null,
-    });
-  };
-
-  // Verificar se tem pelo menos um dia configurado (com horários)
-  const hasConfiguredSchedule = workScheduleData.some(
-    day => day.id && day.start_time && day.end_time
+  const hasConfiguredSchedule = useMemo(
+    () =>
+      workScheduleData.some(day => day.id && day.start_time && day.end_time),
+    [workScheduleData]
   );
 
   return (
@@ -360,21 +248,17 @@ export function BranchWorkScheduleManager({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadBranchWorkSchedule}
-            disabled={loading}
-            className="flex items-center gap-1"
-          >
-            <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
-            Atualizar
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={loadBranchWorkSchedule}
+          disabled={loading}
+        >
+          <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
+          Atualizar
+        </Button>
       </div>
 
-      {/* Renderização condicional: Configurar se não há dados, Visualizar se há dados */}
       {loading || workRangeLoading ? (
         <Card>
           <CardContent className="flex items-center justify-center py-8">
@@ -385,18 +269,14 @@ export function BranchWorkScheduleManager({
           </CardContent>
         </Card>
       ) : hasConfiguredSchedule ? (
-        // Mostra visualização quando há dados configurados
-        <div className="mt-4">
-          <BranchWorkScheduleView
-            workRanges={workScheduleData}
-            branchName={branchName}
-            onEdit={handleEditWorkRange}
-            onDelete={handleDeleteWorkRange}
-            isEditable={true}
-          />
-        </div>
+        <BranchWorkScheduleView
+          workRanges={workScheduleData}
+          branchName={branchName}
+          onEdit={handleEditWorkRange}
+          onDelete={handleDeleteWorkRange}
+          isEditable={true}
+        />
       ) : (
-        // Mostra formulário de configuração quando não há dados
         <div className="mt-4">
           <Card className="mb-4">
             <CardContent className="flex flex-col items-center justify-center py-8">
@@ -420,26 +300,26 @@ export function BranchWorkScheduleManager({
             branchId={branchId}
             branchName={branchName}
             initialData={workScheduleData}
-            services={normalizedServices}
-            onSuccess={handleSuccess}
+            onSuccess={loadBranchWorkSchedule}
           />
         </div>
       )}
 
-      {/* Dialog de edição */}
       <WorkRangeEditDialog
         isOpen={editDialog.isOpen}
-        onClose={handleCloseEditDialog}
+        onClose={() =>
+          setEditDialog({ isOpen: false, workRangeId: null, data: null })
+        }
         onSave={handleSaveEdit}
         branchId={branchId}
-        workRangeId={editDialog.workRangeId || "new"} // "new" para novos registros
-        branchData={branchData} // Passar dados da branch para otimização
+        workRangeId={editDialog.workRangeId || "new"}
+        branchData={branchData}
         initialData={
           editDialog.data
             ? {
                 start_time: editDialog.data.start_time || "09:00",
                 end_time: editDialog.data.end_time || "17:00",
-                weekday: editDialog.data.weekday ?? 1, // Usar ?? em vez de || para preservar weekday 0
+                weekday: editDialog.data.weekday ?? 1,
                 time_zone: editDialog.data.time_zone || "America/Sao_Paulo",
                 services: Array.isArray(editDialog.data.services)
                   ? editDialog.data.services.map((service: any) =>
@@ -452,32 +332,41 @@ export function BranchWorkScheduleManager({
             : undefined
         }
         loading={workRangeLoading}
-        disableWeekdayEdit={!!editDialog.workRangeId} // Desabilita apenas quando editando existente
-        onSuccessfulSave={loadBranchWorkSchedule} // Callback para atualizar dados
+        disableWeekdayEdit={!!editDialog.workRangeId}
+        onSuccessfulSave={loadBranchWorkSchedule}
       />
 
-      {/* Dialog de confirmação de exclusão */}
       <AlertDialog
-        open={deleteConfirmDialog.isOpen}
-        onOpenChange={cancelDelete}
+        open={deleteDialog.isOpen}
+        onOpenChange={() =>
+          setDeleteDialog({ isOpen: false, workRangeId: null, dayName: "" })
+        }
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja deletar o horário de funcionamento de{" "}
-              <strong>{deleteConfirmDialog.dayName}</strong>?
+              <strong>{deleteDialog.dayName}</strong>?
               <br />
               <br />
               Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDelete}>
+            <AlertDialogCancel
+              onClick={() =>
+                setDeleteDialog({
+                  isOpen: false,
+                  workRangeId: null,
+                  dayName: "",
+                })
+              }
+            >
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDeleteWorkRange}
+              onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Deletar

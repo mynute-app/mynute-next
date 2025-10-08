@@ -22,12 +22,7 @@ export const useWorkRangeServices = (props?: UseWorkRangeServicesProps) => {
     setSuccess(false);
     setError(null);
 
-    console.log("📥 Hook WorkRangeServices - Adicionando serviços:", {
-      branchId,
-      workRangeId,
-      serviceIds,
-      serviceIdsTypes: serviceIds.map(id => ({ id, type: typeof id })),
-    });
+    
 
     try {
       // Converter os IDs para o formato esperado pela API
