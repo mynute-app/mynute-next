@@ -64,26 +64,23 @@ const DayScheduleRow = memo(
     const dayRecord = dayRanges.find(range => range.weekday === weekday);
 
     return (
-      <div className="flex flex-col md:flex-row md:items-center gap-4 p-4 border rounded-lg">
-        <div className="flex items-center gap-3 min-w-[140px]">
-          <Calendar className="w-4 h-4 text-muted-foreground" />
-          <div>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+        <div className="flex items-center gap-2 sm:min-w-[120px]">
+          <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+          <div className="min-w-0">
             <p className="font-medium text-sm">{DIAS_SEMANA_MAP[weekday]}</p>
-            <p className="text-xs text-muted-foreground">
-              {DIAS_SEMANA_SHORT[weekday]}
-            </p>
           </div>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {!hasConfiguredRanges ? (
-            <div className="flex items-center justify-between">
-              <Badge variant="secondary" className="text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <Badge variant="secondary" className="text-xs flex-shrink-0">
                 Não configurado
               </Badge>
               {isEditable && (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() =>
                     onEdit?.(dayRecord?.id || "new", {
@@ -94,10 +91,10 @@ const DayScheduleRow = memo(
                       branch_id: dayRecord?.branch_id,
                     })
                   }
-                  className="flex items-center gap-1 h-7 px-2"
+                  className="h-8 px-2 gap-1 flex-shrink-0"
                 >
                   <Plus className="w-3 h-3" />
-                  Configurar
+                  <span className="hidden sm:inline">Configurar</span>
                 </Button>
               )}
             </div>
@@ -108,38 +105,28 @@ const DayScheduleRow = memo(
                 .map((range, index) => (
                   <div
                     key={range.id || index}
-                    className="flex items-center gap-4 flex-wrap justify-between p-3 border rounded-lg bg-muted/20"
+                    className="flex items-center gap-2 flex-wrap justify-between p-2 border rounded-md bg-muted/30"
                   >
-                    <div className="flex items-center gap-4 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        <Badge variant="outline" className="text-sm">
+                    <div className="flex items-center gap-3 flex-wrap flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                        <Badge variant="outline" className="text-xs font-mono">
                           {range.start_time} - {range.end_time}
                         </Badge>
                       </div>
 
-                      {range.time_zone && (
-                        <Badge variant="secondary" className="text-xs">
-                          {range.time_zone}
-                        </Badge>
-                      )}
-
                       {range.services && range.services.length > 0 && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-muted-foreground">
-                            Serviços:
-                          </span>
-                          <Badge variant="default" className="text-xs">
-                            {range.services.length} configurados
-                          </Badge>
-                        </div>
+                        <Badge variant="default" className="text-xs">
+                          {range.services.length} serviço
+                          {range.services.length !== 1 ? "s" : ""}
+                        </Badge>
                       )}
                     </div>
 
                     {isEditable && range.id && (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() =>
                             onEdit?.(range.id!, {
@@ -150,12 +137,12 @@ const DayScheduleRow = memo(
                               services: range.services,
                             })
                           }
-                          className="flex items-center gap-1 h-7 px-2"
+                          className="h-7 w-7 p-0"
                         >
-                          <Edit className="w-3 h-3" />
+                          <Edit className="w-3.5 h-3.5" />
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() =>
                             onDelete?.(range.id!, {
@@ -164,9 +151,9 @@ const DayScheduleRow = memo(
                               end_time: range.end_time,
                             })
                           }
-                          className="flex items-center gap-1 h-7 px-2 text-destructive hover:text-destructive"
+                          className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
                     )}
@@ -198,33 +185,33 @@ export const BranchWorkScheduleView = memo(
     }, {} as Record<number, BranchWorkScheduleRange[]>);
 
     return (
-      <div className={`space-y-4 ${className || ""}`}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              Horários de Funcionamento - {branchName}
-            </CardTitle>
-            <CardDescription>
-              Visualização dos horários configurados para esta filial
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {ALL_WEEKDAYS.map(weekday => (
-                <DayScheduleRow
-                  key={weekday}
-                  weekday={weekday}
-                  dayRanges={rangesByDay[weekday] || []}
-                  isEditable={isEditable}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              ))}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Clock className="w-5 h-5" />
+                Horários de Funcionamento
+              </CardTitle>
+              <CardDescription className="mt-1">{branchName}</CardDescription>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="space-y-2">
+            {ALL_WEEKDAYS.map(weekday => (
+              <DayScheduleRow
+                key={weekday}
+                weekday={weekday}
+                dayRanges={rangesByDay[weekday] || []}
+                isEditable={isEditable}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 );

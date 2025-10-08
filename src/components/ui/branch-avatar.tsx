@@ -224,7 +224,7 @@ export function BranchAvatar({
       {editable && (
         <>
           {(isHovered || loading) && (
-            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-xl flex items-center justify-center h-24 w-24">
+            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-xl flex items-center justify-center h-20 w-20">
               {loading ? (
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
               ) : (

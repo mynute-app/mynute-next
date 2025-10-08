@@ -236,32 +236,10 @@ export function BranchWorkScheduleManager({
   );
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Building2 className="w-5 h-5" />
-          <h3 className="text-lg font-medium">
-            Horários da Filial - {branchName}
-          </h3>
-          {loading && (
-            <RefreshCw className="w-4 h-4 animate-spin text-muted-foreground" />
-          )}
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={loadBranchWorkSchedule}
-          disabled={loading}
-        >
-          <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
-          Atualizar
-        </Button>
-      </div>
-
+    <div className="w-full space-y-4">
       {loading || workRangeLoading ? (
         <Card>
-          <CardContent className="flex items-center justify-center py-8">
+          <CardContent className="flex items-center justify-center py-12">
             <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground mr-2" />
             <span className="text-muted-foreground">
               {loading ? "Carregando horários..." : "Processando..."}
@@ -277,19 +255,19 @@ export function BranchWorkScheduleManager({
           isEditable={true}
         />
       ) : (
-        <div className="mt-4">
-          <Card className="mb-4">
-            <CardContent className="flex flex-col items-center justify-center py-8">
+        <>
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
               <Clock className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">
                 Configure os horários de funcionamento
               </h3>
-              <p className="text-sm text-muted-foreground text-center mb-4">
+              <p className="text-sm text-muted-foreground text-center max-w-md">
                 Defina os horários de funcionamento desta filial para que os
-                funcionários possam trabalhar aqui.
+                serviços possam ser agendados.
               </p>
               {error && (
-                <p className="text-xs text-destructive mb-4 text-center">
+                <p className="text-xs text-destructive mt-4 text-center">
                   {error}
                 </p>
               )}
@@ -302,7 +280,7 @@ export function BranchWorkScheduleManager({
             initialData={workScheduleData}
             onSuccess={loadBranchWorkSchedule}
           />
-        </div>
+        </>
       )}
 
       <WorkRangeEditDialog

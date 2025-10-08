@@ -6,7 +6,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Circle, Clock, DollarSign } from "lucide-react";
 
 interface Service {
   id: number;
@@ -31,36 +32,50 @@ export function ServiceCard({
 }: ServiceCardProps) {
   return (
     <Card
-      className={`flex flex-col justify-between h-full shadow-sm hover:shadow-md transition ${
-        isLinked ? "border-green-500 bg-green-50" : ""
+      className={`flex flex-col justify-between h-full transition-all hover:shadow-md ${
+        isLinked
+          ? "border-green-500 bg-green-50/50 dark:bg-green-950/20"
+          : "hover:border-primary/50"
       }`}
     >
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          {isLinked && <CheckCircle className="text-green-500 w-5 h-5" />}
-          {service.name}
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-start justify-between gap-2 text-base">
+          <span className="flex-1 line-clamp-2">{service.name}</span>
+          {isLinked ? (
+            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+          ) : (
+            <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+          )}
         </CardTitle>
 
-        {(service.duration || service.price) && (
-          <CardDescription>
-            {service.duration ? `${service.duration} min` : ""}
-            {service.price && service.price > 0
-              ? ` • R$ ${service.price.toFixed(2)}`
-              : service.price === 0
-              ? " • Gratuito"
-              : ""}
-          </CardDescription>
+        {(service.duration || service.price !== undefined) && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {service.duration && (
+              <Badge variant="secondary" className="text-xs gap-1">
+                <Clock className="w-3 h-3" />
+                {service.duration} min
+              </Badge>
+            )}
+            {service.price !== undefined && (
+              <Badge variant="secondary" className="text-xs gap-1">
+                <DollarSign className="w-3 h-3" />
+                {service.price > 0
+                  ? `R$ ${service.price.toFixed(2)}`
+                  : "Gratuito"}
+              </Badge>
+            )}
+          </div>
         )}
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="pt-0">
         {isLinked ? (
           <Button
-            variant="destructive"
-            className="w-full"
+            variant="outline"
+            className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
             onClick={() => onUnlink(service.id)}
           >
-            Desvincular Serviço
+            Desvincular
           </Button>
         ) : (
           <Button

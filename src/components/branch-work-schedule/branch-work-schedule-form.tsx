@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Plus, Trash2, Building2, Copy } from "lucide-react";
+import { Clock, Plus, Trash2, Copy, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   useBranchWorkSchedule,
@@ -54,116 +54,120 @@ const DayConfigCard = memo(
     ) => void;
     onApplyToAll: (weekday: number) => void;
   }) => {
-    const hasSchedule = ranges.length > 0;
-
     return (
-      <Card className="relative">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Badge variant={hasSchedule ? "default" : "secondary"}>
-                {dia.shortLabel}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+        {/* Cabeçalho do Dia */}
+        <div className="flex items-center gap-2 sm:min-w-[120px]">
+          <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="font-medium text-sm">{dia.label}</p>
+          </div>
+        </div>
+
+        {/* Conteúdo Principal */}
+        <div className="flex-1 min-w-0 space-y-2">
+          {ranges.length === 0 ? (
+            <div className="flex items-center justify-between gap-2">
+              <Badge variant="secondary" className="text-xs flex-shrink-0">
+                Não configurado
               </Badge>
-              <h4 className="font-medium">{dia.label}</h4>
-            </div>
-            <div className="flex items-center gap-2">
-              {hasSchedule && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onApplyToAll(dia.weekday)}
-                  className="flex items-center gap-1"
-                >
-                  <Copy className="w-3 h-3" />
-                  Aplicar para todos
-                </Button>
-              )}
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => onAdd(dia.weekday)}
-                className="flex items-center gap-1"
+                className="h-8 px-2 gap-1 flex-shrink-0"
               >
                 <Plus className="w-3 h-3" />
-                Adicionar Horário
+                <span className="hidden sm:inline">Configurar</span>
               </Button>
             </div>
-          </div>
-        </CardHeader>
-
-        <CardContent>
-          {ranges.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Nenhum horário configurado para este dia.
-            </p>
           ) : (
-            <div className="space-y-4">
-              {ranges.map((range, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-4 p-4 border rounded-lg"
-                >
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium min-w-[60px]">
-                      #{index + 1}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={range.start_time}
-                      onValueChange={value =>
-                        onUpdate(dia.weekday, index, "start_time", value)
-                      }
-                    >
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {HORARIOS.map(time => (
-                          <SelectItem key={time} value={time}>
-                            {time}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <span className="text-muted-foreground">até</span>
-
-                    <Select
-                      value={range.end_time}
-                      onValueChange={value =>
-                        onUpdate(dia.weekday, index, "end_time", value)
-                      }
-                    >
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {HORARIOS.map(time => (
-                          <SelectItem key={time} value={time}>
-                            {time}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onRemove(dia.weekday, index)}
-                    className="flex items-center gap-1 text-destructive hover:text-destructive"
+            <>
+              <div className="space-y-2">
+                {ranges.map((range, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 flex-wrap justify-between p-2 border rounded-md bg-muted/30"
                   >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Clock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+
+                      <Select
+                        value={range.start_time}
+                        onValueChange={value =>
+                          onUpdate(dia.weekday, index, "start_time", value)
+                        }
+                      >
+                        <SelectTrigger className="h-8 w-[80px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {HORARIOS.map(time => (
+                            <SelectItem key={time} value={time}>
+                              {time}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <span className="text-xs text-muted-foreground">-</span>
+
+                      <Select
+                        value={range.end_time}
+                        onValueChange={value =>
+                          onUpdate(dia.weekday, index, "end_time", value)
+                        }
+                      >
+                        <SelectTrigger className="h-8 w-[80px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {HORARIOS.map(time => (
+                            <SelectItem key={time} value={time}>
+                              {time}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onRemove(dia.weekday, index)}
+                      className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Ações do Dia */}
+              <div className="flex items-center gap-1 pt-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onAdd(dia.weekday)}
+                  className="h-7 px-2 gap-1 text-xs"
+                >
+                  <Plus className="w-3 h-3" />
+                  Adicionar
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onApplyToAll(dia.weekday)}
+                  className="h-7 px-2 gap-1 text-xs"
+                >
+                  <Copy className="w-3 h-3" />
+                  Copiar p/ todos
+                </Button>
+              </div>
+            </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 );
@@ -295,21 +299,28 @@ export function BranchWorkScheduleForm({
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building2 className="w-5 h-5" />
-          Configurar Horários - {branchName}
-        </CardTitle>
-        <CardDescription>
-          Configure os horários de funcionamento da filial. Estes horários
-          determinam quando a filial está disponível para atendimento.
-        </CardDescription>
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Clock className="w-5 h-5" />
+              Configurar Horários
+            </CardTitle>
+            <CardDescription className="mt-1">
+              {branchName} • Defina os horários de funcionamento da filial
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Fuso Horário</label>
+
+      <CardContent className="space-y-6 pt-0">
+        {/* Seletor de Fuso Horário */}
+        <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+          <label className="text-sm font-medium min-w-[100px]">
+            Fuso Horário
+          </label>
           <Select value={selectedTimeZone} onValueChange={setSelectedTimeZone}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="flex-1 max-w-md">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -324,7 +335,8 @@ export function BranchWorkScheduleForm({
 
         <Separator />
 
-        <div className="space-y-6">
+        {/* Lista de Dias */}
+        <div className="space-y-2">
           {DIAS_SEMANA.map(dia => (
             <DayConfigCard
               key={dia.weekday}
@@ -340,14 +352,16 @@ export function BranchWorkScheduleForm({
 
         <Separator />
 
-        <div className="flex justify-end gap-2">
+        {/* Botão de Salvar */}
+        <div className="flex justify-end">
           <Button
             onClick={salvarHorarios}
             disabled={loading}
-            className="flex items-center gap-2"
+            size="lg"
+            className="gap-2 min-w-[160px]"
           >
             <Clock className="w-4 h-4" />
-            {loading ? "Salvando..." : "Salvar Horários"}
+            {loading ? "Salvando..." : "Salvar Configuração"}
           </Button>
         </div>
       </CardContent>
