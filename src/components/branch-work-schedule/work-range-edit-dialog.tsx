@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Clock, Save, X, Users } from "lucide-react";
 import { useGetBranch } from "@/hooks/branch/use-get-branch";
 import { useWorkRangeServices } from "@/hooks/workSchedule/use-work-range-services";
+import { useToast } from "@/hooks/use-toast";
 import { DIAS_SEMANA, HORARIOS, TIMEZONES } from "./constants";
 
 interface WorkRangeEditDialogProps {
@@ -137,11 +138,15 @@ export function WorkRangeEditDialog({
   });
 
   const currentBranchData = externalBranchData || branchData;
+  const { toast } = useToast();
 
-  const { addServicesToWorkRange, loading: servicesLoading } =
-    useWorkRangeServices({
-      onSuccess: () => onSuccessfulSave?.(),
-    });
+  // Hook de serviços SEM onSuccess para evitar múltiplas revalidações
+  // A revalidação será feita UMA VEZ ao final do handleSave
+  const {
+    addServicesToWorkRange,
+    removeServiceFromWorkRange,
+    loading: servicesLoading,
+  } = useWorkRangeServices();
 
   const [formData, setFormData] = useState<WorkRangeEditData>(
     () =>
@@ -154,32 +159,104 @@ export function WorkRangeEditDialog({
       }
   );
 
+  // Guardar os serviços iniciais para detectar remoções
+  const [initialServices, setInitialServices] = useState<string[]>([]);
+
   useEffect(() => {
-    if (initialData) setFormData(initialData);
+    if (initialData) {
+      setFormData(initialData);
+      setInitialServices(initialData.services || []);
+    }
   }, [initialData]);
 
   const handleSave = useCallback(async () => {
-    const basicData = {
-      start_time: formData.start_time,
-      end_time: formData.end_time,
-      weekday: formData.weekday,
-      time_zone: formData.time_zone,
-    };
+    try {
+      const basicData = {
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        weekday: formData.weekday,
+        time_zone: formData.time_zone,
+      };
 
-    await onSave(basicData);
+      // 1. Salvar dados básicos do work_range
+      await onSave(basicData);
 
-    if (workRangeId && workRangeId !== "new" && formData.services.length > 0) {
-      await addServicesToWorkRange(branchId, workRangeId, formData.services);
+      // 2. Se for edição (não é "new"), processar mudanças nos serviços
+      if (workRangeId && workRangeId !== "new") {
+        // Detectar serviços removidos
+        const removedServices = initialServices.filter(
+          serviceId => !formData.services.includes(serviceId)
+        );
+
+        // Detectar serviços adicionados
+        const addedServices = formData.services.filter(
+          serviceId => !initialServices.includes(serviceId)
+        );
+
+        console.log("🔍 Serviços removidos:", removedServices);
+        console.log("🔍 Serviços adicionados:", addedServices);
+
+        // 3. Remover serviços desvinculados (em paralelo, sem toast individual)
+        if (removedServices.length > 0) {
+          await Promise.all(
+            removedServices.map(serviceId =>
+              removeServiceFromWorkRange(branchId, workRangeId, serviceId, {
+                showToast: false,
+              })
+            )
+          );
+        }
+
+        // 4. Adicionar novos serviços vinculados (sem toast individual)
+        if (addedServices.length > 0) {
+          await addServicesToWorkRange(branchId, workRangeId, addedServices, {
+            showToast: false,
+          });
+        }
+
+        // 5. Toast consolidado informando todas as mudanças
+        const changes: string[] = [];
+        if (removedServices.length > 0) {
+          changes.push(`${removedServices.length} serviço(s) removido(s)`);
+        }
+        if (addedServices.length > 0) {
+          changes.push(`${addedServices.length} serviço(s) adicionado(s)`);
+        }
+
+        if (changes.length > 0) {
+          toast({
+            title: "Horário atualizado com sucesso",
+            description: changes.join(" • "),
+          });
+        } else {
+          toast({
+            title: "Horário atualizado",
+            description: "Alterações salvas com sucesso.",
+          });
+        }
+      } else {
+        // Para novos work_ranges, apenas confirmação simples
+        toast({
+          title: "Horário criado",
+          description: "Horário de funcionamento configurado com sucesso.",
+        });
+      }
+
+      onSuccessfulSave?.();
+      onClose();
+    } catch (error) {
+      console.error("❌ Erro ao salvar work_range:", error);
+      // O erro já é tratado pelos hooks individuais com toast
     }
-
-    onSuccessfulSave?.();
-    onClose();
   }, [
     formData,
     onSave,
     workRangeId,
     branchId,
+    initialServices,
     addServicesToWorkRange,
+    removeServiceFromWorkRange,
+    toast,
     onSuccessfulSave,
     onClose,
   ]);

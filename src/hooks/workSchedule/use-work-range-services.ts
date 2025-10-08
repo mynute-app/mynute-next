@@ -16,13 +16,12 @@ export const useWorkRangeServices = (props?: UseWorkRangeServicesProps) => {
   const addServicesToWorkRange = async (
     branchId: string,
     workRangeId: string,
-    serviceIds: string[]
+    serviceIds: string[],
+    options?: { showToast?: boolean } // Opção para controlar toast
   ) => {
     setLoading(true);
     setSuccess(false);
     setError(null);
-
-    
 
     try {
       // Converter os IDs para o formato esperado pela API
@@ -70,10 +69,13 @@ export const useWorkRangeServices = (props?: UseWorkRangeServicesProps) => {
       setSuccess(true);
       setError(null);
 
-      toast({
-        title: "Serviços adicionados",
-        description: `${serviceIds.length} serviço(s) adicionado(s) ao horário com sucesso.`,
-      });
+      // Mostrar toast apenas se não for desabilitado (padrão: true)
+      if (options?.showToast !== false) {
+        toast({
+          title: "Serviços adicionados",
+          description: `${serviceIds.length} serviço(s) adicionado(s) ao horário com sucesso.`,
+        });
+      }
 
       props?.onSuccess?.();
       return responseData;
@@ -99,7 +101,8 @@ export const useWorkRangeServices = (props?: UseWorkRangeServicesProps) => {
   const removeServiceFromWorkRange = async (
     branchId: string,
     workRangeId: string,
-    serviceId: string
+    serviceId: string,
+    options?: { showToast?: boolean } // Opção para controlar toast
   ) => {
     setLoading(true);
     setSuccess(false);
@@ -136,10 +139,13 @@ export const useWorkRangeServices = (props?: UseWorkRangeServicesProps) => {
       setSuccess(true);
       setError(null);
 
-      toast({
-        title: "Serviço removido",
-        description: "Serviço removido do horário com sucesso.",
-      });
+      // Mostrar toast apenas se não for desabilitado (padrão: true)
+      if (options?.showToast !== false) {
+        toast({
+          title: "Serviço removido",
+          description: "Serviço removido do horário com sucesso.",
+        });
+      }
 
       props?.onSuccess?.();
       return responseData;
