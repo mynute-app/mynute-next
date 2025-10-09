@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Plus, Trash2, Copy, Calendar } from "lucide-react";
+import { Clock, Plus, Trash2, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   useBranchWorkSchedule,
@@ -54,51 +54,58 @@ const DayConfigCard = memo(
     ) => void;
     onApplyToAll: (weekday: number) => void;
   }) => {
-    return (
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors">
-        {/* Cabeçalho do Dia */}
-        <div className="flex items-center gap-2 sm:min-w-[120px]">
-          <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          <div className="min-w-0">
-            <p className="font-medium text-sm">{dia.label}</p>
-          </div>
-        </div>
+    const hasRanges = ranges.length > 0;
 
-        {/* Conteúdo Principal */}
-        <div className="flex-1 min-w-0 space-y-2">
-          {ranges.length === 0 ? (
-            <div className="flex items-center justify-between gap-2">
-              <Badge variant="secondary" className="text-xs flex-shrink-0">
-                Não configurado
-              </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onAdd(dia.weekday)}
-                className="h-8 px-2 gap-1 flex-shrink-0"
-              >
-                <Plus className="w-3 h-3" />
-                <span className="hidden sm:inline">Configurar</span>
-              </Button>
-            </div>
-          ) : (
-            <>
+    return (
+      <div className="group relative">
+        <div className="flex items-center gap-3 p-4 border rounded-lg hover:border-primary/50 transition-all bg-card hover:shadow-sm">
+          {/* Indicador visual */}
+          <div
+            className={`w-1 h-12 rounded-full flex-shrink-0 ${
+              hasRanges ? "bg-primary" : "bg-muted"
+            }`}
+          />
+
+          {/* Nome do dia */}
+          <div className="min-w-[100px]">
+            <p className="font-semibold text-sm">{dia.label}</p>
+            <p className="text-xs text-muted-foreground">{dia.shortLabel}</p>
+          </div>
+
+          {/* Horários ou estado vazio */}
+          <div className="flex-1 min-w-0">
+            {!hasRanges ? (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  Fechado
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onAdd(dia.weekday)}
+                  className="ml-auto h-8 gap-1.5"
+                >
+                  <Plus className="w-4 h-4" />
+                  Definir horário
+                </Button>
+              </div>
+            ) : (
               <div className="space-y-2">
                 {ranges.map((range, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 flex-wrap justify-between p-2 border rounded-md bg-muted/30"
+                    className="flex items-center gap-3 p-2.5 rounded-md bg-muted/50 border border-muted"
                   >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <Clock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                    <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
 
+                    <div className="flex items-center gap-2">
                       <Select
                         value={range.start_time}
                         onValueChange={value =>
                           onUpdate(dia.weekday, index, "start_time", value)
                         }
                       >
-                        <SelectTrigger className="h-8 w-[80px]">
+                        <SelectTrigger className="h-9 w-[90px] border-0 bg-background shadow-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -110,7 +117,9 @@ const DayConfigCard = memo(
                         </SelectContent>
                       </Select>
 
-                      <span className="text-xs text-muted-foreground">-</span>
+                      <span className="text-sm text-muted-foreground font-medium">
+                        às
+                      </span>
 
                       <Select
                         value={range.end_time}
@@ -118,7 +127,7 @@ const DayConfigCard = memo(
                           onUpdate(dia.weekday, index, "end_time", value)
                         }
                       >
-                        <SelectTrigger className="h-8 w-[80px]">
+                        <SelectTrigger className="h-9 w-[90px] border-0 bg-background shadow-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -135,37 +144,39 @@ const DayConfigCard = memo(
                       variant="ghost"
                       size="sm"
                       onClick={() => onRemove(dia.weekday, index)}
-                      className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                      className="ml-auto h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 ))}
-              </div>
 
-              {/* Ações do Dia */}
-              <div className="flex items-center gap-1 pt-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onAdd(dia.weekday)}
-                  className="h-7 px-2 gap-1 text-xs"
-                >
-                  <Plus className="w-3 h-3" />
-                  Adicionar
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onApplyToAll(dia.weekday)}
-                  className="h-7 px-2 gap-1 text-xs"
-                >
-                  <Copy className="w-3 h-3" />
-                  Copiar p/ todos
-                </Button>
+                {/* Botões de ação quando tem horários */}
+                <div className="flex items-center gap-2 pt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onAdd(dia.weekday)}
+                    className="h-8 text-xs gap-1.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Adicionar período
+                  </Button>
+                  {ranges.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onApplyToAll(dia.weekday)}
+                      className="h-8 text-xs gap-1.5"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      Replicar para todos
+                    </Button>
+                  )}
+                </div>
               </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
       </div>
     );
@@ -185,7 +196,8 @@ export function BranchWorkScheduleForm({
     onSuccess: () => onSuccess?.(),
   });
 
-  const [selectedTimeZone, setSelectedTimeZone] = useState("America/Sao_Paulo");
+  // Fuso horário fixo para América/São Paulo
+  const TIME_ZONE = "America/Sao_Paulo";
 
   const initialRangesByDay = useMemo(() => {
     const rangesByDay = new Map<number, BranchWorkScheduleRange[]>();
@@ -211,14 +223,14 @@ export function BranchWorkScheduleForm({
           branch_id: branchId,
           start_time: "09:00",
           end_time: "17:00",
-          time_zone: selectedTimeZone,
+          time_zone: TIME_ZONE,
           weekday,
           services: [],
         };
         return new Map(prev.set(weekday, [...currentRanges, newRange]));
       });
     },
-    [branchId, selectedTimeZone]
+    [branchId]
   );
 
   const removerHorario = useCallback((weekday: number, index: number) => {
@@ -298,45 +310,23 @@ export function BranchWorkScheduleForm({
   }, [workRanges, branchId, createBranchWorkSchedule, toast]);
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Clock className="w-5 h-5" />
-              Configurar Horários
-            </CardTitle>
-            <CardDescription className="mt-1">
-              {branchName} • Defina os horários de funcionamento da filial
-            </CardDescription>
+    <Card className="w-full border-2">
+      <CardHeader className="space-y-1 pb-6">
+        <CardTitle className="flex items-center gap-2.5 text-xl">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Clock className="w-5 h-5 text-primary" />
           </div>
-        </div>
+          Configurar Horários de Funcionamento
+        </CardTitle>
+        <CardDescription className="text-base">
+          Defina quando <span className="font-medium">{branchName}</span> estará
+          aberta para atendimento durante a semana
+        </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-6 pt-0">
-        {/* Seletor de Fuso Horário */}
-        <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
-          <label className="text-sm font-medium min-w-[100px]">
-            Fuso Horário
-          </label>
-          <Select value={selectedTimeZone} onValueChange={setSelectedTimeZone}>
-            <SelectTrigger className="flex-1 max-w-md">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TIMEZONES.map(tz => (
-                <SelectItem key={tz.value} value={tz.value}>
-                  {tz.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Separator />
-
+      <CardContent className="space-y-4">
         {/* Lista de Dias */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           {DIAS_SEMANA.map(dia => (
             <DayConfigCard
               key={dia.weekday}
@@ -350,18 +340,35 @@ export function BranchWorkScheduleForm({
           ))}
         </div>
 
-        <Separator />
+        <Separator className="my-6" />
 
-        {/* Botão de Salvar */}
-        <div className="flex justify-end">
+        {/* Informação e Botão de Salvar */}
+        <div className="flex items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg border">
+          <div className="flex-1">
+            <p className="text-sm font-medium">
+              Configure pelo menos um dia da semana
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Os horários determinam quando a filial está disponível
+            </p>
+          </div>
           <Button
             onClick={salvarHorarios}
             disabled={loading}
             size="lg"
-            className="gap-2 min-w-[160px]"
+            className="gap-2 min-w-[180px] shadow-sm"
           >
-            <Clock className="w-4 h-4" />
-            {loading ? "Salvando..." : "Salvar Configuração"}
+            {loading ? (
+              <>
+                <Clock className="w-4 h-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Clock className="w-4 h-4" />
+                Salvar Horários
+              </>
+            )}
           </Button>
         </div>
       </CardContent>
