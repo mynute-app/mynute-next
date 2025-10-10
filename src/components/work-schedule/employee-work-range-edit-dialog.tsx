@@ -21,6 +21,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Clock, Save, X, Users, Building2 } from "lucide-react";
 import { useGetCompany } from "@/hooks/get-company";
+import { useEmployeeWorkRangeServices } from "@/hooks/employee/use-employee-work-range-services";
+import { useToast } from "@/hooks/use-toast";
 
 interface EmployeeWorkRangeEditDialogProps {
   isOpen: boolean;
@@ -82,6 +84,12 @@ export function EmployeeWorkRangeEditDialog({
   workRangeId,
 }: EmployeeWorkRangeEditDialogProps) {
   const { company, loading: loadingCompany } = useGetCompany();
+  const { toast } = useToast();
+  const { addServicesToEmployeeWorkRange, removeServiceFromEmployeeWorkRange } =
+    useEmployeeWorkRangeServices();
+
+  // Estado para rastrear serviços iniciais
+  const [initialServices, setInitialServices] = useState<string[]>([]);
 
   // Log para debug - mostrar dados recebidos quando abre o dialog
   if (isOpen && initialData) {
@@ -90,7 +98,7 @@ export function EmployeeWorkRangeEditDialog({
       "Indefinido";
     console.log("🔍 Dialog - Dados recebidos para edição:", initialData);
     console.log(
-      "� Dialog - Dia da semana detectado:",
+      "📅 Dialog - Dia da semana detectado:",
       diaLabel,
       "(weekday:",
       initialData.weekday,
@@ -110,7 +118,7 @@ export function EmployeeWorkRangeEditDialog({
       }
   );
 
-  // Atualizar formData quando initialData mudar
+  // Atualizar formData E initialServices quando initialData mudar
   useEffect(() => {
     if (initialData) {
       console.log(
@@ -118,6 +126,7 @@ export function EmployeeWorkRangeEditDialog({
         initialData
       );
       setFormData(initialData);
+      setInitialServices(initialData.services || []);
     }
   }, [initialData]);
 
@@ -135,11 +144,103 @@ export function EmployeeWorkRangeEditDialog({
         weekday: formData.weekday,
         time_zone: formData.time_zone,
         branch_id: formData.branch_id,
-        services: formData.services, // Incluir serviços no payload básico
       };
 
-      console.log("💾 Dialog - Salvando dados:", basicData);
+      console.log("💾 Dialog - Salvando dados básicos:", basicData);
       await onSave(basicData);
+
+      // ✅ DETECÇÃO DE MUDANÇAS NOS SERVIÇOS
+      if (workRangeId !== "new") {
+        const currentServices = formData.services;
+
+        // Serviços que foram ADICIONADOS
+        const servicesToAdd = currentServices.filter(
+          serviceId => !initialServices.includes(serviceId)
+        );
+
+        // Serviços que foram REMOVIDOS
+        const servicesToRemove = initialServices.filter(
+          serviceId => !currentServices.includes(serviceId)
+        );
+
+        console.log("🔍 Dialog - Análise de mudanças nos serviços:", {
+          initialServices,
+          currentServices,
+          servicesToAdd,
+          servicesToRemove,
+        });
+
+        // Executar adições e remoções em paralelo
+        const operations: Promise<any>[] = [];
+
+        // Adicionar novos serviços
+        if (servicesToAdd.length > 0) {
+          console.log("➕ Dialog - Adicionando serviços:", servicesToAdd);
+          operations.push(
+            addServicesToEmployeeWorkRange(
+              employeeId,
+              workRangeId,
+              servicesToAdd,
+              { showToast: false }
+            )
+          );
+        }
+
+        // Remover serviços desmarcados (chamadas individuais em paralelo)
+        if (servicesToRemove.length > 0) {
+          console.log("➖ Dialog - Removendo serviços:", servicesToRemove);
+          servicesToRemove.forEach(serviceId => {
+            operations.push(
+              removeServiceFromEmployeeWorkRange(
+                employeeId,
+                workRangeId,
+                serviceId,
+                { showToast: false }
+              )
+            );
+          });
+        }
+
+        // Aguardar todas as operações
+        if (operations.length > 0) {
+          await Promise.all(operations);
+
+          // Toast consolidado
+          const messages: string[] = [];
+          if (servicesToRemove.length > 0) {
+            messages.push(
+              `${servicesToRemove.length} serviço${
+                servicesToRemove.length !== 1 ? "s" : ""
+              } removido${servicesToRemove.length !== 1 ? "s" : ""}`
+            );
+          }
+          if (servicesToAdd.length > 0) {
+            messages.push(
+              `${servicesToAdd.length} serviço${
+                servicesToAdd.length !== 1 ? "s" : ""
+              } adicionado${servicesToAdd.length !== 1 ? "s" : ""}`
+            );
+          }
+
+          toast({
+            title: "Serviços atualizados",
+            description: messages.join(" e "),
+          });
+        }
+      } else {
+        // Novo work_range: apenas adicionar serviços se houver
+        if (formData.services.length > 0) {
+          console.log(
+            "➕ Dialog (Novo) - Adicionando serviços:",
+            formData.services
+          );
+          await addServicesToEmployeeWorkRange(
+            employeeId,
+            workRangeId,
+            formData.services
+          );
+        }
+      }
 
       console.log("✅ Dialog - Tudo salvo com sucesso!");
       onClose();

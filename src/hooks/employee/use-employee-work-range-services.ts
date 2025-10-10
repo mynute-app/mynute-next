@@ -77,11 +77,14 @@ export const useEmployeeWorkRangeServices = (
   const addServicesToEmployeeWorkRange = async (
     employeeId: string,
     workRangeId: string,
-    serviceIds: string[]
+    serviceIds: string[],
+    options?: { showToast?: boolean }
   ) => {
     setLoading(true);
     setSuccess(false);
     setError(null);
+
+    const showToast = options?.showToast !== false; // Default true
 
     console.log("📥 Hook EmployeeWorkRangeServices - Adicionando services:", {
       employeeId,
@@ -137,10 +140,12 @@ export const useEmployeeWorkRangeServices = (
       setError(null);
       setData(responseData.data || responseData);
 
-      toast({
-        title: "Services adicionados",
-        description: `${serviceIds.length} service(s) adicionado(s) ao horário do employee com sucesso.`,
-      });
+      if (showToast) {
+        toast({
+          title: "Services adicionados",
+          description: `${serviceIds.length} service(s) adicionado(s) ao horário do employee com sucesso.`,
+        });
+      }
 
       props?.onSuccess?.();
       return responseData;
@@ -148,15 +153,96 @@ export const useEmployeeWorkRangeServices = (
       const errorMessage = err.message || "Erro interno do servidor";
       setError(errorMessage);
 
-      toast({
-        title: "Erro ao adicionar services",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      if (showToast) {
+        toast({
+          title: "Erro ao adicionar services",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
 
       props?.onError?.(errorMessage);
       console.error(
         "❌ Hook EmployeeWorkRangeServices - Erro ao adicionar:",
+        err
+      );
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // DELETE - Remover serviço individual do work_range do employee
+  const removeServiceFromEmployeeWorkRange = async (
+    employeeId: string,
+    workRangeId: string,
+    serviceId: string,
+    options?: { showToast?: boolean }
+  ) => {
+    setLoading(true);
+    setSuccess(false);
+    setError(null);
+
+    const showToast = options?.showToast !== false; // Default true
+
+    console.log(
+      "🗑️ Hook EmployeeWorkRangeServices - Removendo service individual:",
+      {
+        employeeId,
+        workRangeId,
+        serviceId,
+      }
+    );
+
+    try {
+      const response = await fetch(
+        `/api/employee/${employeeId}/work_range/${workRangeId}/service/${serviceId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      console.log(
+        "✅ Hook EmployeeWorkRangeServices - Service removido:",
+        responseData
+      );
+
+      setSuccess(true);
+      setError(null);
+
+      if (showToast) {
+        toast({
+          title: "Service removido",
+          description: "O service foi removido do work_range do employee.",
+        });
+      }
+
+      props?.onSuccess?.();
+      return responseData;
+    } catch (err: any) {
+      const errorMessage = err.message || "Erro interno do servidor";
+      setError(errorMessage);
+
+      if (showToast) {
+        toast({
+          title: "Erro ao remover service",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+
+      props?.onError?.(errorMessage);
+      console.error(
+        "❌ Hook EmployeeWorkRangeServices - Erro ao remover:",
         err
       );
       throw err;
@@ -332,6 +418,7 @@ export const useEmployeeWorkRangeServices = (
     // Funções
     getEmployeeWorkRangeServices,
     addServicesToEmployeeWorkRange,
+    removeServiceFromEmployeeWorkRange, // Nova função
     updateEmployeeWorkRangeServices,
     removeAllEmployeeWorkRangeServices,
     reset,
