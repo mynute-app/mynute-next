@@ -290,7 +290,7 @@ export default function YourTeam() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center p-6">
-            <Card className="max-w-md w-full">
+            <Card className="max-w-md w-full border-none shadow-none">
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <User className="w-16 h-16 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">

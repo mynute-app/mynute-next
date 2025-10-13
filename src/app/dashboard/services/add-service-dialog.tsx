@@ -27,10 +27,16 @@ import {
 } from "@/utils/format-masks";
 
 type AddServiceDialogProps = {
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onCreate: (service: Service) => void;
 };
 
-export const AddServiceDialog = ({ onCreate }: AddServiceDialogProps) => {
+export const AddServiceDialog = ({
+  isOpen: controlledOpen,
+  onOpenChange,
+  onCreate,
+}: AddServiceDialogProps) => {
   const { form, handleSubmit } = useAddServiceForm();
   const {
     register,
@@ -41,28 +47,33 @@ export const AddServiceDialog = ({ onCreate }: AddServiceDialogProps) => {
   } = form;
   const { errors } = formState;
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Se controlado externamente, usar isOpen; senão usar estado interno
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setIsOpen = onOpenChange || setInternalOpen;
 
   // Watch dos valores para aplicar máscaras
   const durationValue = watch("duration");
   const priceValue = watch("price");
 
   const onSubmit = async (data: any) => {
-    console.log("🚀 Dados que vou enviar para a API:", data);
-
     const createdService = await handleSubmit(data);
     if (createdService) {
       onCreate(createdService);
       setIsOpen(false);
     }
   };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" onClick={() => setIsOpen(true)}>
-          <BsPlus className="w-6 h-6" />
-        </Button>
-      </DialogTrigger>
+      {!controlledOpen && (
+        <DialogTrigger asChild>
+          <Button variant="outline" onClick={() => setIsOpen(true)}>
+            <BsPlus className="w-6 h-6" />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-xl rounded-lg">
         <DialogHeader>
           <DialogTitle>Criar novo serviço</DialogTitle>
