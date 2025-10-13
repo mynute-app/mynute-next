@@ -49,8 +49,10 @@ export default function YourBrandSkeleton() {
                 <Skeleton className="h-4 w-64" /> {/* Card description */}
               </div>
               <div className="space-y-3">
-                <Skeleton className="h-32 w-full rounded-md" /> {/* Content 1 */}
-                <Skeleton className="h-32 w-full rounded-md" /> {/* Content 2 */}
+                <Skeleton className="h-32 w-full rounded-md" />{" "}
+                {/* Content 1 */}
+                <Skeleton className="h-32 w-full rounded-md" />{" "}
+                {/* Content 2 */}
               </div>
             </div>
 
