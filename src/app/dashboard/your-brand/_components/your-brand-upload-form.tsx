@@ -3,11 +3,18 @@
 import { useState } from "react";
 import { useCompanyImageDelete } from "@/hooks/use-company-image-delete";
 import { useCompanyImageUpload } from "@/hooks/use-company-image-upload";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Image as ImageIcon } from "lucide-react";
 import BannerImageUpload from "./banner-image-upload";
 import BrandLogoUpload from "../brand-logo";
 import BackgroundImageUpload from "./background-image-upload";
 import { Company } from "../../../../../types/company";
-import ColorSettings from "./ColorSettings";
 
 interface YourBrandUploadFormProps {
   company: Company;
@@ -21,7 +28,6 @@ export default function YourBrandUploadForm({
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
-
 
   const { deleteImage, isDeleting } = useCompanyImageDelete();
   const { uploadImage, isUploading: isUploadingImage } =
@@ -64,38 +70,59 @@ export default function YourBrandUploadForm({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Status de Upload */}
       {(isUploadingImage || isDeleting) && (
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-700">
-          {isUploadingImage && "📤 Fazendo upload da imagem..."}
-          {isDeleting && "🗑️ Removendo imagem..."}
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 flex items-center gap-3">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          <span className="text-sm font-medium text-blue-700">
+            {isUploadingImage && "Fazendo upload da imagem..."}
+            {isDeleting && "Removendo imagem..."}
+          </span>
         </div>
       )}
 
-      <BannerImageUpload
-        initialBannerUrl={company?.design?.images?.banner?.url || ""}
-        onFileChange={file =>
-          file ? handleUploadImage("banner", file) : setBannerFile(null)
-        }
-        onRemoveFromBackend={() => handleDeleteImage("banner")}
-      />
+      {/* Card de Imagens */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="w-5 h-5" />
+            Galeria de Imagens
+          </CardTitle>
+          <CardDescription>
+            Gerencie as imagens que representam sua marca
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <BannerImageUpload
+            initialBannerUrl={company?.design?.images?.banner?.url || ""}
+            onFileChange={file =>
+              file ? handleUploadImage("banner", file) : setBannerFile(null)
+            }
+            onRemoveFromBackend={() => handleDeleteImage("banner")}
+          />
 
-      <BrandLogoUpload
-        initialLogoUrl={company?.design?.images?.logo?.url || ""}
-        onFileChange={file =>
-          file ? handleUploadImage("logo", file) : setLogoFile(null)
-        }
-        onRemoveFromBackend={() => handleDeleteImage("logo")}
-      />
+          <BrandLogoUpload
+            initialLogoUrl={company?.design?.images?.logo?.url || ""}
+            onFileChange={file =>
+              file ? handleUploadImage("logo", file) : setLogoFile(null)
+            }
+            onRemoveFromBackend={() => handleDeleteImage("logo")}
+          />
 
-      <BackgroundImageUpload
-        initialBackgroundUrl={company?.design?.images?.background?.url || ""}
-        onFileChange={file =>
-          file ? handleUploadImage("background", file) : setBackgroundFile(null)
-        }
-        onRemoveFromBackend={() => handleDeleteImage("background")}
-      />
-    
+          <BackgroundImageUpload
+            initialBackgroundUrl={
+              company?.design?.images?.background?.url || ""
+            }
+            onFileChange={file =>
+              file
+                ? handleUploadImage("background", file)
+                : setBackgroundFile(null)
+            }
+            onRemoveFromBackend={() => handleDeleteImage("background")}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

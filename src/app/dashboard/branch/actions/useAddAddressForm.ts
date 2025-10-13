@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import * as z from "zod";
-import { Branch } from "../../../../../../types/company";
+import { Branch } from "../../../../../types/company";
 
 const addressSchema = z.object({
   city: z.string().min(1, "A cidade é obrigatória"),

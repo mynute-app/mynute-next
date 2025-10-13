@@ -2,6 +2,15 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Palette, Square, Sun, Moon, Monitor, Save } from "lucide-react";
 
 const COLORS = [
   "#1a1a1a",
@@ -17,113 +26,165 @@ const COLORS = [
   "custom",
 ];
 
-const BUTTON_SHAPES = ["pill", "rounded", "rectangle"];
-const THEMES = ["system", "light", "dark"];
+const BUTTON_SHAPES = [
+  { value: "pill", label: "Arredondado", icon: "rounded-full" },
+  { value: "rounded", label: "Suave", icon: "rounded-lg" },
+  { value: "rectangle", label: "Reto", icon: "rounded-none" },
+];
+
+const THEMES = [
+  { value: "system", label: "Sistema", icon: Monitor },
+  { value: "light", label: "Claro", icon: Sun },
+  { value: "dark", label: "Escuro", icon: Moon },
+];
 
 export default function BrandAppearanceSettings() {
   const [selectedColor, setSelectedColor] = useState("#1a1a1a");
   const [customColor, setCustomColor] = useState("#1a1a1a");
   const [selectedShape, setSelectedShape] = useState("rectangle");
   const [selectedTheme, setSelectedTheme] = useState("system");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = () => {
+    setIsSaving(true);
+    // TODO: Implementar save
+    setTimeout(() => setIsSaving(false), 1000);
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold">Aparência</h3>
-        <p className="text-sm text-muted-foreground">
-          Estilize sua página de agendamento com base na identidade da sua
-          marca.
-        </p>
-      </div>
-
-      {/* Brand Color */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium">Cor principal</h4>
-        <div className="flex items-center gap-2 flex-wrap">
-          {COLORS.map(color => (
-            <div key={color}>
-              {color === "custom" ? (
-                <label className="relative">
-                  <input
-                    type="color"
-                    value={customColor}
-                    onChange={e => {
-                      setCustomColor(e.target.value);
-                      setSelectedColor(e.target.value);
-                    }}
-                    className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
-                  />
-                  <div
+      {/* Cor Principal */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="w-5 h-5" />
+            Cor Principal da Marca
+          </CardTitle>
+          <CardDescription>
+            Escolha a cor que representa sua marca na página de agendamento
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3 flex-wrap">
+            {COLORS.map(color => (
+              <div key={color}>
+                {color === "custom" ? (
+                  <label className="relative cursor-pointer group">
+                    <input
+                      type="color"
+                      value={customColor}
+                      onChange={e => {
+                        setCustomColor(e.target.value);
+                        setSelectedColor(e.target.value);
+                      }}
+                      className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                    />
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-lg border-2 flex items-center justify-center transition-all",
+                        selectedColor === customColor
+                          ? "ring-2 ring-primary ring-offset-2 scale-110"
+                          : "border-gray-300 hover:scale-105"
+                      )}
+                      style={{ backgroundColor: customColor }}
+                    >
+                      <Palette className="w-4 h-4 text-white" />
+                    </div>
+                  </label>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedColor(color)}
                     className={cn(
-                      "w-8 h-8 rounded-full border-2 flex items-center justify-center",
-                      selectedColor === customColor
-                        ? "ring-2 ring-black"
-                        : "border-gray-300"
+                      "w-10 h-10 rounded-lg border-2 transition-all",
+                      selectedColor === color
+                        ? "ring-2 ring-primary ring-offset-2 scale-110"
+                        : "border-gray-300 hover:scale-105"
                     )}
-                    style={{ backgroundColor: customColor }}
+                    style={{ backgroundColor: color }}
                   />
-                </label>
-              ) : (
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Formato dos Botões */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Square className="w-5 h-5" />
+            Formato dos Botões
+          </CardTitle>
+          <CardDescription>
+            Defina o estilo dos botões na página de agendamento
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4">
+            {BUTTON_SHAPES.map(shape => (
+              <button
+                key={shape.value}
+                type="button"
+                onClick={() => setSelectedShape(shape.value)}
+                className={cn(
+                  "border-2 p-4 rounded-lg flex flex-col items-center gap-3 text-sm transition-all hover:shadow-md",
+                  selectedShape === shape.value
+                    ? "border-primary bg-primary/5"
+                    : "border-gray-200 hover:border-gray-300"
+                )}
+              >
+                <div className={cn("w-16 h-10 bg-primary/80", shape.icon)} />
+                <span className="font-medium">{shape.label}</span>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tema */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sun className="w-5 h-5" />
+            Tema da Interface
+          </CardTitle>
+          <CardDescription>
+            Escolha o tema visual da página de agendamento
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4">
+            {THEMES.map(theme => {
+              const Icon = theme.icon;
+              return (
                 <button
+                  key={theme.value}
                   type="button"
-                  onClick={() => setSelectedColor(color)}
+                  onClick={() => setSelectedTheme(theme.value)}
                   className={cn(
-                    "w-8 h-8 rounded-full border-2",
-                    selectedColor === color
-                      ? "ring-2 ring-black"
-                      : "border-gray-300"
+                    "border-2 p-4 rounded-lg flex flex-col items-center gap-3 text-sm transition-all hover:shadow-md",
+                    selectedTheme === theme.value
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 hover:border-gray-300"
                   )}
-                  style={{ backgroundColor: color }}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+                >
+                  <Icon className="w-8 h-8 text-muted-foreground" />
+                  <span className="font-medium">{theme.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Button Shape */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium">Formato do botão</h4>
-        <div className="grid grid-cols-3 gap-4">
-          {BUTTON_SHAPES.map(shape => (
-            <button
-              key={shape}
-              type="button"
-              onClick={() => setSelectedShape(shape)}
-              className={cn(
-                "border p-4 rounded-md flex flex-col items-center gap-1 text-sm",
-                selectedShape === shape ? "border-black" : "border-gray-200"
-              )}
-            >
-              <div className="w-8 h-2 bg-gray-400" />
-              {shape.charAt(0).toUpperCase() + shape.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Theme */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium">Tema</h4>
-        <div className="grid grid-cols-3 gap-4">
-          {THEMES.map(theme => (
-            <button
-              key={theme}
-              type="button"
-              onClick={() => setSelectedTheme(theme)}
-              className={cn(
-                "border p-4 rounded-md flex flex-col items-center gap-1 text-sm",
-                selectedTheme === theme ? "border-black" : "border-gray-200"
-              )}
-            >
-              {theme === "system"
-                ? "Sistema"
-                : theme === "light"
-                ? "Claro"
-                : "Escuro"}
-            </button>
-          ))}
-        </div>
+      {/* Botão de Salvar */}
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+          <Save className="w-4 h-4" />
+          {isSaving ? "Salvando..." : "Salvar Alterações"}
+        </Button>
       </div>
     </div>
   );

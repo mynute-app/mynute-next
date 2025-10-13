@@ -22,9 +22,9 @@ import {
   FiFlag,
   FiMail,
 } from "react-icons/fi";
-import { useAddAddressForm } from "../../your-brand/_components/actions/useAddAddressForm";
-import { Branch } from "../../../../../types/company";
 import { PlusIcon } from "lucide-react";
+import { Branch } from "../../../../../types/company";
+import { useAddAddressForm } from "../actions/useAddAddressForm";
 
 type AddBranchDialogProps = {
   onCreate: (branch: Branch) => void;
