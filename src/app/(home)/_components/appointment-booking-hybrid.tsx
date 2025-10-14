@@ -13,12 +13,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-
 import { ServiceHeader } from "@/app/(home)/_components/service-header";
 import { FilterSidebar } from "@/app/(home)/_components/filter-sidebar";
 import { AppointmentSummary } from "@/app/(home)/_components/appointment-summary";
 import { DateCard } from "@/app/(home)/_components/date-card";
-import { Calendar } from "@/app/(home)/_components/calendar";
 import { TimeSlotPicker } from "@/app/(home)/_components/time-slot-picker";
 import { BranchSelection } from "@/app/(home)/_components/branch-selection";
 import {
@@ -34,7 +32,7 @@ import { useCompanyByName } from "@/hooks/use-company-by-name";
 import type { Service } from "../../../../types/company";
 import type { TimeSlot } from "@/hooks/service/useServiceAvailability";
 import { EmployeeSelection } from "./employee-selection-improved";
-
+import { Calendar } from "./calendar";
 
 interface AppointmentBookingProps {
   service: Service;
@@ -329,24 +327,13 @@ export function AppointmentBooking({
   const handleConfirmAppointment = () => {
     if (!selectedSlot || !clientData) return;
 
-    console.log("Agendamento confirmado:", {
-      service,
-      slot: selectedSlot,
-      clientData,
-      employee: employees.find(
-        (emp: any) => emp.id === selectedSlot.employeeId
-      ),
-      branch: branches.find(
-        (branch: any) => branch.id === selectedSlot.branchId
-      ),
-    });
+    // TODO: Implementar lógica de envio para o backend
+    // await createAppointment({ service, slot: selectedSlot, clientData })
 
-    // Aqui você pode adicionar a lógica de envio para o backend
-    // Por exemplo: await createAppointment({ service, slot: selectedSlot, clientData })
+    setShowConfirmation(true);
   };
 
-  // Configurar data mínima e máxima para o calendário
-  const minDate = new Date(); // Hoje
+  const minDate = new Date();
   const maxDate = useMemo(() => {
     const max = new Date();
     max.setDate(max.getDate() + 30); // 30 dias no futuro

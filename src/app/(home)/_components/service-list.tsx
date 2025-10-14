@@ -45,16 +45,11 @@ export function ServiceList({
   }, [services, query]);
 
   const handleServiceSelect = async (service: Service) => {
-    console.log("🎯 Serviço clicado:", service);
-
     if (!companyId) {
-      console.error("❌ Company ID não fornecido");
       return;
     }
 
     try {
-      console.log("🔄 Buscando disponibilidade...");
-
       const availabilityData = await fetchAvailability({
         serviceId: service.id,
         companyId: companyId,
@@ -63,12 +58,9 @@ export function ServiceList({
         dateForwardEnd: 3,
       });
 
-      console.log("✅ Dados de disponibilidade:", availabilityData);
-
-      // Salvar os dados para mostrar na tela
       setAvailabilityData(availabilityData);
     } catch (error) {
-      console.error("❌ Erro ao buscar disponibilidade:", error);
+      // Error handling silencioso, toast já é mostrado pelo hook
     }
 
     setSelectedService(service);
