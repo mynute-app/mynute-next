@@ -18,7 +18,7 @@ export type Branch = {
 export type Service = {
   id: any;
   name: string;
-  duration: string;
+  duration: string | number;
   buffer?: string;
   price?: any;
   description: string;

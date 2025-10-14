@@ -1,15 +1,19 @@
-"use client";
-
-import { useMemo } from "react";
-import { useCompanyByName } from "@/hooks/use-company-by-name";
+import { useSubdomainValidation } from "@/hooks/use-subdomain-validation";
 import { ServiceList } from "@/app/(home)/_components/service-list";
 import Image from "next/image";
-import { Skeleton } from "@/components/ui/skeleton";
 
-export default function Page() {
-  const { company, loading, error } = useCompanyByName();
+export default async function Page() {
+  const { company, errorComponent } = await useSubdomainValidation();
+  console.log(company);
+  if (errorComponent) {
+    return errorComponent;
+  }
 
-  const services = useMemo(() => company?.services ?? [], [company]);
+  if (!company) {
+    return null;
+  }
+
+  const services = company?.services ?? [];
   const brandColor = company?.design?.colors?.primary || undefined;
 
   return (
@@ -37,9 +41,7 @@ export default function Page() {
 
         {/* Logo centralizado */}
         <div className="absolute inset-0 flex items-center justify-center">
-          {loading ? (
-            <Skeleton className="h-16 w-24 md:h-24 md:w-36 rounded-md" />
-          ) : company?.design?.images?.logo?.url ? (
+          {company?.design?.images?.logo?.url ? (
             <div className="relative h-16 w-28 md:h-24 md:w-40 bg-white/20 rounded-md ">
               <Image
                 src={company.design.images.logo.url || "/placeholder.svg"}
@@ -50,17 +52,15 @@ export default function Page() {
                 priority
               />
             </div>
-          ) : (
-            <Skeleton className="h-16 w-24 md:h-24 md:w-36 rounded-md" />
-          )}
+          ) : null}
         </div>
       </section>
 
       <div className="container mx-auto max-w-5xl px-4 py-2">
         <ServiceList
-          services={services as any[]}
-          loading={loading}
-          error={error ?? undefined}
+          services={services}
+          loading={false}
+          error={undefined}
           brandColor={brandColor}
           companyId={company?.id}
         />

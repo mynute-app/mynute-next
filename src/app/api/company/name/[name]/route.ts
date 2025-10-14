@@ -25,14 +25,28 @@ export async function GET(
 
     const spaced = (s: string) => s.replace(/-/g, " ");
     const hyphen = (s: string) => s.replace(/\s+/g, "-");
+    const capitalize = (s: string) =>
+      s
+        .split(/[\s-]+/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join("-");
+    const capitalizeSpaced = (s: string) =>
+      s
+        .split(/[\s-]+/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(" ");
 
     const candidatesRaw = [
       providedName,
       providedName ? spaced(providedName) : "",
       providedName ? hyphen(providedName) : "",
+      providedName ? capitalize(providedName) : "", // Agenda-Kaki
+      providedName ? capitalizeSpaced(providedName) : "", // Agenda Kaki
       fromHostLabel,
       fromHostLabel ? spaced(fromHostLabel) : "",
       fromHostLabel ? hyphen(fromHostLabel) : "",
+      fromHostLabel ? capitalize(fromHostLabel) : "",
+      fromHostLabel ? capitalizeSpaced(fromHostLabel) : "",
     ];
 
     const candidates = Array.from(
