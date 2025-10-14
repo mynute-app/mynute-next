@@ -105,9 +105,6 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
       const errorMessage = err.message || "Erro interno do servidor";
       setError(errorMessage);
 
-      console.error("❌ Hook - Erro ao buscar work_schedule:", err);
-
-      // Não mostrar toast para erro de busca, deixar o componente decidir
       props?.onError?.(errorMessage);
       throw err;
     } finally {
@@ -123,13 +120,10 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
     setSuccess(false);
     setError(null);
 
- 
-
     try {
       const payload = {
         work_schedule: workScheduleData,
       };
-
 
       const response = await fetch(
         `/api/employee/${employeeId}/work_schedule`,
@@ -192,12 +186,8 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
     setSuccess(false);
     setError(null);
 
-   
-
     try {
-      // 1. Filtrar apenas os ranges novos (sem ID)
       const rangesWithoutId = newRanges.filter(range => !range.id);
-
 
       if (rangesWithoutId.length === 0) {
         toast({
@@ -207,11 +197,9 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
         return;
       }
 
-      // 2. Buscar horários existentes para validação de sobreposição
       let existingRanges: WorkScheduleRange[] = [];
       try {
         existingRanges = await fetchWorkSchedule(employeeId);
-    
       } catch (error) {
         existingRanges = [];
       }
@@ -254,14 +242,12 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
         }
       }
 
-      // 4. Enviar apenas os novos ranges (sem conflitos)
       const payload = {
         work_schedule: {
           employee_work_ranges: rangesWithoutId,
         },
       };
 
-    
       const response = await fetch(
         `/api/employee/${employeeId}/work_schedule`,
         {

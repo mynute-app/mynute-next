@@ -50,10 +50,8 @@ export const useAddServiceForm = () => {
       });
 
       form.reset();
-      return createdService; // 👈 RETORNA PRA O COMPONENTE USAR
+      return createdService;
     } catch (error) {
-      console.error("❌ Erro ao criar o serviço:", error);
-
       toast({
         title: "Erro ao criar o serviço",
         description:

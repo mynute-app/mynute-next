@@ -9,8 +9,6 @@ export function useCompanyImageDelete() {
     setIsDeleting(true);
 
     try {
-      console.log(`🗑️ Removendo imagem ${imageType} da empresa...`);
-
       const response = await fetch(`/api/company/design/images/${imageType}`, {
         method: "DELETE",
         headers: {
@@ -19,9 +17,6 @@ export function useCompanyImageDelete() {
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
-        console.error("❌ Erro ao remover imagem:", errorData);
-
         toast({
           title: "Erro",
           description: `Erro ao remover a imagem ${imageType}`,
@@ -31,8 +26,6 @@ export function useCompanyImageDelete() {
         return false;
       }
 
-      console.log(`✅ Imagem ${imageType} removida com sucesso`);
-
       toast({
         title: "Sucesso",
         description: `Imagem ${imageType} removida com sucesso`,
@@ -40,8 +33,6 @@ export function useCompanyImageDelete() {
 
       return true;
     } catch (error) {
-      console.error("❌ Erro ao processar remoção:", error);
-
       toast({
         title: "Erro",
         description: "Erro interno ao remover a imagem",

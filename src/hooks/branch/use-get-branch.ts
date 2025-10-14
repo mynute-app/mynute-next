@@ -85,8 +85,6 @@ export function useGetBranch({ branchId, enabled = true }: UseGetBranchProps) {
     setError(null);
 
     try {
-      console.log("🏢 Buscando dados da filial:", branchId);
-
       const response = await fetch(`/api/branch/${branchId}`, {
         method: "GET",
         headers: {
@@ -100,14 +98,12 @@ export function useGetBranch({ branchId, enabled = true }: UseGetBranchProps) {
       }
 
       const branchData = await response.json();
-      console.log("✅ Dados da filial carregados:", branchData);
 
       setData(branchData);
       setError(null);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
-      console.error("❌ Erro ao buscar filial:", errorMessage);
 
       setError(errorMessage);
       setData(null);
