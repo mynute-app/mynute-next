@@ -14,6 +14,8 @@ export type Service = CompanyService;
 
 type Props = {
   services: Service[];
+  employees?: any[];
+  branches?: any[];
   loading?: boolean;
   error?: string;
   brandColor?: string;
@@ -22,6 +24,8 @@ type Props = {
 
 export function ServiceList({
   services,
+  employees = [],
+  branches = [],
   loading,
   error,
   brandColor,
@@ -58,7 +62,14 @@ export function ServiceList({
         dateForwardEnd: 3,
       });
 
-      setAvailabilityData(availabilityData);
+      // Adicionar employee_info e branch_info se não vieram da API
+      const enrichedData = {
+        ...availabilityData,
+        employee_info: availabilityData?.employee_info || employees,
+        branch_info: availabilityData?.branch_info || branches,
+      };
+
+      setAvailabilityData(enrichedData);
     } catch (error) {
       // Error handling silencioso, toast já é mostrado pelo hook
     }

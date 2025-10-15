@@ -14,15 +14,9 @@ export async function GET(
   }
 
   try {
-    // Usa a rota pública /company/name que retorna dados completos
-    // Converte subdomain para nome da empresa (agenda-kaki -> Agenda-kaki ou agenda kaki)
-    console.log(`� Buscando empresa pelo subdomain: ${subdomain}`);
-
-    // Tenta buscar pelo nome exato do subdomain primeiro
+    // Busca diretamente pelo subdomain no backend (para auth funcionar)
     const res = await fetch(
-      `${process.env.BACKEND_URL}/company/name/${encodeURIComponent(
-        subdomain
-      )}`,
+      `${process.env.BACKEND_URL}/company/subdomain/${subdomain}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -31,7 +25,6 @@ export async function GET(
     );
 
     if (!res.ok) {
-      console.log(`❌ Empresa não encontrada: ${res.status}`);
       return NextResponse.json(
         { error: "Empresa não encontrada para esse subdomínio" },
         { status: res.status }
@@ -39,7 +32,6 @@ export async function GET(
     }
 
     const data = await res.json();
-    console.log(`✅ Dados completos da empresa retornados`);
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(

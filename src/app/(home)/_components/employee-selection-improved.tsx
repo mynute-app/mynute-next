@@ -84,17 +84,18 @@ export function EmployeeSelection({
 
       {/* Lista de funcionários disponíveis */}
       <div className="space-y-4">
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {availableEmployees.map(employee => (
             <Card
               key={employee.id}
-              className="group hover:shadow-lg hover:border-primary/30 transition-all duration-200 cursor-pointer hover:scale-[1.02]"
+              className="group hover:shadow-md hover:border-primary/50 transition-all duration-200 cursor-pointer"
               onClick={() => onEmployeeSelect(employee.id)}
             >
-              <CardContent className="p-6">
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <Avatar className="w-16 h-16 border-2 border-primary/20 group-hover:border-primary/40 transition-colors">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  {/* Avatar e Badge Online */}
+                  <div className="relative shrink-0">
+                    <Avatar className="w-14 h-14 sm:w-16 sm:h-16 border-2 border-primary/20 group-hover:border-primary/40 transition-colors">
                       <AvatarImage
                         src={employee.design?.images?.profile?.url}
                         alt={
@@ -103,39 +104,41 @@ export function EmployeeSelection({
                         }
                         className="object-cover"
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-primary/10 to-primary/5 text-primary font-semibold text-lg">
+                      <AvatarFallback className="bg-gradient-to-br from-primary/10 to-primary/5 text-primary font-semibold text-base sm:text-lg">
                         {employee.name.charAt(0)}
-                        {employee.surname.charAt(0)}
+                        {employee.surname?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                     </div>
                   </div>
 
-                  <div className="flex-1">
-                    <h4 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                  {/* Informações do Funcionário */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-lg sm:text-xl font-bold text-foreground group-hover:text-primary transition-colors truncate">
                       {employee.name} {employee.surname}
                     </h4>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Disponível às {selectedTimeSlot.time}
                     </p>
 
-                    <div className="flex items-center gap-2 mt-3">
+                    {/* Avaliações e Badges - Oculto em mobile */}
+                    <div className="hidden sm:flex items-center gap-2 mt-3">
                       <div className="flex items-center gap-1">
                         {[1, 2, 3, 4, 5].map(star => (
                           <Star
                             key={star}
-                            className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                            className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"
                           />
                         ))}
                       </div>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         5.0 • 127 avaliações
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="hidden sm:flex items-center gap-2 mt-2">
                       <Badge variant="outline" className="text-xs">
                         Especialista
                       </Badge>
@@ -145,9 +148,21 @@ export function EmployeeSelection({
                     </div>
                   </div>
 
+                  {/* Botão - Desktop */}
                   <Button
                     size="lg"
-                    className="ml-auto px-8 group-hover:shadow-md transition-all"
+                    className="hidden sm:flex ml-auto px-6 sm:px-8 group-hover:shadow-md transition-all"
+                    style={
+                      brandColor ? { backgroundColor: brandColor } : undefined
+                    }
+                  >
+                    Escolher
+                  </Button>
+
+                  {/* Botão - Mobile (largura total) */}
+                  <Button
+                    size="default"
+                    className="sm:hidden w-full mt-2"
                     style={
                       brandColor ? { backgroundColor: brandColor } : undefined
                     }

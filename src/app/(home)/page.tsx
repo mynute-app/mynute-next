@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export default async function Page() {
   const { company, errorComponent } = await useSubdomainValidation();
-  console.log(company);
+
   if (errorComponent) {
     return errorComponent;
   }
@@ -14,6 +14,8 @@ export default async function Page() {
   }
 
   const services = company?.services ?? [];
+  const employees = company?.employees ?? [];
+  const branches = company?.branches ?? [];
   const brandColor = company?.design?.colors?.primary || undefined;
 
   return (
@@ -59,6 +61,8 @@ export default async function Page() {
       <div className="container mx-auto max-w-5xl px-4 py-2">
         <ServiceList
           services={services}
+          employees={employees}
+          branches={branches}
           loading={false}
           error={undefined}
           brandColor={brandColor}
