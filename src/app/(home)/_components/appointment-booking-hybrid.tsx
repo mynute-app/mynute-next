@@ -28,6 +28,7 @@ import { useAppointmentAvailabilityHybrid } from "@/hooks/use-appointment-availa
 import { useAppointmentAvailabilitySpecificDate } from "@/hooks/use-appointment-availability-specific-date";
 import { useServiceAvailabilityAuto } from "@/hooks/service/useServiceAvailability";
 import { useCompanyByName } from "@/hooks/use-company-by-name";
+import { useCreateAppointment } from "@/hooks/appointment/useCreateAppointment";
 
 import type { Service } from "../../../../types/company";
 import type { TimeSlot } from "@/hooks/service/useServiceAvailability";
@@ -89,6 +90,15 @@ export function AppointmentBooking({
 
   // Hook para obter dados da empresa
   const { company } = useCompanyByName();
+
+  // Hook para criar agendamento
+  const {
+    appointment,
+    loading: creatingAppointment,
+    error: appointmentError,
+    createAppointment,
+    reset: resetAppointment,
+  } = useCreateAppointment();
 
   // Efeito para controlar quando buscar dados do calendário
   useEffect(() => {
@@ -324,13 +334,43 @@ export function AppointmentBooking({
     }
   };
 
-  const handleConfirmAppointment = () => {
-    if (!selectedSlot || !clientData) return;
+  const handleConfirmAppointment = async () => {
+    if (!selectedSlot || !clientData || !company?.id) return;
 
-    // TODO: Implementar lógica de envio para o backend
-    // await createAppointment({ service, slot: selectedSlot, clientData })
+    try {
+      // Converter data e hora para ISO string (start_time)
+      const startTime = new Date(
+        `${selectedSlot.date}T${selectedSlot.time}:00`
+      ).toISOString();
 
-    setShowConfirmation(true);
+      // TODO: Implementar criação de cliente antes de criar o agendamento
+      // Por enquanto, vamos usar um client_id placeholder
+      const clientId = "00000000-0000-0000-0000-000000000000"; // Placeholder
+
+      const appointmentParams = {
+        branch_id: selectedSlot.branchId,
+        client_id: clientId, // TODO: Criar cliente primeiro e usar o ID real
+        company_id: company.id,
+        employee_id: selectedSlot.employeeId,
+        service_id: service.id,
+        start_time: startTime,
+        // time_zone já é injetado automaticamente como "America/Sao_Paulo"
+      };
+
+      console.log("📤 DADOS QUE VOU ENVIAR:");
+      console.log("Company ID:", company.id);
+      console.log("Params:", JSON.stringify(appointmentParams, null, 2));
+
+      await createAppointment(appointmentParams);
+
+      // Se chegou aqui, o agendamento foi criado com sucesso
+      console.log("✅ Agendamento criado com sucesso!");
+
+      // TODO: Mostrar tela de sucesso ou redirecionar
+    } catch (error) {
+      console.error("❌ Erro ao criar agendamento:", error);
+      // TODO: Mostrar mensagem de erro para o usuário
+    }
   };
 
   const minDate = new Date();
@@ -353,6 +393,8 @@ export function AppointmentBooking({
           brandColor={brandColor}
           onConfirm={handleConfirmAppointment}
           onBack={handleBackToClientForm}
+          loading={creatingAppointment}
+          error={appointmentError}
         />
       ) : showClientForm && selectedSlot ? (
         // Tela de formulário de dados do cliente

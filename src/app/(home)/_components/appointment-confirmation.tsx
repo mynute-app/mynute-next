@@ -31,6 +31,8 @@ interface AppointmentConfirmationProps {
   brandColor?: string;
   onConfirm: () => void;
   onBack: () => void;
+  loading?: boolean;
+  error?: string | null;
 }
 
 export function AppointmentConfirmation({
@@ -42,6 +44,8 @@ export function AppointmentConfirmation({
   brandColor,
   onConfirm,
   onBack,
+  loading = false,
+  error = null,
 }: AppointmentConfirmationProps) {
   const selectedEmployee = employees.find(
     (emp: any) => emp.id === selectedSlot.employeeId
@@ -227,9 +231,18 @@ export function AppointmentConfirmation({
         </Card>
       </div>
 
+      {/* Mensagem de erro */}
+      {error && (
+        <Card className="border-destructive">
+          <CardContent className="p-4">
+            <p className="text-destructive text-center">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Botões */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button variant="outline" onClick={onBack} size="lg">
+        <Button variant="outline" onClick={onBack} size="lg" disabled={loading}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar e editar
         </Button>
@@ -238,9 +251,19 @@ export function AppointmentConfirmation({
           size="lg"
           className="sm:min-w-[200px]"
           style={{ backgroundColor: brandColor }}
+          disabled={loading}
         >
-          <CheckCircle className="w-4 h-4 mr-2" />
-          Confirmar agendamento
+          {loading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Criando agendamento...
+            </>
+          ) : (
+            <>
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Confirmar agendamento
+            </>
+          )}
         </Button>
       </div>
     </div>
