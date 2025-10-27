@@ -6,7 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { ServiceCard } from "@/app/(home)/_components/service-card";
 import { ServiceSkeleton } from "@/app/(home)/_components/service-skeleton";
 import { EmptyState } from "@/app/(home)/_components/service-empty";
-import { AppointmentBooking } from "@/app/(home)/_components/appointment-booking-hybrid";
+import { BookingProvider } from "@/app/(home)/_components/booking";
+import { BookingOrchestrator } from "@/app/(home)/_components/booking-orchestrator";
 import { useServiceAvailability } from "@/hooks/service/useServiceAvailability";
 import type { Service as CompanyService } from "../../../../types/company";
 
@@ -83,14 +84,17 @@ export function ServiceList({
   };
 
   // Se tem um serviço selecionado, mostra a tela de agendamento
+  // Envolvido no BookingProvider para gerenciar estado do novo fluxo
   if (selectedService) {
     return (
-      <AppointmentBooking
-        service={selectedService}
-        onBack={handleBackToServices}
-        brandColor={brandColor}
-        initialAvailabilityData={availabilityData}
-      />
+      <BookingProvider companyId={companyId} brandColor={brandColor}>
+        <BookingOrchestrator
+          service={selectedService}
+          onBack={handleBackToServices}
+          brandColor={brandColor}
+          initialAvailabilityData={availabilityData}
+        />
+      </BookingProvider>
     );
   }
 
