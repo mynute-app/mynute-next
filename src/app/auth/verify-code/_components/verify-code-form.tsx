@@ -2,11 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
@@ -31,7 +35,7 @@ export function VerifyCodeForm({
   const emailFromParams = searchParams.get("email") || "";
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<VerifyCodeData>({
@@ -98,14 +102,23 @@ export function VerifyCodeForm({
           <div className="text-sm text-muted-foreground mb-2">
             Enviamos um código para <strong>{emailFromParams}</strong>
           </div>
-          <Input
-            id="code"
-            type="text"
-            placeholder="000000"
-            maxLength={6}
-            {...register("code")}
-            className="text-center text-2xl tracking-[0.5em] font-mono"
-            autoComplete="one-time-code"
+          <Controller
+            name="code"
+            control={control}
+            render={({ field }) => (
+              <div className="flex justify-center">
+                <InputOTP maxLength={6} {...field}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+            )}
           />
           {errors.code?.message && (
             <p className="text-sm text-red-500">{errors.code.message}</p>
