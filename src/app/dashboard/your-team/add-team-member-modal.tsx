@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAddEmployeeForm } from "@/hooks/post-employee";
 import { FiUser, FiMail, FiPhone } from "react-icons/fi";
-import { FormError } from "@/app/auth/_components/form/form-error";
+import { FormError } from "@/app/auth/register-company/_components/form-error";
 
 interface AddUserDialogProps {
   isOpen: boolean;

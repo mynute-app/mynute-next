@@ -1,7 +1,8 @@
-import { LoginFormSwitcher } from "./_components/login-form-switcher";
+import { Suspense } from "react";
+import { VerifyCodeForm } from "./_components/verify-code-form";
 import { useSubdomainValidation } from "@/hooks/use-subdomain-validation";
 
-export default async function LoginPage() {
+export default async function VerifyCodePage() {
   const { company, errorComponent } = await useSubdomainValidation();
 
   if (errorComponent) {
@@ -18,15 +19,15 @@ export default async function LoginPage() {
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs space-y-4">
             <div className="text-center">
-              <h2 className="text-lg font-semibold">
-                Acesse sua conta da {company.trading_name || company.legal_name}
-              </h2>
+              <h2 className="text-lg font-semibold">Verificação de código</h2>
               <p className="text-sm text-muted-foreground">
-                Ambiente exclusivo para funcionários.
+                Insira o código que enviamos para seu email
               </p>
             </div>
 
-            <LoginFormSwitcher />
+            <Suspense fallback={<div>Carregando...</div>}>
+              <VerifyCodeForm />
+            </Suspense>
           </div>
         </div>
       </div>

@@ -26,7 +26,7 @@ export const { handlers, auth, signIn } = NextAuth({
           }
 
           const companyRes = await fetch(
-            `http://localhost:3000/api/company/subdomain/${subdomain}`,
+            `${process.env.NEXTAUTH_URL}/api/company/subdomain/${subdomain}`,
             { cache: "no-store" }
           );
 
@@ -34,15 +34,18 @@ export const { handlers, auth, signIn } = NextAuth({
             throw new Error("Empresa não encontrada para o subdomínio.");
           }
 
-          const company = await companyRes.json(); // ✅ Realiza login com X-Company-ID
-          const response = await fetch("http://localhost:4000/employee/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Company-ID": company.id,
-            },
-            body: JSON.stringify({ email, password }),
-          });
+          const company = await companyRes.json();
+          const response = await fetch(
+            `${process.env.BACKEND_URL}/employee/login`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Company-ID": company.id,
+              },
+              body: JSON.stringify({ email, password }),
+            }
+          );
 
           response.headers.forEach((value, key) => {
             console.log(`${key}: ${value}`);
@@ -77,6 +80,79 @@ export const { handlers, auth, signIn } = NextAuth({
         }
       },
     }),
+    Credentials({
+      id: "code-login",
+      name: "Code Login",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        code: { label: "Code", type: "text" },
+      },
+      authorize: async (credentials, req) => {
+        try {
+          const { email, code } = credentials as {
+            email: string;
+            code: string;
+          };
+
+          if (!email || !code) {
+            throw new Error("Email e código são obrigatórios");
+          }
+
+          const host = req?.headers?.get("host") || "";
+          const subdomain = host.split(".")[0];
+
+          if (!subdomain) {
+            throw new Error("Subdomínio não identificado na requisição.");
+          }
+
+          const companyRes = await fetch(
+            `${process.env.NEXTAUTH_URL}/api/company/subdomain/${subdomain}`,
+            { cache: "no-store" }
+          );
+
+          if (!companyRes.ok) {
+            throw new Error("Empresa não encontrada para o subdomínio.");
+          }
+
+          const company = await companyRes.json();
+
+          const response = await fetch(
+            `${process.env.BACKEND_URL}/employee/login-with-code`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Company-ID": company.id,
+              },
+              body: JSON.stringify({ email, code }),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`Código inválido ou expirado`);
+          }
+
+          const token = response.headers.get("X-Auth-Token");
+
+          if (!token) {
+            console.error(
+              "Token X-Auth-Token não encontrado nos headers da resposta"
+            );
+            throw new Error("Token não encontrado na resposta.");
+          }
+
+          return {
+            email,
+            token,
+            companyId: company.id,
+            subdomain,
+          };
+        } catch (error) {
+          console.error("Erro durante a autenticação com código:", error);
+          return null;
+        }
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -102,7 +178,6 @@ export const { handlers, auth, signIn } = NextAuth({
   pages: {
     signIn: "/auth/login",
   },
-  // Garante uso de JWT para sessão
   session: {
     strategy: "jwt",
   },

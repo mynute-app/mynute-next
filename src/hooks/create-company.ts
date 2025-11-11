@@ -41,16 +41,34 @@ export const useCreateCompany = () => {
       if (!response.ok) {
         throw new Error(errorMessage);
       }
-      
 
-      toast({
-        title: "Empresa cadastrada com sucesso!",
-        description: "Você será redirecionado para o login.",
-      });
+      const result = JSON.parse(text);
 
-      router.push("/auth/employee");
+      try {
+        const encodedEmail = encodeURIComponent(data.owner_email);
+        await fetch(`/api/employee/send-login-code/email/${encodedEmail}`, {
+          method: "POST",
+        });
 
-      return JSON.parse(text);
+        toast({
+          title: "Empresa cadastrada com sucesso!",
+          description:
+            "Um código de verificação foi enviado para seu email. Você será redirecionado.",
+        });
+      } catch (codeError) {
+        console.error("Erro ao enviar código de verificação:", codeError);
+        toast({
+          title: "Empresa cadastrada!",
+          description:
+            "Mas houve um problema ao enviar o código. Você será redirecionado para o login.",
+        });
+      }
+
+      router.push(
+        `/auth/verify-code?email=${encodeURIComponent(data.owner_email)}`
+      );
+
+      return result;
     } catch (err: any) {
       const errorMessage = err.message;
       const normalizedMessage = errorMessage.toLowerCase();

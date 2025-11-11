@@ -26,19 +26,9 @@ export default function Page() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-              <Button
-                variant="outline"
-                className="w-full flex items-center justify-center py-5 border-gray-300 hover:border-gray-400 transition"
-              >
-                <FcGoogle className="mr-2 h-5 w-5" /> Continuar com Google
-              </Button>
-              <div className="relative flex items-center py-2">
-                <div className="flex-1 border-t border-gray-300" />
-                <span className="px-4 text-gray-500 text-sm">ou</span>
-                <div className="flex-1 border-t border-gray-300" />
-              </div>
+
               <div>
-                <Link href="/auth/login" passHref>
+                <Link href="/auth/employee" passHref>
                   <Button
                     variant="outline"
                     className="w-full flex items-center justify-center py-5 border-gray-300 hover:border-gray-400 transition"

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { RegisterFormCompany } from "../_components/form-employee-register";
+import { RegisterFormCompany } from "./_components/form-employee-register";
 
 export default function RegisterEmployeePage() {
   return (

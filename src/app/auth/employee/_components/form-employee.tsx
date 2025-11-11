@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type LoginFormProps = React.ComponentPropsWithoutRef<"form"> & {
   provider: "user-login" | "employee-login";
+  onToggleMode?: () => void;
 };
 
 const loginSchema = z.object({
@@ -29,6 +30,7 @@ type LoginData = z.infer<typeof loginSchema>;
 export function LoginFormEmployee({
   className,
   provider,
+  onToggleMode,
   ...props
 }: LoginFormProps) {
   const {
@@ -69,13 +71,6 @@ export function LoginFormEmployee({
       className={cn("flex flex-col gap-6", className)}
       {...props}
     >
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Faça login na sua conta</h1>
-        <p className="text-balance text-sm text-muted-foreground">
-          Insira seu e-mail abaixo para fazer login
-        </p>
-      </div>
-
       <div className="grid gap-6">
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
@@ -134,22 +129,24 @@ export function LoginFormEmployee({
           {loading ? "Entrando..." : "Login"}
         </Button>
 
-        <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-          <span className="relative z-10 bg-background px-2 text-muted-foreground">
-            Ou continue com
-          </span>
-        </div>
+        {onToggleMode && (
+          <>
+            <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+              <span className="relative z-10 bg-background px-2 text-muted-foreground">
+                Ou
+              </span>
+            </div>
 
-        <Button variant="outline" className="w-full">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            className="h-5 w-5 mr-2"
-          >
-            <path d="M12 .297c-6.63 0-12 5.373-12 12..." fill="currentColor" />
-          </svg>
-          Login com GitHub
-        </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={onToggleMode}
+            >
+              Login com código de email
+            </Button>
+          </>
+        )}
       </div>
 
       <div className="text-center text-sm">

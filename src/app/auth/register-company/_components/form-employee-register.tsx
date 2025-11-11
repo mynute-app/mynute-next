@@ -7,15 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import {
-  companyRegisterSchema,
-  CompanyRegisterSchema,
-} from "../../../../schema/company-register";
 import { useCreateCompany } from "@/hooks/create-company";
 import { useState } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { FormError } from "./form/form-error";
 import { formatCNPJ, formatPhone } from "@/utils/format-cnpj";
+import { FormError } from "./form-error";
+import {
+  companyRegisterSchema,
+  CompanyRegisterSchema,
+} from "../../../../../schema/company-register";
 
 export function RegisterFormCompany({
   className,
