@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, User, Phone, Mail, MessageSquare } from "lucide-react";
+import { ArrowLeft, User, Loader2 } from "lucide-react";
+import { useClientByEmail } from "@/hooks/use-client-by-email";
+import { useCreateClient } from "@/hooks/use-create-client";
 import type { Service } from "../../../../types/company";
 
 interface ClientDetailsFormProps {
@@ -26,6 +28,7 @@ interface ClientDetailsFormProps {
 
 export interface ClientData {
   name: string;
+  surname: string;
   phone: string;
   email: string;
   notes?: string;
@@ -42,12 +45,22 @@ export function ClientDetailsForm({
 }: ClientDetailsFormProps) {
   const [clientData, setClientData] = useState<ClientData>({
     name: "",
+    surname: "",
     phone: "",
     email: "",
     notes: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const {
+    client,
+    loading,
+    error: clientError,
+    checkEmail,
+  } = useClientByEmail();
+
+  const { createClient, loading: creatingClient } = useCreateClient();
 
   const selectedEmployee = employees.find(
     (emp: any) => emp.id === selectedSlot.employeeId
@@ -56,11 +69,32 @@ export function ClientDetailsForm({
     (branch: any) => branch.id === selectedSlot.branchId
   );
 
+  const handleEmailBlur = async () => {
+    const email = clientData.email.trim();
+
+    if (!email) return;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return;
+
+    await checkEmail(email);
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
+    if (!clientData.email.trim()) {
+      newErrors.email = "Email é obrigatório";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientData.email.trim())) {
+      newErrors.email = "Email deve ter um formato válido";
+    }
+
     if (!clientData.name.trim()) {
       newErrors.name = "Nome é obrigatório";
+    }
+
+    if (!clientData.surname.trim()) {
+      newErrors.surname = "Sobrenome é obrigatório";
     }
 
     if (!clientData.phone.trim()) {
@@ -69,26 +103,40 @@ export function ClientDetailsForm({
       newErrors.phone = "Telefone deve conter apenas números";
     }
 
-    if (!clientData.email.trim()) {
-      newErrors.email = "Email é obrigatório";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientData.email.trim())) {
-      newErrors.email = "Email deve ter um formato válido";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      onSubmit({
-        ...clientData,
-        name: clientData.name.trim(),
-        phone: clientData.phone.trim(),
-        email: clientData.email.trim(),
-        notes: clientData.notes?.trim(),
-      });
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
     }
+
+    // Se o cliente não existe, criar automaticamente
+    if (clientError === "Cliente não encontrado") {
+      const newClient = await createClient({
+        email: clientData.email.trim(),
+        name: clientData.name.trim(),
+        surname: clientData.surname.trim(),
+        phone: clientData.phone.trim(),
+        password: "Senha123!", // Senha padrão
+      });
+
+      if (!newClient) {
+        // Se falhou ao criar, mostra erro
+        alert("Erro ao criar conta. Tente novamente.");
+        return;
+      }
+    }
+
+    onSubmit({
+      ...clientData,
+      name: clientData.name.trim(),
+      surname: clientData.surname.trim(),
+      phone: clientData.phone.trim(),
+      email: clientData.email.trim(),
+      notes: clientData.notes?.trim(),
+    });
   };
 
   const formatDate = (dateStr: string) => {
@@ -132,10 +180,59 @@ export function ClientDetailsForm({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome completo *</Label>
+                <Label htmlFor="email" className="flex items-center gap-2">
+                  Email *
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={clientData.email}
+                  onChange={e =>
+                    setClientData({ ...clientData, email: e.target.value })
+                  }
+                  onBlur={handleEmailBlur}
+                  className={errors.email ? "border-destructive" : ""}
+                />
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email}</p>
+                )}
+
+                {/* DEBUG: Mostrar resultado da busca */}
+                {loading && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                    <p className="font-medium">🔍 Buscando cliente...</p>
+                  </div>
+                )}
+
+                {!loading && clientError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded text-sm">
+                    <p className="font-medium text-red-700">❌ {clientError}</p>
+                    <p className="text-xs text-red-600 mt-1">
+                      Uma conta será criada automaticamente ao finalizar o
+                      agendamento.
+                    </p>
+                  </div>
+                )}
+
+                {!loading && client && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded text-sm space-y-1">
+                    <p className="font-medium text-green-700">
+                      ✅ Cliente encontrado:
+                    </p>
+                    <pre className="text-xs bg-white p-2 rounded overflow-auto">
+                      {JSON.stringify(client, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome *</Label>
                 <Input
                   id="name"
-                  placeholder="Digite seu nome completo"
+                  placeholder="Digite seu nome"
                   value={clientData.name}
                   onChange={e =>
                     setClientData({ ...clientData, name: e.target.value })
@@ -147,39 +244,36 @@ export function ClientDetailsForm({
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone *</Label>
-                  <Input
-                    id="phone"
-                    placeholder="(11) 99999-9999"
-                    value={clientData.phone}
-                    onChange={e =>
-                      setClientData({ ...clientData, phone: e.target.value })
-                    }
-                    className={errors.phone ? "border-destructive" : ""}
-                  />
-                  {errors.phone && (
-                    <p className="text-sm text-destructive">{errors.phone}</p>
-                  )}
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="surname">Sobrenome *</Label>
+                <Input
+                  id="surname"
+                  placeholder="Digite seu sobrenome"
+                  value={clientData.surname}
+                  onChange={e =>
+                    setClientData({ ...clientData, surname: e.target.value })
+                  }
+                  className={errors.surname ? "border-destructive" : ""}
+                />
+                {errors.surname && (
+                  <p className="text-sm text-destructive">{errors.surname}</p>
+                )}
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={clientData.email}
-                    onChange={e =>
-                      setClientData({ ...clientData, email: e.target.value })
-                    }
-                    className={errors.email ? "border-destructive" : ""}
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email}</p>
-                  )}
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefone *</Label>
+                <Input
+                  id="phone"
+                  placeholder="(11) 99999-9999"
+                  value={clientData.phone}
+                  onChange={e =>
+                    setClientData({ ...clientData, phone: e.target.value })
+                  }
+                  className={errors.phone ? "border-destructive" : ""}
+                />
+                {errors.phone && (
+                  <p className="text-sm text-destructive">{errors.phone}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -272,8 +366,16 @@ export function ClientDetailsForm({
             className="w-full"
             size="lg"
             style={{ backgroundColor: brandColor }}
+            disabled={creatingClient}
           >
-            Finalizar agendamento
+            {creatingClient ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Criando conta...
+              </>
+            ) : (
+              "Finalizar agendamento"
+            )}
           </Button>
         </div>
       </div>
