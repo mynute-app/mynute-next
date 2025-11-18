@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, User, Loader2 } from "lucide-react";
 import { useClientByEmail } from "@/hooks/use-client-by-email";
 import { useCreateClient } from "@/hooks/use-create-client";
+import { useClientSendLoginCode } from "@/hooks/use-client-send-login-code";
 import type { Service } from "../../../../types/company";
+import { ClientVerifyCodeDialog } from "./client-verify-code-dialog";
+import { UnverifiedEmailAlert } from "./unverified-email-alert";
 
 interface ClientDetailsFormProps {
   service: Service;
@@ -52,6 +55,8 @@ export function ClientDetailsForm({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
+  const [clientToken, setClientToken] = useState<string | null>(null);
 
   const {
     client,
@@ -61,6 +66,8 @@ export function ClientDetailsForm({
   } = useClientByEmail();
 
   const { createClient, loading: creatingClient } = useCreateClient();
+  const { sendVerificationCode, loading: sendingCode } =
+    useClientSendLoginCode();
 
   const selectedEmployee = employees.find(
     (emp: any) => emp.id === selectedSlot.employeeId
@@ -79,6 +86,18 @@ export function ClientDetailsForm({
 
     await checkEmail(email);
   };
+
+  // Preencher campos automaticamente quando cliente for encontrado (verificado ou não)
+  useEffect(() => {
+    if (client) {
+      setClientData(prev => ({
+        ...prev,
+        name: client.name || prev.name,
+        surname: client.surname || prev.surname,
+        phone: client.phone || prev.phone,
+      }));
+    }
+  }, [client]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -112,7 +131,48 @@ export function ClientDetailsForm({
       return;
     }
 
-    // Se o cliente não existe, criar automaticamente
+    // Se já tem token, pode prosseguir
+    if (clientToken) {
+      onSubmit({
+        ...clientData,
+        name: clientData.name.trim(),
+        surname: clientData.surname.trim(),
+        phone: clientData.phone.trim(),
+        email: clientData.email.trim(),
+        notes: clientData.notes?.trim(),
+      });
+      return;
+    }
+
+    // Cenário 1: Cliente existe e está verificado - enviar código para fazer login
+    if (client && client.verified) {
+      const codeSent = await sendVerificationCode(clientData.email.trim());
+
+      if (!codeSent) {
+        alert("Erro ao enviar código de verificação. Tente novamente.");
+        return;
+      }
+
+      // Abrir dialog de verificação
+      setIsVerifyDialogOpen(true);
+      return;
+    }
+
+    // Cenário 2: Cliente existe mas não está verificado - enviar código
+    if (client && !client.verified) {
+      const codeSent = await sendVerificationCode(clientData.email.trim());
+
+      if (!codeSent) {
+        alert("Erro ao enviar código de verificação. Tente novamente.");
+        return;
+      }
+
+      // Abrir dialog de verificação
+      setIsVerifyDialogOpen(true);
+      return;
+    }
+
+    // Cenário 3: Cliente não existe - criar conta e enviar código
     if (clientError === "Cliente não encontrado") {
       const newClient = await createClient({
         email: clientData.email.trim(),
@@ -123,12 +183,41 @@ export function ClientDetailsForm({
       });
 
       if (!newClient) {
-        // Se falhou ao criar, mostra erro
         alert("Erro ao criar conta. Tente novamente.");
         return;
       }
+
+      console.log("✅ Cliente criado com sucesso:", newClient);
+
+      // Enviar código de verificação
+      const codeSent = await sendVerificationCode(clientData.email.trim());
+
+      if (!codeSent) {
+        alert("Erro ao enviar código de verificação. Tente novamente.");
+        return;
+      }
+
+      // Abrir dialog de verificação
+      setIsVerifyDialogOpen(true);
+      return;
     }
 
+    // Caso padrão: se não se encaixa em nenhum cenário, tentar continuar
+    onSubmit({
+      ...clientData,
+      name: clientData.name.trim(),
+      surname: clientData.surname.trim(),
+      phone: clientData.phone.trim(),
+      email: clientData.email.trim(),
+      notes: clientData.notes?.trim(),
+    });
+  };
+
+  const handleVerificationSuccess = (token: string) => {
+    console.log("✅ Verificação bem-sucedida! Token:", token);
+    setClientToken(token);
+
+    // Continuar com o agendamento
     onSubmit({
       ...clientData,
       name: clientData.name.trim(),
@@ -210,20 +299,30 @@ export function ClientDetailsForm({
                   <div className="p-3 bg-red-50 border border-red-200 rounded text-sm">
                     <p className="font-medium text-red-700">❌ {clientError}</p>
                     <p className="text-xs text-red-600 mt-1">
-                      Uma conta será criada automaticamente ao finalizar o
-                      agendamento.
+                      Uma conta será criada e você receberá um código de
+                      verificação por email.
                     </p>
                   </div>
                 )}
 
-                {!loading && client && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded text-sm space-y-1">
+                {!loading && client && !client.verified && (
+                  <UnverifiedEmailAlert
+                    email={clientData.email}
+                    onVerificationSuccess={token => {
+                      setClientToken(token);
+                    }}
+                  />
+                )}
+
+                {!loading && client && client.verified && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded text-sm">
                     <p className="font-medium text-green-700">
-                      ✅ Cliente encontrado:
+                      ✅ Cliente encontrado
                     </p>
-                    <pre className="text-xs bg-white p-2 rounded overflow-auto">
-                      {JSON.stringify(client, null, 2)}
-                    </pre>
+                    <p className="text-xs text-green-600 mt-1">
+                      Seus dados foram preenchidos automaticamente. Você
+                      receberá um código por email para fazer login.
+                    </p>
                   </div>
                 )}
               </div>
@@ -366,12 +465,21 @@ export function ClientDetailsForm({
             className="w-full"
             size="lg"
             style={{ backgroundColor: brandColor }}
-            disabled={creatingClient}
+            disabled={
+              creatingClient ||
+              sendingCode ||
+              !!(client && !client.verified && !clientToken)
+            }
           >
             {creatingClient ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Criando conta...
+              </>
+            ) : sendingCode ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Enviando código...
               </>
             ) : (
               "Finalizar agendamento"
@@ -379,6 +487,13 @@ export function ClientDetailsForm({
           </Button>
         </div>
       </div>
+
+      <ClientVerifyCodeDialog
+        open={isVerifyDialogOpen}
+        onOpenChange={setIsVerifyDialogOpen}
+        email={clientData.email}
+        onSuccess={handleVerificationSuccess}
+      />
     </div>
   );
 }

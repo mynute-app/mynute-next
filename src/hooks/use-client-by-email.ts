@@ -6,6 +6,7 @@ interface Client {
   surname: string;
   email: string;
   phone: string;
+  verified: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
