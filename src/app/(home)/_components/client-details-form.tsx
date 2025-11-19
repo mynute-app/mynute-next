@@ -126,12 +126,35 @@ export function ClientDetailsForm({
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleCreateAccount = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    const newClient = await createClient({
+      email: clientData.email.trim(),
+      name: clientData.name.trim(),
+      surname: clientData.surname.trim(),
+      phone: clientData.phone.trim(),
+      password: "Senha123!", 
+    });
+
+    if (!newClient) {
+      alert("Erro ao criar conta. Tente novamente.");
+      return;
+    }
+
+    console.log("✅ Cliente criado com sucesso:", newClient);
+
+    await checkEmail(clientData.email.trim());
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
 
-    // Se já tem token, pode prosseguir
+    // Se já tem token, pode prosseguir para agendamento
     if (clientToken) {
       onSubmit({
         ...clientData,
@@ -144,7 +167,7 @@ export function ClientDetailsForm({
       return;
     }
 
-    // Cenário 1: Cliente existe e está verificado - enviar código para fazer login
+    // Cenário: Cliente existe e está verificado - enviar código para fazer login
     if (client && client.verified) {
       const codeSent = await sendVerificationCode(clientData.email.trim());
 
@@ -157,60 +180,6 @@ export function ClientDetailsForm({
       setIsVerifyDialogOpen(true);
       return;
     }
-
-    // Cenário 2: Cliente existe mas não está verificado - enviar código
-    if (client && !client.verified) {
-      const codeSent = await sendVerificationCode(clientData.email.trim());
-
-      if (!codeSent) {
-        alert("Erro ao enviar código de verificação. Tente novamente.");
-        return;
-      }
-
-      // Abrir dialog de verificação
-      setIsVerifyDialogOpen(true);
-      return;
-    }
-
-    // Cenário 3: Cliente não existe - criar conta e enviar código
-    if (clientError === "Cliente não encontrado") {
-      const newClient = await createClient({
-        email: clientData.email.trim(),
-        name: clientData.name.trim(),
-        surname: clientData.surname.trim(),
-        phone: clientData.phone.trim(),
-        password: "Senha123!", // Senha padrão
-      });
-
-      if (!newClient) {
-        alert("Erro ao criar conta. Tente novamente.");
-        return;
-      }
-
-      console.log("✅ Cliente criado com sucesso:", newClient);
-
-      // Enviar código de verificação
-      const codeSent = await sendVerificationCode(clientData.email.trim());
-
-      if (!codeSent) {
-        alert("Erro ao enviar código de verificação. Tente novamente.");
-        return;
-      }
-
-      // Abrir dialog de verificação
-      setIsVerifyDialogOpen(true);
-      return;
-    }
-
-    // Caso padrão: se não se encaixa em nenhum cenário, tentar continuar
-    onSubmit({
-      ...clientData,
-      name: clientData.name.trim(),
-      surname: clientData.surname.trim(),
-      phone: clientData.phone.trim(),
-      email: clientData.email.trim(),
-      notes: clientData.notes?.trim(),
-    });
   };
 
   const handleVerificationSuccess = (token: string) => {
@@ -461,7 +430,11 @@ export function ClientDetailsForm({
 
           {/* Botão de confirmação */}
           <Button
-            onClick={handleSubmit}
+            onClick={
+              clientError === "Cliente não encontrado"
+                ? handleCreateAccount
+                : handleSubmit
+            }
             className="w-full"
             size="lg"
             style={{ backgroundColor: brandColor }}
@@ -481,6 +454,8 @@ export function ClientDetailsForm({
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Enviando código...
               </>
+            ) : clientError === "Cliente não encontrado" ? (
+              "Criar conta"
             ) : (
               "Finalizar agendamento"
             )}

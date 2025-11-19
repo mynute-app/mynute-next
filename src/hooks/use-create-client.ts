@@ -17,10 +17,6 @@ interface CreateClientRequest {
   password: string;
 }
 
-interface CreateClientResponse {
-  message: string;
-  client: Client;
-}
 
 interface UseCreateClientReturn {
   createdClient: Client | null;
@@ -56,6 +52,18 @@ export function useCreateClient(): UseCreateClientReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Função para formatar telefone no formato E.164
+  const formatPhoneToE164 = (phone: string): string => {
+    const cleaned = phone.replace(/\D/g, "");
+    if (cleaned.length >= 10) {
+      if (cleaned.length >= 11) {
+        return `+${cleaned}`;
+      }
+      return `+55${cleaned}`;
+    }
+    return `+55${cleaned}`;
+  };
+
   const createClient = async (
     data: CreateClientRequest
   ): Promise<Client | null> => {
@@ -64,14 +72,19 @@ export function useCreateClient(): UseCreateClientReturn {
     setCreatedClient(null);
 
     try {
-      console.log("📝 Enviando dados para criar cliente:", data);
+      const formattedData = {
+        ...data,
+        phone: formatPhoneToE164(data.phone),
+      };
+
+      console.log("📝 Enviando dados para criar cliente:", formattedData);
 
       const response = await fetch("/api/client", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formattedData),
       });
 
       console.log("📡 Status:", response.status);
