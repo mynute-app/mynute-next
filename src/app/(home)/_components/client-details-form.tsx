@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, User, Loader2 } from "lucide-react";
+import { ArrowLeft, User, Loader2, LogOut } from "lucide-react";
 import { useClientByEmail } from "@/hooks/use-client-by-email";
 import { useCreateClient } from "@/hooks/use-create-client";
 import { useClientSendLoginCode } from "@/hooks/use-client-send-login-code";
 import type { Service } from "../../../../types/company";
 import { ClientVerifyCodeDialog } from "./client-verify-code-dialog";
 import { UnverifiedEmailAlert } from "./unverified-email-alert";
+import { decodeJWTToken } from "@/utils/decode-jwt";
 
 interface ClientDetailsFormProps {
   service: Service;
@@ -57,6 +58,7 @@ export function ClientDetailsForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
   const [clientToken, setClientToken] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const {
     client,
@@ -75,6 +77,49 @@ export function ClientDetailsForm({
   const selectedBranch = branches.find(
     (branch: any) => branch.id === selectedSlot.branchId
   );
+
+  // Verificar se já existe token no localStorage ao carregar
+  useEffect(() => {
+    const storedToken = localStorage.getItem("client_token");
+
+    if (storedToken) {
+      console.log("🔑 Token encontrado no localStorage:", storedToken);
+
+      const userData = decodeJWTToken(storedToken);
+      console.log("📋 Dados decodificados do token:", userData);
+
+      if (userData) {
+        // Preencher os dados do formulário com os dados do token
+        setClientData({
+          name: userData.name,
+          surname: userData.surname,
+          phone: userData.phone,
+          email: userData.email,
+          notes: "",
+        });
+
+        setClientToken(storedToken);
+        setIsLoggedIn(true);
+
+        // Buscar dados completos do cliente
+        checkEmail(userData.email);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    console.log("👋 Fazendo logout...");
+    localStorage.removeItem("client_token");
+    setClientToken(null);
+    setIsLoggedIn(false);
+    setClientData({
+      name: "",
+      surname: "",
+      phone: "",
+      email: "",
+      notes: "",
+    });
+  };
 
   const handleEmailBlur = async () => {
     const email = clientData.email.trim();
@@ -136,7 +181,7 @@ export function ClientDetailsForm({
       name: clientData.name.trim(),
       surname: clientData.surname.trim(),
       phone: clientData.phone.trim(),
-      password: "Senha123!", 
+      password: "Senha123!",
     });
 
     if (!newClient) {
@@ -145,48 +190,54 @@ export function ClientDetailsForm({
     }
 
     console.log("✅ Cliente criado com sucesso:", newClient);
-
     await checkEmail(clientData.email.trim());
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) {
+  const handleLogin = async () => {
+    const codeSent = await sendVerificationCode(clientData.email.trim());
+
+    if (!codeSent) {
+      alert("Erro ao enviar código de verificação. Tente novamente.");
       return;
     }
 
-    // Se já tem token, pode prosseguir para agendamento
-    if (clientToken) {
-      onSubmit({
-        ...clientData,
+    setIsVerifyDialogOpen(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!clientToken) {
+      return;
+    }
+
+    console.log("🎯 CONFIRMAR AGENDAMENTO - Dados completos:", {
+      clientToken,
+      clientData: {
         name: clientData.name.trim(),
         surname: clientData.surname.trim(),
         phone: clientData.phone.trim(),
         email: clientData.email.trim(),
         notes: clientData.notes?.trim(),
-      });
-      return;
-    }
+      },
+      selectedSlot: {
+        date: selectedSlot.date,
+        time: selectedSlot.time,
+        branchId: selectedSlot.branchId,
+        employeeId: selectedSlot.employeeId,
+      },
+      service: {
+        id: service.id,
+        name: service.name,
+        price: service.price,
+      },
+      client: client
+        ? {
+            id: client.id,
+            email: client.email,
+            verified: client.verified,
+          }
+        : null,
+    });
 
-    // Cenário: Cliente existe e está verificado - enviar código para fazer login
-    if (client && client.verified) {
-      const codeSent = await sendVerificationCode(clientData.email.trim());
-
-      if (!codeSent) {
-        alert("Erro ao enviar código de verificação. Tente novamente.");
-        return;
-      }
-
-      // Abrir dialog de verificação
-      setIsVerifyDialogOpen(true);
-      return;
-    }
-  };
-
-  const handleVerificationSuccess = (token: string) => {
-    console.log("✅ Verificação bem-sucedida! Token:", token);
-    setClientToken(token);
-
-    // Continuar com o agendamento
     onSubmit({
       ...clientData,
       name: clientData.name.trim(),
@@ -195,6 +246,23 @@ export function ClientDetailsForm({
       email: clientData.email.trim(),
       notes: clientData.notes?.trim(),
     });
+  };
+
+  const handleVerificationSuccess = (token: string) => {
+    console.log("✅ Verificação bem-sucedida! Token:", token);
+
+    // Salvar token no localStorage
+    localStorage.setItem("client_token", token);
+
+    // Decodificar token para pegar os dados
+    const userData = decodeJWTToken(token);
+    console.log("📋 Dados do usuário decodificados:", userData);
+
+    setClientToken(token);
+    setIsLoggedIn(true);
+
+    // Fechar o dialog de verificação
+    setIsVerifyDialogOpen(false);
   };
 
   const formatDate = (dateStr: string) => {
@@ -231,131 +299,167 @@ export function ClientDetailsForm({
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Informações pessoais
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  {isLoggedIn ? "Seus dados" : "Informações pessoais"}
+                </div>
+                {isLoggedIn && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Trocar email
+                  </Button>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2">
-                  Email *
-                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={clientData.email}
-                  onChange={e =>
-                    setClientData({ ...clientData, email: e.target.value })
-                  }
-                  onBlur={handleEmailBlur}
-                  className={errors.email ? "border-destructive" : ""}
-                />
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email}</p>
-                )}
-
-                {/* DEBUG: Mostrar resultado da busca */}
-                {loading && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
-                    <p className="font-medium">🔍 Buscando cliente...</p>
+              {isLoggedIn ? (
+                // Modo visualização quando logado
+                <>
+                  <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Nome completo
+                      </p>
+                      <p className="font-medium">
+                        {clientData.name} {clientData.surname}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Telefone</p>
+                      <p className="font-medium">{clientData.phone}</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Email</p>
+                        <p className="font-medium">{clientData.email}</p>
+                      </div>
+                    </div>
                   </div>
-                )}
 
-                {!loading && clientError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded text-sm">
-                    <p className="font-medium text-red-700">❌ {clientError}</p>
-                    <p className="text-xs text-red-600 mt-1">
-                      Uma conta será criada e você receberá um código de
-                      verificação por email.
-                    </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Observações (opcional)</Label>
+                    <Textarea
+                      id="notes"
+                      placeholder="Alguma observação ou preferência especial..."
+                      value={clientData.notes}
+                      onChange={e =>
+                        setClientData({ ...clientData, notes: e.target.value })
+                      }
+                      rows={3}
+                    />
                   </div>
-                )}
+                </>
+              ) : (
+                // Modo formulário quando não logado
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="flex items-center gap-2">
+                      Email *
+                      {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={clientData.email}
+                      onChange={e =>
+                        setClientData({ ...clientData, email: e.target.value })
+                      }
+                      onBlur={handleEmailBlur}
+                      className={errors.email ? "border-destructive" : ""}
+                    />
+                    {errors.email && (
+                      <p className="text-sm text-destructive">{errors.email}</p>
+                    )}
 
-                {!loading && client && !client.verified && (
-                  <UnverifiedEmailAlert
-                    email={clientData.email}
-                    onVerificationSuccess={token => {
-                      setClientToken(token);
-                    }}
-                  />
-                )}
+                    {/* Status da busca */}
+                    {loading && (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                        <p className="font-medium">🔍 Buscando cliente...</p>
+                      </div>
+                    )}
 
-                {!loading && client && client.verified && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded text-sm">
-                    <p className="font-medium text-green-700">
-                      ✅ Cliente encontrado
-                    </p>
-                    <p className="text-xs text-green-600 mt-1">
-                      Seus dados foram preenchidos automaticamente. Você
-                      receberá um código por email para fazer login.
-                    </p>
+                    {!loading && client && !client.verified && (
+                      <UnverifiedEmailAlert
+                        email={clientData.email}
+                        onVerificationSuccess={handleVerificationSuccess}
+                      />
+                    )}
                   </div>
-                )}
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome *</Label>
-                <Input
-                  id="name"
-                  placeholder="Digite seu nome"
-                  value={clientData.name}
-                  onChange={e =>
-                    setClientData({ ...clientData, name: e.target.value })
-                  }
-                  className={errors.name ? "border-destructive" : ""}
-                />
-                {errors.name && (
-                  <p className="text-sm text-destructive">{errors.name}</p>
-                )}
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome *</Label>
+                    <Input
+                      id="name"
+                      placeholder="Digite seu nome"
+                      value={clientData.name}
+                      onChange={e =>
+                        setClientData({ ...clientData, name: e.target.value })
+                      }
+                      className={errors.name ? "border-destructive" : ""}
+                    />
+                    {errors.name && (
+                      <p className="text-sm text-destructive">{errors.name}</p>
+                    )}
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="surname">Sobrenome *</Label>
-                <Input
-                  id="surname"
-                  placeholder="Digite seu sobrenome"
-                  value={clientData.surname}
-                  onChange={e =>
-                    setClientData({ ...clientData, surname: e.target.value })
-                  }
-                  className={errors.surname ? "border-destructive" : ""}
-                />
-                {errors.surname && (
-                  <p className="text-sm text-destructive">{errors.surname}</p>
-                )}
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="surname">Sobrenome *</Label>
+                    <Input
+                      id="surname"
+                      placeholder="Digite seu sobrenome"
+                      value={clientData.surname}
+                      onChange={e =>
+                        setClientData({
+                          ...clientData,
+                          surname: e.target.value,
+                        })
+                      }
+                      className={errors.surname ? "border-destructive" : ""}
+                    />
+                    {errors.surname && (
+                      <p className="text-sm text-destructive">
+                        {errors.surname}
+                      </p>
+                    )}
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone *</Label>
-                <Input
-                  id="phone"
-                  placeholder="(11) 99999-9999"
-                  value={clientData.phone}
-                  onChange={e =>
-                    setClientData({ ...clientData, phone: e.target.value })
-                  }
-                  className={errors.phone ? "border-destructive" : ""}
-                />
-                {errors.phone && (
-                  <p className="text-sm text-destructive">{errors.phone}</p>
-                )}
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Telefone *</Label>
+                    <Input
+                      id="phone"
+                      placeholder="(11) 99999-9999"
+                      value={clientData.phone}
+                      onChange={e =>
+                        setClientData({ ...clientData, phone: e.target.value })
+                      }
+                      className={errors.phone ? "border-destructive" : ""}
+                    />
+                    {errors.phone && (
+                      <p className="text-sm text-destructive">{errors.phone}</p>
+                    )}
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="notes">Observações (opcional)</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Alguma observação ou preferência especial..."
-                  value={clientData.notes}
-                  onChange={e =>
-                    setClientData({ ...clientData, notes: e.target.value })
-                  }
-                  rows={3}
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Observações (opcional)</Label>
+                    <Textarea
+                      id="notes"
+                      placeholder="Alguma observação ou preferência especial..."
+                      value={clientData.notes}
+                      onChange={e =>
+                        setClientData({ ...clientData, notes: e.target.value })
+                      }
+                      rows={3}
+                    />
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -429,37 +533,54 @@ export function ClientDetailsForm({
           </Card>
 
           {/* Botão de confirmação */}
-          <Button
-            onClick={
-              clientError === "Cliente não encontrado"
-                ? handleCreateAccount
-                : handleSubmit
-            }
-            className="w-full"
-            size="lg"
-            style={{ backgroundColor: brandColor }}
-            disabled={
-              creatingClient ||
-              sendingCode ||
-              !!(client && !client.verified && !clientToken)
-            }
-          >
-            {creatingClient ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Criando conta...
-              </>
-            ) : sendingCode ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Enviando código...
-              </>
-            ) : clientError === "Cliente não encontrado" ? (
-              "Criar conta"
-            ) : (
-              "Finalizar agendamento"
-            )}
-          </Button>
+          {!isLoggedIn && clientError === "Cliente não encontrado" ? (
+            // Botão criar conta
+            <Button
+              onClick={handleCreateAccount}
+              className="w-full"
+              size="lg"
+              style={{ backgroundColor: brandColor }}
+              disabled={creatingClient}
+            >
+              {creatingClient ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                "Criar conta"
+              )}
+            </Button>
+          ) : !isLoggedIn && !clientToken ? (
+            // Botão de login
+            <Button
+              onClick={handleLogin}
+              className="w-full"
+              size="lg"
+              style={{ backgroundColor: brandColor }}
+              disabled={sendingCode || !clientData.email}
+            >
+              {sendingCode ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Enviando código...
+                </>
+              ) : (
+                "Fazer login para continuar"
+              )}
+            </Button>
+          ) : (
+            // Botão finalizar agendamento
+            <Button
+              onClick={handleSubmit}
+              className="w-full"
+              size="lg"
+              style={{ backgroundColor: brandColor }}
+              disabled={!clientToken}
+            >
+              Finalizar agendamento
+            </Button>
+          )}
         </div>
       </div>
 
