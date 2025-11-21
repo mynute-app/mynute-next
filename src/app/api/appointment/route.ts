@@ -33,11 +33,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Fazer requisição direta ao backend (rota pública, sem autenticação)
-    const backendUrl =
-      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
 
     console.log("📤 ENVIANDO PARA BACKEND:");
     console.log("URL:", `${backendUrl}/appointment`);
+    console.log("Backend URL da env:", process.env.BACKEND_URL);
     console.log("Headers:", {
       "Content-Type": "application/json",
       "X-Company-ID": companyId,
@@ -83,12 +83,35 @@ export async function POST(req: NextRequest) {
         "Stack:",
         fetchError instanceof Error ? fetchError.stack : "N/A"
       );
+      console.error(
+        "Causa:",
+        fetchError instanceof Error ? (fetchError as any).cause : "N/A"
+      );
+
+      // Erro de conexão recusada
+      if (
+        fetchError instanceof Error &&
+        (fetchError as any).cause?.code === "ECONNREFUSED"
+      ) {
+        const errorMessage = `Não foi possível conectar ao backend em ${backendUrl}. Verifique se o servidor está rodando.`;
+        console.error("🔴", errorMessage);
+        return NextResponse.json(
+          {
+            error: errorMessage,
+            details:
+              "Backend não está acessível. Verifique a URL e se o servidor está rodando.",
+          },
+          { status: 503 }
+        );
+      }
+
       return NextResponse.json(
         {
           error:
             fetchError instanceof Error
               ? fetchError.message
               : "Erro ao criar agendamento",
+          details: "Erro ao comunicar com o backend",
         },
         { status: 500 }
       );

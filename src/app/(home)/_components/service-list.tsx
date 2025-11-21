@@ -87,7 +87,11 @@ export function ServiceList({
   // Envolvido no BookingProvider para gerenciar estado do novo fluxo
   if (selectedService) {
     return (
-      <BookingProvider companyId={companyId} brandColor={brandColor}>
+      <BookingProvider
+        companyId={companyId}
+        brandColor={brandColor}
+        service={selectedService}
+      >
         <BookingOrchestrator
           service={selectedService}
           onBack={handleBackToServices}
