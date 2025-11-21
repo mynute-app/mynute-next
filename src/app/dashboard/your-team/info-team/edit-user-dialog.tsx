@@ -14,12 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 
 function EditUserDialog({
   user,
-  onSave,
   isOpen,
   onClose,
 }: {
   user: any;
-  onSave: (updatedUser: any) => void;
   isOpen: boolean;
   onClose: () => void;
 }) {
@@ -50,20 +48,13 @@ function EditUserDialog({
     setFormData(prevData => ({ ...prevData, [name]: value }));
   };
 
-  const handleSave = () => {
-    onSave(formData);
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="max-w-4xl" onEscapeKeyDown={onClose}>
         <DialogHeader>
           <DialogTitle>Your profile</DialogTitle>
           <DialogClose asChild onClick={onClose}>
-            <Button
-              variant="ghost"
-              className="absolute right-2 top-2"
-            ></Button>
+            <Button variant="ghost" className="absolute right-2 top-2"></Button>
           </DialogClose>
         </DialogHeader>
 
@@ -262,9 +253,6 @@ function EditUserDialog({
         <DialogFooter className="flex justify-end mt-4">
           <Button variant="outline" onClick={onClose}>
             Cancel
-          </Button>
-          <Button onClick={handleSave} className="ml-2">
-            Save
           </Button>
         </DialogFooter>
       </DialogContent>

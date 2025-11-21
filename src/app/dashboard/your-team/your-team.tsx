@@ -39,6 +39,8 @@ export default function YourTeam() {
   const { employee: selectedEmployeeData, loading: loadingEmployee } =
     useGetEmployeeById(selectedMemberId);
 
+  console.log("Selected Employee Data:", selectedEmployeeData);
+
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const { toast } = useToast();
 
@@ -53,18 +55,15 @@ export default function YourTeam() {
     setActiveTab("about");
   };
 
-  const handleDeleteMember = (member: any | null) => {
-    if (member) {
-      console.log(`Deleting member: ${member.name}`);
-    }
-  };
-
-  const handleSaveMember = (updatedUser: TeamMember) => {
-    console.log(`Saving member: ${updatedUser.name}`);
+  const handleDeleteMember = () => {
+    // Limpar seleção após deletar
+    setSelectedMember(null);
+    setSelectedMemberId(null);
+    // Recarregar lista de funcionários
+    refetch();
   };
 
   const handleImageChange = (newImageUrl: string | null) => {
-    // Atualizar o estado local imediatamente para feedback visual rápido
     setSelectedMember((prev: any) => ({
       ...prev,
       design: {
@@ -79,8 +78,6 @@ export default function YourTeam() {
       },
     }));
 
-    // Recarregar dados da empresa para manter sincronização
-    // Isso garante que a lista lateral também será atualizada
     setTimeout(() => {
       refetch();
     }, 500); // Pequeno delay para não interferir na UX
@@ -173,8 +170,7 @@ export default function YourTeam() {
                     </div>
                     <TeamMemberActions
                       selectedMember={selectedMember}
-                      onDelete={() => handleDeleteMember(selectedMember)}
-                      onSave={updatedUser => handleSaveMember(updatedUser)}
+                      onDelete={handleDeleteMember}
                     />
                   </div>
                 </div>

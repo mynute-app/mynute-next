@@ -49,6 +49,26 @@ const weekdayNames = [
   "Sábado",
 ];
 
+// Formata horário ISO 8601 para "HH:MM"
+const formatTime = (time: string): string => {
+  if (!time) return "";
+
+  // Se for formato ISO 8601: "2020-01-01T09:00:00-03:00"
+  if (time.includes("T")) {
+    const timePart = time.split("T")[1]; // Pega "09:00:00-03:00"
+    return timePart.substring(0, 5); // Pega "09:00"
+  }
+
+  // Se tiver espaço: "2020-01-01 09:00:00"
+  if (time.includes(" ")) {
+    const timePart = time.split(" ")[1];
+    return timePart.substring(0, 5);
+  }
+
+  // Formato simples: "09:00:00" ou "09:00"
+  return time.substring(0, 5);
+};
+
 export function WorkRangeServicesSection({
   selectedMember,
   setSelectedMember,
@@ -461,7 +481,8 @@ export function WorkRangeServicesSection({
                       {weekdayNames[workRange.weekday]}
                     </Badge>
                     <span>
-                      {workRange.start_time} - {workRange.end_time}
+                      {formatTime(workRange.start_time)} -{" "}
+                      {formatTime(workRange.end_time)}
                     </span>
                     {workRange.branch?.name && (
                       <span className="text-muted-foreground">
@@ -486,8 +507,8 @@ export function WorkRangeServicesSection({
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   <span>
-                    {selectedWorkRange.start_time} -{" "}
-                    {selectedWorkRange.end_time}
+                    {formatTime(selectedWorkRange.start_time)} -{" "}
+                    {formatTime(selectedWorkRange.end_time)}
                   </span>
                 </div>
                 {selectedWorkRange.branch?.name && (
