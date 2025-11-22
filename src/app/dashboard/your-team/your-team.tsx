@@ -34,7 +34,8 @@ export default function YourTeam() {
   const employees: Employee[] = company?.employees ?? [];
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
 
-  const { employee: selectedEmployeeData } = useGetEmployeeById(selectedMemberId);
+  const { employee: selectedEmployeeData } =
+    useGetEmployeeById(selectedMemberId);
 
   const [selectedMember, setSelectedMember] = useState<Employee | null>(null);
   const { toast } = useToast();
@@ -59,21 +60,20 @@ export default function YourTeam() {
   const handleImageChange = (newImageUrl: string | null) => {
     setSelectedMember((prev: any) => ({
       ...prev,
-      design: {
-        ...prev?.design,
-        images: {
-          ...prev?.design?.images,
-          profile: {
-            ...prev?.design?.images?.profile,
-            url: newImageUrl,
+      meta: {
+        ...prev?.meta,
+        design: {
+          ...prev?.meta?.design,
+          images: {
+            ...prev?.meta?.design?.images,
+            profile: {
+              ...prev?.meta?.design?.images?.profile,
+              url: newImageUrl,
+            },
           },
         },
       },
     }));
-
-    setTimeout(() => {
-      refetch();
-    }, 500); // Pequeno delay para não interferir na UX
   };
 
   return (

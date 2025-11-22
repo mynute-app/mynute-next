@@ -39,7 +39,6 @@ export function UserAvatar({
   const { uploadImage, deleteImage, loading } = useUploadEmployeeImage();
   const { toast } = useToast();
 
-  // Reset image error quando imageUrl muda
   useEffect(() => {
     if (imageUrl) {
       setImageError(false);
@@ -71,9 +70,7 @@ export function UserAvatar({
 
     try {
       const result = await uploadImage(employeeId, file);
-
       if (result && result.imageUrl) {
-        // Reset image error state quando uma nova imagem é carregada
         setImageError(false);
         onImageChange?.(result.imageUrl);
         toast({
@@ -89,6 +86,8 @@ export function UserAvatar({
         description: "Falha ao fazer upload da imagem",
         variant: "destructive",
       });
+    } finally {
+      event.target.value = "";
     }
   };
 
@@ -116,7 +115,6 @@ export function UserAvatar({
       const success = await deleteImage(employeeId);
 
       if (success) {
-        // Reset image error state quando a imagem é removida
         setImageError(false);
         onImageChange?.(null);
         toast({
