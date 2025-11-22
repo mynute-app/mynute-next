@@ -15,8 +15,6 @@ import { ServicesSection } from "./services-section";
 import { WorkRangeServicesSection } from "./work-range-services-section";
 import { AboutSection } from "./about-section";
 import TeamMemberActions from "./team-member-actions";
-import { TeamMember } from "../../../../types/TeamMember";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Employee } from "../../../../types/company";
 import { WorkScheduleManager } from "@/components/work-schedule";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,12 +34,9 @@ export default function YourTeam() {
   const employees: Employee[] = company?.employees ?? [];
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
 
-  const { employee: selectedEmployeeData, loading: loadingEmployee } =
-    useGetEmployeeById(selectedMemberId);
+  const { employee: selectedEmployeeData } = useGetEmployeeById(selectedMemberId);
 
-  console.log("Selected Employee Data:", selectedEmployeeData);
-
-  const [selectedMember, setSelectedMember] = useState<any | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Employee | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -56,10 +51,8 @@ export default function YourTeam() {
   };
 
   const handleDeleteMember = () => {
-    // Limpar seleção após deletar
     setSelectedMember(null);
     setSelectedMemberId(null);
-    // Recarregar lista de funcionários
     refetch();
   };
 
@@ -127,7 +120,7 @@ export default function YourTeam() {
                 <UserAvatar
                   name={selectedMember?.name}
                   surname={selectedMember?.surname}
-                  imageUrl={selectedMember?.design?.images?.profile?.url}
+                  imageUrl={selectedMember?.meta?.design?.images?.profile?.url}
                   size="lg"
                   editable={true}
                   employeeId={selectedMember?.id}
@@ -260,12 +253,18 @@ export default function YourTeam() {
                       }
                       branches={
                         Array.isArray(selectedMember.branches)
-                          ? selectedMember.branches
+                          ? selectedMember.branches.map(branch => ({
+                              id: branch.id.toString(),
+                              name: branch.name,
+                            }))
                           : []
                       }
                       services={
                         Array.isArray(selectedMember.services)
-                          ? selectedMember.services
+                          ? selectedMember.services.map(service => ({
+                              id: service.id.toString(),
+                              name: service.name,
+                            }))
                           : []
                       }
                       onSuccess={() => {

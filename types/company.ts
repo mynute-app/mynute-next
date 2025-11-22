@@ -1,30 +1,4 @@
-export type Branch = {
-  id: number;
-  name: string;
-  street: string;
-  number: string;
-  complement?: string;
-  neighborhood: string;
-  zip_code: string;
-  city: string;
-  state: string;
-  country: string;
-  image?: string;
-  services?: number[];
-  employees?: Employee[];
-  work_schedule?: any[];
-};
-
-export type Service = {
-  id: any;
-  name: string;
-  duration: string | number;
-  buffer?: string;
-  price?: any;
-  description: string;
-  location?: string;
-  category?: string;
-  hidden?: boolean;
+export type Design = {
   design?: {
     colors?: {
       primary?: string;
@@ -57,6 +31,35 @@ export type Service = {
   };
 };
 
+export type Branch = {
+  id: number;
+  name: string;
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  zip_code: string;
+  city: string;
+  state: string;
+  country: string;
+  image?: string;
+  services?: number[];
+  employees?: Employee[];
+  work_schedule?: any[];
+} & Design;
+
+export type Service = {
+  id: any;
+  name: string;
+  duration: string | number;
+  buffer?: string;
+  price?: any;
+  description: string;
+  location?: string;
+  category?: string;
+  hidden?: boolean;
+} & Design;
+
 export type Employee = {
   work_schedule: any;
   id: number;
@@ -68,6 +71,9 @@ export type Employee = {
   role: string;
   branches: Branch[];
   services: Service[];
+  meta?: {
+    design?: Design["design"];
+  };
 };
 export interface Company {
   id: string;
@@ -75,22 +81,10 @@ export interface Company {
   trading_name: string;
   name?: string;
   tax_id: string;
-  design?: {
-    colors?: {
-      primary?: string;
-      secondary?: string;
-      tertiary?: string;
-      quaternary?: string;
-    };
-    images?: {
-      logo?: { url?: string };
-      banner?: { url?: string };
-      background?: { url?: string };
-    };
-  };
   branches: Branch[];
   services: Service[];
   employees: Employee[];
-  sectors: any[]; // Baseado no seu log
-  subdomains: any[]; // Baseado no seu log
+  sectors: any[];
+  subdomains: any[];
+  design?: Design["design"];
 }

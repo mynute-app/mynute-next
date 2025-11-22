@@ -1,7 +1,6 @@
 "use client";
 
 import { ClockIcon, MailIcon, PhoneIcon } from "lucide-react";
-import { TeamMember } from "../../../../types/TeamMember";
 
 const traduzirDia = (diaIngles: string): string => {
   const mapa: Record<string, string> = {

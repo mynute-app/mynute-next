@@ -10,7 +10,6 @@ import { ServiceCard } from "./service-card";
 import { AddressField } from "./address-field";
 import { BusinessSchema } from "../../../../../schema";
 import { AddAddressDialog } from "./add-address-dialog";
-import { Separator } from "@/components/ui/separator";
 import { BranchEmployees } from "./branch-employees";
 import { BranchAvatar } from "@/components/ui/branch-avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

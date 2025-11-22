@@ -1,10 +1,6 @@
-1 - Login Employee
+1 - Img do employee
 
-    Estou fazendo o login, preciso verificar o usuario (dono da empresa), perguntar para o Luan 
-    como vai ficar o fluxo.
-        1.1 - "Talves vamos ter problema com o email, se tiver email
-    de empressas diferentes. (OBS)"
-        1.2 - Ver essa Rota aqui /employee/send-verification-code/email/{email}/{company_id}
+    As img do employee via swagger da OK, mas nao retorna nada nem no ID e nem por Email
     
 
 2 - 
