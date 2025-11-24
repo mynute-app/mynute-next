@@ -16,8 +16,8 @@ interface EmployeeSelectionStepProps {
   employees: EmployeeInfo[];
   selectedDate: string;
   selectedTime: string;
-  selectedBranchId?: string | null; // Opcional: se vier do fluxo Branch->Employee
-  availableEmployeeIds: string[]; // IDs dos funcionários disponíveis para o horário
+  selectedBranchId?: string | null;
+  availableEmployeeIds: string[];
   onEmployeeSelect: (employeeId: string) => void;
   onBack: () => void;
   brandColor?: string;
@@ -38,13 +38,14 @@ export function EmployeeSelectionStep({
     availableEmployeeIds.includes(emp.id)
   );
 
-  // Formatar data
   const formattedDate = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
   }).format(new Date(selectedDate + "T00:00:00"));
+
+  console.log("Available Employees:", availableEmployees);
 
   return (
     <div className="space-y-6">
@@ -99,7 +100,7 @@ export function EmployeeSelectionStep({
                 <div className="relative shrink-0">
                   <Avatar className="w-14 h-14 sm:w-16 sm:h-16 border-2 border-primary/20 group-hover:border-primary/40 transition-colors">
                     <AvatarImage
-                      src={employee.design?.images?.profile?.url}
+                      src={employee.meta?.design?.images?.profile?.url}
                       alt={`${employee.name} ${employee.surname}`}
                       className="object-cover"
                     />
@@ -140,7 +141,7 @@ export function EmployeeSelectionStep({
 
                   <div className="hidden sm:flex items-center gap-2 mt-2">
                     <Badge variant="outline" className="text-xs">
-                      Especialista
+                      Especialistaaaa
                     </Badge>
                     <Badge variant="outline" className="text-xs">
                       Experiência comprovada

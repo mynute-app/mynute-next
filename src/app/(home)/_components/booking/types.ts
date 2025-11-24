@@ -57,11 +57,13 @@ export interface EmployeeInfo {
   id: string;
   name: string;
   surname: string;
-  design?: {
-    images?: {
-      profile?: {
-        url: string;
-        alt: string;
+  meta?: {
+    design?: {
+      images?: {
+        profile?: {
+          url: string;
+          alt: string;
+        };
       };
     };
   };
