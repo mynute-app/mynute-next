@@ -11,6 +11,7 @@ import { AppointmentBookingNew } from "./appointment-booking-new";
 import { ChoiceSelection } from "./booking/steps/ChoiceSelection";
 import { EmployeeSelectionStep } from "./booking/steps/EmployeeSelectionStep";
 import { BranchSelectionStep } from "./booking/steps/BranchSelectionStep";
+import { SuccessStep } from "./booking/steps/SuccessStep";
 import { ClientDetailsForm } from "./client-details-form";
 import { AppointmentConfirmation } from "./appointment-confirmation";
 import type { Service } from "../../../../types/company";
@@ -38,6 +39,7 @@ export function BookingOrchestrator({
     availabilityData,
     clientData,
     goBack,
+    reset,
     selectFirstChoice,
     selectEmployee,
     selectBranch,
@@ -47,8 +49,10 @@ export function BookingOrchestrator({
     error,
   } = useBooking();
 
-  // Renderizar breadcrumbs em todos os steps (exceto SERVICE_SELECTION)
-  const showBreadcrumbs = currentStep !== BookingStep.SERVICE_SELECTION;
+  // Renderizar breadcrumbs em todos os steps (exceto SERVICE_SELECTION e SUCCESS)
+  const showBreadcrumbs =
+    currentStep !== BookingStep.SERVICE_SELECTION &&
+    currentStep !== BookingStep.SUCCESS;
 
   return (
     <div className="space-y-4">
@@ -206,6 +210,43 @@ export function BookingOrchestrator({
           onBack={goBack}
           loading={isCreatingAppointment}
           error={error}
+        />
+      );
+    }
+
+    // Step 6: Sucesso (tela animada de confirmação)
+    if (currentStep === BookingStep.SUCCESS) {
+      if (
+        !selectedDate ||
+        !selectedTime ||
+        !selectedBranchId ||
+        !selectedEmployeeId ||
+        !clientData
+      )
+        return null;
+
+      const availability = availabilityData || initialAvailabilityData;
+      if (!availability) return null;
+
+      const handleComplete = () => {
+        reset(); // Limpar todos os dados
+        onBack(); // Voltar para tela de serviços
+      };
+
+      return (
+        <SuccessStep
+          brandColor={brandColor}
+          onComplete={handleComplete}
+          service={service}
+          selectedSlot={{
+            date: selectedDate,
+            time: selectedTime,
+            branchId: selectedBranchId,
+            employeeId: selectedEmployeeId,
+          }}
+          clientData={clientData}
+          branches={availability.branch_info}
+          employees={availability.employee_info}
         />
       );
     }

@@ -377,9 +377,8 @@ export function BookingProvider({
 
       console.log("✅ Appointment criado com sucesso:", appointment);
 
-      // TODO: Navegar para tela de sucesso ou resetar fluxo
-      alert("Agendamento criado com sucesso!");
-      dispatch({ type: "RESET" });
+      // Ir para tela de sucesso
+      dispatch({ type: "GO_TO_STEP", payload: BookingStep.SUCCESS });
     } catch (error) {
       console.error("❌ Erro ao criar appointment:", error);
       dispatch({

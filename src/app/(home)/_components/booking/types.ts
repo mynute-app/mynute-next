@@ -16,6 +16,7 @@ export enum BookingStep {
   BRANCH_SELECTION = "branch-selection",
   CLIENT_FORM = "client-form",
   CONFIRMATION = "confirmation",
+  SUCCESS = "success", // Tela de sucesso (não aparece no breadcrumb)
 }
 
 /**
