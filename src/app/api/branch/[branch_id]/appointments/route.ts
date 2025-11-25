@@ -25,15 +25,26 @@ export const GET = auth(async function GET(req, ctx) {
       );
     }
 
-    // Extract query parameters for pagination
+    // Extract query parameters for pagination and filtering
     const { searchParams } = req.nextUrl;
     const page = searchParams.get("page") || "1";
     const pageSize = searchParams.get("page_size") || "10";
+    const startDate = searchParams.get("start_date");
+    const endDate = searchParams.get("end_date");
+    const cancelled = searchParams.get("cancelled");
 
-    const queryParams = {
+    const queryParams: Record<string, string> = {
       page,
       page_size: pageSize,
+      timezone: "America/Sao_Paulo", // Timezone fixo por enquanto
     };
+
+    // Adicionar parâmetros opcionais apenas se fornecidos
+    if (startDate) queryParams.start_date = startDate;
+    if (endDate) queryParams.end_date = endDate;
+    if (cancelled) queryParams.cancelled = cancelled;
+
+    console.log("🔵 GET Appointments - Query Params:", queryParams);
 
     const appointments = await fetchFromBackend(
       req,
@@ -44,6 +55,9 @@ export const GET = auth(async function GET(req, ctx) {
         queryParams,
       }
     );
+
+    console.log("✅ GET Appointments - Resposta do Backend:");
+    console.log(JSON.stringify(appointments, null, 2));
 
     return NextResponse.json(appointments, { status: 200 });
   } catch (error) {

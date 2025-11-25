@@ -11,7 +11,10 @@ interface UseBranchAppointmentsProps {
   branchId: string;
   page?: number;
   pageSize?: number;
-  enabled?: boolean; 
+  startDate?: string; // Formato: DD/MM/YYYY
+  endDate?: string; // Formato: DD/MM/YYYY
+  cancelled?: boolean;
+  enabled?: boolean;
 }
 
 /**
@@ -30,6 +33,9 @@ export function useBranchAppointments({
   branchId,
   page = 1,
   pageSize = 10,
+  startDate,
+  endDate,
+  cancelled,
   enabled = true,
 }: UseBranchAppointmentsProps) {
   const [data, setData] = useState<BranchAppointmentsResponse | null>(null);
@@ -50,7 +56,14 @@ export function useBranchAppointments({
       const queryParams = new URLSearchParams({
         page: page.toString(),
         page_size: pageSize.toString(),
+        timezone: "America/Sao_Paulo", // Timezone fixo por enquanto
       });
+
+      // Adicionar parâmetros opcionais apenas se fornecidos
+      if (startDate) queryParams.append("start_date", startDate);
+      if (endDate) queryParams.append("end_date", endDate);
+      if (cancelled !== undefined)
+        queryParams.append("cancelled", cancelled.toString());
 
       const response = await fetch(
         `/api/branch/${branchId}/appointments?${queryParams.toString()}`,
@@ -93,7 +106,7 @@ export function useBranchAppointments({
     if (enabled && branchId) {
       fetchAppointments();
     }
-  }, [branchId, page, pageSize, enabled]);
+  }, [branchId, page, pageSize, startDate, endDate, cancelled, enabled]);
 
   return {
     data,

@@ -3,44 +3,24 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { AppointmentBlock } from "./appointment-block";
+import type { Appointment } from "../../../../../../types/appointment";
+import type { Service } from "../../../../../../types/company";
 
 interface TimeGridProps {
   weekDays: Date[];
   currentDate: Date;
+  appointments: Appointment[];
+  isLoading: boolean;
+  services: Service[];
 }
 
-// Mock data para demonstração
-const mockAppointments = [
-  {
-    id: "1",
-    title: "Corte de Cabelo",
-    client: "João Silva",
-    time: "09:00",
-    duration: 60,
-    day: 1, // Segunda-feira
-    employee: "Carlos Barbeiro",
-  },
-  {
-    id: "2",
-    title: "Barba",
-    client: "Pedro Santos",
-    time: "14:30",
-    duration: 30,
-    day: 1, // Segunda-feira
-    employee: "Carlos Barbeiro",
-  },
-  {
-    id: "3",
-    title: "Corte + Barba",
-    client: "Maria Oliveira",
-    time: "10:00",
-    duration: 90,
-    day: 3, // Quarta-feira
-    employee: "Ana Silva",
-  },
-];
-
-export function TimeGrid({ weekDays, currentDate }: TimeGridProps) {
+export function TimeGrid({
+  weekDays,
+  currentDate,
+  appointments,
+  isLoading,
+  services,
+}: TimeGridProps) {
   // Gerar horários de 08:00 às 18:00 de 30 em 30 minutos
   const timeSlots = Array.from({ length: 20 }, (_, i) => {
     const hour = Math.floor(i / 2) + 8;
@@ -50,11 +30,32 @@ export function TimeGrid({ weekDays, currentDate }: TimeGridProps) {
       .padStart(2, "0")}`;
   });
 
-  const getAppointmentsForDayAndTime = (dayIndex: number, time: string) => {
-    return mockAppointments.filter(
-      apt => apt.day === dayIndex && apt.time === time
-    );
+  // Função para verificar se um agendamento está em determinado dia e horário
+  const getAppointmentsForDayAndTime = (day: Date, time: string) => {
+    return appointments.filter(apt => {
+      const aptDate = new Date(apt.start_time);
+      const aptTime = `${aptDate
+        .getHours()
+        .toString()
+        .padStart(2, "0")}:${aptDate.getMinutes().toString().padStart(2, "0")}`;
+
+      // Comparar data (apenas dia, mês e ano)
+      const isSameDay =
+        aptDate.getDate() === day.getDate() &&
+        aptDate.getMonth() === day.getMonth() &&
+        aptDate.getFullYear() === day.getFullYear();
+
+      return isSameDay && aptTime === time;
+    });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-muted-foreground">Carregando agendamentos...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-8 relative">
@@ -74,7 +75,7 @@ export function TimeGrid({ weekDays, currentDate }: TimeGridProps) {
       {weekDays.map((day, dayIndex) => (
         <div key={day.toISOString()} className="border-r relative">
           {timeSlots.map(time => {
-            const appointments = getAppointmentsForDayAndTime(dayIndex, time);
+            const dayAppointments = getAppointmentsForDayAndTime(day, time);
 
             return (
               <div
@@ -84,10 +85,11 @@ export function TimeGrid({ weekDays, currentDate }: TimeGridProps) {
                   dayIndex === 0 || dayIndex === 6 ? "bg-muted/20" : ""
                 )}
               >
-                {appointments.map(appointment => (
+                {dayAppointments.map(appointment => (
                   <AppointmentBlock
                     key={appointment.id}
                     appointment={appointment}
+                    services={services}
                   />
                 ))}
               </div>

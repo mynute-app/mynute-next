@@ -3,13 +3,24 @@
 import React from "react";
 import { WeekHeader } from "./week-header";
 import { TimeGrid } from "./time-grid";
+import type { Appointment } from "../../../../../../types/appointment";
+import type { Service } from "../../../../../../types/company";
 
 interface WeekViewProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
+  appointments: Appointment[];
+  isLoading: boolean;
+  services: Service[];
 }
 
-export function WeekView({ currentDate, onDateChange }: WeekViewProps) {
+export function WeekView({
+  currentDate,
+  onDateChange,
+  appointments,
+  isLoading,
+  services,
+}: WeekViewProps) {
   // Calcular o início da semana (domingo)
   const startOfWeek = new Date(currentDate);
   startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
@@ -29,7 +40,13 @@ export function WeekView({ currentDate, onDateChange }: WeekViewProps) {
         onDateChange={onDateChange}
       />
       <div className="flex-1 overflow-auto">
-        <TimeGrid weekDays={weekDays} currentDate={currentDate} />
+        <TimeGrid
+          weekDays={weekDays}
+          currentDate={currentDate}
+          appointments={appointments}
+          isLoading={isLoading}
+          services={services}
+        />
       </div>
     </div>
   );
