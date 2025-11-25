@@ -61,6 +61,7 @@ type BookingAction =
   | { type: "SELECT_EMPLOYEE"; payload: string }
   | { type: "SELECT_BRANCH"; payload: string }
   | { type: "SUBMIT_CLIENT_DATA"; payload: ClientData }
+  | { type: "UPDATE_AVAILABILITY_DATA"; payload: AvailabilityData }
   | { type: "SET_LOADING_AVAILABILITY"; payload: boolean }
   | { type: "SET_CREATING_APPOINTMENT"; payload: boolean }
   | { type: "SET_ERROR"; payload: string | null };
@@ -139,6 +140,12 @@ function bookingReducer(
         ...state,
         clientData: action.payload,
         currentStep: BookingStep.CONFIRMATION,
+      };
+
+    case "UPDATE_AVAILABILITY_DATA":
+      return {
+        ...state,
+        availabilityData: action.payload,
       };
 
     case "SET_LOADING_AVAILABILITY":
@@ -258,6 +265,10 @@ export function BookingProvider({
 
   const submitClientData = useCallback((data: ClientData) => {
     dispatch({ type: "SUBMIT_CLIENT_DATA", payload: data });
+  }, []);
+
+  const updateAvailabilityData = useCallback((data: AvailabilityData) => {
+    dispatch({ type: "UPDATE_AVAILABILITY_DATA", payload: data });
   }, []);
 
   const confirmAppointment = useCallback(async () => {
@@ -381,8 +392,10 @@ export function BookingProvider({
     }
   }, [state, createAppointment]);
 
-  const contextValue: BookingContextType = {
+  const value: BookingContextType = {
     ...state,
+    companyId,
+    brandColor,
     goToStep,
     goBack,
     reset,
@@ -392,13 +405,12 @@ export function BookingProvider({
     selectEmployee,
     selectBranch,
     submitClientData,
+    updateAvailabilityData,
     confirmAppointment,
   };
 
   return (
-    <BookingContext.Provider value={contextValue}>
-      {children}
-    </BookingContext.Provider>
+    <BookingContext.Provider value={value}>{children}</BookingContext.Provider>
   );
 }
 

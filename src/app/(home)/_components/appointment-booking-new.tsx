@@ -6,11 +6,12 @@
  * Responsável apenas pela seleção de data/hora
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CalendarDays, Calendar as CalendarIcon } from "lucide-react";
+import { useServiceAvailability } from "@/hooks/service/useServiceAvailability";
 import {
   Dialog,
   DialogContent,
@@ -40,17 +41,40 @@ export function AppointmentBookingNew({
   brandColor,
   initialAvailabilityData,
 }: AppointmentBookingNewProps) {
-  const { selectDateTime } = useBooking();
+  const { selectDateTime, companyId, updateAvailabilityData } = useBooking();
+  const { fetchAvailability, loading: extendedLoading } =
+    useServiceAvailability();
 
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date | null>(
     null
   );
   const [showCalendarTimeSlots, setShowCalendarTimeSlots] = useState(false);
+  const [extendedAvailability, setExtendedAvailability] = useState<any>(null);
 
-  // Usar dados de disponibilidade
-  const availability = initialAvailabilityData;
-  const loading = !initialAvailabilityData;
+  // Usar dados de disponibilidade (estendida para calendário ou inicial para hoje/amanhã)
+  // IMPORTANTE: Sempre mesclar employee_info e branch_info do initial com o extended
+  const availability = useMemo(() => {
+    if (!extendedAvailability) {
+      return initialAvailabilityData;
+    }
+
+    // Mesclar dados: usar datas do extended mas manter employee/branch info completos
+    return {
+      ...extendedAvailability,
+      employee_info:
+        initialAvailabilityData?.employee_info ||
+        extendedAvailability?.employee_info ||
+        [],
+      branch_info:
+        initialAvailabilityData?.branch_info ||
+        extendedAvailability?.branch_info ||
+        [],
+    };
+  }, [extendedAvailability, initialAvailabilityData]);
+
+  const loading =
+    (!initialAvailabilityData && !extendedAvailability) || extendedLoading;
 
   // Organizar os 3 primeiros dias (hoje, amanhã, depois de amanhã)
   const organizedTodayTomorrow = useMemo(() => {
@@ -141,8 +165,36 @@ export function AppointmentBookingNew({
     setShowCalendarTimeSlots(true);
   };
 
-  const handleCalendarOpenChange = (open: boolean) => {
+  const handleCalendarOpenChange = async (open: boolean) => {
     setCalendarOpen(open);
+
+    if (open && !extendedAvailability && companyId) {
+      try {
+        const data = await fetchAvailability({
+          serviceId: service.id,
+          companyId: companyId,
+          timezone: "America/Sao_Paulo",
+          dateForwardStart: 0,
+          dateForwardEnd: 31,
+        });
+
+        // Enriquecer com dados de employee e branch
+        const enrichedData = {
+          ...data,
+          employee_info:
+            data?.employee_info || initialAvailabilityData?.employee_info || [],
+          branch_info:
+            data?.branch_info || initialAvailabilityData?.branch_info || [],
+        };
+
+        setExtendedAvailability(enrichedData);
+        // Atualizar o contexto com a disponibilidade estendida mesclada
+        updateAvailabilityData(enrichedData as any);
+      } catch (error) {
+        console.error("Erro ao buscar disponibilidade estendida:", error);
+      }
+    }
+
     if (!open) {
       setCalendarSelectedDate(null);
       setShowCalendarTimeSlots(false);

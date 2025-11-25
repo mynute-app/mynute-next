@@ -111,8 +111,10 @@ export interface SelectedSlot {
  */
 export interface ClientData {
   name: string;
+  surname: string;
   email: string;
   phone: string;
+  notes?: string;
 }
 
 /**
@@ -168,6 +170,7 @@ export interface BookingActions {
   selectEmployee: (employeeId: string) => void;
   selectBranch: (branchId: string) => void;
   submitClientData: (data: ClientData) => void;
+  updateAvailabilityData: (data: AvailabilityData) => void;
 
   // Confirmação
   confirmAppointment: () => Promise<void>;
@@ -176,4 +179,7 @@ export interface BookingActions {
 /**
  * Interface completa do contexto de booking
  */
-export interface BookingContextType extends BookingState, BookingActions {}
+export interface BookingContextType extends BookingState, BookingActions {
+  companyId?: string;
+  brandColor?: string;
+}

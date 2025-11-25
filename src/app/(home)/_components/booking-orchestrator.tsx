@@ -97,7 +97,8 @@ export function BookingOrchestrator({
     if (currentStep === BookingStep.EMPLOYEE_SELECTION) {
       if (!selectedDate || !selectedTime) return null;
 
-      const availability = initialAvailabilityData || availabilityData;
+      // Priorizar availabilityData (atualizado) ao invés do initialAvailabilityData (3 dias)
+      const availability = availabilityData || initialAvailabilityData;
       if (!availability) return null;
 
       // Obter funcionários disponíveis para o horário
@@ -127,7 +128,7 @@ export function BookingOrchestrator({
     if (currentStep === BookingStep.BRANCH_SELECTION) {
       if (!selectedDate || !selectedTime) return null;
 
-      const availability = initialAvailabilityData || availabilityData;
+      const availability = availabilityData || initialAvailabilityData;
       if (!availability) return null;
 
       return (
@@ -153,7 +154,7 @@ export function BookingOrchestrator({
       )
         return null;
 
-      const availability = initialAvailabilityData || availabilityData;
+      const availability = availabilityData || initialAvailabilityData;
       if (!availability) return null;
 
       return (
@@ -185,7 +186,7 @@ export function BookingOrchestrator({
       )
         return null;
 
-      const availability = initialAvailabilityData || availabilityData;
+      const availability = availabilityData || initialAvailabilityData;
       if (!availability) return null;
 
       return (

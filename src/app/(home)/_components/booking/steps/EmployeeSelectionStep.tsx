@@ -45,8 +45,6 @@ export function EmployeeSelectionStep({
     year: "numeric",
   }).format(new Date(selectedDate + "T00:00:00"));
 
-  console.log("Available Employees:", availableEmployees);
-
   return (
     <div className="space-y-6">
       {/* Header */}
