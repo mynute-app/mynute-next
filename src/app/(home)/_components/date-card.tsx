@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Lock } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { TimeSlot } from "@/hooks/service/useServiceAvailability";
 
 interface DateCardProps {
@@ -45,23 +47,38 @@ export function DateCard({
           {timeSlots.map(slot => {
             const isSelected =
               selectedSlot?.date === date && selectedSlot?.time === slot.time;
+            const isOccupiedByClient = slot.occupied_by_client === true;
 
             return (
               <Button
                 key={slot.time}
                 variant={isSelected ? "default" : "outline"}
                 size="sm"
-                className="text-xs"
+                disabled={isOccupiedByClient}
+                className={cn(
+                  "text-xs relative",
+                  isOccupiedByClient && "opacity-40 cursor-not-allowed"
+                )}
                 style={
-                  isSelected && brandColor
+                  isSelected && brandColor && !isOccupiedByClient
                     ? {
                         backgroundColor: brandColor,
                         borderColor: brandColor,
                       }
                     : undefined
                 }
-                onClick={() => onSlotSelect(date, slot, branchId)}
+                onClick={() =>
+                  !isOccupiedByClient && onSlotSelect(date, slot, branchId)
+                }
+                title={
+                  isOccupiedByClient
+                    ? "Você já tem um agendamento neste horário"
+                    : undefined
+                }
               >
+                {isOccupiedByClient && (
+                  <Lock className="w-3 h-3 absolute top-1 right-1" />
+                )}
                 {slot.time}
               </Button>
             );

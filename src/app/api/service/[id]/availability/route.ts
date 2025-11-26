@@ -20,6 +20,7 @@ export async function GET(
     const timezone = searchParams.get("timezone");
     const dateForwardStart = searchParams.get("date_forward_start");
     const dateForwardEnd = searchParams.get("date_forward_end");
+    const clientId = searchParams.get("client_id"); // Opcional
 
     // Validar parâmetros obrigatórios
     if (!timezone) {
@@ -74,6 +75,11 @@ export async function GET(
         date_forward_start: dateForwardStart,
         date_forward_end: dateForwardEnd,
       });
+
+      // Adicionar client_id se fornecido
+      if (clientId) {
+        queryParams.append("client_id", clientId);
+      }
 
       const availability = await fetchFromBackend(
         req,

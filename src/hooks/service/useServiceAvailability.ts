@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { decodeJWTToken } from "@/utils/decode-jwt";
 
 export interface ServiceAvailabilityParams {
   serviceId: string;
@@ -13,6 +14,7 @@ export interface ServiceAvailabilityParams {
 export interface TimeSlot {
   time: string;
   employees: string[];
+  occupied_by_client?: boolean; // Indica se este horário está ocupado pelo cliente logado
 }
 
 export interface AvailableDate {
@@ -107,6 +109,15 @@ export const useServiceAvailability = () => {
         date_forward_start: dateForwardStart.toString(),
         date_forward_end: dateForwardEnd.toString(),
       });
+
+      // Tentar pegar client_id do token, se existir
+      const clientToken = localStorage.getItem("client_token");
+      if (clientToken) {
+        const userData = decodeJWTToken(clientToken);
+        if (userData?.id) {
+          queryParams.append("client_id", userData.id);
+        }
+      }
 
       const url = `/api/service/${serviceId}/availability?${queryParams.toString()}`;
 

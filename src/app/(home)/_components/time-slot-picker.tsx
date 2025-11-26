@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock } from "lucide-react";
+import { Clock, Lock } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { TimeSlot } from "@/hooks/service/useServiceAvailability";
 
 interface TimeSlotPickerProps {
@@ -76,23 +77,38 @@ export function TimeSlotPicker({
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
           {sortedTimeSlots.map(slot => {
             const isSelected = selectedTime === slot.time;
+            const isOccupiedByClient = slot.occupied_by_client === true;
 
             return (
               <Button
                 key={slot.time}
                 variant={isSelected ? "default" : "outline"}
                 size="sm"
-                className="text-xs"
+                disabled={isOccupiedByClient}
+                className={cn(
+                  "text-xs relative",
+                  isOccupiedByClient && "opacity-40 cursor-not-allowed"
+                )}
                 style={
-                  isSelected && brandColor
+                  isSelected && brandColor && !isOccupiedByClient
                     ? {
                         backgroundColor: brandColor,
                         borderColor: brandColor,
                       }
                     : undefined
                 }
-                onClick={() => onTimeSelect(slot.time, slot, branchId)}
+                onClick={() =>
+                  !isOccupiedByClient && onTimeSelect(slot.time, slot, branchId)
+                }
+                title={
+                  isOccupiedByClient
+                    ? "Você já tem um agendamento neste horário"
+                    : undefined
+                }
               >
+                {isOccupiedByClient && (
+                  <Lock className="w-3 h-3 absolute top-1 right-1" />
+                )}
                 {slot.time}
               </Button>
             );
