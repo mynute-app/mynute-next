@@ -1,7 +1,0 @@
-1 - Img do employee
-
-    As img do employee via swagger da OK, mas nao retorna nada nem no ID e nem por Email
-    
-
-2 - 
-

@@ -12,6 +12,7 @@ interface WeekViewProps {
   appointments: Appointment[];
   isLoading: boolean;
   services: Service[];
+  onAppointmentClick: (appointment: Appointment) => void;
 }
 
 export function WeekView({
@@ -20,6 +21,7 @@ export function WeekView({
   appointments,
   isLoading,
   services,
+  onAppointmentClick,
 }: WeekViewProps) {
   // Calcular o início da semana (domingo)
   const startOfWeek = new Date(currentDate);
@@ -46,6 +48,7 @@ export function WeekView({
           appointments={appointments}
           isLoading={isLoading}
           services={services}
+          onAppointmentClick={onAppointmentClick}
         />
       </div>
     </div>

@@ -9,11 +9,13 @@ import type { Service } from "../../../../../../types/company";
 interface AppointmentBlockProps {
   appointment: Appointment;
   services: Service[];
+  onAppointmentClick: (appointment: Appointment) => void;
 }
 
 export function AppointmentBlock({
   appointment,
   services,
+  onAppointmentClick,
 }: AppointmentBlockProps) {
   // Calcular duração em minutos
   const startTime = new Date(appointment.start_time);
@@ -45,6 +47,10 @@ export function AppointmentBlock({
       )}
       style={{ height: `${height - 2}px` }}
       title={`${serviceName} - ${clientName}`}
+      onClick={e => {
+        e.stopPropagation();
+        onAppointmentClick(appointment);
+      }}
     >
       <div className="font-medium truncate">{serviceName}</div>
       <div className="flex items-center gap-1 text-xs opacity-90 mt-0.5">

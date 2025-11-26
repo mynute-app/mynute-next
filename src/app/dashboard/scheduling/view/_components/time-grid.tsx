@@ -12,6 +12,7 @@ interface TimeGridProps {
   appointments: Appointment[];
   isLoading: boolean;
   services: Service[];
+  onAppointmentClick: (appointment: Appointment) => void;
 }
 
 export function TimeGrid({
@@ -20,6 +21,7 @@ export function TimeGrid({
   appointments,
   isLoading,
   services,
+  onAppointmentClick,
 }: TimeGridProps) {
   // Gerar horários de 08:00 às 18:00 de 30 em 30 minutos
   const timeSlots = Array.from({ length: 20 }, (_, i) => {
@@ -90,6 +92,7 @@ export function TimeGrid({
                     key={appointment.id}
                     appointment={appointment}
                     services={services}
+                    onAppointmentClick={onAppointmentClick}
                   />
                 ))}
               </div>

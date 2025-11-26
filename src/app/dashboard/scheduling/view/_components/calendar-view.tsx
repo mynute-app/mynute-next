@@ -15,6 +15,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Building2 } from "lucide-react";
+import { CreateAppointmentButton } from "./create-appointment-button";
+import { AppointmentDetailsDialog } from "./appointment-details-dialog";
+import type { Appointment } from "../../../../../../types/appointment";
 
 type ViewType = "week" | "month" | "day";
 
@@ -25,6 +28,14 @@ export function CalendarView() {
   const [selectedBranchId, setSelectedBranchId] = useState<string>(
     company?.branches?.[0]?.id?.toString() || ""
   );
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<Appointment | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+
+  const handleAppointmentClick = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setIsDetailsDialogOpen(true);
+  };
 
   // Atualizar branchId quando a empresa carregar
   React.useEffect(() => {
@@ -121,20 +132,27 @@ export function CalendarView() {
     <div className="flex flex-col h-full bg-background">
       {/* Seletor de Filial */}
       <div className="border-b p-4">
-        <div className="flex items-center gap-3 max-w-xs">
-          <Building2 className="h-5 w-5 text-muted-foreground" />
-          <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione uma filial" />
-            </SelectTrigger>
-            <SelectContent>
-              {company?.branches?.map((branch: any) => (
-                <SelectItem key={branch.id} value={branch.id.toString()}>
-                  {branch.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 max-w-xs">
+            <Building2 className="h-5 w-5 text-muted-foreground" />
+            <Select
+              value={selectedBranchId}
+              onValueChange={setSelectedBranchId}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione uma filial" />
+              </SelectTrigger>
+              <SelectContent>
+                {company?.branches?.map((branch: any) => (
+                  <SelectItem key={branch.id} value={branch.id.toString()}>
+                    {branch.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <CreateAppointmentButton />
         </div>
       </div>
 
@@ -156,6 +174,7 @@ export function CalendarView() {
             appointments={appointments}
             isLoading={isLoading}
             services={company?.services || []}
+            onAppointmentClick={handleAppointmentClick}
           />
         )}
         {viewType === "month" && (
@@ -165,6 +184,12 @@ export function CalendarView() {
           />
         )}
       </div>
+
+      <AppointmentDetailsDialog
+        appointment={selectedAppointment}
+        open={isDetailsDialogOpen}
+        onOpenChange={setIsDetailsDialogOpen}
+      />
     </div>
   );
 }
