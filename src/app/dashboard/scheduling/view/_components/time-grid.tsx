@@ -3,6 +3,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { AppointmentBlock } from "./appointment-block";
+import { MultipleAppointmentsCard } from "./multiple-appointments-card";
 import type { Appointment } from "../../../../../../types/appointment";
 import type { Service } from "../../../../../../types/company";
 
@@ -78,6 +79,7 @@ export function TimeGrid({
         <div key={day.toISOString()} className="border-r relative">
           {timeSlots.map(time => {
             const dayAppointments = getAppointmentsForDayAndTime(day, time);
+            const hasMultiple = dayAppointments.length > 1;
 
             return (
               <div
@@ -87,14 +89,27 @@ export function TimeGrid({
                   dayIndex === 0 || dayIndex === 6 ? "bg-muted/20" : ""
                 )}
               >
-                {dayAppointments.map(appointment => (
-                  <AppointmentBlock
-                    key={appointment.id}
-                    appointment={appointment}
+                {hasMultiple ? (
+                  // Mostrar card especial quando houver múltiplos agendamentos
+                  <MultipleAppointmentsCard
+                    appointments={dayAppointments}
                     services={services}
+                    height={48}
                     onAppointmentClick={onAppointmentClick}
                   />
-                ))}
+                ) : (
+                  // Mostrar agendamento único normalmente
+                  dayAppointments.map((appointment, index) => (
+                    <AppointmentBlock
+                      key={appointment.id}
+                      appointment={appointment}
+                      services={services}
+                      onAppointmentClick={onAppointmentClick}
+                      totalInSlot={dayAppointments.length}
+                      indexInSlot={index}
+                    />
+                  ))
+                )}
               </div>
             );
           })}
