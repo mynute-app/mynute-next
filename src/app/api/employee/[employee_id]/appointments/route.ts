@@ -3,8 +3,21 @@ import { auth } from "../../../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 import { getAuthDataFromRequest } from "@/utils/decode-jwt";
 
-// GET /api/branch/[branch_id]/appointments
-// Retrieve all appointments for a branch with pagination
+/**
+ * GET /api/employee/[employee_id]/appointments
+ *
+ * Busca agendamentos de um funcionário com paginação e filtros
+ *
+ * Query Params:
+ * - page: número da página (padrão: 1)
+ * - page_size: tamanho da página (padrão: 10)
+ * - start_date: data inicial no formato DD/MM/YYYY
+ * - end_date: data final no formato DD/MM/YYYY
+ * - cancelled: filtrar agendamentos cancelados (true/false)
+ * - branch_id: ID da filial para filtrar
+ * - service_id: ID do serviço para filtrar
+ * - timezone: timezone (padrão: America/Sao_Paulo)
+ */
 export const GET = auth(async function GET(req, ctx) {
   try {
     const authData = getAuthDataFromRequest(req);
@@ -16,11 +29,11 @@ export const GET = auth(async function GET(req, ctx) {
       );
     }
 
-    const { branch_id } = ctx.params as { branch_id: string };
+    const { employee_id } = ctx.params as { employee_id: string };
 
-    if (!branch_id) {
+    if (!employee_id) {
       return NextResponse.json(
-        { message: "Branch ID é obrigatório" },
+        { message: "Employee ID é obrigatório" },
         { status: 400 }
       );
     }
@@ -32,22 +45,26 @@ export const GET = auth(async function GET(req, ctx) {
     const startDate = searchParams.get("start_date");
     const endDate = searchParams.get("end_date");
     const cancelled = searchParams.get("cancelled");
+    const branchId = searchParams.get("branch_id");
+    const serviceId = searchParams.get("service_id");
+    const timezone = searchParams.get("timezone") || "America/Sao_Paulo";
 
     const queryParams: Record<string, string> = {
       page,
       page_size: pageSize,
-      timezone: "America/Sao_Paulo", // Timezone fixo por enquanto
+      timezone,
     };
 
     // Adicionar parâmetros opcionais apenas se fornecidos
     if (startDate) queryParams.start_date = startDate;
     if (endDate) queryParams.end_date = endDate;
     if (cancelled) queryParams.cancelled = cancelled;
-
+    if (branchId) queryParams.branch_id = branchId;
+    if (serviceId) queryParams.service_id = serviceId;
 
     const appointments = await fetchFromBackend(
       req,
-      `/branch/${branch_id}/appointments`,
+      `/employee/${employee_id}/appointments`,
       authData.token!,
       {
         method: "GET",
@@ -57,7 +74,7 @@ export const GET = auth(async function GET(req, ctx) {
 
     return NextResponse.json(appointments, { status: 200 });
   } catch (error) {
-    console.error("❌ Erro ao buscar agendamentos da filial:", error);
+    console.error("❌ Erro ao buscar agendamentos do funcionário:", error);
     return NextResponse.json(
       {
         message: "Erro interno ao buscar agendamentos.",

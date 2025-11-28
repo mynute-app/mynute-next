@@ -36,7 +36,7 @@ export function MultipleAppointmentsCard({
         className={cn(
           "absolute left-1 right-1 bg-gradient-to-br from-primary/90 to-primary/70 text-primary-foreground rounded-md p-2 text-xs border border-primary overflow-hidden z-10",
           "hover:from-primary hover:to-primary/80 transition-all cursor-pointer shadow-md",
-          "flex flex-col items-center justify-center gap-1"
+          "flex flex-col items-center justify-center"
         )}
         style={{ height: `${height - 2}px` }}
         onClick={e => {
@@ -46,7 +46,7 @@ export function MultipleAppointmentsCard({
         title={`${count} agendamentos às ${timeString} - Clique para ver todos`}
       >
         <Users className="h-5 w-5" />
-        <div className="font-bold text-lg">+{count}</div>
+        <div className="font-bold text-lg mt-3">+{count}</div>
         <div className="text-[10px] opacity-90">agendamentos</div>
         <div className="text-[10px] font-medium">{timeString}</div>
       </div>

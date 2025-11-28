@@ -6,6 +6,7 @@ import { CalendarHeader } from "./calendar-header";
 import { WeekView } from "./week-view";
 import { MonthView } from "./month-view";
 import { useBranchAppointments } from "@/hooks/branch/use-branch-appointments";
+import { useEmployeeAppointments } from "@/hooks/employee/use-employee-appointments";
 import { useGetCompany } from "@/hooks/get-company";
 import {
   Select,
@@ -17,6 +18,10 @@ import {
 import { Building2 } from "lucide-react";
 import { CreateAppointmentButton } from "./create-appointment-button";
 import { AppointmentDetailsDialog } from "./appointment-details-dialog";
+import {
+  CalendarFiltersDrawer,
+  CalendarFilters,
+} from "./calendar-filters-drawer";
 import type { Appointment } from "../../../../../../types/appointment";
 
 type ViewType = "week" | "month" | "day";
@@ -31,10 +36,18 @@ export function CalendarView() {
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [filters, setFilters] = useState<CalendarFilters>({
+    employeeId: null,
+    serviceId: null,
+  });
 
   const handleAppointmentClick = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setIsDetailsDialogOpen(true);
+  };
+
+  const handleFiltersChange = (newFilters: CalendarFilters) => {
+    setFilters(newFilters);
   };
 
   // Atualizar branchId quando a empresa carregar
@@ -74,14 +87,42 @@ export function CalendarView() {
     };
   }, [currentDate, viewType]);
 
-  const { appointments, isLoading, error } = useBranchAppointments({
+  // Hook para buscar agendamentos da filial (quando não há filtro de funcionário)
+  const {
+    appointments: branchAppointments,
+    isLoading: isLoadingBranch,
+    error: errorBranch,
+  } = useBranchAppointments({
     branchId: selectedBranchId,
     page: 1,
     pageSize: 100,
     startDate: getWeekDates.startDate,
     endDate: getWeekDates.endDate,
-    enabled: !!selectedBranchId,
+    enabled: !!selectedBranchId && !filters.employeeId, // Desabilitar se houver filtro de funcionário
   });
+
+  // Hook para buscar agendamentos do funcionário (quando há filtro de funcionário)
+  const {
+    appointments: employeeAppointments,
+    isLoading: isLoadingEmployee,
+    error: errorEmployee,
+  } = useEmployeeAppointments({
+    employeeId: filters.employeeId || "",
+    page: 1,
+    pageSize: 100,
+    startDate: getWeekDates.startDate,
+    endDate: getWeekDates.endDate,
+    branchId: selectedBranchId,
+    serviceId: filters.serviceId || undefined,
+    enabled: !!filters.employeeId, // Habilitar apenas se houver filtro de funcionário
+  });
+
+  // Determinar quais appointments e estados usar baseado no filtro ativo
+  const appointments = filters.employeeId
+    ? employeeAppointments
+    : branchAppointments;
+  const isLoading = filters.employeeId ? isLoadingEmployee : isLoadingBranch;
+  const error = filters.employeeId ? errorEmployee : errorBranch;
 
   const handleDateChange = (date: Date) => {
     setCurrentDate(date);
@@ -152,7 +193,16 @@ export function CalendarView() {
             </Select>
           </div>
 
-          <CreateAppointmentButton />
+          <div className="flex items-center gap-2">
+            <CalendarFiltersDrawer
+              onFiltersChange={handleFiltersChange}
+              employees={company?.employees || []}
+              services={company?.services || []}
+              isLoadingEmployees={loadingCompany}
+              isLoadingServices={loadingCompany}
+            />
+            <CreateAppointmentButton />
+          </div>
         </div>
       </div>
 
