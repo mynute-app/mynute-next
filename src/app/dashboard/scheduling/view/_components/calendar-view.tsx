@@ -258,6 +258,10 @@ export function CalendarView() {
 
       <AppointmentDetailsDialog
         appointment={selectedAppointment}
+        clientInfo={clientInfo}
+        serviceInfo={serviceInfo}
+        employeeInfo={employeeInfo}
+        companyEmployees={company?.employees || []}
         open={isDetailsDialogOpen}
         onOpenChange={setIsDetailsDialogOpen}
       />
