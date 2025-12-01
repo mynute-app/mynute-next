@@ -3,12 +3,20 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Users } from "lucide-react";
-import type { Appointment } from "../../../../../../types/appointment";
+import type {
+  Appointment,
+  ClientInfo,
+  ServiceInfo,
+  EmployeeInfo,
+} from "../../../../../../types/appointment";
 import type { Service } from "../../../../../../types/company";
 import { MultipleAppointmentsModal } from "./multiple-appointments-modal";
 
 interface MultipleAppointmentsCardProps {
   appointments: Appointment[];
+  clientInfo: ClientInfo[];
+  serviceInfo: ServiceInfo[];
+  employeeInfo: EmployeeInfo[];
   services: Service[];
   height: number;
   onAppointmentClick: (appointment: Appointment) => void;
@@ -16,6 +24,9 @@ interface MultipleAppointmentsCardProps {
 
 export function MultipleAppointmentsCard({
   appointments,
+  clientInfo,
+  serviceInfo,
+  employeeInfo,
   services,
   height,
   onAppointmentClick,
@@ -55,6 +66,9 @@ export function MultipleAppointmentsCard({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         appointments={appointments}
+        clientInfo={clientInfo}
+        serviceInfo={serviceInfo}
+        employeeInfo={employeeInfo}
         services={services}
         onAppointmentClick={(appointment: Appointment) => {
           setIsModalOpen(false);

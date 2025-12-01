@@ -3,11 +3,19 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Clock, User, Users } from "lucide-react";
-import type { Appointment } from "../../../../../../types/appointment";
+import type {
+  Appointment,
+  ClientInfo,
+  ServiceInfo,
+  EmployeeInfo,
+} from "../../../../../../types/appointment";
 import type { Service } from "../../../../../../types/company";
 
 interface AppointmentBlockProps {
   appointment: Appointment;
+  clientInfo: ClientInfo[];
+  serviceInfo: ServiceInfo[];
+  employeeInfo: EmployeeInfo[];
   services: Service[];
   onAppointmentClick: (appointment: Appointment) => void;
   totalInSlot?: number;
@@ -16,6 +24,9 @@ interface AppointmentBlockProps {
 
 export function AppointmentBlock({
   appointment,
+  clientInfo,
+  serviceInfo,
+  employeeInfo,
   services,
   onAppointmentClick,
   totalInSlot = 1,
@@ -36,12 +47,15 @@ export function AppointmentBlock({
     .toString()
     .padStart(2, "0")}:${startTime.getMinutes().toString().padStart(2, "0")}`;
 
-  // Buscar nome do serviço
-  const service = services.find(s => s.id === appointment.service_id);
+  // Buscar nome do serviço na resposta da API
+  const service = serviceInfo.find(s => s.id === appointment.service_id);
   const serviceName = service?.name || "Serviço não encontrado";
 
-  // Manter ID do cliente por enquanto (sem rota disponível)
-  const clientName = `Cliente ${appointment.client_id.slice(0, 8)}...`;
+  // Buscar nome do cliente na resposta da API
+  const client = clientInfo.find(c => c.id === appointment.client_id);
+  const clientName = client
+    ? `${client.name} ${client.surname}`
+    : `Cliente ${appointment.client_id.slice(0, 8)}...`;
 
   // Calcular largura e posição quando há múltiplos agendamentos
   const hasMultiple = totalInSlot > 1;

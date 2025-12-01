@@ -26,8 +26,34 @@ export interface Appointment {
   comments: string | null;
 }
 
+export interface ClientInfo {
+  id: string;
+  name: string;
+  surname: string;
+  email: string;
+  phone: string;
+}
+
+export interface ServiceInfo {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: number;
+}
+
+export interface EmployeeInfo {
+  id: string;
+  name: string;
+  surname: string;
+  email: string;
+}
+
 export interface BranchAppointmentsResponse {
   appointments: Appointment[];
+  client_info: ClientInfo[];
+  service_info: ServiceInfo[];
+  employee_info: EmployeeInfo[];
   total_count: number;
   page: number;
   page_size: number;

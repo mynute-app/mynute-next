@@ -4,13 +4,21 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { AppointmentBlock } from "./appointment-block";
 import { MultipleAppointmentsCard } from "./multiple-appointments-card";
-import type { Appointment } from "../../../../../../types/appointment";
+import type {
+  Appointment,
+  ClientInfo,
+  ServiceInfo,
+  EmployeeInfo,
+} from "../../../../../../types/appointment";
 import type { Service } from "../../../../../../types/company";
 
 interface TimeGridProps {
   weekDays: Date[];
   currentDate: Date;
   appointments: Appointment[];
+  clientInfo: ClientInfo[];
+  serviceInfo: ServiceInfo[];
+  employeeInfo: EmployeeInfo[];
   isLoading: boolean;
   services: Service[];
   onAppointmentClick: (appointment: Appointment) => void;
@@ -20,6 +28,9 @@ export function TimeGrid({
   weekDays,
   currentDate,
   appointments,
+  clientInfo,
+  serviceInfo,
+  employeeInfo,
   isLoading,
   services,
   onAppointmentClick,
@@ -93,6 +104,9 @@ export function TimeGrid({
                   // Mostrar card especial quando houver múltiplos agendamentos
                   <MultipleAppointmentsCard
                     appointments={dayAppointments}
+                    clientInfo={clientInfo}
+                    serviceInfo={serviceInfo}
+                    employeeInfo={employeeInfo}
                     services={services}
                     height={48}
                     onAppointmentClick={onAppointmentClick}
@@ -103,6 +117,9 @@ export function TimeGrid({
                     <AppointmentBlock
                       key={appointment.id}
                       appointment={appointment}
+                      clientInfo={clientInfo}
+                      serviceInfo={serviceInfo}
+                      employeeInfo={employeeInfo}
                       services={services}
                       onAppointmentClick={onAppointmentClick}
                       totalInSlot={dayAppointments.length}

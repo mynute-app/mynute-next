@@ -9,13 +9,21 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, User, Briefcase } from "lucide-react";
-import type { Appointment } from "../../../../../../types/appointment";
+import type {
+  Appointment,
+  ClientInfo,
+  ServiceInfo,
+  EmployeeInfo,
+} from "../../../../../../types/appointment";
 import type { Service } from "../../../../../../types/company";
 
 interface MultipleAppointmentsModalProps {
   isOpen: boolean;
   onClose: () => void;
   appointments: Appointment[];
+  clientInfo: ClientInfo[];
+  serviceInfo: ServiceInfo[];
+  employeeInfo: EmployeeInfo[];
   services: Service[];
   onAppointmentClick: (appointment: Appointment) => void;
 }
@@ -24,6 +32,9 @@ export function MultipleAppointmentsModal({
   isOpen,
   onClose,
   appointments,
+  clientInfo,
+  serviceInfo,
+  employeeInfo,
   services,
   onAppointmentClick,
 }: MultipleAppointmentsModalProps) {
@@ -56,12 +67,17 @@ export function MultipleAppointmentsModal({
 
         <div className="grid gap-3 py-4">
           {appointments.map((appointment, index) => {
-            const service = services.find(s => s.id === appointment.service_id);
+            // Buscar nome do serviço na resposta da API
+            const service = serviceInfo.find(
+              s => s.id === appointment.service_id
+            );
             const serviceName = service?.name || "Serviço não encontrado";
-            const clientName = `Cliente ${appointment.client_id.slice(
-              0,
-              8
-            )}...`;
+
+            // Buscar nome do cliente na resposta da API
+            const client = clientInfo.find(c => c.id === appointment.client_id);
+            const clientName = client
+              ? `${client.name} ${client.surname}`
+              : `Cliente ${appointment.client_id.slice(0, 8)}...`;
 
             const colors = [
               "border-primary bg-primary/5 hover:bg-primary/10",

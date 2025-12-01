@@ -3,13 +3,21 @@
 import React from "react";
 import { WeekHeader } from "./week-header";
 import { TimeGrid } from "./time-grid";
-import type { Appointment } from "../../../../../../types/appointment";
+import type {
+  Appointment,
+  ClientInfo,
+  ServiceInfo,
+  EmployeeInfo,
+} from "../../../../../../types/appointment";
 import type { Service } from "../../../../../../types/company";
 
 interface WeekViewProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
   appointments: Appointment[];
+  clientInfo: ClientInfo[];
+  serviceInfo: ServiceInfo[];
+  employeeInfo: EmployeeInfo[];
   isLoading: boolean;
   services: Service[];
   onAppointmentClick: (appointment: Appointment) => void;
@@ -19,6 +27,9 @@ export function WeekView({
   currentDate,
   onDateChange,
   appointments,
+  clientInfo,
+  serviceInfo,
+  employeeInfo,
   isLoading,
   services,
   onAppointmentClick,
@@ -46,6 +57,9 @@ export function WeekView({
           weekDays={weekDays}
           currentDate={currentDate}
           appointments={appointments}
+          clientInfo={clientInfo}
+          serviceInfo={serviceInfo}
+          employeeInfo={employeeInfo}
           isLoading={isLoading}
           services={services}
           onAppointmentClick={onAppointmentClick}

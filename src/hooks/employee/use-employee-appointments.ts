@@ -125,6 +125,9 @@ export function useEmployeeAppointments({
   return {
     data,
     appointments: data?.appointments || [],
+    clientInfo: data?.client_info || [],
+    serviceInfo: data?.service_info || [],
+    employeeInfo: data?.employee_info || [],
     totalCount: data?.total_count || 0,
     currentPage: data?.page || page,
     pageSize: data?.page_size || pageSize,

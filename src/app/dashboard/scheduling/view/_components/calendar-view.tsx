@@ -90,6 +90,9 @@ export function CalendarView() {
   // Hook para buscar agendamentos da filial (quando não há filtro de funcionário)
   const {
     appointments: branchAppointments,
+    clientInfo: branchClientInfo,
+    serviceInfo: branchServiceInfo,
+    employeeInfo: branchEmployeeInfo,
     isLoading: isLoadingBranch,
     error: errorBranch,
   } = useBranchAppointments({
@@ -104,6 +107,9 @@ export function CalendarView() {
   // Hook para buscar agendamentos do funcionário (quando há filtro de funcionário)
   const {
     appointments: employeeAppointments,
+    clientInfo: employeeClientInfo,
+    serviceInfo: employeeServiceInfo,
+    employeeInfo: employeeEmployeeInfo,
     isLoading: isLoadingEmployee,
     error: errorEmployee,
   } = useEmployeeAppointments({
@@ -121,6 +127,13 @@ export function CalendarView() {
   const appointments = filters.employeeId
     ? employeeAppointments
     : branchAppointments;
+  const clientInfo = filters.employeeId ? employeeClientInfo : branchClientInfo;
+  const serviceInfo = filters.employeeId
+    ? employeeServiceInfo
+    : branchServiceInfo;
+  const employeeInfo = filters.employeeId
+    ? employeeEmployeeInfo
+    : branchEmployeeInfo;
   const isLoading = filters.employeeId ? isLoadingEmployee : isLoadingBranch;
   const error = filters.employeeId ? errorEmployee : errorBranch;
 
@@ -196,7 +209,12 @@ export function CalendarView() {
           <div className="flex items-center gap-2">
             <CalendarFiltersDrawer
               onFiltersChange={handleFiltersChange}
-              employees={company?.employees || []}
+              employees={
+                company?.employees?.map(emp => ({
+                  id: emp.id.toString(),
+                  name: `${emp.name} ${emp.surname}`,
+                })) || []
+              }
               services={company?.services || []}
               isLoadingEmployees={loadingCompany}
               isLoadingServices={loadingCompany}
@@ -222,6 +240,9 @@ export function CalendarView() {
             currentDate={currentDate}
             onDateChange={handleDateChange}
             appointments={appointments}
+            clientInfo={clientInfo}
+            serviceInfo={serviceInfo}
+            employeeInfo={employeeInfo}
             isLoading={isLoading}
             services={company?.services || []}
             onAppointmentClick={handleAppointmentClick}
