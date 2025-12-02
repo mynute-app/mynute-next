@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Building2 } from "lucide-react";
-import { CreateAppointmentButton } from "./create-appointment-button";
+import { CreateAppointmentDialog } from "./create-appointment-dialog";
 import { AppointmentDetailsDialog } from "./appointment-details-dialog";
 import {
   CalendarFiltersDrawer,
@@ -219,7 +219,7 @@ export function CalendarView() {
               isLoadingEmployees={loadingCompany}
               isLoadingServices={loadingCompany}
             />
-            <CreateAppointmentButton />
+            <CreateAppointmentDialog />
           </div>
         </div>
       </div>
