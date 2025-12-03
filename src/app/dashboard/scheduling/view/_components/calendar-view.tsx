@@ -16,13 +16,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Building2 } from "lucide-react";
-import { CreateAppointmentDialog } from "./create-appointment-dialog";
 import { AppointmentDetailsDialog } from "./appointment-details-dialog";
 import {
   CalendarFiltersDrawer,
   CalendarFilters,
 } from "./calendar-filters-drawer";
 import type { Appointment } from "../../../../../../types/appointment";
+import { CreateAppointmentDialog } from "./create-appointment-dialog";
 
 type ViewType = "week" | "month" | "day";
 

@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Loader2, ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Plus,
+  Loader2,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ChevronDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,6 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -30,6 +47,8 @@ import { useServiceAvailability } from "@/hooks/service/useServiceAvailability";
 import { useCreateAppointment } from "@/hooks/appointment/useCreateAppointment";
 import { useClientByEmail } from "@/hooks/use-client-by-email";
 import { useCreateClient } from "@/hooks/use-create-client";
+import { DateCard } from "@/app/(home)/_components/date-card";
+import { clientFormSchema, type ClientFormData } from "./client-form-schema";
 import type { Service } from "../../../../../../types/company";
 import type {
   ServiceAvailability,
@@ -48,6 +67,13 @@ interface FormData {
   clientEmail: string;
 }
 
+interface SelectedSlot {
+  date: string;
+  time: string;
+  branchId: string;
+  employees: string[];
+}
+
 export function CreateAppointmentDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>("service");
@@ -59,12 +85,24 @@ export function CreateAppointmentDialog() {
     employeeId: null,
     clientEmail: "",
   });
+  const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
+  const [showClientForm, setShowClientForm] = useState(false);
 
   const [availability, setAvailability] = useState<ServiceAvailability | null>(
     null
   );
   const [existingClient, setExistingClient] = useState<any>(null);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+
+  const form = useForm<ClientFormData>({
+    resolver: zodResolver(clientFormSchema),
+    defaultValues: {
+      email: "",
+      name: "",
+      surname: "",
+      phone: "",
+    },
+  });
 
   const { toast } = useToast();
   const { company, loading: loadingCompany } = useGetCompany();
@@ -118,10 +156,8 @@ export function CreateAppointmentDialog() {
   }, [formData.selectedDate, organizedDates]);
 
   const selectedBranchId = useMemo(() => {
-    if (!formData.selectedDate || !organizedDates.length) return null;
-    const dateData = organizedDates.find(d => d.date === formData.selectedDate);
-    return dateData?.branch_id || null;
-  }, [formData.selectedDate, organizedDates]);
+    return formData.branchId || selectedSlot?.branchId || null;
+  }, [formData.branchId, selectedSlot?.branchId]);
 
   const selectedBranchInfo = useMemo(() => {
     if (!selectedBranchId || !availability?.branch_info) return null;
@@ -129,12 +165,8 @@ export function CreateAppointmentDialog() {
   }, [selectedBranchId, availability?.branch_info]);
 
   const availableEmployees = useMemo(() => {
-    if (!formData.selectedTime || !selectedDateSlots.length) return [];
-    const timeSlot = selectedDateSlots.find(
-      (slot: TimeSlot) => slot.time === formData.selectedTime
-    );
-    return timeSlot?.employees || [];
-  }, [formData.selectedTime, selectedDateSlots]);
+    return selectedSlot?.employees || [];
+  }, [selectedSlot]);
 
   const employeeOptions = useMemo(() => {
     if (!availableEmployees.length || !availability?.employee_info) return [];
@@ -176,11 +208,13 @@ export function CreateAppointmentDialog() {
   };
 
   const handleEmailBlur = async () => {
-    if (!formData.clientEmail || formData.clientEmail.length < 5) return;
+    const email = form.getValues("email");
+    if (!email || email.length < 5) return;
 
     setIsCheckingEmail(true);
+    setShowClientForm(false);
     try {
-      await checkEmail(formData.clientEmail);
+      await checkEmail(email);
     } catch (error) {
       console.error("Erro ao buscar cliente:", error);
     } finally {
@@ -191,8 +225,17 @@ export function CreateAppointmentDialog() {
   useEffect(() => {
     if (client) {
       setExistingClient(client);
+      setShowClientForm(false);
+      // Preencher os campos se o cliente existir
+      form.setValue("name", client.name || "");
+      form.setValue("surname", client.surname || "");
+      form.setValue("phone", client.phone || "");
+    } else if (form.getValues("email") && !isCheckingEmail) {
+      // Se não encontrou o cliente, mostrar o formulário
+      setShowClientForm(true);
+      setExistingClient(null);
     }
-  }, [client]);
+  }, [client, isCheckingEmail]);
 
   // Debug company and services
   useEffect(() => {
@@ -215,8 +258,27 @@ export function CreateAppointmentDialog() {
       setAvailability(null);
       setExistingClient(null);
       setCurrentStep("service");
+      setSelectedSlot(null);
+      setShowClientForm(false);
+      form.reset();
     }
-  }, [isOpen]);
+  }, [isOpen, form]);
+
+  const handleSlotSelect = (date: string, slot: any, branchId: string) => {
+    setSelectedSlot({
+      date,
+      time: slot.time,
+      branchId,
+      employees: slot.employees,
+    });
+    setFormData(prev => ({
+      ...prev,
+      selectedDate: date,
+      selectedTime: slot.time,
+      branchId: branchId,
+      employeeId: null, // Reset employee when changing slot
+    }));
+  };
 
   const handleNext = () => {
     if (currentStep === "service") {
@@ -246,16 +308,7 @@ export function CreateAppointmentDialog() {
     else if (currentStep === "client") setCurrentStep("datetime");
   };
 
-  const handleSubmit = async () => {
-    if (!formData.clientEmail) {
-      toast({
-        title: "Email obrigatório",
-        description: "Preencha o email do cliente",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleSubmit = async (clientFormData: ClientFormData) => {
     try {
       const [hours, minutes] = formData.selectedTime!.split(":").map(Number);
       const startDateTime = new Date(formData.selectedDate + "T00:00:00");
@@ -264,14 +317,13 @@ export function CreateAppointmentDialog() {
       let clientId = existingClient?.id;
 
       if (!clientId) {
-        const emailName = formData.clientEmail.split("@")[0];
-        const randomPassword = Math.random().toString(36).slice(-8);
+        const randomPassword = Math.random().toString(36).slice(-8) + "Aa1!";
 
         const newClient = await createClient({
-          email: formData.clientEmail,
-          name: emailName,
-          surname: "Cliente",
-          phone: "+5511999999999",
+          email: clientFormData.email,
+          name: clientFormData.name,
+          surname: clientFormData.surname,
+          phone: clientFormData.phone,
           password: randomPassword,
         });
 
@@ -423,64 +475,32 @@ export function CreateAppointmentDialog() {
 
             {currentStep === "datetime" && (
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="date">Data *</Label>
-                  <Select
-                    value={formData.selectedDate || ""}
-                    onValueChange={value =>
-                      setFormData(prev => ({
-                        ...prev,
-                        selectedDate: value,
-                        selectedTime: null,
-                        employeeId: null,
-                      }))
-                    }
-                  >
-                    <SelectTrigger id="date">
-                      <SelectValue placeholder="Selecione a data" />
-                    </SelectTrigger>
-                    <SelectContent className="z-[10001]" position="popper">
-                      {organizedDates.map((dateInfo: any) => (
-                        <SelectItem key={dateInfo.date} value={dateInfo.date}>
-                          {dateInfo.label && (
-                            <Badge variant="outline" className="mr-2">
-                              {dateInfo.label}
-                            </Badge>
-                          )}
-                          {dateInfo.formattedDate}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {formData.selectedDate && (
-                  <div className="space-y-2">
-                    <Label htmlFor="time">Horário *</Label>
-                    <Select
-                      value={formData.selectedTime || ""}
-                      onValueChange={value =>
-                        setFormData(prev => ({
-                          ...prev,
-                          selectedTime: value,
-                          employeeId: null,
-                        }))
-                      }
-                    >
-                      <SelectTrigger id="time">
-                        <SelectValue placeholder="Selecione o horário" />
-                      </SelectTrigger>
-                      <SelectContent className="z-[10001]" position="popper">
-                        {selectedDateSlots.map((slot: TimeSlot) => (
-                          <SelectItem key={slot.time} value={slot.time}>
-                            {slot.time} ({slot.employees.length} funcionário
-                            {slot.employees.length > 1 ? "s" : ""} disponível
-                            {slot.employees.length > 1 ? "is" : ""})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                {organizedDates.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhuma data disponível
                   </div>
+                ) : (
+                  <>
+                    {organizedDates.map((dateInfo: any) => (
+                      <DateCard
+                        key={dateInfo.date}
+                        date={dateInfo.date}
+                        label={dateInfo.label}
+                        formattedDate={dateInfo.formattedDate}
+                        timeSlots={dateInfo.time_slots}
+                        selectedSlot={
+                          selectedSlot
+                            ? {
+                                date: selectedSlot.date,
+                                time: selectedSlot.time,
+                              }
+                            : null
+                        }
+                        branchId={dateInfo.branch_id}
+                        onSlotSelect={handleSlotSelect}
+                      />
+                    ))}
+                  </>
                 )}
 
                 {formData.selectedTime && (
@@ -520,45 +540,113 @@ export function CreateAppointmentDialog() {
 
             {currentStep === "client" && (
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="clientEmail">Email do Cliente *</Label>
-                  <div className="relative">
-                    <Input
-                      id="clientEmail"
-                      type="email"
-                      placeholder="cliente@email.com"
-                      value={formData.clientEmail}
-                      onChange={e =>
-                        setFormData(prev => ({
-                          ...prev,
-                          clientEmail: e.target.value,
-                        }))
-                      }
-                      onBlur={handleEmailBlur}
-                      disabled={isCheckingEmail}
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(handleSubmit)}
+                    className="space-y-4"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email do Cliente *</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                type="email"
+                                placeholder="cliente@email.com"
+                                {...field}
+                                onBlur={e => {
+                                  field.onBlur();
+                                  handleEmailBlur();
+                                }}
+                                disabled={isCheckingEmail}
+                              />
+                              {isCheckingEmail && (
+                                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    {isCheckingEmail && (
-                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />
+
+                    {existingClient && (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                        <p className="text-sm text-green-800 font-medium">
+                          ✓ Cliente encontrado no sistema
+                        </p>
+                        <p className="text-xs text-green-700 mt-1">
+                          {existingClient.name} {existingClient.surname}
+                        </p>
+                      </div>
                     )}
-                  </div>
-                  {existingClient && (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                      <p className="text-sm text-green-800 font-medium">
-                        ✓ Cliente encontrado no sistema
-                      </p>
-                      <p className="text-xs text-green-700 mt-1">
-                        {existingClient.name} {existingClient.surname}
-                      </p>
-                    </div>
-                  )}
-                  {formData.clientEmail &&
-                    !existingClient &&
-                    !isCheckingEmail && (
-                      <p className="text-xs text-amber-600">
-                        Cliente não encontrado. Será criado automaticamente.
-                      </p>
+
+                    {showClientForm && !existingClient && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">
+                            Preencha os dados do novo cliente
+                          </p>
+                          <Badge variant="outline">Novo Cliente</Badge>
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nome *</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Nome do cliente"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="surname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Sobrenome *</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Sobrenome do cliente"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Telefone *</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="(11) 99999-9999"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     )}
-                </div>
+                  </form>
+                </Form>
 
                 <Separator />
                 <div className="p-4 bg-muted rounded-lg space-y-3">
@@ -626,7 +714,7 @@ export function CreateAppointmentDialog() {
               </Button>
             ) : (
               <Button
-                onClick={handleSubmit}
+                onClick={form.handleSubmit(handleSubmit)}
                 disabled={
                   creatingAppointment || creatingClient || isCheckingEmail
                 }
