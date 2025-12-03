@@ -351,7 +351,7 @@ export function CreateAppointmentDialog({
         description: "O agendamento foi criado com sucesso.",
       });
       handleReset();
-      
+
       // Chamar callback para atualizar a lista
       if (onAppointmentCreated) {
         onAppointmentCreated();
