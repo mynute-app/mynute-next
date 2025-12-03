@@ -74,7 +74,13 @@ interface SelectedSlot {
   employees: string[];
 }
 
-export function CreateAppointmentDialog() {
+interface CreateAppointmentDialogProps {
+  onAppointmentCreated?: () => void;
+}
+
+export function CreateAppointmentDialog({
+  onAppointmentCreated,
+}: CreateAppointmentDialogProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>("service");
   const [formData, setFormData] = useState<FormData>({
@@ -345,7 +351,11 @@ export function CreateAppointmentDialog() {
         description: "O agendamento foi criado com sucesso.",
       });
       handleReset();
-      window.location.reload();
+      
+      // Chamar callback para atualizar a lista
+      if (onAppointmentCreated) {
+        onAppointmentCreated();
+      }
     } catch (error) {
       toast({
         title: "Erro ao criar agendamento",

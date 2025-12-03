@@ -95,6 +95,7 @@ export function CalendarView() {
     employeeInfo: branchEmployeeInfo,
     isLoading: isLoadingBranch,
     error: errorBranch,
+    refetch: refetchBranch,
   } = useBranchAppointments({
     branchId: selectedBranchId,
     page: 1,
@@ -112,6 +113,7 @@ export function CalendarView() {
     employeeInfo: employeeEmployeeInfo,
     isLoading: isLoadingEmployee,
     error: errorEmployee,
+    refetch: refetchEmployee,
   } = useEmployeeAppointments({
     employeeId: filters.employeeId || "",
     page: 1,
@@ -173,6 +175,15 @@ export function CalendarView() {
     setCurrentDate(new Date());
   };
 
+  const handleAppointmentDeleted = () => {
+    // Refetch os dados dependendo do filtro ativo
+    if (filters.employeeId) {
+      refetchEmployee();
+    } else {
+      refetchBranch();
+    }
+  };
+
   // Log para debug
   React.useEffect(() => {
     if (viewType === "week" && getWeekDates.startDate) {
@@ -219,7 +230,9 @@ export function CalendarView() {
               isLoadingEmployees={loadingCompany}
               isLoadingServices={loadingCompany}
             />
-            <CreateAppointmentDialog />
+            <CreateAppointmentDialog
+              onAppointmentCreated={handleAppointmentDeleted}
+            />
           </div>
         </div>
       </div>
@@ -264,6 +277,7 @@ export function CalendarView() {
         companyEmployees={company?.employees || []}
         open={isDetailsDialogOpen}
         onOpenChange={setIsDetailsDialogOpen}
+        onAppointmentDeleted={handleAppointmentDeleted}
       />
     </div>
   );

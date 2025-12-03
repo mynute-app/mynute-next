@@ -65,6 +65,7 @@ interface AppointmentDetailsDialogProps {
   companyEmployees: Employee[]; // Funcionários da empresa
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAppointmentDeleted?: () => void;
 }
 
 export function AppointmentDetailsDialog({
@@ -75,6 +76,7 @@ export function AppointmentDetailsDialog({
   companyEmployees,
   open,
   onOpenChange,
+  onAppointmentDeleted,
 }: AppointmentDetailsDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEmployeeId, setEditedEmployeeId] = useState<string>("");
@@ -195,8 +197,10 @@ export function AppointmentDetailsDialog({
       setShowCancelDialog(false);
       onOpenChange(false);
 
-      // Recarregar a página para atualizar a lista
-      window.location.reload();
+      // Chamar callback para atualizar a lista
+      if (onAppointmentDeleted) {
+        onAppointmentDeleted();
+      }
     } catch (error) {
       toast({
         title: "Erro ao cancelar agendamento",
