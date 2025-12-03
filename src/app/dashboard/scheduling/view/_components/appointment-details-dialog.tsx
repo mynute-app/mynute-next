@@ -9,6 +9,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -21,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -43,6 +54,7 @@ import type {
 import { Calendar } from "@/app/(home)/_components/calendar";
 import { TimeSlotPicker } from "@/app/(home)/_components/time-slot-picker";
 import { useAppointmentAvailabilitySpecificDate } from "@/hooks/use-appointment-availability-specific-date";
+import { useDeleteAppointment } from "@/hooks/appointment/useDeleteAppointment";
 import type { Employee, Service } from "../../../../../../types/company";
 
 interface AppointmentDetailsDialogProps {
@@ -68,6 +80,11 @@ export function AppointmentDetailsDialog({
   const [editedEmployeeId, setEditedEmployeeId] = useState<string>("");
   const [editedDate, setEditedDate] = useState<Date | null>(null);
   const [editedTime, setEditedTime] = useState<string | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+
+  const { toast } = useToast();
+  const { deleteAppointment, loading: deletingAppointment } =
+    useDeleteAppointment();
 
   // Buscar informações do cliente, serviço e funcionário
   const client = clientInfo.find(c => c.id === appointment?.client_id);
@@ -164,9 +181,30 @@ export function AppointmentDetailsDialog({
     }
   }, [appointment]);
 
-  const handleCancelAppointment = () => {
-    // TODO: Implementar cancelamento
-    console.log("Cancelar agendamento:", appointment?.id);
+  const handleCancelAppointment = async () => {
+    if (!appointment?.id) return;
+
+    try {
+      await deleteAppointment(appointment.id);
+
+      toast({
+        title: "Agendamento cancelado",
+        description: "O agendamento foi cancelado com sucesso.",
+      });
+
+      setShowCancelDialog(false);
+      onOpenChange(false);
+
+      // Recarregar a página para atualizar a lista
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Erro ao cancelar agendamento",
+        description:
+          error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSaveEdit = () => {
@@ -550,7 +588,7 @@ export function AppointmentDetailsDialog({
                   </Button>
                   <Button
                     variant="destructive"
-                    onClick={handleCancelAppointment}
+                    onClick={() => setShowCancelDialog(true)}
                   >
                     <Ban className="h-4 w-4 mr-2" />
                     Cancelar Agendamento
@@ -561,6 +599,35 @@ export function AppointmentDetailsDialog({
           )}
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent className="z-[10001]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar Agendamento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja cancelar este agendamento? Esta ação não
+              pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não, manter agendamento</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelAppointment}
+              disabled={deletingAppointment}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingAppointment ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cancelando...
+                </>
+              ) : (
+                "Sim, cancelar agendamento"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

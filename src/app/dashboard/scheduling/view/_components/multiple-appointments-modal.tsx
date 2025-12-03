@@ -8,7 +8,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, User, Briefcase } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Clock, User, Briefcase, Ban } from "lucide-react";
 import type {
   Appointment,
   ClientInfo,
@@ -90,10 +91,15 @@ export function MultipleAppointmentsModal({
 
             const colorClass = colors[index % colors.length];
 
+            const isCancelled =
+              appointment.cancelled || appointment.is_cancelled;
+
             return (
               <Card
                 key={appointment.id}
-                className={`cursor-pointer transition-all border-l-4 ${colorClass}`}
+                className={`cursor-pointer transition-all border-l-4 ${colorClass} ${
+                  isCancelled ? "opacity-60 bg-gray-100/50" : ""
+                }`}
                 onClick={() => onAppointmentClick(appointment)}
               >
                 <CardContent className="p-4">
@@ -101,12 +107,29 @@ export function MultipleAppointmentsModal({
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2">
                         <Briefcase className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <span className="font-semibold">{serviceName}</span>
+                        <span
+                          className={`font-semibold ${
+                            isCancelled ? "line-through" : ""
+                          }`}
+                        >
+                          {serviceName}
+                        </span>
+                        {isCancelled && (
+                          <Badge
+                            variant="destructive"
+                            className="ml-2 text-[10px]"
+                          >
+                            <Ban className="h-3 w-3 mr-1" />
+                            Cancelado
+                          </Badge>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <User className="h-4 w-4 flex-shrink-0" />
-                        <span>{clientName}</span>
+                        <span className={isCancelled ? "line-through" : ""}>
+                          {clientName}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">

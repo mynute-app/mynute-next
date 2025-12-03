@@ -52,3 +52,51 @@ export const GET = auth(async function GET(req, ctx) {
     );
   }
 });
+
+/**
+ * DELETE /api/appointment/[id]
+ *
+ * Deleta um agendamento específico por ID
+ *
+ * Path Params:
+ * - id: ID do agendamento
+ */
+export const DELETE = auth(async function DELETE(req, ctx) {
+  try {
+    const authData = getAuthDataFromRequest(req);
+
+    if (!authData.isValid) {
+      return NextResponse.json(
+        { message: authData.error || "Token inválido" },
+        { status: 401 }
+      );
+    }
+
+    const { id } = ctx.params as { id: string };
+
+    if (!id) {
+      return NextResponse.json(
+        { message: "ID do agendamento é obrigatório" },
+        { status: 400 }
+      );
+    }
+
+    await fetchFromBackend(req, `/appointment/${id}`, authData.token!, {
+      method: "DELETE",
+    });
+
+    return NextResponse.json(
+      { message: "Agendamento cancelado com sucesso" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("❌ Erro ao deletar agendamento:", error);
+    return NextResponse.json(
+      {
+        message: "Erro interno ao deletar agendamento.",
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
+});

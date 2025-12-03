@@ -2,7 +2,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Clock, User, Users } from "lucide-react";
+import { Clock, User, Users, Ban } from "lucide-react";
 import type {
   Appointment,
   ClientInfo,
@@ -76,13 +76,20 @@ export function AppointmentBlock({
     ? colors[indexInSlot % colors.length]
     : colors[0];
 
+  // Estilo para agendamentos cancelados
+  const isCancelled = appointment.cancelled || appointment.is_cancelled;
+  const cancelledStyles = isCancelled
+    ? "bg-gray-400/60 border-gray-500 opacity-70 line-through"
+    : colorClass;
+
   return (
     <div
       className={cn(
         "absolute text-primary-foreground rounded-md p-1 text-xs border overflow-hidden z-10",
         "hover:brightness-110 transition-all cursor-pointer",
-        colorClass,
-        hasMultiple && "shadow-sm"
+        cancelledStyles,
+        hasMultiple && "shadow-sm",
+        isCancelled && "cursor-default"
       )}
       style={{
         height: `${height - 2}px`,
@@ -94,14 +101,21 @@ export function AppointmentBlock({
       }}
       title={`${serviceName} - ${clientName}${
         hasMultiple ? ` (${indexInSlot + 1}/${totalInSlot})` : ""
-      }`}
+      }${isCancelled ? " - CANCELADO" : ""}`}
       onClick={e => {
         e.stopPropagation();
         onAppointmentClick(appointment);
       }}
     >
+      {/* Badge de cancelado */}
+      {isCancelled && (
+        <div className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm z-20">
+          <Ban className="h-3 w-3" />
+        </div>
+      )}
+
       {/* Badge indicando múltiplos agendamentos (apenas no primeiro) */}
-      {hasMultiple && indexInSlot === 0 && (
+      {hasMultiple && indexInSlot === 0 && !isCancelled && (
         <div className="absolute -top-1 -left-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold shadow-sm z-20">
           {totalInSlot}
         </div>
