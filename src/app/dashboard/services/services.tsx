@@ -107,7 +107,13 @@ export const ServicesPage = () => {
       {editingService && (
         <EditServiceDialog
           isOpen={!!editingService}
-          service={editingService}
+          service={{
+            ...editingService,
+            duration: String(editingService.duration),
+            price: editingService.price
+              ? String(editingService.price)
+              : undefined,
+          }}
           onOpenChange={open => {
             if (!open) {
               setEditingService(null);

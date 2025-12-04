@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/dialog";
 
 import { ServiceHeader } from "@/app/(home)/_components/service-header";
-import { FilterSidebar } from "@/app/(home)/_components/filter-sidebar";
-import { AppointmentSummary } from "@/app/(home)/_components/appointment-summary";
 import { DateCard } from "@/app/(home)/_components/date-card";
 import { TimeSlotPicker } from "@/app/(home)/_components/time-slot-picker";
 import { BranchSelection } from "@/app/(home)/_components/branch-selection";
@@ -24,8 +22,6 @@ import {
   ClientData,
 } from "@/app/(home)/_components/client-details-form";
 import { AppointmentConfirmation } from "@/app/(home)/_components/appointment-confirmation";
-import { useAppointmentAvailabilityHybrid } from "@/hooks/use-appointment-availability-hybrid";
-import { useAppointmentAvailabilitySpecificDate } from "@/hooks/use-appointment-availability-specific-date";
 import { useServiceAvailabilityAuto } from "@/hooks/service/useServiceAvailability";
 import { useCompanyByName } from "@/hooks/use-company-by-name";
 import { useCreateAppointment } from "@/hooks/appointment/useCreateAppointment";
