@@ -50,53 +50,12 @@ export async function POST(req: Request) {
       owner_time_zone: "America/Sao_Paulo",
     };
 
-    console.log("📤 Enviando payload:", payload);
-
     try {
-      const backendData = await fetchFromBackend(
-        req as any,
-        "/company",
-        "", // POST não precisa de token de auth
-        {
-          method: "POST",
-          body: payload,
-          // Ao criar empresa, ainda não existe tenant. Não resolva subdomínio e não envie headers de tenant
-          skipCompanyContext: true,
-        }
-      );
-
-      console.log("✅ Empresa cadastrada com sucesso");
-
-      // Enviar email de boas-vindas após criar a empresa com sucesso
-      try {
-        const emailResponse = await fetch(
-          `${
-            process.env.NEXTAUTH_URL || "http://localhost:3000"
-          }/api/send/welcome-company`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ownerName: `${payload.owner_name} ${payload.owner_surname}`,
-              companyName: payload.name,
-              email: payload.owner_email,
-              subdomain: payload.start_subdomain,
-              owner_time_zone: payload.owner_time_zone,
-            }),
-          }
-        );
-
-        if (!emailResponse.ok) {
-          console.warn(
-            "⚠️ Falha ao enviar email de boas-vindas, mas empresa foi criada com sucesso"
-          );
-        } else {
-          console.log("✅ Email de boas-vindas enviado com sucesso");
-        }
-      } catch (emailError) {
-        console.error("❌ Erro ao enviar email de boas-vindas:", emailError);
-        // Não falha a criação da empresa se o email falhar
-      }
+      const backendData = await fetchFromBackend(req as any, "/company", "", {
+        method: "POST",
+        body: payload,
+        skipCompanyContext: true,
+      });
 
       return NextResponse.json(
         { message: "Empresa cadastrada com sucesso", data: backendData },
