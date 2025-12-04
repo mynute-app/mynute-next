@@ -9,7 +9,7 @@ interface ForgotPasswordEmailTemplateProps {
 
 export const ForgotPasswordEmailTemplate: React.FC<
   Readonly<ForgotPasswordEmailTemplateProps>
-> = ({ employeeName, companyName, email, newPassword }) => (
+> = ({ employeeName, companyName, newPassword }) => (
   <div
     style={{
       maxWidth: "600px",

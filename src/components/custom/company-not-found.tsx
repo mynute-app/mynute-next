@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertCircle, ArrowLeft, Building, Home } from "lucide-react";
+import { AlertCircle, Building, Home } from "lucide-react";
 import Link from "next/link";
 
 interface CompanyNotFoundProps {

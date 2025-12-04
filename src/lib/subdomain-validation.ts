@@ -14,7 +14,6 @@ export interface Company {
       quaternary?: string;
     };
   };
-  sectors?: any[]; // Tipar se necessário
   subdomains?: {
     id: string;
     name: string;

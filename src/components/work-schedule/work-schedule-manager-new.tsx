@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,17 +13,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Eye, Clock, Calendar, RefreshCw, User } from "lucide-react";
+import { Clock, RefreshCw, User } from "lucide-react";
 import { WorkScheduleForm } from "./work-schedule-form";
 import { WorkScheduleView } from "./work-schedule-view";
 import { EmployeeWorkRangeEditDialog } from "./employee-work-range-edit-dialog";
-import { Badge } from "@/components/ui/badge";
 import {
   useWorkSchedule,
   WorkScheduleRange,
 } from "@/hooks/workSchedule/use-work-schedule";
 import { useEmployeeWorkRange } from "@/hooks/workSchedule/use-employee-work-range";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface WorkScheduleManagerProps {
   employeeId: string;

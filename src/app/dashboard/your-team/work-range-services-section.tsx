@@ -59,13 +59,11 @@ const formatTime = (time: string): string => {
     return timePart.substring(0, 5); // Pega "09:00"
   }
 
-  // Se tiver espaço: "2020-01-01 09:00:00"
   if (time.includes(" ")) {
     const timePart = time.split(" ")[1];
     return timePart.substring(0, 5);
   }
 
-  // Formato simples: "09:00:00" ou "09:00"
   return time.substring(0, 5);
 };
 
@@ -76,7 +74,6 @@ export function WorkRangeServicesSection({
   const { company, loading: loadingCompany } = useGetCompany();
   const allServices: Service[] = company?.services ?? [];
 
-  // Filtrar apenas serviços vinculados ao funcionário
   const employeeServices: Service[] = selectedMember?.services ?? [];
 
   const [selectedWorkRangeId, setSelectedWorkRangeId] = useState<string>("");
