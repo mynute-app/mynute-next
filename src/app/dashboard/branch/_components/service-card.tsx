@@ -32,32 +32,34 @@ export function ServiceCard({
 }: ServiceCardProps) {
   return (
     <Card
-      className={`flex flex-col justify-between h-full transition-all hover:shadow-md ${
+      className={`flex flex-col justify-between h-full transition-all shadow-sm hover:shadow-md ${
         isLinked
           ? "border-green-500 bg-green-50/50 dark:bg-green-950/20"
-          : "hover:border-primary/50"
+          : "hover:border-primary/30"
       }`}
     >
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-start justify-between gap-2 text-base">
-          <span className="flex-1 line-clamp-2">{service.name}</span>
+      <CardHeader className="pb-3 p-4">
+        <CardTitle className="flex items-start justify-between gap-2 text-sm">
+          <span className="flex-1 line-clamp-2 font-semibold">
+            {service.name}
+          </span>
           {isLinked ? (
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
           ) : (
-            <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+            <Circle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           )}
         </CardTitle>
 
         {(service.duration || service.price !== undefined) && (
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-1.5 mt-2">
             {service.duration && (
-              <Badge variant="secondary" className="text-xs gap-1">
+              <Badge variant="secondary" className="text-xs gap-1 px-2 py-0.5">
                 <Clock className="w-3 h-3" />
                 {service.duration} min
               </Badge>
             )}
             {service.price !== undefined && (
-              <Badge variant="secondary" className="text-xs gap-1">
+              <Badge variant="secondary" className="text-xs gap-1 px-2 py-0.5">
                 <DollarSign className="w-3 h-3" />
                 {service.price > 0
                   ? `R$ ${service.price.toFixed(2)}`
@@ -68,10 +70,11 @@ export function ServiceCard({
         )}
       </CardHeader>
 
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 p-4">
         {isLinked ? (
           <Button
             variant="outline"
+            size="sm"
             className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
             onClick={() => onUnlink(service.id)}
           >
@@ -80,10 +83,11 @@ export function ServiceCard({
         ) : (
           <Button
             variant="default"
+            size="sm"
             className="w-full"
             onClick={() => onLink(service.id)}
           >
-            Vincular Serviço
+            Vincular
           </Button>
         )}
       </CardContent>

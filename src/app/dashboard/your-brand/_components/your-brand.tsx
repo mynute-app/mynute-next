@@ -22,7 +22,7 @@ export default function YourBrand() {
   }
 
   return (
-    <div className="flex h-[90vh] gap-4 p-4">
+    <div className="flex h-[95vh] gap-4 p-4">
       {/* Sidebar */}
       <div className="w-80 flex flex-col gap-4">
         {/* Header Card */}
@@ -63,20 +63,20 @@ export default function YourBrand() {
                 <Image className="w-4 h-4" />
                 Imagens
               </TabsTrigger>
-              <TabsTrigger
+              {/* <TabsTrigger
                 value="appearance"
                 className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
               >
                 <Palette className="w-4 h-4" />
                 Aparência
-              </TabsTrigger>
-              <TabsTrigger
+              </TabsTrigger> */}
+              {/* <TabsTrigger
                 value="business"
                 className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
               >
                 <Building2 className="w-4 h-4" />
                 Informações
-              </TabsTrigger>
+              </TabsTrigger> */}
             </TabsList>
           </div>
 
