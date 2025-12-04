@@ -4,7 +4,6 @@ import { getCachedCompany, setCachedCompany } from "@/lib/cache/company-cache";
 
 export async function getCompanyFromRequest(req: NextRequest) {
   const rawHost = req.headers.get("host") || "";
-  // Remove porta se existir (ex: agenda-kaki.127.0.0.1.nip.io:3000 -> agenda-kaki.127.0.0.1.nip.io)
   const host = rawHost.split(":")[0];
   const subdomain = host.split(".")[0];
 
@@ -17,7 +16,6 @@ export async function getCompanyFromRequest(req: NextRequest) {
     return cached;
   }
 
-  // Preferir a origem da requisição atual para evitar inconsistência entre hosts (localhost vs nip.io)
   const baseUrl =
     req.nextUrl?.origin || process.env.NEXTAUTH_URL || "http://localhost:3000";
 

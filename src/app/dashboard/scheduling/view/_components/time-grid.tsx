@@ -35,9 +35,9 @@ export function TimeGrid({
   services,
   onAppointmentClick,
 }: TimeGridProps) {
-  // Gerar horários de 08:00 às 18:00 de 30 em 30 minutos
-  const timeSlots = Array.from({ length: 20 }, (_, i) => {
-    const hour = Math.floor(i / 2) + 8;
+  // Gerar horários de 00:00 às 23:30 de 30 em 30 minutos (48 slots)
+  const timeSlots = Array.from({ length: 48 }, (_, i) => {
+    const hour = Math.floor(i / 2);
     const minute = (i % 2) * 30;
     return `${hour.toString().padStart(2, "0")}:${minute
       .toString()

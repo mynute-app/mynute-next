@@ -40,8 +40,8 @@ export async function GET(
       providedName,
       providedName ? spaced(providedName) : "",
       providedName ? hyphen(providedName) : "",
-      providedName ? capitalize(providedName) : "", // Agenda-Kaki
-      providedName ? capitalizeSpaced(providedName) : "", // Agenda Kaki
+      providedName ? capitalize(providedName) : "",
+      providedName ? capitalizeSpaced(providedName) : "",
       fromHostLabel,
       fromHostLabel ? spaced(fromHostLabel) : "",
       fromHostLabel ? hyphen(fromHostLabel) : "",
