@@ -1,6 +1,8 @@
 "use client";
 
 import { ChevronRight, type LucideIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 
 import {
   Collapsible,
@@ -33,41 +35,69 @@ export function NavMain({
     }[];
   }[];
 }) {
+  const pathname = usePathname();
+  const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
+
+  // Determinar qual item deve estar aberto baseado na rota atual
+  useEffect(() => {
+    const newOpenItems: Record<string, boolean> = {};
+
+    items.forEach(item => {
+      // Verifica se algum subitem corresponde à rota atual
+      const isCurrentRoute = item.items?.some(subItem =>
+        pathname.startsWith(subItem.url)
+      );
+      newOpenItems[item.title] = isCurrentRoute || false;
+    });
+
+    setOpenItems(newOpenItems);
+  }, [pathname, items]);
+
+  const toggleItem = (title: string) => {
+    setOpenItems(prev => ({
+      ...prev,
+      [title]: !prev[title],
+    }));
+  };
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
       <SidebarMenu>
         {items.map(item => (
-          <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
+          <Collapsible
+            key={item.title}
+            asChild
+            open={openItems[item.title]}
+            onOpenChange={() => toggleItem(item.title)}
+          >
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={item.title}>
-                <a href={item.url}>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip={item.title}>
                   <item.icon />
                   <span>{item.title}</span>
-                </a>
-              </SidebarMenuButton>
+                  {item.items?.length ? (
+                    <ChevronRight className="ml-auto transition-transform duration-200 data-[state=open]:rotate-90" />
+                  ) : null}
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
               {item.items?.length ? (
-                <>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuAction className="data-[state=open]:rotate-90">
-                      <ChevronRight />
-                      <span className="sr-only">Toggle</span>
-                    </SidebarMenuAction>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {item.items?.map(subItem => (
-                        <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild>
-                            <a href={subItem.url}>
-                              <span>{subItem.title}</span>
-                            </a>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {item.items?.map(subItem => (
+                      <SidebarMenuSubItem key={subItem.title}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname === subItem.url}
+                        >
+                          <a href={subItem.url}>
+                            <span>{subItem.title}</span>
+                          </a>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
               ) : null}
             </SidebarMenuItem>
           </Collapsible>

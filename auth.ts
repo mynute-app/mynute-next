@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import { signInSchema } from "@/lib/zod";
 
 export const { handlers, auth, signIn } = NextAuth({
+  trustHost: true,
   providers: [
     Credentials({
       id: "employee-login",

@@ -33,7 +33,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Gestão",
         url: "#",
         icon: SquareTerminal,
-        isActive: true,
         items: [
           {
             title: "Empresa",
@@ -57,12 +56,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Agendamentos",
         url: "#",
         icon: Calendar,
-        isActive: false,
         items: [
-          {
-            title: "Novo Agendamento",
-            url: "/dashboard/scheduling/new",
-          },
           {
             title: "Visualizar Agendamentos",
             url: "/dashboard/scheduling/view",
@@ -73,7 +67,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Configurações",
         url: "#",
         icon: Settings2,
-        isActive: false,
         items: [
           {
             title: "Trocar Senha",
