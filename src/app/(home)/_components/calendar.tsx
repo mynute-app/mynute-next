@@ -204,7 +204,7 @@ export function Calendar({
           {weekDays.map(day => (
             <div
               key={day}
-              className="h-8 flex items-center justify-center text-xs font-medium text-muted-foreground"
+              className="h-8 flex bg-amber-300 items-center justify-center text-xs font-medium text-muted-foreground"
             >
               {day}
             </div>
@@ -212,7 +212,7 @@ export function Calendar({
         </div>
 
         {/* Grid dos dias */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1 bg-slate-400 items-center justify-center">
           {days.map(({ date, isCurrentMonth, dateString }, index) => {
             const disabled = isDateDisabled(date, dateString, isCurrentMonth);
             const selected = isDateSelected(date);

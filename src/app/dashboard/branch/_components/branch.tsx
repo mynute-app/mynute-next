@@ -32,7 +32,7 @@ export default function BranchManager() {
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
 
   const services = company?.services ?? [];
-  console.log(selectedBranch?.employees);
+
   const form = useForm<BranchForm>({
     resolver: zodResolver(BusinessSchema),
     defaultValues: {
@@ -156,7 +156,6 @@ export default function BranchManager() {
 
   return (
     <div className="flex flex-col lg:flex-row h-[100vh] border rounded-lg shadow overflow-hidden bg-background">
-     
       <aside className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r bg-muted/30 overflow-hidden flex flex-col">
         <div className="p-4 border-b bg-background">
           <div className="flex justify-between items-center mb-3">

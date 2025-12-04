@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +41,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useGetCompany } from "@/hooks/get-company";
@@ -48,6 +50,7 @@ import { useCreateAppointment } from "@/hooks/appointment/useCreateAppointment";
 import { useClientByEmail } from "@/hooks/use-client-by-email";
 import { useCreateClient } from "@/hooks/use-create-client";
 import { DateCard } from "@/app/(home)/_components/date-card";
+import { Calendar } from "@/app/(home)/_components/calendar";
 import { clientFormSchema, type ClientFormData } from "./client-form-schema";
 import type { Service } from "../../../../../../types/company";
 import type {
@@ -56,7 +59,7 @@ import type {
   TimeSlot,
 } from "@/hooks/service/useServiceAvailability";
 
-type Step = "service" | "datetime" | "client";
+type Step = "service" | "datetime" | "employee" | "client";
 
 interface FormData {
   serviceId: string;
@@ -294,13 +297,18 @@ export function CreateAppointmentDialog({
       }
       setCurrentStep("datetime");
     } else if (currentStep === "datetime") {
-      if (
-        !formData.selectedDate ||
-        !formData.selectedTime ||
-        !formData.employeeId
-      ) {
+      if (!formData.selectedDate || !formData.selectedTime) {
         toast({
-          title: "Selecione data, horário e funcionário",
+          title: "Selecione data e horário",
+          variant: "destructive",
+        });
+        return;
+      }
+      setCurrentStep("employee");
+    } else if (currentStep === "employee") {
+      if (!formData.employeeId) {
+        toast({
+          title: "Selecione um funcionário",
           variant: "destructive",
         });
         return;
@@ -311,7 +319,8 @@ export function CreateAppointmentDialog({
 
   const handleBack = () => {
     if (currentStep === "datetime") setCurrentStep("service");
-    else if (currentStep === "client") setCurrentStep("datetime");
+    else if (currentStep === "employee") setCurrentStep("datetime");
+    else if (currentStep === "client") setCurrentStep("employee");
   };
 
   const handleSubmit = async (clientFormData: ClientFormData) => {
@@ -385,28 +394,40 @@ export function CreateAppointmentDialog({
           <DialogDescription>
             {currentStep === "service" &&
               "Selecione o serviço para verificar disponibilidade"}
-            {currentStep === "datetime" &&
-              "Escolha data, horário e funcionário"}
+            {currentStep === "datetime" && "Escolha a data e horário"}
+            {currentStep === "employee" && "Selecione o funcionário"}
             {currentStep === "client" && "Preencha o email do cliente"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <Badge
               variant={currentStep === "service" ? "default" : "secondary"}
+              className="text-xs"
             >
               1. Serviço
             </Badge>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            <ArrowRight className="h-3 w-3 text-muted-foreground" />
             <Badge
               variant={currentStep === "datetime" ? "default" : "secondary"}
+              className="text-xs"
             >
               2. Data/Hora
             </Badge>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            <Badge variant={currentStep === "client" ? "default" : "secondary"}>
-              3. Cliente
+            <ArrowRight className="h-3 w-3 text-muted-foreground" />
+            <Badge
+              variant={currentStep === "employee" ? "default" : "secondary"}
+              className="text-xs"
+            >
+              3. Funcionário
+            </Badge>
+            <ArrowRight className="h-3 w-3 text-muted-foreground" />
+            <Badge
+              variant={currentStep === "client" ? "default" : "secondary"}
+              className="text-xs"
+            >
+              4. Cliente
             </Badge>
           </div>
         </div>
@@ -414,7 +435,7 @@ export function CreateAppointmentDialog({
         <Separator />
 
         <ScrollArea className="max-h-[calc(90vh-280px)] pr-4">
-          <div className="grid gap-6 py-4">
+          <div className="grid gap-6 py-4 px-2">
             {currentStep === "service" && (
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -491,31 +512,150 @@ export function CreateAppointmentDialog({
                   </div>
                 ) : (
                   <>
-                    {organizedDates.map((dateInfo: any) => (
-                      <DateCard
-                        key={dateInfo.date}
-                        date={dateInfo.date}
-                        label={dateInfo.label}
-                        formattedDate={dateInfo.formattedDate}
-                        timeSlots={dateInfo.time_slots}
-                        selectedSlot={
-                          selectedSlot
-                            ? {
-                                date: selectedSlot.date,
-                                time: selectedSlot.time,
-                              }
-                            : null
-                        }
-                        branchId={dateInfo.branch_id}
-                        onSlotSelect={handleSlotSelect}
-                      />
-                    ))}
+                    {/* Calendário */}
+                    <Calendar
+                      selectedDate={
+                        formData.selectedDate
+                          ? new Date(formData.selectedDate + "T00:00:00")
+                          : null
+                      }
+                      onDateSelect={date => {
+                        const dateString = date.toISOString().split("T")[0];
+                        setFormData(prev => ({
+                          ...prev,
+                          selectedDate: dateString,
+                          selectedTime: null,
+                          branchId: null,
+                          employeeId: null,
+                        }));
+                        setSelectedSlot(null);
+                      }}
+                      availableDates={availability?.available_dates.map(
+                        d => d.date
+                      )}
+                    />
+
+                    {/* Horários disponíveis para a data selecionada */}
+                    {formData.selectedDate && selectedDateSlots.length > 0 && (
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            Horários Disponíveis
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {[...selectedDateSlots]
+                              .sort((a: TimeSlot, b: TimeSlot) =>
+                                a.time.localeCompare(b.time)
+                              )
+                              .map((slot: TimeSlot) => {
+                                const isSelected =
+                                  selectedSlot?.time === slot.time;
+
+                                return (
+                                  <Button
+                                    key={slot.time}
+                                    variant={isSelected ? "default" : "outline"}
+                                    size="sm"
+                                    className="text-xs"
+                                    onClick={() => {
+                                      if (formData.selectedDate) {
+                                        handleSlotSelect(
+                                          formData.selectedDate,
+                                          slot,
+                                          organizedDates.find(
+                                            d =>
+                                              d.date === formData.selectedDate
+                                          )?.branch_id || ""
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    {slot.time}
+                                  </Button>
+                                );
+                              })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {formData.selectedDate &&
+                      selectedDateSlots.length === 0 && (
+                        <Card>
+                          <CardContent className="p-6 text-center">
+                            <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground">
+                              Nenhum horário disponível para esta data.
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                    {selectedBranchInfo && formData.selectedTime && (
+                      <div className="p-4 bg-muted rounded-lg space-y-2">
+                        <h4 className="font-semibold text-sm">Filial</h4>
+                        <p className="text-sm">{selectedBranchInfo.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedBranchInfo.street},{" "}
+                          {selectedBranchInfo.number}
+                        </p>
+                      </div>
+                    )}
                   </>
                 )}
+              </div>
+            )}
 
-                {formData.selectedTime && (
-                  <div className="space-y-2">
-                    <Label htmlFor="employee">Funcionário *</Label>
+            {currentStep === "employee" && (
+              <div className="space-y-4">
+                {selectedService && (
+                  <div className="p-4 bg-muted rounded-lg space-y-2">
+                    <h4 className="font-semibold text-sm">
+                      Resumo do Agendamento
+                    </h4>
+                    <div className="space-y-1 text-sm">
+                      <p>
+                        <span className="font-medium">Serviço:</span>{" "}
+                        {selectedService.name}
+                      </p>
+                      {formData.selectedDate && (
+                        <p>
+                          <span className="font-medium">Data:</span>{" "}
+                          {new Intl.DateTimeFormat("pt-BR", {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long",
+                          }).format(
+                            new Date(formData.selectedDate + "T00:00:00")
+                          )}
+                        </p>
+                      )}
+                      {formData.selectedTime && (
+                        <p>
+                          <span className="font-medium">Horário:</span>{" "}
+                          {formData.selectedTime}
+                        </p>
+                      )}
+                      {selectedBranchInfo && (
+                        <p>
+                          <span className="font-medium">Filial:</span>{" "}
+                          {selectedBranchInfo.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2 px-2">
+                  <Label htmlFor="employee">Selecione o Funcionário *</Label>
+                  {employeeOptions.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Nenhum funcionário disponível para este horário
+                    </div>
+                  ) : (
                     <Select
                       value={formData.employeeId || ""}
                       onValueChange={value =>
@@ -528,23 +668,22 @@ export function CreateAppointmentDialog({
                       <SelectContent className="z-[10001]" position="popper">
                         {employeeOptions.map((emp: any) => (
                           <SelectItem key={emp.id} value={emp.id}>
-                            {emp.name} {emp.surname}
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {emp.name} {emp.surname}
+                              </span>
+                              {emp.role && (
+                                <span className="text-xs text-muted-foreground">
+                                  {emp.role}
+                                </span>
+                              )}
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                )}
-
-                {selectedBranchInfo && (
-                  <div className="p-4 bg-muted rounded-lg space-y-2">
-                    <h4 className="font-semibold text-sm">Filial</h4>
-                    <p className="text-sm">{selectedBranchInfo.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {selectedBranchInfo.street}, {selectedBranchInfo.number}
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
 

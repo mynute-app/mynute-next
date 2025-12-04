@@ -3,10 +3,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Employee } from "../../../../../types/company";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { Mail, Phone, Briefcase } from "lucide-react";
+import { Mail, Phone, Briefcase, User } from "lucide-react";
 
 interface BranchEmployeesProps {
-  employees?: Employee[];
+  employees?: any[]; // Aceita qualquer tipo de employee da API
 }
 
 export function BranchEmployees({ employees }: BranchEmployeesProps) {
@@ -48,20 +48,37 @@ export function BranchEmployees({ employees }: BranchEmployeesProps) {
                       </p>
                     </div>
                   )}
+                  {emp.total_service_density !== undefined && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <User className="w-3 h-3 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">
+                        {emp.total_service_density} serviço
+                        {emp.total_service_density !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="mt-3 space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <p className="text-xs text-muted-foreground truncate">
-                    {emp.email}
-                  </p>
+              {(emp.email || emp.phone) && (
+                <div className="mt-3 space-y-1.5">
+                  {emp.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                      <p className="text-xs text-muted-foreground truncate">
+                        {emp.email}
+                      </p>
+                    </div>
+                  )}
+                  {emp.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                      <p className="text-xs text-muted-foreground">
+                        {emp.phone}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <p className="text-xs text-muted-foreground">{emp.phone}</p>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         ))}

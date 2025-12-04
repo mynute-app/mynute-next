@@ -63,17 +63,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ],
       },
-      {
-        title: "Configurações",
-        url: "#",
-        icon: Settings2,
-        items: [
-          {
-            title: "Trocar Senha",
-            url: "/dashboard/settings/change-password",
-          },
-        ],
-      },
+      // {
+      //   title: "Configurações",
+      //   url: "#",
+      //   icon: Settings2,
+      //   items: [
+      //     {
+      //       title: "Trocar Senha",
+      //       url: "/dashboard/settings/change-password",
+      //     },
+      //   ],
+      // },
     ],
     navSecondary: [
       {
