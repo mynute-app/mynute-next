@@ -39,8 +39,8 @@ export function Calendar({
     const daysArray = [];
 
     // Dias do mês anterior (para preencher o início)
-    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-      const prevDate = new Date(year, month, -i);
+    for (let i = startingDayOfWeek; i > 0; i--) {
+      const prevDate = new Date(year, month, 1 - i);
       daysArray.push({
         date: prevDate,
         isCurrentMonth: false,
@@ -204,7 +204,7 @@ export function Calendar({
           {weekDays.map(day => (
             <div
               key={day}
-              className="h-8 flex bg-amber-300 items-center justify-center text-xs font-medium text-muted-foreground"
+              className="h-8 flex items-center justify-center text-xs font-medium text-muted-foreground"
             >
               {day}
             </div>
@@ -212,7 +212,7 @@ export function Calendar({
         </div>
 
         {/* Grid dos dias */}
-        <div className="grid grid-cols-7 gap-1 bg-slate-400 items-center justify-center">
+        <div className="grid grid-cols-7 gap-1 items-center justify-items-center">
           {days.map(({ date, isCurrentMonth, dateString }, index) => {
             const disabled = isDateDisabled(date, dateString, isCurrentMonth);
             const selected = isDateSelected(date);
@@ -224,7 +224,7 @@ export function Calendar({
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-8 w-8 p-0 text-xs font-normal",
+                  "h-8 w-8 p-0 text-xs font-normal flex items-center justify-center",
                   !isCurrentMonth && "text-muted-foreground opacity-30",
                   selected &&
                     "bg-primary text-primary-foreground hover:bg-primary/90",
