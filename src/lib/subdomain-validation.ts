@@ -50,17 +50,58 @@ export interface SubdomainValidationResult {
   success: true;
   company: Company;
   subdomain: string;
+  isMainDomain: false;
 }
 
 export interface SubdomainValidationError {
   success: false;
   error: "invalid_subdomain" | "company_not_found";
   subdomain?: string;
+  isMainDomain: false;
+}
+
+export interface MainDomainResult {
+  success: true;
+  isMainDomain: true;
+  company: null;
+  subdomain: null;
 }
 
 export type SubdomainValidationResponse =
   | SubdomainValidationResult
-  | SubdomainValidationError;
+  | SubdomainValidationError
+  | MainDomainResult;
+
+/**
+ * Verifica se o host é o domínio principal da aplicação
+ * Domínios principais: localhost, mynute.app, www.mynute.app
+ */
+function isMainDomain(host: string): boolean {
+  const mainDomains = [
+    "localhost",
+    "127.0.0.1",
+    "mynute.app",
+    "www.mynute.app",
+  ];
+
+  // Remove porta se existir
+  const hostWithoutPort = host.split(":")[0];
+
+  // Verifica se é exatamente um dos domínios principais
+  if (mainDomains.includes(hostWithoutPort)) {
+    return true;
+  }
+
+  // Verifica se é mynute.app ou www.mynute.app
+  if (
+    hostWithoutPort === "mynute.app" ||
+    hostWithoutPort === "www.mynute.app"
+  ) {
+    return true;
+  }
+
+  return false;
+}
 
 /**
  * Valida o subdomínio e busca os dados da empresa
@@ -68,13 +109,25 @@ export type SubdomainValidationResponse =
  */
 export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidationResponse> {
   const host = headers().get("host") || "";
+
+  // Verifica se é o domínio principal
+  if (isMainDomain(host)) {
+    return {
+      success: true,
+      isMainDomain: true,
+      company: null,
+      subdomain: null,
+    };
+  }
+
   const subdomain = host.split(".")[0];
 
   // Validação do subdomínio
-  if (!subdomain || subdomain === "localhost" || subdomain === "127") {
+  if (!subdomain || subdomain === "127") {
     return {
       success: false,
       error: "invalid_subdomain",
+      isMainDomain: false,
     };
   }
 
@@ -96,6 +149,7 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
         success: false,
         error: "company_not_found",
         subdomain,
+        isMainDomain: false,
       };
     }
 
@@ -105,6 +159,7 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
       success: true,
       company,
       subdomain,
+      isMainDomain: false,
     };
   } catch (error) {
     console.error("Erro ao buscar empresa:", error);
@@ -112,6 +167,7 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
       success: false,
       error: "company_not_found",
       subdomain,
+      isMainDomain: false,
     };
   }
 }

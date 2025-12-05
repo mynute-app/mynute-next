@@ -1,9 +1,16 @@
 import { useSubdomainValidation } from "@/hooks/use-subdomain-validation";
 import { ServiceList } from "@/app/(home)/_components/service-list";
+import { LandingPage } from "@/components/custom/landing-page";
 import Image from "next/image";
 
 export default async function Page() {
-  const { company, errorComponent } = await useSubdomainValidation();
+  const { company, errorComponent, isMainDomain } =
+    await useSubdomainValidation();
+
+  // Se for o domínio principal (mynute.app ou localhost), mostra a landing page
+  if (isMainDomain) {
+    return <LandingPage />;
+  }
 
   if (errorComponent) {
     return errorComponent;
