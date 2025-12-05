@@ -201,6 +201,7 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
       try {
         existingRanges = await fetchWorkSchedule(employeeId);
       } catch (error) {
+        console.error("Erro ao buscar horários existentes:", error);
         existingRanges = [];
       }
 

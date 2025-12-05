@@ -7,7 +7,6 @@ export interface JWTUserData {
   surname: string;
   email: string;
   phone: string;
-  tags: any;
   verified: boolean;
   company_id: string;
 }
@@ -82,8 +81,9 @@ export function getAuthDataFromToken(token: string) {
  * @param req - A requisição Next.js com NextAuth
  * @returns Objeto completo com token, email, company_id, dados do usuário e status de validação
  */
-export function getAuthDataFromRequest(req: any) {
-  // Busca o token do NextAuth
+export function getAuthDataFromRequest(req: {
+  auth?: { accessToken?: string };
+}) {
   const token = req.auth?.accessToken;
   console.log("Token recebido do NextAuth:", token);
 

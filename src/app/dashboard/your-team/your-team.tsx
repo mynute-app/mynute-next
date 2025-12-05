@@ -39,7 +39,6 @@ export default function YourTeam() {
 
   const [selectedMember, setSelectedMember] = useState<Employee | null>(null);
   const { toast } = useToast();
-  console.log("Selected Member:", selectedMember);
   useEffect(() => {
     if (selectedEmployeeData) {
       setSelectedMember(selectedEmployeeData);

@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, User, Calendar, Edit, Trash2, Plus } from "lucide-react";
+import { Clock, Calendar, Edit, Trash2, Plus } from "lucide-react";
 
 interface WorkScheduleRange {
   id?: string;
@@ -67,7 +67,7 @@ export function EmployeeWorkScheduleView({
   onEdit,
   onDelete,
 }: EmployeeWorkScheduleViewProps) {
-  workRanges.forEach((range, index) => {
+  workRanges.forEach(range => {
     if (range.start_time && range.end_time) {
     }
   });

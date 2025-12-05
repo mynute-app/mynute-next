@@ -9,6 +9,7 @@ export interface SubdomainHookResult {
   company: Company | null;
   subdomain: string | null;
   errorComponent: React.ReactElement | null;
+  isMainDomain: boolean;
 }
 
 /**
@@ -17,6 +18,16 @@ export interface SubdomainHookResult {
  */
 export async function useSubdomainValidation(): Promise<SubdomainHookResult> {
   const result = await validateSubdomainAndGetCompany();
+
+  // Se for o domínio principal (mynute.app ou localhost sem subdomínio)
+  if (result.isMainDomain) {
+    return {
+      company: null,
+      subdomain: null,
+      errorComponent: null,
+      isMainDomain: true,
+    };
+  }
 
   if (!result.success) {
     let errorComponent: React.ReactElement;
@@ -31,6 +42,7 @@ export async function useSubdomainValidation(): Promise<SubdomainHookResult> {
       company: null,
       subdomain: result.subdomain || null,
       errorComponent,
+      isMainDomain: false,
     };
   }
 
@@ -38,5 +50,6 @@ export async function useSubdomainValidation(): Promise<SubdomainHookResult> {
     company: result.company,
     subdomain: result.subdomain,
     errorComponent: null,
+    isMainDomain: false,
   };
 }

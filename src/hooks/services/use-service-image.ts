@@ -21,17 +21,11 @@ export function useServiceImage({
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
 
-  // Buscar dados atuais do serviço para pegar a imagem real
-  const {
-    service,
-    loading: serviceLoading,
-    refetch,
-  } = useGetService({
+  const { service, refetch } = useGetService({
     serviceId,
     enabled: !!serviceId,
   });
 
-  // Atualizar preview quando o serviço for carregado ou currentImage mudar
   useEffect(() => {
     if (service?.imageUrl) {
       setImagePreview(service.imageUrl);
