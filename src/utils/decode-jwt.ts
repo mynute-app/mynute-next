@@ -82,7 +82,7 @@ export function getAuthDataFromToken(token: string) {
  * @returns Objeto completo com token, email, company_id, dados do usuário e status de validação
  */
 export function getAuthDataFromRequest(req: {
-  auth?: { accessToken?: string };
+  auth?: { accessToken?: string } | null;
 }) {
   const token = req.auth?.accessToken;
   console.log("Token recebido do NextAuth:", token);
