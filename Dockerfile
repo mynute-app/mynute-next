@@ -1,9 +1,16 @@
 # Base stage with dependencies
-FROM node:20-alpine3.23 AS base
+FROM node:22-bookworm-slim AS base
+
+# Install security updates
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files

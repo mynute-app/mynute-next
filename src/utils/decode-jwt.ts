@@ -9,6 +9,7 @@ export interface JWTUserData {
   phone: string;
   verified: boolean;
   company_id: string;
+  tags?: any;
 }
 
 /**
