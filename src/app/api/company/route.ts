@@ -48,6 +48,7 @@ export async function POST(req: Request) {
     const payload = {
       ...body,
       owner_time_zone: "America/Sao_Paulo",
+      TimeZone: "America/Sao_Paulo", // Campo adicional para compatibilidade com backend
     };
 
     try {
@@ -64,13 +65,14 @@ export async function POST(req: Request) {
     } catch (fetchError) {
       console.error("❌ Erro ao cadastrar empresa:", fetchError);
 
+      // Retornar o erro completo para o frontend poder processar
+      const errorMessage =
+        fetchError instanceof Error ? fetchError.message : "Erro desconhecido";
+
       return NextResponse.json(
         {
-          message: "Erro ao cadastrar empresa.",
-          error:
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Erro desconhecido",
+          message: errorMessage,
+          error: errorMessage,
         },
         { status: 500 }
       );
@@ -80,7 +82,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         message: "Erro interno no servidor",
-        error: error instanceof Error ? error.message : error,
+        error: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );

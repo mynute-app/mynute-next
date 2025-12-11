@@ -170,19 +170,6 @@ export default function TokenInfoPage() {
                   {decodedData.company_id}
                 </p>
               </div>
-
-              {decodedData.tags && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    Tags:
-                  </label>
-                  <div className="bg-gray-50 p-2 rounded border">
-                    <pre className="text-sm">
-                      {JSON.stringify(decodedData.tags, null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
