@@ -48,6 +48,7 @@ export async function POST(req: Request) {
     const payload = {
       ...body,
       owner_time_zone: "America/Sao_Paulo",
+      TimeZone: "America/Sao_Paulo", // Campo adicional para compatibilidade com backend
     };
 
     try {
