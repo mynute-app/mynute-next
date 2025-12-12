@@ -39,6 +39,7 @@ export const companyRegisterSchema = z
         "A senha deve conter pelo menos um caractere especial"
       ),
     confirmPassword: z.string(),
+    owner_time_zone: z.string().min(1, "Fuso horário é obrigatório"),
   })
   .refine(data => data.owner_password === data.confirmPassword, {
     message: "As senhas não coincidem",

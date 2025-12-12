@@ -13,7 +13,7 @@ export default function RegisterEmployeePage() {
         </div>
       </div>
 
-      <div className="relative overflow-hidden flex flex-col justify-center bg-muted px-10 py-12 text-left">
+      <div className="hidden lg:flex relative overflow-hidden flex-col justify-center bg-muted px-10 py-12 text-left">
         {/* Fundo animado com blobs */}
         <motion.div
           initial={{ opacity: 1 }}
