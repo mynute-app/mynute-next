@@ -138,13 +138,13 @@ export function RegisterFormCompany({
           <Label htmlFor="owner_time_zone">Fuso Horário</Label>
           <Select
             onValueChange={value => setValue("owner_time_zone", value)}
-            defaultValue="UTC"
+            defaultValue="America/Sao_Paulo"
           >
             <SelectTrigger id="owner_time_zone">
               <SelectValue placeholder="Selecione o fuso horário" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="UTC">
+              <SelectItem value="America/Sao_Paulo">
                 Brasil (Brasília - GMT-3)
               </SelectItem>
               <SelectItem value="America/New_York">
