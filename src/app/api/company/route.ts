@@ -63,6 +63,7 @@ export async function POST(req: Request) {
     const backendData = await fetchFromBackend(req as any, endpoint, "", {
       method: "POST",
       body: dataToSend,
+      skipCompanyContext: true, // Não precisa de contexto ao criar empresa
     });
 
     console.log(
