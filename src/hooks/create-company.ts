@@ -44,118 +44,71 @@ export const useCreateCompany = () => {
 
       const result = JSON.parse(text);
 
-      try {
-        const encodedEmail = encodeURIComponent(data.owner_email);
-        await fetch(`/api/employee/send-login-code/email/${encodedEmail}`, {
-          method: "POST",
-        });
-
-        toast({
-          title: "Empresa cadastrada com sucesso!",
-          description:
-            "Um código de verificação foi enviado para seu email. Você será redirecionado.",
-        });
-      } catch (codeError) {
-        console.error("Erro ao enviar código de verificação:", codeError);
-        toast({
-          title: "Empresa cadastrada!",
-          description:
-            "Mas houve um problema ao enviar o código. Você será redirecionado para o login.",
-        });
-      }
-
-      router.push(
-        `/auth/verify-code?email=${encodeURIComponent(data.owner_email)}`
-      );
+      toast({
+        title: "Empresa cadastrada com sucesso!",
+        description: "Sua empresa foi criada com sucesso.",
+      });
 
       return result;
     } catch (err: any) {
-      const errorMessage = err.message;
-      const normalizedMessage = errorMessage.toLowerCase();
-      const constraintMap: Record<
-        string,
-        { field: keyof CompanyRegisterSchema; message: string }
-      > = {
-        // Diferentes variações para nome da empresa
-        uni_companies_name: {
-          field: "name",
-          message: "Já existe uma empresa com esse nome.",
-        },
-        uni_public_companies_legal_name: {
-          field: "name",
-          message: "Já existe uma empresa com esse nome.",
-        },
-        uni_companies_legal_name: {
-          field: "name",
-          message: "Já existe uma empresa com esse nome.",
-        }, // CNPJ
-        uni_companies_tax_id: {
-          field: "tax_id",
-          message: "Já existe uma empresa com esse CNPJ.",
-        },
-        uni_public_companies_tax_id: {
-          field: "tax_id",
-          message: "Já existe uma empresa com esse CNPJ.",
-        },
-        idx_public_companies_tax_id: {
-          field: "tax_id",
-          message: "Já existe uma empresa com esse CNPJ.",
-        },
-        // Email
-        idx_employees_email: {
-          field: "owner_email",
-          message: "Já existe uma conta com esse e-mail.",
-        },
-        uni_employees_email: {
-          field: "owner_email",
-          message: "Já existe uma conta com esse e-mail.",
-        },
-        // Telefone
-        idx_employees_phone: {
-          field: "owner_phone",
-          message: "Já existe uma conta com esse telefone.",
-        },
-        uni_employees_phone: {
-          field: "owner_phone",
-          message: "Já existe uma conta com esse telefone.",
-        },
-      };
-      const matchedConstraint = Object.entries(constraintMap).find(
-        ([constraint]) =>
-          normalizedMessage.includes("duplicate key") &&
-          normalizedMessage.includes(constraint)
-      );
+      const errorMessage = err.message || String(err);
 
-      // Verificar se é erro de subdomínio
-      const isSubdomainError =
-        normalizedMessage.includes("subdomain") &&
-        normalizedMessage.includes("already exists");
+      // Traduzir erros comuns
+      let translatedMessage = errorMessage;
+      let errorField: keyof CompanyRegisterSchema | null = null;
 
-      if (matchedConstraint) {
-        const [, { field, message }] = matchedConstraint;
+      // Detectar constraint violations
+      if (errorMessage.includes("idx_public_companies_trade_name")) {
+        translatedMessage = "Já existe uma empresa com esse nome fantasia.";
+        errorField = "trading_name";
+      } else if (
+        errorMessage.includes("idx_public_companies_tax_id") ||
+        errorMessage.includes("uni_companies_tax_id")
+      ) {
+        translatedMessage = "Já existe uma empresa com esse CNPJ.";
+        errorField = "tax_id";
+      } else if (
+        errorMessage.includes("idx_employees_email") ||
+        errorMessage.includes("uni_employees_email")
+      ) {
+        translatedMessage = "Já existe uma conta com esse e-mail.";
+        errorField = "owner_email";
+      } else if (
+        errorMessage.includes("idx_employees_phone") ||
+        errorMessage.includes("uni_employees_phone")
+      ) {
+        translatedMessage = "Já existe uma conta com esse telefone.";
+        errorField = "owner_phone";
+      } else if (
+        errorMessage.includes("subdomain") &&
+        errorMessage.includes("already exists")
+      ) {
+        translatedMessage = "Este subdomínio já está em uso. Escolha outro.";
+        errorField = "start_subdomain";
+      } else if (errorMessage.includes("duplicate key")) {
+        translatedMessage =
+          "Já existe um registro com essas informações. Verifique os dados e tente novamente.";
+      }
 
-        setFormError(field, {
+      // Se for erro de campo, mostrar no campo
+      if (errorField) {
+        setFormError(errorField, {
           type: "manual",
-          message,
+          message: translatedMessage,
         });
-
-        // Não mostrar toast para erros de campos específicos
-      } else if (isSubdomainError) {
-        setFormError("start_subdomain", {
-          type: "manual",
-          message: "Este subdomínio já está em uso. Escolha outro.",
-        });
-
-        // Não mostrar toast para erros de campos específicos
       } else {
+        // Mostrar no toast
         toast({
           title: "Erro ao cadastrar empresa",
-          description: errorMessage,
+          description: translatedMessage,
           variant: "destructive",
         });
       }
 
-      setSubmitError(errorMessage);
+      // Log do erro original para debug
+      console.error("❌ Erro ao cadastrar empresa:", errorMessage);
+
+      setSubmitError(translatedMessage);
       throw err;
     } finally {
       setLoading(false);

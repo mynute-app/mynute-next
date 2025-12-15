@@ -45,42 +45,32 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const payload = {
-      ...body,
-      owner_time_zone: "America/Sao_Paulo",
-    };
+    // Remover confirmPassword
+    const { confirmPassword, ...dataToSend } = body;
 
-    try {
-      const backendData = await fetchFromBackend(req as any, "/company", "", {
-        method: "POST",
-        body: payload,
-        skipCompanyContext: true,
-      });
+    console.log(
+      "📤 Dados enviados ao backend:",
+      JSON.stringify(dataToSend, null, 2)
+    );
 
-      return NextResponse.json(
-        { message: "Empresa cadastrada com sucesso", data: backendData },
-        { status: 201 }
-      );
-    } catch (fetchError) {
-      console.error("❌ Erro ao cadastrar empresa:", fetchError);
+    const backendData = await fetchFromBackend(req as any, "/company", "", {
+      method: "POST",
+      body: dataToSend,
+    });
 
-      return NextResponse.json(
-        {
-          message: "Erro ao cadastrar empresa.",
-          error:
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Erro desconhecido",
-        },
-        { status: 500 }
-      );
-    }
+    return NextResponse.json(
+      { message: "Empresa cadastrada com sucesso", data: backendData },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error("❌ Erro no servidor:", error);
+    console.error("❌ ERRO COMPLETO DO BACKEND:", error);
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
     return NextResponse.json(
       {
-        message: "Erro interno no servidor",
-        error: error instanceof Error ? error.message : error,
+        message: errorMessage,
+        error: errorMessage,
       },
       { status: 500 }
     );

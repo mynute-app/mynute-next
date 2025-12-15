@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useCreateCompany } from "@/hooks/create-company";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { formatCNPJ, formatPhone } from "@/utils/format-cnpj";
 import { FormError } from "./form-error";
@@ -16,6 +16,13 @@ import {
   companyRegisterSchema,
   CompanyRegisterSchema,
 } from "../../../../../schema/company-register";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function RegisterFormCompany({
   className,
@@ -35,6 +42,11 @@ export function RegisterFormCompany({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { submit } = useCreateCompany();
+
+  // Setar valor padrão do timezone
+  useEffect(() => {
+    setValue("owner_time_zone", "UTC");
+  }, [setValue]);
 
   const onSubmit = async (data: CompanyRegisterSchema) => {
     await submit(data, setError);
@@ -120,6 +132,34 @@ export function RegisterFormCompany({
             }}
           />
           <FormError message={errors.owner_phone?.message} />
+        </div>
+
+        <div className="grid gap-1">
+          <Label htmlFor="owner_time_zone">Fuso Horário</Label>
+          <Select
+            onValueChange={value => setValue("owner_time_zone", value)}
+            defaultValue="America/Sao_Paulo"
+          >
+            <SelectTrigger id="owner_time_zone">
+              <SelectValue placeholder="Selecione o fuso horário" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="America/Sao_Paulo">
+                Brasil (Brasília - GMT-3)
+              </SelectItem>
+              <SelectItem value="America/New_York">
+                EUA - Costa Leste (Nova York - GMT-5)
+              </SelectItem>
+              <SelectItem value="America/Los_Angeles">
+                EUA - Costa Oeste (Los Angeles - GMT-8)
+              </SelectItem>
+              <SelectItem value="Europe/London">
+                Europa (Londres - GMT+0)
+              </SelectItem>
+              <SelectItem value="Asia/Tokyo">Ásia (Tóquio - GMT+9)</SelectItem>
+            </SelectContent>
+          </Select>
+          <FormError message={errors.owner_time_zone?.message} />
         </div>
         <div className="flex gap-2">
           <div className="grid gap-1 flex-1">
