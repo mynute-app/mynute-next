@@ -48,22 +48,39 @@ export async function POST(req: Request) {
     // Remover confirmPassword
     const { confirmPassword, ...dataToSend } = body;
 
+    const backendUrl = process.env.BACKEND_URL;
+    const endpoint = "/company";
+
+    console.log("\n" + "=".repeat(50));
+    console.log("🌐 [ROUTE] URL Base Backend:", backendUrl);
+    console.log("🔗 [ROUTE] Endpoint:", endpoint);
+    console.log("🔗 [ROUTE] URL Completa:", `${backendUrl}${endpoint}`);
     console.log(
-      "📤 Dados enviados ao backend:",
+      "📤 [ROUTE] Dados enviados ao backend:",
       JSON.stringify(dataToSend, null, 2)
     );
 
-    const backendData = await fetchFromBackend(req as any, "/company", "", {
+    const backendData = await fetchFromBackend(req as any, endpoint, "", {
       method: "POST",
       body: dataToSend,
+      skipCompanyContext: true, // Não precisa de contexto ao criar empresa
     });
+
+    console.log(
+      "✅ [ROUTE] Response do Backend:",
+      JSON.stringify(backendData, null, 2)
+    );
+    console.log("=".repeat(50) + "\n");
 
     return NextResponse.json(
       { message: "Empresa cadastrada com sucesso", data: backendData },
       { status: 201 }
     );
   } catch (error) {
-    console.error("❌ ERRO COMPLETO DO BACKEND:", error);
+    console.error("\n" + "=".repeat(50));
+    console.error("❌ [ROUTE] ERRO COMPLETO DO BACKEND:", error);
+    console.error("❌ [ROUTE] Tipo do erro:", typeof error);
+    console.error("=".repeat(50) + "\n");
 
     const errorMessage = error instanceof Error ? error.message : String(error);
 

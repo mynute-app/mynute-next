@@ -24,25 +24,48 @@ export const useCreateCompany = () => {
         owner_phone: preparePhoneToSubmit(data.owner_phone),
       };
 
-      const response = await fetch("/api/company", {
+      const url = "/api/company";
+      console.log("🌐 [HOOK] URL Base:", url);
+      console.log(
+        "📤 [HOOK] Request Body:",
+        JSON.stringify(cleanData, null, 2)
+      );
+
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cleanData),
       });
 
+      console.log("📊 [HOOK] Status Code:", response.status);
+      console.log("✅ [HOOK] Response OK:", response.ok);
+
       const text = await response.text();
+      console.log("📥 [HOOK] Response Body:", text);
+
       let errorMessage = text;
 
       try {
         const json = JSON.parse(text);
+        console.log("📦 [HOOK] Response JSON:", JSON.stringify(json, null, 2));
         errorMessage = json?.backendResponse || json?.message || text;
       } catch {}
 
       if (!response.ok) {
+        console.error(
+          "❌ [HOOK] Response não OK - Status:",
+          response.status,
+          "Message:",
+          errorMessage
+        );
         throw new Error(errorMessage);
       }
 
       const result = JSON.parse(text);
+      console.log(
+        "✅ [HOOK] Sucesso! Result:",
+        JSON.stringify(result, null, 2)
+      );
 
       toast({
         title: "Empresa cadastrada com sucesso!",

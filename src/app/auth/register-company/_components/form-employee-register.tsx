@@ -34,19 +34,19 @@ export function RegisterFormCompany({
     formState: { errors, isSubmitting },
     setValue,
     setError,
+    watch,
   } = useForm<CompanyRegisterSchema>({
     resolver: zodResolver(companyRegisterSchema),
+    defaultValues: {
+      owner_time_zone: "America/Sao_Paulo",
+    },
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { submit } = useCreateCompany();
-
-  // Setar valor padrão do timezone
-  useEffect(() => {
-    setValue("owner_time_zone", "UTC");
-  }, [setValue]);
+  const timeZone = watch("owner_time_zone");
 
   const onSubmit = async (data: CompanyRegisterSchema) => {
     await submit(data, setError);
@@ -138,7 +138,7 @@ export function RegisterFormCompany({
           <Label htmlFor="owner_time_zone">Fuso Horário</Label>
           <Select
             onValueChange={value => setValue("owner_time_zone", value)}
-            defaultValue="America/Sao_Paulo"
+            value={timeZone}
           >
             <SelectTrigger id="owner_time_zone">
               <SelectValue placeholder="Selecione o fuso horário" />
