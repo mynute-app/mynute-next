@@ -1,0 +1,34 @@
+version: '3.8'
+# # RUN line below for prod in local machine # #
+# # # docker compose -p mynute-frontend-prod -f ./docker-compose.prod.yml up -d --build --remove-orphans
+
+# # ADD line below for prod in VPS using Dokploy at Advanced > Run Command # #
+# docker compose build --no-cache && docker compose up -d --force-recreate
+
+services:
+  frontend:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    networks:
+      - dokploy-network
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      # Wildcard domain routing (mynute.app + *.mynute.app)
+      # Priority 1 to allow other services (postgres, dokploy) to match first
+      - "traefik.http.routers.mynute-frontend-prod-http.rule=Host(`mynute.app`) || HostRegexp(`^[a-z0-9-]+\\.mynute\\.app$$`)"
+      - "traefik.http.routers.mynute-frontend-prod-http.entrypoints=websecure"
+      - "traefik.http.routers.mynute-frontend-prod-http.priority=1"
+      - "traefik.http.routers.mynute-frontend-prod-http.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mynute-frontend-prod-http.loadbalancer.server.port=3000"
+
+networks:
+  dokploy-network:
+    external: true
