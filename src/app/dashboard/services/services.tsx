@@ -132,30 +132,30 @@ export const ServicesPage = () => {
                 {/* Imagem do Serviço */}
                 <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
                   {selectedService.design?.images?.profile?.url ? (
-                    <Image
-                      src={
-                        getPublicImageUrl(
-                          selectedService.design.images.profile.url
-                        ) || ""
-                      }
-                      alt={selectedService.name}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                      onError={e => {
-                        console.error(
-                          "❌ Erro ao carregar imagem:",
-                          e.currentTarget.src
-                        );
-                        e.currentTarget.style.display = "none";
-                      }}
-                      onLoad={() => {
-                        console.log(
-                          "✅ Imagem carregada:",
-                          selectedService.design?.images?.profile?.url
-                        );
-                      }}
-                    />
+                    (() => {
+                      const imageUrl = getPublicImageUrl(
+                        selectedService.design.images.profile.url
+                      );
+                      return (
+                        <Image
+                          src={imageUrl || ""}
+                          alt={selectedService.name}
+                          fill
+                          className="object-cover"
+                          sizes="80px"
+                          onError={e => {
+                            console.error(
+                              "❌ Erro ao carregar imagem:",
+                              e.currentTarget.src
+                            );
+                            e.currentTarget.style.display = "none";
+                          }}
+                          onLoad={() => {
+                            console.log("✅ Imagem carregada:", imageUrl);
+                          }}
+                        />
+                      );
+                    })()
                   ) : (
                     <Briefcase className="w-8 h-8 text-muted-foreground" />
                   )}
