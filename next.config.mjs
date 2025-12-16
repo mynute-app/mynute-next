@@ -13,6 +13,10 @@ const nextConfig = {
         port: "9000",
         pathname: "/app-local-images/**",
       },
+      {
+        protocol: "https",
+        hostname: "storage.mynute.app",
+      },
     ],
   },
 };
