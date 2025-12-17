@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { AddServiceDialog } from "./add-service-dialog";
 import { EditServiceDialog } from "./edit-service-dialog";
 import { DeleteServiceDialog } from "./delete-service-dailog";
@@ -13,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Briefcase, Clock, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
-import Image from "next/image";
+import { getPublicImageUrl } from "@/utils/image-url";
 
 export const ServicesPage = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -22,7 +23,10 @@ export const ServicesPage = () => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const { company, loading } = useGetCompany();
   const { handleDelete } = useDeleteService();
-
+  console.log(
+    "🏢 Company data in ServicesPage:",
+    selectedService?.design?.images?.profile?.url
+  );
   useEffect(() => {
     if (company?.services) {
       setServices(company.services);
@@ -126,15 +130,32 @@ export const ServicesPage = () => {
             <div className="p-6 border-b bg-background">
               <div className="flex items-start gap-4">
                 {/* Imagem do Serviço */}
-                <div className="h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+                <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
                   {selectedService.design?.images?.profile?.url ? (
-                    <Image
-                      src={selectedService.design.images.profile.url}
-                      alt={selectedService.name}
-                      width={80}
-                      height={80}
-                      className="object-cover w-full h-full"
-                    />
+                    (() => {
+                      const imageUrl = getPublicImageUrl(
+                        selectedService.design.images.profile.url
+                      );
+                      return (
+                        <Image
+                          src={imageUrl || ""}
+                          alt={selectedService.name}
+                          fill
+                          className="object-cover"
+                          sizes="80px"
+                          onError={e => {
+                            console.error(
+                              "❌ Erro ao carregar imagem:",
+                              e.currentTarget.src
+                            );
+                            e.currentTarget.style.display = "none";
+                          }}
+                          onLoad={() => {
+                            console.log("✅ Imagem carregada:", imageUrl);
+                          }}
+                        />
+                      );
+                    })()
                   ) : (
                     <Briefcase className="w-8 h-8 text-muted-foreground" />
                   )}
@@ -187,7 +208,6 @@ export const ServicesPage = () => {
             <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-     
                   <Card className="border hover:border-primary/30 transition-colors shadow-sm">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2 mb-1.5">
