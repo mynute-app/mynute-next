@@ -4,13 +4,15 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    console.log("📤 Enviando payload:", body);
 
-    const backendResponse = await fetch(`${process.env.BACKEND_URL}/user`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    const backendResponse = await fetch(
+      `${process.env.BACKEND_URL}/user?language=pt`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }
+    );
 
     // ✅ Corrigindo a leitura do corpo da resposta
     const backendText = await backendResponse.text();
@@ -20,11 +22,6 @@ export async function POST(req: Request) {
     } catch {
       backendJson = backendText;
     }
-
-    console.log("📥 Resposta do Backend:", {
-      status: backendResponse.status,
-      response: backendJson,
-    });
 
     if (backendResponse.ok) {
       return NextResponse.json(

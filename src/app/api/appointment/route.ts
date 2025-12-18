@@ -35,17 +35,9 @@ export async function POST(req: NextRequest) {
     // Fazer requisição direta ao backend (rota pública, sem autenticação)
     const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
 
-    console.log("📤 ENVIANDO PARA BACKEND:");
-    console.log("URL:", `${backendUrl}/appointment`);
-    console.log("Backend URL da env:", process.env.BACKEND_URL);
-    console.log("Headers:", {
-      "Content-Type": "application/json",
-      "X-Company-ID": companyId,
-    });
-    console.log("Body:", JSON.stringify(body, null, 2));
 
     try {
-      const response = await fetch(`${backendUrl}/appointment`, {
+      const response = await fetch(`${backendUrl}/appointment/?language=pt`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -54,9 +46,6 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify(body),
       });
 
-      console.log("📥 RESPOSTA DO BACKEND:");
-      console.log("Status:", response.status);
-      console.log("Status Text:", response.statusText);
 
       const data = await response.json();
       console.log("Data:", JSON.stringify(data, null, 2));
@@ -75,7 +64,6 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      console.log("✅ Agendamento criado com sucesso!");
       return NextResponse.json(data, { status: 201 });
     } catch (fetchError) {
       console.error("❌ Erro ao fazer fetch para o backend:", fetchError);

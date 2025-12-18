@@ -86,7 +86,6 @@ export function getAuthDataFromRequest(req: {
   auth?: { accessToken?: string } | null;
 }) {
   const token = req.auth?.accessToken;
-  console.log("Token recebido do NextAuth:", token);
 
   if (!token) {
     return {
