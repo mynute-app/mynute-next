@@ -14,7 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Briefcase, Clock, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
-import { getPublicImageUrl } from "@/utils/image-url";
 
 export const ServicesPage = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -78,7 +77,7 @@ export const ServicesPage = () => {
             cadastrado{services.length === 1 ? "" : "s"}
           </p>
         </div>
-
+ 
         <div className="flex-1 overflow-y-auto p-3">
           {loading ? (
             <div className="space-y-2">
@@ -127,35 +126,18 @@ export const ServicesPage = () => {
         {selectedService ? (
           <>
             {/* Header do Serviço */}
-            <div className="p-6 border-b bg-background">
-              <div className="flex items-start gap-4">
+            <div className="p-6 border-b bg-background ">
+              <div className="flex items-start gap-4 ">
                 {/* Imagem do Serviço */}
                 <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
                   {selectedService.design?.images?.profile?.url ? (
-                    (() => {
-                      const imageUrl = getPublicImageUrl(
-                        selectedService.design.images.profile.url
-                      );
-                      return (
-                        <Image
-                          src={imageUrl || ""}
-                          alt={selectedService.name}
-                          fill
-                          className="object-cover"
-                          sizes="80px"
-                          onError={e => {
-                            console.error(
-                              "❌ Erro ao carregar imagem:",
-                              e.currentTarget.src
-                            );
-                            e.currentTarget.style.display = "none";
-                          }}
-                          onLoad={() => {
-                            console.log("✅ Imagem carregada:", imageUrl);
-                          }}
-                        />
-                      );
-                    })()
+                    <Image
+                      src={selectedService.design.images.profile.url}
+                      alt={selectedService.name}
+                      width={80}
+                      height={80}
+                      className="object-cover w-full h-full"
+                    />
                   ) : (
                     <Briefcase className="w-8 h-8 text-muted-foreground" />
                   )}

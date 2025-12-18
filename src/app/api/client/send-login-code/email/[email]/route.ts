@@ -7,28 +7,23 @@ export async function POST(
   try {
     const email = decodeURIComponent(params.email);
 
-    console.log("📧 Enviando código de login para:", email);
-
     const apiUrl = process.env.BACKEND_URL;
     if (!apiUrl) {
       throw new Error("BACKEND_URL não configurada");
     }
 
-    const response = await fetch(
-      `${apiUrl}/client/send-login-code/email/${encodeURIComponent(email)}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const backendUrl = `${apiUrl}/client/send-login-code/email/${encodeURIComponent(
+      email
+    )}?language=pt`;
 
-    console.log("📡 Status da resposta:", response.status);
+    const response = await fetch(backendUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-    // Verificar se há conteúdo na resposta
     const text = await response.text();
-    console.log("📄 Resposta raw:", text);
 
     let data;
     try {
@@ -38,7 +33,6 @@ export async function POST(
       data = { message: text || "Resposta vazia do servidor" };
     }
 
-    console.log("✅ Dados parseados:", data);
 
     if (!response.ok) {
       return NextResponse.json(

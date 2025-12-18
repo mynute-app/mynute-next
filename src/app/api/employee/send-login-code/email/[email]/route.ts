@@ -43,7 +43,7 @@ export async function POST(
 
     // Chama a API backend para enviar o código com X-Company-ID
     const response = await fetch(
-      `${process.env.BACKEND_URL}/employee/send-login-code/email/${decodedEmail}`,
+      `${process.env.BACKEND_URL}/employee/send-login-code/email/${decodedEmail}?language=pt`,
       {
         method: "POST",
         headers: {
