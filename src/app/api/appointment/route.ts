@@ -37,14 +37,17 @@ export async function POST(req: NextRequest) {
 
 
     try {
-      const response = await fetch(`${backendUrl}/appointment/?language=pt`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId,
-        },
-        body: JSON.stringify(body),
-      });
+      const response = await fetch(
+        `${backendUrl}/appointment/?email_language=pt`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Company-ID": companyId,
+          },
+          body: JSON.stringify(body),
+        }
+      );
 
 
       const data = await response.json();
