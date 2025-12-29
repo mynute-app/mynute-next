@@ -111,8 +111,11 @@ export function Calendar({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Data no passado
-    if (date < today) return true;
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+
+    // Data no passado (antes de hoje)
+    if (checkDate < today) return true;
 
     // Antes da data mínima
     if (minDate && date < minDate) return true;
@@ -172,10 +175,12 @@ export function Calendar({
   }, [currentMonth, maxDate]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="border-0 sm:border shadow-none sm:shadow-sm">
+      <CardHeader className="pb-3 px-2 sm:px-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base capitalize">{monthYear}</CardTitle>
+          <CardTitle className="text-sm sm:text-base capitalize">
+            {monthYear}
+          </CardTitle>
           <div className="flex gap-1">
             <Button
               variant="ghost"
@@ -185,6 +190,7 @@ export function Calendar({
               className="h-8 w-8 p-0"
             >
               <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Mês anterior</span>
             </Button>
             <Button
               variant="ghost"
@@ -194,17 +200,18 @@ export function Calendar({
               className="h-8 w-8 p-0"
             >
               <ChevronRight className="h-4 w-4" />
+              <span className="sr-only">Próximo mês</span>
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-3">
+      <CardContent className="p-2 sm:p-3">
         {/* Header dos dias da semana */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {weekDays.map(day => (
             <div
               key={day}
-              className="h-8 flex items-center justify-center text-xs font-medium text-muted-foreground"
+              className="h-6 sm:h-8 flex items-center justify-center text-[10px] sm:text-xs font-medium text-muted-foreground"
             >
               {day}
             </div>
@@ -224,14 +231,14 @@ export function Calendar({
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-8 w-8 p-0 text-xs font-normal flex items-center justify-center",
+                  "h-8 w-8 sm:h-9 sm:w-9 p-0 text-xs sm:text-sm font-normal flex items-center justify-center transition-all",
                   !isCurrentMonth && "text-muted-foreground opacity-30",
                   selected &&
-                    "bg-primary text-primary-foreground hover:bg-primary/90",
+                    "bg-primary text-primary-foreground hover:bg-primary/90 ring-2 ring-primary ring-offset-2",
                   available &&
                     isCurrentMonth &&
                     !selected &&
-                    "border border-green-300 bg-green-50/30 hover:bg-green-50/50",
+                    "border border-green-400 bg-green-50/40 hover:bg-green-50/60 hover:border-green-500",
                   disabled &&
                     "opacity-30 cursor-not-allowed hover:bg-transparent"
                 )}
@@ -245,12 +252,12 @@ export function Calendar({
         </div>
 
         {/* Legenda */}
-        <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-100 border border-green-200"></div>
+        <div className="flex items-center gap-3 sm:gap-4 mt-3 pt-3 border-t text-[10px] sm:text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-green-100 border border-green-300"></div>
             <span>Disponível</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-primary"></div>
             <span>Selecionado</span>
           </div>

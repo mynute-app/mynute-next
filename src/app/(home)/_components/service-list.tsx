@@ -103,26 +103,31 @@ export function ServiceList({
   }
 
   return (
-    <div className="space-y-4">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Serviços</h1>
-        <p className="text-sm text-muted-foreground">
-          Explore e selecione um serviço para continuar o agendamento.
-        </p>
-      </header>
-      <div className="flex items-center gap-3">
-        <Input
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Buscar serviço..."
-          className="max-w-sm"
-        />
+    <div className="flex flex-col h-full md:block md:space-y-4">
+      {/* Header - Fixo no mobile */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-3 md:pb-0 md:static">
+        <header className="mb-3 md:mb-6">
+          <h1 className="text-lg md:text-2xl font-bold tracking-tight">
+            Serviços
+          </h1>
+          <p className="text-xs md:text-sm text-muted-foreground">
+            Selecione o serviço desejado
+          </p>
+        </header>
+        <div className="flex items-center gap-3">
+          <Input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Buscar serviço..."
+            className="h-9 md:h-10 text-sm"
+          />
+        </div>
       </div>
 
-      <Separator />
+      <Separator className="hidden md:block" />
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex-1 overflow-auto md:overflow-visible grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 pb-20 md:pb-0 pt-3 md:pt-0">
           {Array.from({ length: 6 }).map((_, i) => (
             <ServiceSkeleton key={i} />
           ))}
@@ -135,7 +140,7 @@ export function ServiceList({
           description="Tente ajustar a busca ou verifique mais tarde."
         />
       ) : (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <ul className="flex-1 overflow-auto md:overflow-visible grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 pb-20 md:pb-0 pt-3 md:pt-0">
           {filtered.map(s => (
             <li key={String(s.id)}>
               <ServiceCard

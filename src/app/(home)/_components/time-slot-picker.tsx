@@ -25,10 +25,10 @@ export function TimeSlotPicker({
 }: TimeSlotPickerProps) {
   if (!selectedDate) {
     return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <p className="text-muted-foreground">
+      <Card className="border-0 sm:border shadow-none sm:shadow-sm">
+        <CardContent className="p-4 sm:p-6 text-center">
+          <Clock className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+          <p className="text-sm sm:text-base text-muted-foreground">
             Selecione uma data no calendário para ver os horários disponíveis.
           </p>
         </CardContent>
@@ -38,10 +38,10 @@ export function TimeSlotPicker({
 
   if (timeSlots.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <p className="text-muted-foreground">
+      <Card className="border-0 sm:border shadow-none sm:shadow-sm">
+        <CardContent className="p-4 sm:p-6 text-center">
+          <Clock className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+          <p className="text-sm sm:text-base text-muted-foreground">
             Nenhum horário disponível para{" "}
             {selectedDate.toLocaleDateString("pt-BR", {
               weekday: "long",
@@ -66,15 +66,9 @@ export function TimeSlotPicker({
   );
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base capitalize flex items-center gap-2">
-          <Clock className="w-4 h-4" />
-          Horários para {formattedDate}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+    <Card className="border-0 sm:border shadow-none sm:shadow-sm">
+      <CardContent className="p-0 sm:p-6">
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
           {sortedTimeSlots.map(slot => {
             const isSelected = selectedTime === slot.time;
             const isOccupiedByClient = slot.occupied_by_client === true;
@@ -86,14 +80,16 @@ export function TimeSlotPicker({
                 size="sm"
                 disabled={isOccupiedByClient}
                 className={cn(
-                  "text-xs relative",
-                  isOccupiedByClient && "opacity-40 cursor-not-allowed"
+                  "text-xs sm:text-sm relative h-9 sm:h-10 touch-manipulation",
+                  isOccupiedByClient && "opacity-40 cursor-not-allowed",
+                  isSelected && "ring-2 ring-offset-2"
                 )}
                 style={
                   isSelected && brandColor && !isOccupiedByClient
                     ? {
                         backgroundColor: brandColor,
                         borderColor: brandColor,
+                        color: "white",
                       }
                     : undefined
                 }
@@ -107,7 +103,7 @@ export function TimeSlotPicker({
                 }
               >
                 {isOccupiedByClient && (
-                  <Lock className="w-3 h-3 absolute top-1 right-1" />
+                  <Lock className="w-3 h-3 absolute top-0.5 right-0.5" />
                 )}
                 {slot.time}
               </Button>
