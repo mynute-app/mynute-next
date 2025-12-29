@@ -10,7 +10,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { CalendarDays, Calendar as CalendarIcon } from "lucide-react";
+import { CalendarDays, Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { useServiceAvailability } from "@/hooks/service/useServiceAvailability";
 import {
   Dialog,
@@ -232,52 +232,91 @@ export function AppointmentBookingNew({
                 Outras datas
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
-              <DialogHeader>
-                <DialogTitle>Escolher outra data </DialogTitle>
+            <DialogContent className="max-w-4xl h-[90vh] sm:h-auto max-h-[90vh] p-0 gap-0 flex flex-col">
+              <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b sticky top-0 bg-background z-10">
+                <div className="flex items-center justify-between">
+                  <DialogTitle>Escolher outra data</DialogTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCalendarOpen(false)}
+                    className="sm:hidden -mr-2"
+                  >
+                    Fechar
+                  </Button>
+                </div>
               </DialogHeader>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Calendário */}
-                <div>
-                  <h4 className="font-medium mb-4">Selecione uma data</h4>
-                  <Calendar
-                    selectedDate={calendarSelectedDate}
-                    onDateSelect={handleCalendarDateSelect}
-                    availableDates={availableDates}
-                    minDate={minDate}
-                    maxDate={maxDate}
-                  />
-                </div>
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
+                {extendedLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 sm:py-20">
+                    <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin text-primary mb-4" />
+                    <p className="text-sm sm:text-base text-muted-foreground">
+                      Carregando disponibilidade...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6">
+                    {/* Calendário */}
+                    <div className="flex-shrink-0">
+                      <h4 className="font-medium mb-4 text-sm sm:text-base">
+                        Selecione uma data
+                      </h4>
+                      <Calendar
+                        selectedDate={calendarSelectedDate}
+                        onDateSelect={handleCalendarDateSelect}
+                        availableDates={availableDates}
+                        minDate={minDate}
+                        maxDate={maxDate}
+                      />
+                    </div>
 
-                {/* Horários para data selecionada no calendário */}
-                <div>
-                  <h4 className="font-medium mb-4">Horários disponíveis</h4>
-                  {showCalendarTimeSlots ? (
-                    <TimeSlotPicker
-                      selectedDate={calendarSelectedDate}
-                      timeSlots={calendarTimeSlots.timeSlots}
-                      selectedTime={null}
-                      branchId={calendarTimeSlots.branchId}
-                      brandColor={brandColor}
-                      onTimeSelect={(time, slot, branchId) => {
-                        const date =
-                          calendarSelectedDate?.toISOString().split("T")[0] ||
-                          "";
-                        handleSlotSelect(date, slot, branchId);
-                      }}
-                    />
-                  ) : (
-                    <Card>
-                      <CardContent className="p-6 text-center">
-                        <CalendarIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                        <p className="text-muted-foreground">
-                          Selecione uma data no calendário
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
+                    {/* Horários para data selecionada no calendário */}
+                    <div className="flex-1">
+                      <div className="sticky top-0 bg-background pb-4 mb-2 border-b lg:border-none">
+                        <h4 className="font-medium text-sm sm:text-base">
+                          Horários disponíveis
+                        </h4>
+                        {calendarSelectedDate && (
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                            {new Intl.DateTimeFormat("pt-BR", {
+                              weekday: "long",
+                              day: "numeric",
+                              month: "long",
+                            }).format(calendarSelectedDate)}
+                          </p>
+                        )}
+                      </div>
+                      {showCalendarTimeSlots ? (
+                        <div className="pb-4">
+                          <TimeSlotPicker
+                            selectedDate={calendarSelectedDate}
+                            timeSlots={calendarTimeSlots.timeSlots}
+                            selectedTime={null}
+                            branchId={calendarTimeSlots.branchId}
+                            brandColor={brandColor}
+                            onTimeSelect={(time, slot, branchId) => {
+                              const date =
+                                calendarSelectedDate
+                                  ?.toISOString()
+                                  .split("T")[0] || "";
+                              handleSlotSelect(date, slot, branchId);
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <Card>
+                          <CardContent className="p-6 text-center">
+                            <CalendarIcon className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+                            <p className="text-sm sm:text-base text-muted-foreground">
+                              Selecione uma data no calendário
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>
