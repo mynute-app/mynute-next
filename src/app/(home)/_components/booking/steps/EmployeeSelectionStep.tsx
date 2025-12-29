@@ -85,7 +85,7 @@ export function EmployeeSelectionStep({
       </Card>
 
       {/* Lista de funcionários */}
-      <div className="space-y-3">
+      <div className="space-y-3 pb-6 md:pb-0">
         {availableEmployees.map(employee => (
           <Card
             key={employee.id}

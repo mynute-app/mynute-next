@@ -43,7 +43,7 @@ export function ChoiceSelection({
       </div>
 
       {/* Opções */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pb-6 md:pb-0">
         {/* Opção: Escolher Local primeiro */}
         <Card
           className="group hover:shadow-lg hover:border-primary/30 transition-all duration-200 cursor-pointer hover:scale-[1.02]"

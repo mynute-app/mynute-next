@@ -87,7 +87,7 @@ export function BranchSelectionStep({
       </Card>
 
       {/* Lista de locais */}
-      <div className="space-y-4">
+      <div className="space-y-4 pb-6 md:pb-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
