@@ -46,40 +46,55 @@ export function BranchSelectionStep({
   }).format(new Date(selectedDate + "T00:00:00"));
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          className="p-2 hover:bg-muted rounded-full"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Escolha o local
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {selectedEmployeeId
-              ? "Locais onde o profissional atende"
-              : "Selecione onde você gostaria de ser atendido"}
-          </p>
-        </header>
+    <div className="flex flex-col h-full md:block md:space-y-6">
+      {/* Header - Fixo no mobile */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-3 md:pb-0 md:static">
+        <div className="flex items-center gap-3 mb-3 md:mb-0">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="p-2 hover:bg-muted rounded-full shrink-0"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <header className="min-w-0">
+            <h1 className="text-lg md:text-2xl font-bold tracking-tight">
+              Escolha o local
+            </h1>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              {selectedEmployeeId
+                ? "Locais onde o profissional atende"
+                : "Selecione onde você gostaria de ser atendido"}
+            </p>
+          </header>
+        </div>
+
+        {/* Info compacta - Mobile */}
+        <div className="flex md:hidden items-center gap-3 text-xs bg-primary/5 rounded-lg px-3 py-2 border border-primary/10">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-primary" />
+            <span className="font-medium capitalize">
+              {formattedDate.split(",")[0]}
+            </span>
+          </div>
+          <div className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-primary" />
+            <span className="font-medium">{selectedTime}</span>
+          </div>
+        </div>
       </div>
 
-      {/* Informações do agendamento */}
-      <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+      {/* Informações do agendamento - Desktop */}
+      <Card className="hidden md:block border border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-4 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">Data: </span>
               <span className="font-semibold capitalize">{formattedDate}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">Horário: </span>
               <span className="font-semibold">{selectedTime}</span>
             </div>
           </div>
@@ -87,29 +102,65 @@ export function BranchSelectionStep({
       </Card>
 
       {/* Lista de locais */}
-      <div className="space-y-4 pb-6 md:pb-0">
-        <div className="flex items-center justify-between">
+      <div className="flex-1 overflow-auto md:overflow-visible space-y-3 md:space-y-4 pb-20 md:pb-0 pt-3 md:pt-0">
+        <div className="hidden md:flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
             <h3 className="text-xl font-semibold">Locais disponíveis</h3>
           </div>
-          <Badge variant="secondary" className="px-3 py-1">
-            {branches.length} {branches.length === 1 ? "local" : "locais"}
+          <Badge variant="secondary" className="px-3 py-1 text-xs">
+            {branches.length}
           </Badge>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-3 md:gap-4">
           {branches.map(branch => (
             <Card
               key={branch.id}
-              className="group hover:shadow-lg hover:border-primary/30 transition-all duration-200 cursor-pointer hover:scale-[1.01]"
+              className="group overflow-hidden border-2 md:border hover:border-primary/50 md:hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-[0.97] md:hover:scale-[1.01]"
               onClick={() => onBranchSelect(branch.id)}
             >
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+              {/* Layout Mobile - Vertical */}
+              <CardContent className="p-0 md:p-6">
+                {/* Mobile */}
+                <div className="flex md:hidden flex-col">
+                  {/* Imagem grande no topo */}
+                  <div className="relative w-full h-32 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center overflow-hidden">
+                    {branch.design?.images?.profile?.url ? (
+                      <img
+                        src={branch.design.images.profile.url}
+                        alt={branch.design.images.profile.alt || branch.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <MapPin className="w-12 h-12 text-primary/40" />
+                    )}
+                    {/* Badge disponível */}
+                    <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                      Disponível
+                    </div>
+                  </div>
+
+                  {/* Info embaixo */}
+                  <div className="p-4">
+                    <h4 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors mb-1">
+                      {branch.name}
+                    </h4>
+                    <p className="text-sm text-muted-foreground flex items-start gap-1.5 leading-relaxed">
+                      <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-primary" />
+                      <span>
+                        {branch.street}, {branch.number} • {branch.neighborhood}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Desktop - Layout horizontal original mas melhorado */}
+                <div className="hidden md:flex items-center gap-6">
                   {/* Imagem do local */}
                   <div className="relative shrink-0">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20 group-hover:border-primary/40 transition-colors flex items-center justify-center overflow-hidden">
+                    <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20 group-hover:border-primary/40 transition-colors flex items-center justify-center overflow-hidden">
                       {branch.design?.images?.profile?.url ? (
                         <img
                           src={branch.design.images.profile.url}
@@ -120,7 +171,6 @@ export function BranchSelectionStep({
                         <MapPin className="w-8 h-8 text-primary" />
                       )}
                     </div>
-                    {/* Badge Online */}
                     <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                     </div>
@@ -128,7 +178,7 @@ export function BranchSelectionStep({
 
                   {/* Informações */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-lg sm:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                    <h4 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                       {branch.name}
                     </h4>
                     <p className="text-sm text-muted-foreground mt-1">
@@ -143,7 +193,7 @@ export function BranchSelectionStep({
                     </p>
 
                     {/* Ações - Desktop */}
-                    <div className="hidden sm:flex items-center gap-4 mt-3">
+                    <div className="hidden md:flex items-center gap-4 mt-3">
                       <button className="flex items-center gap-2 text-sm text-primary font-medium hover:underline">
                         <Navigation className="w-4 h-4" />
                         Ver no mapa
@@ -154,8 +204,8 @@ export function BranchSelectionStep({
                       </div>
                     </div>
 
-                    {/* Badges */}
-                    <div className="flex items-center gap-2 mt-3 flex-wrap">
+                    {/* Badges - Desktop */}
+                    <div className="hidden md:flex items-center gap-2 mt-3 flex-wrap">
                       <Badge variant="outline" className="text-xs">
                         Estacionamento
                       </Badge>
@@ -171,23 +221,12 @@ export function BranchSelectionStep({
                   {/* Botão - Desktop */}
                   <Button
                     size="lg"
-                    className="hidden sm:flex ml-auto px-8 group-hover:shadow-md transition-all self-center"
+                    className="hidden md:flex ml-auto px-8 group-hover:shadow-md transition-all self-center"
                     style={
                       brandColor ? { backgroundColor: brandColor } : undefined
                     }
                   >
                     Escolher
-                  </Button>
-
-                  {/* Botão - Mobile */}
-                  <Button
-                    size="default"
-                    className="sm:hidden w-full"
-                    style={
-                      brandColor ? { backgroundColor: brandColor } : undefined
-                    }
-                  >
-                    Escolher local
                   </Button>
                 </div>
               </CardContent>
