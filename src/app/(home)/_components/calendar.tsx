@@ -111,8 +111,11 @@ export function Calendar({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Data no passado
-    if (date < today) return true;
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+
+    // Data no passado (antes de hoje)
+    if (checkDate < today) return true;
 
     // Antes da data mínima
     if (minDate && date < minDate) return true;

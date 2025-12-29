@@ -201,7 +201,12 @@ export function AppointmentBookingNew({
     }
   };
 
-  const minDate = new Date();
+  const minDate = useMemo(() => {
+    const min = new Date();
+    min.setHours(0, 0, 0, 0); // Zerar hora para começar do início do dia
+    return min;
+  }, []);
+
   const maxDate = useMemo(() => {
     const max = new Date();
     max.setDate(max.getDate() + 30);
@@ -229,7 +234,7 @@ export function AppointmentBookingNew({
             </DialogTrigger>
             <DialogContent className="max-w-4xl">
               <DialogHeader>
-                <DialogTitle>Escolher outra data</DialogTitle>
+                <DialogTitle>Escolher outra data </DialogTitle>
               </DialogHeader>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
