@@ -37,9 +37,10 @@ export function ServiceCard({ service, onSelect, brandColor }: Props) {
     () => (service.description ? service.description.length > 140 : false),
     [service.description]
   );
-  
+
   return (
-    <Card className="group h-full overflow-hidden border-2 md:border hover:border-primary/50 md:hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-[0.97] md:hover:scale-[1.01]"
+    <Card
+      className="group h-full overflow-hidden border-2 md:border hover:border-primary/50 md:hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-[0.97] md:hover:scale-[1.01]"
       onClick={() => onSelect?.(service)}
     >
       {/* Layout Mobile - Compacto e Visual */}
@@ -56,7 +57,14 @@ export function ServiceCard({ service, onSelect, brandColor }: Props) {
             />
           ) : (
             <div className="text-primary/20">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <rect x="3" y="3" width="18" height="18" rx="2" />
                 <circle cx="8.5" cy="8.5" r="1.5" />
                 <path d="M21 15l-5-5L5 21" />
@@ -65,7 +73,10 @@ export function ServiceCard({ service, onSelect, brandColor }: Props) {
           )}
           {/* Badge categoria */}
           {service.category && (
-            <Badge className="absolute top-2 right-2 text-xs" variant="secondary">
+            <Badge
+              className="absolute top-2 right-2 text-xs"
+              variant="secondary"
+            >
               {service.category}
             </Badge>
           )}
@@ -175,7 +186,7 @@ export function ServiceCard({ service, onSelect, brandColor }: Props) {
               {hasLongDescription && (
                 <button
                   type="button"
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     setExpanded(v => !v);
                   }}
@@ -199,7 +210,7 @@ export function ServiceCard({ service, onSelect, brandColor }: Props) {
                   }
                 : undefined
             }
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onSelect?.(service);
             }}

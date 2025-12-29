@@ -107,7 +107,9 @@ export function ServiceList({
       {/* Header - Fixo no mobile */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-3 md:pb-0 md:static">
         <header className="mb-3 md:mb-6">
-          <h1 className="text-lg md:text-2xl font-bold tracking-tight">Serviços</h1>
+          <h1 className="text-lg md:text-2xl font-bold tracking-tight">
+            Serviços
+          </h1>
           <p className="text-xs md:text-sm text-muted-foreground">
             Selecione o serviço desejado
           </p>
