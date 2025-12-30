@@ -6,14 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, User, Loader2, LogOut } from "lucide-react";
+import {
+  ArrowLeft,
+  User,
+  Loader2,
+  LogOut,
+  CheckCircle2,
+  AlertCircle,
+  Mail,
+} from "lucide-react";
 import { useClientByEmail } from "@/hooks/use-client-by-email";
 import { useCreateClient } from "@/hooks/use-create-client";
 import { useClientSendLoginCode } from "@/hooks/use-client-send-login-code";
 import type { Service } from "../../../../types/company";
 import { ClientVerifyCodeDialog } from "./client-verify-code-dialog";
-import { UnverifiedEmailAlert } from "./unverified-email-alert";
 import { decodeJWTToken } from "@/utils/decode-jwt";
+import { formatPhone } from "@/utils/format-cnpj";
 
 interface ClientDetailsFormProps {
   service: Service;
@@ -59,6 +67,8 @@ export function ClientDetailsForm({
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
   const [clientToken, setClientToken] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [emailValidated, setEmailValidated] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   const {
     client,
@@ -100,6 +110,7 @@ export function ClientDetailsForm({
 
         setClientToken(storedToken);
         setIsLoggedIn(true);
+        setEmailValidated(true);
 
         // Buscar dados completos do cliente
         checkEmail(userData.email);
@@ -112,6 +123,7 @@ export function ClientDetailsForm({
     localStorage.removeItem("client_token");
     setClientToken(null);
     setIsLoggedIn(false);
+    setEmailValidated(false);
     setClientData({
       name: "",
       surname: "",
@@ -121,15 +133,35 @@ export function ClientDetailsForm({
     });
   };
 
-  const handleEmailBlur = async () => {
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailValidation = async () => {
     const email = clientData.email.trim();
 
-    if (!email) return;
+    // Limpar erros anteriores
+    setErrors(prev => ({ ...prev, email: "" }));
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return;
+    if (!email) {
+      setErrors(prev => ({ ...prev, email: "Email é obrigatório" }));
+      return;
+    }
 
+    if (!validateEmail(email)) {
+      setErrors(prev => ({
+        ...prev,
+        email: "Digite um email válido (exemplo: seu@email.com)",
+      }));
+      return;
+    }
+
+    // Email válido, buscar no servidor
+    setIsCheckingEmail(true);
     await checkEmail(email);
+    setIsCheckingEmail(false);
+    setEmailValidated(true);
   };
 
   // Preencher campos automaticamente quando cliente for encontrado (verificado ou não)
@@ -194,10 +226,21 @@ export function ClientDetailsForm({
   };
 
   const handleLogin = async () => {
+    if (!validateEmail(clientData.email.trim())) {
+      setErrors(prev => ({
+        ...prev,
+        email: "Digite um email válido antes de fazer login",
+      }));
+      return;
+    }
+
     const codeSent = await sendVerificationCode(clientData.email.trim());
 
     if (!codeSent) {
-      alert("Erro ao enviar código de verificação. Tente novamente.");
+      setErrors(prev => ({
+        ...prev,
+        email: "Erro ao enviar código. Verifique seu email e tente novamente.",
+      }));
       return;
     }
 
@@ -280,7 +323,7 @@ export function ClientDetailsForm({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24 lg:pb-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" onClick={onBack}>
@@ -288,7 +331,7 @@ export function ClientDetailsForm({
         </Button>
         <div>
           <h2 className="text-2xl font-bold">Seus dados</h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Preencha seus dados para finalizar o agendamento
           </p>
         </div>
@@ -319,30 +362,43 @@ export function ClientDetailsForm({
             </CardHeader>
             <CardContent className="space-y-4">
               {isLoggedIn ? (
-                // Modo visualização quando logado
                 <>
-                  <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Nome completo
-                      </p>
-                      <p className="font-medium">
-                        {clientData.name} {clientData.surname}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Telefone</p>
-                      <p className="font-medium">{clientData.phone}</p>
-                    </div>
-                    <div className="flex items-center justify-between">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-muted-foreground">Email</p>
-                        <p className="font-medium">{clientData.email}</p>
+                        <Label className="text-xs text-muted-foreground">
+                          Nome
+                        </Label>
+                        <p className="font-medium mt-1">{clientData.name}</p>
                       </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">
+                          Sobrenome
+                        </Label>
+                        <p className="font-medium mt-1">{clientData.surname}</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs text-muted-foreground">
+                        Email
+                      </Label>
+                      <p className="font-medium mt-1 break-all">
+                        {clientData.email}
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs text-muted-foreground">
+                        Telefone
+                      </Label>
+                      <p className="font-medium mt-1">
+                        {formatPhone(clientData.phone.replace(/^\+55/, ""))}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 pt-4 border-t">
                     <Label htmlFor="notes">Observações (opcional)</Label>
                     <Textarea
                       id="notes"
@@ -358,231 +414,207 @@ export function ClientDetailsForm({
               ) : (
                 // Modo formulário quando não logado
                 <>
+                  {/* Campo de Email - Sempre visível */}
                   <div className="space-y-2">
                     <Label htmlFor="email" className="flex items-center gap-2">
                       Email *
-                      {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {isCheckingEmail && (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      )}
                     </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={clientData.email}
-                      onChange={e =>
-                        setClientData({ ...clientData, email: e.target.value })
-                      }
-                      onBlur={handleEmailBlur}
-                      className={errors.email ? "border-destructive" : ""}
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={clientData.email}
+                        onChange={e => {
+                          setClientData({
+                            ...clientData,
+                            email: e.target.value,
+                          });
+                          setEmailValidated(false);
+                          setErrors(prev => ({ ...prev, email: "" }));
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleEmailValidation();
+                          }
+                        }}
+                        className={errors.email ? "border-destructive" : ""}
+                        disabled={isCheckingEmail}
+                      />
+                      {!emailValidated && (
+                        <Button
+                          type="button"
+                          onClick={handleEmailValidation}
+                          disabled={isCheckingEmail || !clientData.email.trim()}
+                          variant="secondary"
+                        >
+                          {isCheckingEmail ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            "Verificar"
+                          )}
+                        </Button>
+                      )}
+                    </div>
                     {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
-                    )}
-
-                    {/* Status da busca */}
-                    {loading && (
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
-                        <p className="font-medium">🔍 Buscando cliente...</p>
+                      <div className="flex items-center gap-2 text-sm text-destructive">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{errors.email}</span>
                       </div>
                     )}
 
-                    {!loading && client && !client.verified && (
-                      <UnverifiedEmailAlert
-                        email={clientData.email}
-                        onVerificationSuccess={handleVerificationSuccess}
-                      />
+                    {/* Status da verificação */}
+                    {emailValidated && !clientError && client && (
+                      <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        <span className="text-green-700 font-medium">
+                          Email encontrado!
+                        </span>
+                      </div>
+                    )}
+
+                    {emailValidated &&
+                      clientError === "Cliente não encontrado" && (
+                        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                          <Mail className="w-4 h-4 text-blue-600" />
+                          <span className="text-blue-700">
+                            Email disponível para criar conta
+                          </span>
+                        </div>
+                      )}
+
+                    {emailValidated && client && !client.verified && (
+                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-yellow-600" />
+                          <p className="font-medium text-yellow-700">
+                            Email não verificado
+                          </p>
+                        </div>
+                        <p className="text-xs text-yellow-600 mt-1">
+                          Clique em "Fazer login" para verificar seu email e
+                          continuar.
+                        </p>
+                      </div>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome *</Label>
-                    <Input
-                      id="name"
-                      placeholder="Digite seu nome"
-                      value={clientData.name}
-                      onChange={e =>
-                        setClientData({ ...clientData, name: e.target.value })
-                      }
-                      className={errors.name ? "border-destructive" : ""}
-                    />
-                    {errors.name && (
-                      <p className="text-sm text-destructive">{errors.name}</p>
-                    )}
-                  </div>
+                  {/* Campos restantes - Mostrar apenas após email validado */}
+                  {emailValidated && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Nome *</Label>
+                        <Input
+                          id="name"
+                          placeholder="Digite seu nome"
+                          value={clientData.name}
+                          onChange={e =>
+                            setClientData({
+                              ...clientData,
+                              name: e.target.value,
+                            })
+                          }
+                          className={errors.name ? "border-destructive" : ""}
+                          disabled={
+                            client !== null &&
+                            clientError !== "Cliente não encontrado"
+                          }
+                        />
+                        {errors.name && (
+                          <p className="text-sm text-destructive">
+                            {errors.name}
+                          </p>
+                        )}
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="surname">Sobrenome *</Label>
-                    <Input
-                      id="surname"
-                      placeholder="Digite seu sobrenome"
-                      value={clientData.surname}
-                      onChange={e =>
-                        setClientData({
-                          ...clientData,
-                          surname: e.target.value,
-                        })
-                      }
-                      className={errors.surname ? "border-destructive" : ""}
-                    />
-                    {errors.surname && (
-                      <p className="text-sm text-destructive">
-                        {errors.surname}
-                      </p>
-                    )}
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="surname">Sobrenome *</Label>
+                        <Input
+                          id="surname"
+                          placeholder="Digite seu sobrenome"
+                          value={clientData.surname}
+                          onChange={e =>
+                            setClientData({
+                              ...clientData,
+                              surname: e.target.value,
+                            })
+                          }
+                          className={errors.surname ? "border-destructive" : ""}
+                          disabled={
+                            client !== null &&
+                            clientError !== "Cliente não encontrado"
+                          }
+                        />
+                        {errors.surname && (
+                          <p className="text-sm text-destructive">
+                            {errors.surname}
+                          </p>
+                        )}
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Telefone *</Label>
-                    <Input
-                      id="phone"
-                      placeholder="(11) 99999-9999"
-                      value={clientData.phone}
-                      onChange={e =>
-                        setClientData({ ...clientData, phone: e.target.value })
-                      }
-                      className={errors.phone ? "border-destructive" : ""}
-                    />
-                    {errors.phone && (
-                      <p className="text-sm text-destructive">{errors.phone}</p>
-                    )}
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Telefone *</Label>
+                        <Input
+                          id="phone"
+                          placeholder="(11) 99999-9999"
+                          value={clientData.phone}
+                          onChange={e => {
+                            const formatted = formatPhone(e.target.value);
+                            setClientData({
+                              ...clientData,
+                              phone: formatted,
+                            });
+                          }}
+                          className={errors.phone ? "border-destructive" : ""}
+                          disabled={
+                            client !== null &&
+                            clientError !== "Cliente não encontrado"
+                          }
+                        />
+                        {errors.phone && (
+                          <p className="text-sm text-destructive">
+                            {errors.phone}
+                          </p>
+                        )}
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Observações (opcional)</Label>
-                    <Textarea
-                      id="notes"
-                      placeholder="Alguma observação ou preferência especial..."
-                      value={clientData.notes}
-                      onChange={e =>
-                        setClientData({ ...clientData, notes: e.target.value })
-                      }
-                      rows={3}
-                    />
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Resumo do agendamento */}
-        <div className="space-y-4">
-          <Card className="">
-            <CardHeader>
-              <CardTitle>Resumo do agendamento</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Serviço */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Serviço
-                </p>
-                <p className="font-medium">{service.name}</p>
-                {service.description && (
-                  <p className="text-sm text-muted-foreground">
-                    {service.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Data e horário */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Data e horário
-                </p>
-                <p className="font-medium">{formatDate(selectedSlot.date)}</p>
-                <p className="font-medium">{formatTime(selectedSlot.time)}</p>
-              </div>
-
-              {/* Profissional */}
-              {selectedEmployee && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Profissional
-                  </p>
-                  <p className="font-medium">{selectedEmployee.name}</p>
-                </div>
-              )}
-
-              {/* Local */}
-              {selectedBranch && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Local
-                  </p>
-                  <p className="font-medium">{selectedBranch.name}</p>
-                  {selectedBranch.address && (
-                    <p className="text-sm text-muted-foreground">
-                      {selectedBranch.address}
-                    </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Observações (opcional)</Label>
+                        <Textarea
+                          id="notes"
+                          placeholder="Alguma observação ou preferência especial..."
+                          value={clientData.notes}
+                          onChange={e =>
+                            setClientData({
+                              ...clientData,
+                              notes: e.target.value,
+                            })
+                          }
+                          rows={3}
+                        />
+                      </div>
+                    </>
                   )}
-                </div>
-              )}
-
-              {/* Preço */}
-              {service.price && (
-                <div className="space-y-2 pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium">Total</p>
-                    <p className="font-bold text-lg">
-                      R$ {service.price.toFixed(2)}
-                    </p>
-                  </div>
-                </div>
+                </>
               )}
             </CardContent>
           </Card>
-
-          {/* Botão de confirmação */}
-          {!isLoggedIn && clientError === "Cliente não encontrado" ? (
-            // Botão criar conta
-            <Button
-              onClick={handleCreateAccount}
-              className="w-full"
-              size="lg"
-              style={{ backgroundColor: brandColor }}
-              disabled={creatingClient}
-            >
-              {creatingClient ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Criando conta...
-                </>
-              ) : (
-                "Criar conta"
-              )}
-            </Button>
-          ) : !isLoggedIn && !clientToken ? (
-            // Botão de login
-            <Button
-              onClick={handleLogin}
-              className="w-full"
-              size="lg"
-              style={{ backgroundColor: brandColor }}
-              disabled={sendingCode || !clientData.email}
-            >
-              {sendingCode ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Enviando código...
-                </>
-              ) : (
-                "Fazer login para continuar"
-              )}
-            </Button>
-          ) : (
-            // Botão finalizar agendamento
-            <Button
-              onClick={handleSubmit}
-              className="w-full"
-              size="lg"
-              style={{ backgroundColor: brandColor }}
-              disabled={!clientToken}
-            >
-              Finalizar agendamento
-            </Button>
-          )}
         </div>
+
+        {/* Resumo do agendamento - Apenas Desktop */}
+        <div className="hidden lg:block space-y-4">{renderSummaryCard()}</div>
       </div>
+
+      {/* Botão fixo no mobile */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-lg z-50">
+        {renderActionButton()}
+      </div>
+
+      {/* Botão no desktop (dentro do card) - Renderizado dentro do Card no desktop */}
 
       <ClientVerifyCodeDialog
         open={isVerifyDialogOpen}
@@ -592,4 +624,151 @@ export function ClientDetailsForm({
       />
     </div>
   );
+
+  // Função auxiliar para renderizar o card de resumo
+  function renderSummaryCard() {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Resumo do agendamento</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Serviço */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">Serviço</p>
+            <p className="font-medium">{service.name}</p>
+            {service.description && (
+              <p className="text-sm text-muted-foreground">
+                {service.description}
+              </p>
+            )}
+          </div>
+
+          {/* Data e horário */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Data e horário
+            </p>
+            <p className="font-medium">{formatDate(selectedSlot.date)}</p>
+            <p className="font-medium">{formatTime(selectedSlot.time)}</p>
+          </div>
+
+          {/* Profissional */}
+          {selectedEmployee && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Profissional
+              </p>
+              <p className="font-medium">{selectedEmployee.name}</p>
+            </div>
+          )}
+
+          {/* Local */}
+          {selectedBranch && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Local</p>
+              <p className="font-medium">{selectedBranch.name}</p>
+              {selectedBranch.address && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedBranch.address}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Preço */}
+          {service.price && (
+            <div className="space-y-2 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <p className="font-medium">Total</p>
+                <p className="font-bold text-lg">
+                  R$ {service.price.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Botão no desktop */}
+          <div className="pt-4">{renderActionButton()}</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Função auxiliar para renderizar o botão de ação
+  function renderActionButton() {
+    if (!emailValidated) {
+      return (
+        <Button
+          onClick={handleEmailValidation}
+          className="w-full"
+          size="lg"
+          disabled={isCheckingEmail || !clientData.email.trim()}
+        >
+          {isCheckingEmail ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Verificando email...
+            </>
+          ) : (
+            "Verificar email"
+          )}
+        </Button>
+      );
+    }
+
+    if (!isLoggedIn && clientError === "Cliente não encontrado") {
+      return (
+        <Button
+          onClick={handleCreateAccount}
+          className="w-full"
+          size="lg"
+          style={{ backgroundColor: brandColor }}
+          disabled={creatingClient}
+        >
+          {creatingClient ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Criando conta...
+            </>
+          ) : (
+            "Criar conta"
+          )}
+        </Button>
+      );
+    }
+
+    if (!isLoggedIn && !clientToken) {
+      return (
+        <Button
+          onClick={handleLogin}
+          className="w-full"
+          size="lg"
+          style={{ backgroundColor: brandColor }}
+          disabled={sendingCode}
+        >
+          {sendingCode ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Enviando código...
+            </>
+          ) : (
+            "Fazer login"
+          )}
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        onClick={handleSubmit}
+        className="w-full"
+        size="lg"
+        style={{ backgroundColor: brandColor }}
+        disabled={!clientToken}
+      >
+        Finalizar agendamento
+      </Button>
+    );
+  }
 }
