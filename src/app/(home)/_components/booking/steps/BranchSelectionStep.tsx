@@ -244,12 +244,12 @@ export function BranchSelectionStep({
               <h3 className="text-lg font-semibold mb-2">
                 Nenhum local disponível
               </h3>
-              <p className="text-muted-foreground">
+              <div className="text-muted-foreground">
                 Não há locais disponíveis
                 {selectedEmployeeId &&
                   " onde este profissional atende no horário selecionado"}
                 .
-              </p>
+              </div>
             </CardContent>
           </Card>
         )}

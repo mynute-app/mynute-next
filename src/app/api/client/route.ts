@@ -29,7 +29,30 @@ export async function POST(request: NextRequest) {
     console.log("📡 Status da API:", response.status);
 
     if (!response.ok) {
-      const errorData = await response.json();
+      // Clonar a resposta para poder ler o body de múltiplas formas
+      const clonedResponse = response.clone();
+      let errorData;
+
+      try {
+        errorData = await response.json();
+      } catch (parseError) {
+        // Se falhar ao parsear JSON, tenta ler como texto
+        try {
+          const textError = await clonedResponse.text();
+          console.log("❌ Erro (texto):", textError);
+          errorData = {
+            message: textError,
+            error: textError,
+          };
+        } catch (textError) {
+          console.log("❌ Erro ao ler resposta");
+          errorData = {
+            message: "Erro ao processar resposta do servidor",
+            error: "Erro ao processar resposta do servidor",
+          };
+        }
+      }
+
       console.log("❌ Erro da API:", errorData);
       return NextResponse.json(errorData, { status: response.status });
     }

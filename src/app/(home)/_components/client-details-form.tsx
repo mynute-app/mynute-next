@@ -77,7 +77,11 @@ export function ClientDetailsForm({
     checkEmail,
   } = useClientByEmail();
 
-  const { createClient, loading: creatingClient } = useCreateClient();
+  const {
+    createClient,
+    loading: creatingClient,
+    error: createClientError,
+  } = useCreateClient();
   const { sendVerificationCode, loading: sendingCode } =
     useClientSendLoginCode();
 
@@ -208,6 +212,11 @@ export function ClientDetailsForm({
       return;
     }
 
+    // Limpar erros anteriores
+    setErrors({});
+
+    console.log("🚀 Iniciando criação de conta...");
+
     const newClient = await createClient({
       email: clientData.email.trim(),
       name: clientData.name.trim(),
@@ -216,8 +225,47 @@ export function ClientDetailsForm({
       password: "Senha123!",
     });
 
+    console.log("🔍 Resultado da criação:", newClient);
+    console.log("🔍 Erro do hook:", createClientError);
+
     if (!newClient) {
-      alert("Erro ao criar conta. Tente novamente.");
+      console.log("❌ Falha ao criar cliente. Analisando erro...");
+      // Verificar se é erro de telefone duplicado
+      const phoneDuplicate =
+        createClientError === "PHONE_DUPLICATE" ||
+        (typeof createClientError === "string" &&
+          (createClientError.includes("idx_public_clients_phone") ||
+            (createClientError.includes("duplicate key") &&
+              createClientError.includes("phone"))));
+      if (phoneDuplicate) {
+        console.log("📞 Aplicando erro: Telefone duplicado");
+        setErrors(prev => ({
+          ...prev,
+          phone:
+            "Este número de telefone já está cadastrado. Use outro número.",
+        }));
+        return;
+      }
+      if (
+        createClientError === "EMAIL_DUPLICATE" ||
+        (typeof createClientError === "string" &&
+          (createClientError.includes("idx_public_clients_email") ||
+            (createClientError.includes("duplicate key") &&
+              createClientError.includes("email"))))
+      ) {
+        console.log("📧 Aplicando erro: Email duplicado");
+        setErrors(prev => ({
+          ...prev,
+          email: "Este email já está cadastrado.",
+        }));
+        return;
+      }
+      console.log("⚠️ Aplicando erro genérico:", createClientError);
+      // Erro genérico
+      setErrors(prev => ({
+        ...prev,
+        email: createClientError || "Erro ao criar conta. Tente novamente.",
+      }));
       return;
     }
 
