@@ -69,6 +69,7 @@ export function ClientDetailsForm({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [emailValidated, setEmailValidated] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [didAttemptCreate, setDidAttemptCreate] = useState(false);
 
   const {
     client,
@@ -180,6 +181,54 @@ export function ClientDetailsForm({
     }
   }, [client]);
 
+  useEffect(() => {
+    if (!didAttemptCreate || !createClientError) {
+      return;
+    }
+
+    const error =
+      typeof createClientError === "string" ? createClientError : "";
+
+    if (!error) {
+      return;
+    }
+
+    const phoneDuplicate =
+      error === "PHONE_DUPLICATE" ||
+      error.includes("idx_public_clients_phone") ||
+      (error.includes("duplicate key") && error.includes("phone"));
+    if (phoneDuplicate) {
+      setErrors(prev => ({
+        ...prev,
+        phone:
+          "Este número de telefone já está cadastrado. Use outro número.",
+      }));
+      return;
+    }
+
+    if (
+      error === "EMAIL_DUPLICATE" ||
+      error.includes("idx_public_clients_email") ||
+      (error.includes("duplicate key") && error.includes("email"))
+    ) {
+      setErrors(prev => ({
+        ...prev,
+        email: "Este email já está cadastrado.",
+      }));
+      return;
+    }
+
+    setErrors(prev => {
+      if (prev.email || prev.phone) {
+        return prev;
+      }
+      return {
+        ...prev,
+        phone: error || "Erro ao criar conta. Tente novamente.",
+      };
+    });
+  }, [createClientError, didAttemptCreate]);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -214,10 +263,12 @@ export function ClientDetailsForm({
 
     // Limpar erros anteriores
     setErrors({});
+    setDidAttemptCreate(true);
 
     console.log("🚀 Iniciando criação de conta...");
 
-    const newClient = await createClient({
+    // Chama createClient e aguarda o erro mais recente diretamente
+    const created = await createClient({
       email: clientData.email.trim(),
       name: clientData.name.trim(),
       surname: clientData.surname.trim(),
@@ -225,51 +276,10 @@ export function ClientDetailsForm({
       password: "Senha123!",
     });
 
-    console.log("🔍 Resultado da criação:", newClient);
-    console.log("🔍 Erro do hook:", createClientError);
-
-    if (!newClient) {
-      console.log("❌ Falha ao criar cliente. Analisando erro...");
-      // Verificar se é erro de telefone duplicado
-      const phoneDuplicate =
-        createClientError === "PHONE_DUPLICATE" ||
-        (typeof createClientError === "string" &&
-          (createClientError.includes("idx_public_clients_phone") ||
-            (createClientError.includes("duplicate key") &&
-              createClientError.includes("phone"))));
-      if (phoneDuplicate) {
-        console.log("📞 Aplicando erro: Telefone duplicado");
-        setErrors(prev => ({
-          ...prev,
-          phone:
-            "Este número de telefone já está cadastrado. Use outro número.",
-        }));
-        return;
-      }
-      if (
-        createClientError === "EMAIL_DUPLICATE" ||
-        (typeof createClientError === "string" &&
-          (createClientError.includes("idx_public_clients_email") ||
-            (createClientError.includes("duplicate key") &&
-              createClientError.includes("email"))))
-      ) {
-        console.log("📧 Aplicando erro: Email duplicado");
-        setErrors(prev => ({
-          ...prev,
-          email: "Este email já está cadastrado.",
-        }));
-        return;
-      }
-      console.log("⚠️ Aplicando erro genérico:", createClientError);
-      // Erro genérico
-      setErrors(prev => ({
-        ...prev,
-        email: createClientError || "Erro ao criar conta. Tente novamente.",
-      }));
+    if (!created) {
       return;
     }
 
-    console.log("✅ Cliente criado com sucesso:", newClient);
     await checkEmail(clientData.email.trim());
   };
 
@@ -745,40 +755,29 @@ export function ClientDetailsForm({
 
   // Função auxiliar para renderizar o botão de ação
   function renderActionButton() {
-    if (!emailValidated) {
+    // Se o usuário está logado e tem token, pode finalizar agendamento
+    if (isLoggedIn && clientToken) {
       return (
         <Button
-          onClick={handleEmailValidation}
-          className="w-full"
           size="lg"
-          disabled={isCheckingEmail || !clientData.email.trim()}
+          style={{ backgroundColor: brandColor }}
+          onClick={handleSubmit}
         >
-          {isCheckingEmail ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Verificando email...
-            </>
-          ) : (
-            "Verificar email"
-          )}
+          Finalizar agendamento
         </Button>
       );
     }
 
-    if (!isLoggedIn && clientError === "Cliente não encontrado") {
+    // Se email foi validado e cliente não existe, mostrar botão de criar conta
+    if (emailValidated && clientError === "Cliente não encontrado") {
       return (
         <Button
-          onClick={handleCreateAccount}
-          className="w-full"
           size="lg"
           style={{ backgroundColor: brandColor }}
-          disabled={creatingClient}
+          onClick={handleCreateAccount}
         >
           {creatingClient ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Criando conta...
-            </>
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             "Criar conta"
           )}
@@ -786,20 +785,16 @@ export function ClientDetailsForm({
       );
     }
 
-    if (!isLoggedIn && !clientToken) {
+    // Se email foi validado, cliente existe e não está verificado, mostrar botão de login
+    if (emailValidated && client && !client.verified) {
       return (
         <Button
-          onClick={handleLogin}
-          className="w-full"
           size="lg"
           style={{ backgroundColor: brandColor }}
-          disabled={sendingCode}
+          onClick={handleLogin}
         >
           {sendingCode ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Enviando código...
-            </>
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             "Fazer login"
           )}
@@ -807,14 +802,26 @@ export function ClientDetailsForm({
       );
     }
 
+    // Se email foi validado, cliente existe e está verificado, mostrar botão de login
+    if (emailValidated && client && client.verified && !isLoggedIn) {
+      return (
+        <Button
+          size="lg"
+          style={{ backgroundColor: brandColor }}
+          onClick={handleLogin}
+        >
+          {sendingCode ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            "Fazer login"
+          )}
+        </Button>
+      );
+    }
+
+    // Caso padrão: botão desabilitado
     return (
-      <Button
-        onClick={handleSubmit}
-        className="w-full"
-        size="lg"
-        style={{ backgroundColor: brandColor }}
-        disabled={!clientToken}
-      >
+      <Button size="lg" style={{ backgroundColor: brandColor }} disabled>
         Finalizar agendamento
       </Button>
     );
