@@ -466,7 +466,7 @@ export function ClientDetailsForm({
 
         {/* Resumo do agendamento */}
         <div className="space-y-4">
-          <Card>
+          <Card className="">
             <CardHeader>
               <CardTitle>Resumo do agendamento</CardTitle>
             </CardHeader>
