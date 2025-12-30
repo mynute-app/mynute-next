@@ -119,10 +119,13 @@ export function BookingBreadcrumbs({
   };
 
   const steps = getSteps();
+  const currentStepIndex = steps.findIndex(step => step.current);
+  const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
 
   return (
     <nav aria-label="Progresso do agendamento" className="mb-6">
-      <ol className="flex items-center justify-between">
+      {/* Layout Desktop - Breadcrumbs completo */}
+      <ol className="hidden sm:flex items-center justify-between">
         {steps.map((step, index) => (
           <li
             key={step.id}
@@ -158,10 +161,10 @@ export function BookingBreadcrumbs({
                 )}
               </div>
 
-              {/* Label - Ocultar em mobile se não for atual */}
+              {/* Label */}
               <span
                 className={cn(
-                  "text-sm font-medium transition-colors hidden sm:inline",
+                  "text-sm font-medium transition-colors",
                   step.current && "text-foreground",
                   step.completed && "text-muted-foreground",
                   !step.completed && !step.current && "text-muted-foreground/60"
@@ -169,20 +172,13 @@ export function BookingBreadcrumbs({
               >
                 {step.label}
               </span>
-
-              {/* Label mobile - mostrar apenas se atual */}
-              {step.current && (
-                <span className="text-sm font-medium sm:hidden">
-                  {step.label}
-                </span>
-              )}
             </div>
 
             {/* Separador */}
             {index < steps.length - 1 && (
               <ChevronRight
                 className={cn(
-                  "w-4 h-4 flex-shrink-0 mx-2 hidden sm:block",
+                  "w-4 h-4 flex-shrink-0 mx-2",
                   step.completed ? "text-primary" : "text-muted-foreground/30"
                 )}
                 style={
@@ -195,6 +191,30 @@ export function BookingBreadcrumbs({
           </li>
         ))}
       </ol>
+
+      {/* Layout Mobile - Indicador compacto */}
+      <div className="sm:hidden space-y-2">
+        {/* Título do step atual */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-foreground">
+            {steps[currentStepIndex]?.label}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {currentStepIndex + 1} de {steps.length}
+          </span>
+        </div>
+
+        {/* Barra de progresso */}
+        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary transition-all duration-300 ease-in-out rounded-full"
+            style={{
+              width: `${progressPercentage}%`,
+              backgroundColor: brandColor || undefined,
+            }}
+          />
+        </div>
+      </div>
     </nav>
   );
 }

@@ -17,7 +17,6 @@ interface CreateClientRequest {
   password: string;
 }
 
-
 interface UseCreateClientReturn {
   createdClient: Client | null;
   loading: boolean;
@@ -89,11 +88,45 @@ export function useCreateClient(): UseCreateClientReturn {
 
       console.log("📡 Status:", response.status);
       const responseData = await response.json();
-      console.log("📦 Resposta:", responseData);
+      console.log("📦 Resposta completa:", responseData);
+      console.log("📦 Mensagem:", responseData.message);
+      console.log("📦 Erro:", responseData.error);
 
       if (!response.ok) {
         console.log("❌ Erro ao criar cliente");
-        setError(responseData.message || "Erro ao criar cliente");
+        const errorMessage =
+          responseData.message ||
+          responseData.error ||
+          JSON.stringify(responseData) ||
+          "Erro ao criar cliente";
+
+        console.log("🔍 Analisando erro:", errorMessage);
+
+        // Detectar erros específicos de constraint
+        if (
+          errorMessage.includes("idx_public_clients_phone") ||
+          (errorMessage.includes(
+            "duplicate key value violates unique constraint"
+          ) &&
+            errorMessage.includes("phone")) ||
+          (errorMessage.includes("duplicate") && errorMessage.includes("phone"))
+        ) {
+          console.log("📞 Detectado: Telefone duplicado");
+          setError("PHONE_DUPLICATE");
+        } else if (
+          errorMessage.includes("idx_public_clients_email") ||
+          (errorMessage.includes(
+            "duplicate key value violates unique constraint"
+          ) &&
+            errorMessage.includes("email")) ||
+          (errorMessage.includes("duplicate") && errorMessage.includes("email"))
+        ) {
+          console.log("📧 Detectado: Email duplicado");
+          setError("EMAIL_DUPLICATE");
+        } else {
+          console.log("⚠️ Erro genérico:", errorMessage);
+          setError(errorMessage);
+        }
         return null;
       }
 

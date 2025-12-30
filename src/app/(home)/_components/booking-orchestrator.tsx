@@ -55,15 +55,17 @@ export function BookingOrchestrator({
     currentStep !== BookingStep.SUCCESS;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mb-4">
+      {/* REMOVER STEEPS */}
       {/* Breadcrumbs de progresso */}
-      {showBreadcrumbs && (
+      
+      {/* {showBreadcrumbs && (
         <BookingBreadcrumbs
           currentStep={currentStep}
           firstChoice={firstChoice}
           brandColor={brandColor}
         />
-      )}
+      )} */}
 
       {/* Renderizar step atual */}
       {renderCurrentStep()}

@@ -149,10 +149,10 @@ export function EmployeeSelectionStep({
                       5.0
                     </span>
                   </div>
-                  <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                  <div className="text-xs text-green-600 font-medium flex items-center gap-1">
                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                     Disponível agora
-                  </p>
+                  </div>
                 </div>
               </div>
 
@@ -235,11 +235,11 @@ export function EmployeeSelectionStep({
               <h3 className="text-lg font-semibold mb-2">
                 Nenhum profissional disponível
               </h3>
-              <p className="text-muted-foreground">
+              <div className="text-muted-foreground">
                 Não há profissionais disponíveis para este horário
                 {selectedBranchId && " neste local"}. Tente selecionar outro
                 horário{selectedBranchId && " ou local"}.
-              </p>
+              </div>
             </CardContent>
           </Card>
         )}
