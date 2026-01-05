@@ -5,10 +5,10 @@ import { RegisterFormCompany } from "./_components/form-employee-register";
 
 export default function RegisterEmployeePage() {
   return (
-    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+    <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[100dvh]">
       {/* Coluna da esquerda: Formulário */}
-      <div className="flex items-center justify-center p-6 md:p-10">
-        <div className="w-full max-w-lg">
+      <div className="h-full max-h-[100dvh] overflow-y-auto lg:overflow-y-hidden lg:max-h-none p-4 sm:p-6 md:p-10 py-8 md:py-12 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+        <div className="w-full max-w-lg mx-auto">
           <RegisterFormCompany />
         </div>
       </div>

@@ -55,63 +55,82 @@ export function RegisterFormCompany({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className={cn("flex flex-col gap-2", className)}
+      className={cn("flex flex-col gap-1.5 sm:gap-2", className)}
       {...props}
     >
-      <div className="flex flex-col items-center gap-1 text-center">
-        <h1 className="text-xl font-bold">Crie sua empresa</h1>
-        <p className="text-balance text-sm text-muted-foreground">
+      <div className="flex flex-col items-center gap-0.5 text-center mb-1">
+        <h1 className="text-lg sm:text-xl font-bold">Crie sua empresa</h1>
+        <p className="text-balance text-xs sm:text-sm text-muted-foreground">
           Preencha os dados abaixo para cadastrar sua empresa
         </p>
       </div>
 
-      <div className="grid gap-0.5">
-        <div className="grid gap-1">
-          <Label htmlFor="name">Nome da Empresa</Label>
-          <Input id="name" {...register("name")} placeholder="Waffle Tech" />
+      <div className="grid gap-1 sm:gap-1.5">
+        <div className="grid gap-0.5">
+          <Label htmlFor="name" className="text-xs sm:text-sm">
+            Nome da Empresa
+          </Label>
+          <Input
+            id="name"
+            {...register("name")}
+            placeholder="Waffle Tech"
+            className="h-9"
+          />
           <FormError message={errors.name?.message} />
         </div>
 
-        <div className="flex gap-2">
-          <div className="grid gap-1 flex-1">
-            <Label htmlFor="owner_name">Nome</Label>
+        <div className="flex gap-1.5 sm:gap-2">
+          <div className="grid gap-0.5 flex-1">
+            <Label htmlFor="owner_name" className="text-xs sm:text-sm">
+              Nome
+            </Label>
             <Input
               id="owner_name"
               {...register("owner_name")}
               placeholder="John"
+              className="h-9"
             />
             <FormError message={errors.owner_name?.message} />
           </div>
 
-          <div className="grid gap-1 flex-1">
-            <Label htmlFor="owner_surname">Sobrenome</Label>
+          <div className="grid gap-0.5 flex-1">
+            <Label htmlFor="owner_surname" className="text-xs sm:text-sm">
+              Sobrenome
+            </Label>
             <Input
               id="owner_surname"
               {...register("owner_surname")}
               placeholder="Clark"
+              className="h-9"
             />
             <FormError message={errors.owner_surname?.message} />
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <div className="grid gap-1 flex-1">
-            <Label htmlFor="owner_email">Email</Label>
+        <div className="flex gap-1.5 sm:gap-2">
+          <div className="grid gap-0.5 flex-1">
+            <Label htmlFor="owner_email" className="text-xs sm:text-sm">
+              Email
+            </Label>
             <Input
               id="owner_email"
               type="email"
               {...register("owner_email")}
               placeholder="john.clark@gmail.com"
+              className="h-9"
             />
             <FormError message={errors.owner_email?.message} />
           </div>
 
-          <div className="grid gap-1 flex-1">
-            <Label htmlFor="tax_id">CNPJ</Label>
+          <div className="grid gap-0.5 flex-1">
+            <Label htmlFor="tax_id" className="text-xs sm:text-sm">
+              CNPJ
+            </Label>
             <Input
               id="tax_id"
               placeholder="00.000.000/0000-00"
               {...register("tax_id")}
+              className="h-9"
               onChange={e => {
                 const formatted = formatCNPJ(e.target.value);
                 setValue("tax_id", formatted);
@@ -120,12 +139,15 @@ export function RegisterFormCompany({
             <FormError message={errors.tax_id?.message} />
           </div>
         </div>
-        <div className="grid gap-1">
-          <Label htmlFor="owner_phone">Telefone</Label>
+        <div className="grid gap-0.5">
+          <Label htmlFor="owner_phone" className="text-xs sm:text-sm">
+            Telefone
+          </Label>
           <Input
             id="owner_phone"
             {...register("owner_phone")}
             placeholder="(11) 99999-9999"
+            className="h-9"
             onChange={e => {
               const formatted = formatPhone(e.target.value);
               setValue("owner_phone", formatted);
@@ -134,13 +156,15 @@ export function RegisterFormCompany({
           <FormError message={errors.owner_phone?.message} />
         </div>
 
-        <div className="grid gap-1">
-          <Label htmlFor="owner_time_zone">Fuso Horário</Label>
+        <div className="grid gap-0.5">
+          <Label htmlFor="owner_time_zone" className="text-xs sm:text-sm">
+            Fuso Horário
+          </Label>
           <Select
             onValueChange={value => setValue("owner_time_zone", value)}
             value={timeZone}
           >
-            <SelectTrigger id="owner_time_zone">
+            <SelectTrigger id="owner_time_zone" className="h-9">
               <SelectValue placeholder="Selecione o fuso horário" />
             </SelectTrigger>
             <SelectContent>
@@ -161,37 +185,45 @@ export function RegisterFormCompany({
           </Select>
           <FormError message={errors.owner_time_zone?.message} />
         </div>
-        <div className="flex gap-2">
-          <div className="grid gap-1 flex-1">
-            <Label htmlFor="trading_name">Nome fantasia</Label>
+        <div className="flex gap-1.5 sm:gap-2">
+          <div className="grid gap-0.5 flex-1">
+            <Label htmlFor="trading_name" className="text-xs sm:text-sm">
+              Nome fantasia
+            </Label>
             <Input
               id="trading_name"
               {...register("trading_name")}
               placeholder="Agenda"
+              className="h-9"
             />
             <FormError message={errors.trading_name?.message} />
           </div>
 
-          <div className="grid gap-1 flex-1">
-            <Label htmlFor="start_subdomain">Subdomínio</Label>
+          <div className="grid gap-0.5 flex-1">
+            <Label htmlFor="start_subdomain" className="text-xs sm:text-sm">
+              Subdomínio
+            </Label>
             <Input
               id="start_subdomain"
               {...register("start_subdomain")}
               placeholder="agenda-yourcompany2"
+              className="h-9"
             />
             <FormError message={errors.start_subdomain?.message} />
           </div>
         </div>
         {/* Senha */}
-        <div className="grid gap-1 relative">
-          <Label htmlFor="owner_password">Senha</Label>
+        <div className="grid gap-0.5 relative">
+          <Label htmlFor="owner_password" className="text-xs sm:text-sm">
+            Senha
+          </Label>
           <div className="relative">
             <Input
               id="owner_password"
               type={showPassword ? "text" : "password"}
               {...register("owner_password")}
               placeholder="Crie uma senha forte"
-              className="pr-10"
+              className="pr-10 h-9"
             />
             <button
               type="button"
@@ -199,9 +231,9 @@ export function RegisterFormCompany({
               onClick={() => setShowPassword(prev => !prev)}
             >
               {showPassword ? (
-                <EyeOffIcon className="h-5 w-5" />
+                <EyeOffIcon className="h-4 w-4" />
               ) : (
-                <EyeIcon className="h-5 w-5" />
+                <EyeIcon className="h-4 w-4" />
               )}
             </button>
           </div>
@@ -209,15 +241,17 @@ export function RegisterFormCompany({
         </div>
 
         {/* Confirmar senha */}
-        <div className="grid gap-1 relative">
-          <Label htmlFor="confirmPassword">Confirmar senha</Label>
+        <div className="grid gap-0.5 relative">
+          <Label htmlFor="confirmPassword" className="text-xs sm:text-sm">
+            Confirmar senha
+          </Label>
           <div className="relative">
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               {...register("confirmPassword")}
               placeholder="Repita sua senha"
-              className="pr-10"
+              className="pr-10 h-9"
             />
             <button
               type="button"
@@ -225,21 +259,25 @@ export function RegisterFormCompany({
               onClick={() => setShowConfirmPassword(prev => !prev)}
             >
               {showConfirmPassword ? (
-                <EyeOffIcon className="h-5 w-5" />
+                <EyeOffIcon className="h-4 w-4" />
               ) : (
-                <EyeIcon className="h-5 w-5" />
+                <EyeIcon className="h-4 w-4" />
               )}
             </button>
           </div>
           <FormError message={errors.confirmPassword?.message} />
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full mt-1 h-9"
+          disabled={isSubmitting}
+        >
           {isSubmitting ? "Cadastrando..." : "Cadastrar"}
         </Button>
       </div>
 
-      <div className="text-center text-sm">
+      <div className="text-center text-xs sm:text-sm">
         Já tem uma conta?{" "}
         <Link href="/auth/employee" className="underline underline-offset-4">
           Faça login

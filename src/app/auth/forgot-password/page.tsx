@@ -13,9 +13,9 @@ export default async function ForgotPasswordPage() {
   }
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex flex-1 items-center justify-center">
+    <div className="grid min-h-[100dvh] lg:grid-cols-2">
+      <div className="flex flex-col gap-4 p-4 sm:p-6 md:p-10 py-8 min-h-[100dvh]">
+        <div className="flex flex-1 items-center justify-center py-4">
           <div className="w-full max-w-xs space-y-4">
             <div className="text-center">
               <h2 className="text-lg font-semibold">

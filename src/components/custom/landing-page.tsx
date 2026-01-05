@@ -11,8 +11,8 @@ import Link from "next/link";
 
 export function LandingPage() {
   return (
-    <div className="h-[100dvh] overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-900 dark:via-blue-950 dark:to-slate-800 flex flex-col justify-center">
-      <div className="flex-1 flex flex-col justify-center items-center px-4 py-4 max-h-screen gap-8 md:gap-12">
+    <div className="min-h-[100dvh] max-h-[100dvh] overflow-y-auto lg:overflow-y-hidden lg:max-h-none pb-[calc(0.5rem+env(safe-area-inset-bottom))] bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-900 dark:via-blue-950 dark:to-slate-800 flex flex-col">
+      <div className="flex-1 flex flex-col justify-center items-center px-4 py-6 md:py-8 lg:py-12 gap-6 md:gap-8 lg:gap-12">
         {/* Hero Section */}
         <div className="text-center space-y-3 max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full text-xs font-medium text-blue-700 dark:text-blue-300">
