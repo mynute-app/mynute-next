@@ -6,8 +6,8 @@ import { MdOutlineEmail } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 export default function Page() {
   return (
-    <div className="container grid gap-12 py-8 md:grid-cols-2 md:py-16 mx-auto  place-items-center flex-grow min-h-[80vh] items-center justify-center">
-      <div className="flex flex-col justify-center space-y-6">
+    <div className="container grid gap-8 py-8 md:gap-12 md:grid-cols-2 md:py-16 mx-auto place-items-center">
+      <div className="flex flex-col justify-center space-y-4 sm:space-y-6">
         <h1 className="text-4xl font-bold tracking-tight text-[#1a2b47] md:text-5xl lg:text-6xl">
           Crie seu próprio calendário de reservas
         </h1>
@@ -26,7 +26,6 @@ export default function Page() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-
               <div>
                 <Link href="/auth/employee" passHref>
                   <Button
