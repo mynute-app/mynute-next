@@ -1,9 +1,19 @@
 // middleware.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { auth } from "./auth";
 
-export function middleware(req: NextRequest) {
+const LOGIN_ROUTES = new Set(["/auth/employee", "/auth/login"]);
+
+export const middleware = auth((req) => {
+  if (req.auth && LOGIN_ROUTES.has(req.nextUrl.pathname)) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/dashboard/your-brand";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: ["/((?!_next|favicon.ico).*)"],

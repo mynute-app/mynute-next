@@ -11,7 +11,7 @@ const nextConfig = {
         protocol: "http",
         hostname: "localhost",
         port: "9000",
-        pathname: "/app-local-images/**",
+        pathname: "/**",
       },
       {
         protocol: "https",
