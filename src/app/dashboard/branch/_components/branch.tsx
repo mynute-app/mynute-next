@@ -20,6 +20,7 @@ import { Branch } from "../../../../../types/company";
 import { useGetCompany } from "@/hooks/get-company";
 import { useBranchApi } from "@/hooks/branch/use-branch-api";
 import { BranchWorkScheduleManager } from "@/components/branch-work-schedule/branch-work-schedule-manager";
+import { Button } from "@/components/ui/button";
 
 type BranchForm = Omit<Branch, "id" | "services">;
 
@@ -155,11 +156,11 @@ export default function BranchManager() {
   }, []);
 
   return (
-    <div className="flex flex-col lg:flex-row h-[100vh] border rounded-lg shadow overflow-hidden bg-background">
-      <aside className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r bg-muted/30 overflow-hidden flex flex-col">
-        <div className="p-4 border-b bg-background">
+    <div className="flex flex-col lg:flex-row h-[100vh] border rounded-lg shadow-lg overflow-hidden bg-gradient-to-br from-background to-muted/10">
+      <aside className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r bg-gradient-to-b from-muted/40 via-muted/20 to-muted/10 overflow-hidden flex flex-col">
+        <div className="p-4 border-b bg-background/80 backdrop-blur-sm shadow-sm">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold">Filiais</h2>
+            <h2 className="text-lg font-semibold text-foreground">Filiais</h2>
             <AddAddressDialog onCreate={handleAddAddress} />
           </div>
           <p className="text-xs text-muted-foreground">
@@ -168,7 +169,7 @@ export default function BranchManager() {
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3">
+        <div className="flex-1 overflow-y-auto p-3 bg-gradient-to-b from-transparent via-muted/5 to-transparent">
           {loading ? (
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -191,10 +192,10 @@ export default function BranchManager() {
                 <Card
                   key={branch.id}
                   onClick={() => handleSelectBranch(branch)}
-                  className={`p-3 cursor-pointer transition-all hover:shadow-md ${
+                  className={`p-3 cursor-pointer transition-all duration-200 ${
                     selectedBranch?.id === branch.id
-                      ? "border-primary bg-primary/5 shadow-sm"
-                      : "hover:bg-accent"
+                      ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-md ring-2 ring-primary/20"
+                      : "hover:bg-accent hover:shadow-md hover:scale-[1.02] bg-background/60"
                   }`}
                 >
                   <p className="font-medium text-sm truncate">{branch.name}</p>
@@ -212,11 +213,11 @@ export default function BranchManager() {
       </aside>
 
       {/* Main Content - Detalhes da Filial */}
-      <main className="flex-1 overflow-hidden flex flex-col">
+      <main className="flex-1 overflow-hidden flex flex-col bg-gradient-to-br from-background via-muted/5 to-background">
         {selectedBranch ? (
           <>
             {/* Header da Filial */}
-            <div className="p-6 border-b bg-background">
+            <div className="p-6 border-b bg-background/80 backdrop-blur-md shadow-sm">
               <div className="flex items-start gap-4">
                 <BranchAvatar
                   name={selectedBranch.name}
@@ -252,7 +253,7 @@ export default function BranchManager() {
             {/* Tabs de Conteúdo */}
             <div className="flex-1 overflow-y-auto">
               <Tabs defaultValue="info" className="w-full">
-                <div className="border-b px-6 bg-background sticky top-0 z-10">
+                <div className="border-b px-6 bg-background/95 backdrop-blur-md sticky top-0 z-10 shadow-sm">
                   <TabsList className="w-full justify-start h-12 bg-transparent">
                     <TabsTrigger value="info" className="gap-2">
                       <MapPin className="w-4 h-4" />
@@ -279,9 +280,12 @@ export default function BranchManager() {
                   </TabsList>
                 </div>
 
-                <div className="p-6">
+                <div className="p-4 mb-14">
                   {/* Tab: Informações */}
-                  <TabsContent value="info" className="mt-0">
+                  <TabsContent
+                    value="info"
+                    className="mt-0 animate-in fade-in-50 duration-300"
+                  >
                     <AddressField
                       register={register}
                       watch={watch}
@@ -292,18 +296,24 @@ export default function BranchManager() {
                   </TabsContent>
 
                   {/* Tab: Serviços */}
-                  <TabsContent value="services" className="mt-0">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Briefcase className="w-5 h-5" />
-                          Serviços Disponíveis
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
+                  <TabsContent
+                    value="services"
+                    className="mt-0 animate-in fade-in-50 duration-300"
+                  >
+                    <Card className="border-muted/50 shadow-sm bg-gradient-to-br from-background to-muted/5">
+                      <CardHeader className="border-b border-muted/30 bg-muted/5">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="flex items-center gap-2">
+                            <Briefcase className="w-5 h-5 text-primary" />
+                            Serviços Disponíveis
+                          </CardTitle>
+                          {/* <Button>Vincular Todos</Button> */}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-2">
                           Vincule ou desvincule serviços desta filial
                         </p>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="pt-6">
                         {services.length === 0 ? (
                           <div className="text-center py-8">
                             <Briefcase className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
@@ -312,7 +322,7 @@ export default function BranchManager() {
                             </p>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-6">
                             {services.map(service => (
                               <ServiceCard
                                 key={`${service.id}-${selectedServices.join(
@@ -337,30 +347,40 @@ export default function BranchManager() {
                   </TabsContent>
 
                   {/* Tab: Horários */}
-                  <TabsContent value="schedule" className="mt-0">
-                    <BranchWorkScheduleManager
-                      branchId={selectedBranch.id.toString()}
-                      branchName={selectedBranch.name}
-                      branchData={{
-                        ...selectedBranch,
-                        services: branchServicesData,
-                      }}
-                      initialData={selectedBranch.work_schedule || []}
-                      onSuccess={() => {
-                        toast({
-                          title: "Horários atualizados",
-                          description:
-                            "Os horários da filial foram configurados com sucesso.",
-                        });
-                        handleSelectBranch(selectedBranch);
-                      }}
-                      defaultView="view"
-                    />
+                  <TabsContent
+                    value="schedule"
+                    className="mt-0 animate-in fade-in-50 duration-300"
+                  >
+                    <div className="rounded-lg border border-muted/50 bg-gradient-to-br from-background to-muted/5 p-6 shadow-sm">
+                      <BranchWorkScheduleManager
+                        branchId={selectedBranch.id.toString()}
+                        branchName={selectedBranch.name}
+                        branchData={{
+                          ...selectedBranch,
+                          services: branchServicesData,
+                        }}
+                        initialData={selectedBranch.work_schedule || []}
+                        onSuccess={() => {
+                          toast({
+                            title: "Horários atualizados",
+                            description:
+                              "Os horários da filial foram configurados com sucesso.",
+                          });
+                          handleSelectBranch(selectedBranch);
+                        }}
+                        defaultView="view"
+                      />
+                    </div>
                   </TabsContent>
 
                   {/* Tab: Funcionários */}
-                  <TabsContent value="employees" className="mt-0">
-                    <BranchEmployees employees={selectedBranch.employees} />
+                  <TabsContent
+                    value="employees"
+                    className="mt-0 animate-in fade-in-50 duration-300"
+                  >
+                    <div className="rounded-lg border border-muted/50 bg-gradient-to-br from-background to-muted/5 p-6 shadow-sm">
+                      <BranchEmployees employees={selectedBranch.employees} />
+                    </div>
                   </TabsContent>
                 </div>
               </Tabs>

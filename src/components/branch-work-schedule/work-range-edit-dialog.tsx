@@ -414,31 +414,6 @@ export function WorkRangeEditDialog({
               </Select>
             </div>
           </div>
-
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="services" className="text-right pt-2">
-              <Users className="w-4 h-4 inline mr-1" />
-              Serviços
-            </Label>
-            <div className="col-span-3">
-              {!externalBranchData && loadingBranch ? (
-                <div className="text-sm text-muted-foreground">
-                  Carregando serviços...
-                </div>
-              ) : currentBranchData?.services?.length > 0 ? (
-                <ServiceCheckboxList
-                  services={currentBranchData.services}
-                  selectedServices={formData.services}
-                  onToggle={handleServiceToggle}
-                  onSelectAll={handleSelectAllServices}
-                />
-              ) : (
-                <div className="text-sm text-muted-foreground p-4 border rounded-md text-center">
-                  Nenhum serviço disponível nesta filial
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
         <DialogFooter>
