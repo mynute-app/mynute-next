@@ -17,15 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, Save, X, Users, ChevronUp, ChevronDown } from "lucide-react";
-import { DismissableLayerBranch } from "@radix-ui/react-dismissable-layer";
+import { Clock, Save, X, ChevronUp, ChevronDown } from "lucide-react";
 import { useGetBranch } from "@/hooks/branch/use-get-branch";
 import { useWorkRangeServices } from "@/hooks/workSchedule/use-work-range-services";
 import { useToast } from "@/hooks/use-toast";
@@ -131,15 +125,12 @@ const TimePicker = memo(
     value,
     onChange,
     label,
-    onOpenChange,
   }: {
     value: string;
     onChange: (value: string) => void;
     label: string;
-    onOpenChange?: (open: boolean) => void;
   }) => {
     const [hour, minute] = value.split(":").map(Number);
-    const [isOpen, setIsOpen] = useState(false);
 
     const adjustTime = (type: "hour" | "minute", delta: number) => {
       let newHour = hour;
@@ -164,157 +155,64 @@ const TimePicker = memo(
       onChange(formatted);
     };
 
-    const quickTimes = [
-      "06:00",
-      "07:00",
-      "08:00",
-      "09:00",
-      "12:00",
-      "13:00",
-      "17:00",
-      "18:00",
-      "19:00",
-      "20:00",
-      "22:00",
-    ];
-
-    const handlePopoverOpenChange = useCallback(
-      (open: boolean) => {
-        setIsOpen(open);
-        onOpenChange?.(open);
-      },
-      [onOpenChange]
-    );
-
     return (
-      <Popover
-        open={isOpen}
-        onOpenChange={handlePopoverOpenChange}
-        modal={true}
-      >
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full justify-start text-left font-normal"
-            type="button"
-            onClick={e => {
-              e.stopPropagation();
-            }}
-          >
-            <Clock className="mr-2 h-4 w-4" />
-            {value}
-          </Button>
-        </PopoverTrigger>
-        <DismissableLayerBranch asChild>
-          <PopoverContent
-            className="w-80 p-4 z-[10000]"
-            align="start"
-            onInteractOutside={e => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onEscapeKeyDown={e => {
-              e.preventDefault();
-              handlePopoverOpenChange(false);
-            }}
-          >
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{label}</Label>
-                <div className="flex items-center justify-center gap-2">
-                  <div className="flex flex-col items-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        adjustTime("hour", 1);
-                      }}
-                    >
-                      <ChevronUp className="h-4 w-4" />
-                    </Button>
-                    <div className="flex h-16 w-16 items-center justify-center rounded-lg border-2 border-primary bg-primary/5 text-2xl font-bold">
-                      {String(hour).padStart(2, "0")}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        adjustTime("hour", -1);
-                      }}
-                    >
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <span className="text-2xl font-bold">:</span>
-
-                  <div className="flex flex-col items-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        adjustTime("minute", 15);
-                      }}
-                    >
-                      <ChevronUp className="h-4 w-4" />
-                    </Button>
-                    <div className="flex h-16 w-16 items-center justify-center rounded-lg border-2 border-primary bg-primary/5 text-2xl font-bold">
-                      {String(minute).padStart(2, "0")}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        adjustTime("minute", -15);
-                      }}
-                    >
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-center text-xs text-muted-foreground">
-                  Horas: ±1h | Minutos: ±15min
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">
-                  Horários Rápidos
-                </Label>
-                <div className="grid grid-cols-4 gap-2">
-                  {quickTimes.map(time => (
-                    <Button
-                      key={time}
-                      variant={value === time ? "default" : "outline"}
-                      size="sm"
-                      className="text-xs"
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        onChange(time);
-                      }}
-                    >
-                      {time}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground">{label}</Label>
+        <div className="flex items-center justify-center gap-1.5">
+          <div className="flex flex-col items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              type="button"
+              onClick={() => adjustTime("hour", 1)}
+            >
+              <ChevronUp className="h-3 w-3" />
+            </Button>
+            <div className="flex h-10 w-10 items-center justify-center rounded-md border border-primary/50 bg-primary/5 text-lg font-semibold">
+              {String(hour).padStart(2, "0")}
             </div>
-          </PopoverContent>
-        </DismissableLayerBranch>
-      </Popover>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              type="button"
+              onClick={() => adjustTime("hour", -1)}
+            >
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </div>
+
+          <span className="text-lg font-semibold text-muted-foreground">:</span>
+
+          <div className="flex flex-col items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              type="button"
+              onClick={() => adjustTime("minute", 15)}
+            >
+              <ChevronUp className="h-3 w-3" />
+            </Button>
+            <div className="flex h-10 w-10 items-center justify-center rounded-md border border-primary/50 bg-primary/5 text-lg font-semibold">
+              {String(minute).padStart(2, "0")}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              type="button"
+              onClick={() => adjustTime("minute", -15)}
+            >
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+        <p className="text-center text-[10px] text-muted-foreground">
+          Horas: ±1h | Minutos: ±15min
+        </p>
+      </div>
     );
   }
 );
@@ -341,34 +239,21 @@ export function WorkRangeEditDialog({
   const currentBranchData = externalBranchData || branchData;
   const { toast } = useToast();
   const overlayOpenCountRef = useRef(0);
-  const [hasOpenPopovers, setHasOpenPopovers] = useState(false);
 
   const handleOverlayOpenChange = useCallback((open: boolean) => {
-    if (open) {
-      overlayOpenCountRef.current += 1;
-      setHasOpenPopovers(true);
-    } else {
-      overlayOpenCountRef.current = Math.max(
-        0,
-        overlayOpenCountRef.current - 1
-      );
-      if (overlayOpenCountRef.current === 0) {
-        setHasOpenPopovers(false);
-      }
+    overlayOpenCountRef.current += open ? 1 : -1;
+    if (overlayOpenCountRef.current < 0) {
+      overlayOpenCountRef.current = 0;
     }
   }, []);
 
   const handleDialogOpenChange = useCallback(
     (open: boolean) => {
-      // Só permite fechar o Dialog se:
-      // 1. O usuário está tentando fechar (open === false)
-      // 2. Não há popovers abertos
-      // 3. O counter de overlays está em 0
-      if (!open && !hasOpenPopovers && overlayOpenCountRef.current === 0) {
+      if (!open && overlayOpenCountRef.current === 0) {
         onClose();
       }
     },
-    [onClose, hasOpenPopovers]
+    [onClose]
   );
 
   // Hook de serviços SEM onSuccess para evitar múltiplas revalidações
@@ -530,27 +415,10 @@ export function WorkRangeEditDialog({
     <Dialog open={isOpen} onOpenChange={handleDialogOpenChange} modal={true}>
       <DialogContent
         className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto"
-        onInteractOutside={e => {
-          // Só previne se não houver popovers abertos ou se o clique for dentro de um popover
-          if (hasOpenPopovers || overlayOpenCountRef.current > 0) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }}
-        onPointerDownOutside={e => {
-          if (hasOpenPopovers || overlayOpenCountRef.current > 0) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }}
+        onInteractOutside={e => e.preventDefault()}
+        onPointerDownOutside={e => e.preventDefault()}
         onFocusOutside={e => e.preventDefault()}
-        onEscapeKeyDown={e => {
-          if (hasOpenPopovers || overlayOpenCountRef.current > 0) {
-            e.preventDefault();
-          } else {
-            onClose();
-          }
-        }}
+        onEscapeKeyDown={e => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -600,35 +468,6 @@ export function WorkRangeEditDialog({
               )}
             </div>
           </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="start_time" className="text-right">
-              Início
-            </Label>
-            <div className="col-span-3">
-              <TimePicker
-                value={formData.start_time}
-                onChange={value => updateField("start_time", value)}
-                label="Horário de Início"
-                onOpenChange={handleOverlayOpenChange}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="end_time" className="text-right">
-              Fim
-            </Label>
-            <div className="col-span-3">
-              <TimePicker
-                value={formData.end_time}
-                onChange={value => updateField("end_time", value)}
-                label="Horário de Término"
-                onOpenChange={handleOverlayOpenChange}
-              />
-            </div>
-          </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="time_zone" className="text-right">
               Fuso Horário
@@ -650,6 +489,32 @@ export function WorkRangeEditDialog({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="start_time" className="text-right">
+              Início
+            </Label>
+            <div className="col-span-3">
+              <TimePicker
+                value={formData.start_time}
+                onChange={value => updateField("start_time", value)}
+                label="Horário de Início"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="end_time" className="text-right">
+              Fim
+            </Label>
+            <div className="col-span-3">
+              <TimePicker
+                value={formData.end_time}
+                onChange={value => updateField("end_time", value)}
+                label="Horário de Término"
+              />
             </div>
           </div>
         </div>
