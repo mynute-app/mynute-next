@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useEffect, useCallback, useRef, memo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,13 +17,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, Save, X, Users } from "lucide-react";
+import { Clock, Save, X, Users, ChevronUp, ChevronDown } from "lucide-react";
+import { DismissableLayerBranch } from "@radix-ui/react-dismissable-layer";
 import { useGetBranch } from "@/hooks/branch/use-get-branch";
 import { useWorkRangeServices } from "@/hooks/workSchedule/use-work-range-services";
 import { useToast } from "@/hooks/use-toast";
-import { DIAS_SEMANA, HORARIOS, TIMEZONES } from "./constants";
+import { DIAS_SEMANA, TIMEZONES } from "./constants";
 
 interface WorkRangeEditDialogProps {
   isOpen: boolean;
@@ -120,6 +126,201 @@ const ServiceCheckboxList = memo(
 
 ServiceCheckboxList.displayName = "ServiceCheckboxList";
 
+const TimePicker = memo(
+  ({
+    value,
+    onChange,
+    label,
+    onOpenChange,
+  }: {
+    value: string;
+    onChange: (value: string) => void;
+    label: string;
+    onOpenChange?: (open: boolean) => void;
+  }) => {
+    const [hour, minute] = value.split(":").map(Number);
+    const [isOpen, setIsOpen] = useState(false);
+
+    const adjustTime = (type: "hour" | "minute", delta: number) => {
+      let newHour = hour;
+      let newMinute = minute;
+
+      if (type === "hour") {
+        newHour = (hour + delta + 24) % 24;
+      } else {
+        newMinute = minute + delta;
+        if (newMinute >= 60) {
+          newMinute = 0;
+          newHour = (hour + 1) % 24;
+        } else if (newMinute < 0) {
+          newMinute = 45;
+          newHour = (hour - 1 + 24) % 24;
+        }
+      }
+
+      const formatted = `${String(newHour).padStart(2, "0")}:${String(
+        newMinute
+      ).padStart(2, "0")}`;
+      onChange(formatted);
+    };
+
+    const quickTimes = [
+      "06:00",
+      "07:00",
+      "08:00",
+      "09:00",
+      "12:00",
+      "13:00",
+      "17:00",
+      "18:00",
+      "19:00",
+      "20:00",
+      "22:00",
+    ];
+
+    const handlePopoverOpenChange = useCallback(
+      (open: boolean) => {
+        setIsOpen(open);
+        onOpenChange?.(open);
+      },
+      [onOpenChange]
+    );
+
+    return (
+      <Popover
+        open={isOpen}
+        onOpenChange={handlePopoverOpenChange}
+        modal={true}
+      >
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full justify-start text-left font-normal"
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+            }}
+          >
+            <Clock className="mr-2 h-4 w-4" />
+            {value}
+          </Button>
+        </PopoverTrigger>
+        <DismissableLayerBranch asChild>
+          <PopoverContent
+            className="w-80 p-4 z-[10000]"
+            align="start"
+            onInteractOutside={e => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onEscapeKeyDown={e => {
+              e.preventDefault();
+              handlePopoverOpenChange(false);
+            }}
+          >
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">{label}</Label>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="flex flex-col items-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        adjustTime("hour", 1);
+                      }}
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                    <div className="flex h-16 w-16 items-center justify-center rounded-lg border-2 border-primary bg-primary/5 text-2xl font-bold">
+                      {String(hour).padStart(2, "0")}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        adjustTime("hour", -1);
+                      }}
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <span className="text-2xl font-bold">:</span>
+
+                  <div className="flex flex-col items-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        adjustTime("minute", 15);
+                      }}
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                    <div className="flex h-16 w-16 items-center justify-center rounded-lg border-2 border-primary bg-primary/5 text-2xl font-bold">
+                      {String(minute).padStart(2, "0")}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        adjustTime("minute", -15);
+                      }}
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  Horas: ±1h | Minutos: ±15min
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">
+                  Horários Rápidos
+                </Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {quickTimes.map(time => (
+                    <Button
+                      key={time}
+                      variant={value === time ? "default" : "outline"}
+                      size="sm"
+                      className="text-xs"
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        onChange(time);
+                      }}
+                    >
+                      {time}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </PopoverContent>
+        </DismissableLayerBranch>
+      </Popover>
+    );
+  }
+);
+
+TimePicker.displayName = "TimePicker";
+
 export function WorkRangeEditDialog({
   isOpen,
   onClose,
@@ -139,6 +340,36 @@ export function WorkRangeEditDialog({
 
   const currentBranchData = externalBranchData || branchData;
   const { toast } = useToast();
+  const overlayOpenCountRef = useRef(0);
+  const [hasOpenPopovers, setHasOpenPopovers] = useState(false);
+
+  const handleOverlayOpenChange = useCallback((open: boolean) => {
+    if (open) {
+      overlayOpenCountRef.current += 1;
+      setHasOpenPopovers(true);
+    } else {
+      overlayOpenCountRef.current = Math.max(
+        0,
+        overlayOpenCountRef.current - 1
+      );
+      if (overlayOpenCountRef.current === 0) {
+        setHasOpenPopovers(false);
+      }
+    }
+  }, []);
+
+  const handleDialogOpenChange = useCallback(
+    (open: boolean) => {
+      // Só permite fechar o Dialog se:
+      // 1. O usuário está tentando fechar (open === false)
+      // 2. Não há popovers abertos
+      // 3. O counter de overlays está em 0
+      if (!open && !hasOpenPopovers && overlayOpenCountRef.current === 0) {
+        onClose();
+      }
+    },
+    [onClose, hasOpenPopovers]
+  );
 
   // Hook de serviços SEM onSuccess para evitar múltiplas revalidações
   // A revalidação será feita UMA VEZ ao final do handleSave
@@ -296,8 +527,31 @@ export function WorkRangeEditDialog({
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={handleDialogOpenChange} modal={true}>
+      <DialogContent
+        className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto"
+        onInteractOutside={e => {
+          // Só previne se não houver popovers abertos ou se o clique for dentro de um popover
+          if (hasOpenPopovers || overlayOpenCountRef.current > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
+        onPointerDownOutside={e => {
+          if (hasOpenPopovers || overlayOpenCountRef.current > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
+        onFocusOutside={e => e.preventDefault()}
+        onEscapeKeyDown={e => {
+          if (hasOpenPopovers || overlayOpenCountRef.current > 0) {
+            e.preventDefault();
+          } else {
+            onClose();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clock className="w-5 h-5" />
@@ -327,6 +581,7 @@ export function WorkRangeEditDialog({
                   onValueChange={value =>
                     updateField("weekday", parseInt(value))
                   }
+                  onOpenChange={handleOverlayOpenChange}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -351,21 +606,12 @@ export function WorkRangeEditDialog({
               Início
             </Label>
             <div className="col-span-3">
-              <Select
+              <TimePicker
                 value={formData.start_time}
-                onValueChange={value => updateField("start_time", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="z-[10000]">
-                  {HORARIOS.map(time => (
-                    <SelectItem key={time} value={time}>
-                      {time}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={value => updateField("start_time", value)}
+                label="Horário de Início"
+                onOpenChange={handleOverlayOpenChange}
+              />
             </div>
           </div>
 
@@ -374,21 +620,12 @@ export function WorkRangeEditDialog({
               Fim
             </Label>
             <div className="col-span-3">
-              <Select
+              <TimePicker
                 value={formData.end_time}
-                onValueChange={value => updateField("end_time", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="z-[10000]">
-                  {HORARIOS.map(time => (
-                    <SelectItem key={time} value={time}>
-                      {time}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={value => updateField("end_time", value)}
+                label="Horário de Término"
+                onOpenChange={handleOverlayOpenChange}
+              />
             </div>
           </div>
 
@@ -400,6 +637,7 @@ export function WorkRangeEditDialog({
               <Select
                 value={formData.time_zone}
                 onValueChange={value => updateField("time_zone", value)}
+                onOpenChange={handleOverlayOpenChange}
               >
                 <SelectTrigger>
                   <SelectValue />
