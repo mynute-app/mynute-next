@@ -282,9 +282,9 @@ export function AppointmentDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[650px] max-h-[85vh]">
+      <DialogContent className="max-w-[95vw] sm:max-w-[650px] max-h-[90vh] sm:max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle className="text-2xl">
+          <DialogTitle className="text-xl sm:text-2xl pr-8">
             {isEditing ? "Editar Agendamento" : "Detalhes do Agendamento"}
           </DialogTitle>
           <DialogDescription>
@@ -294,8 +294,8 @@ export function AppointmentDetailsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(85vh-200px)]">
-          <div className="grid gap-6 py-4 pr-4">
+        <ScrollArea className="max-h-[calc(90vh-200px)] sm:max-h-[calc(85vh-200px)]">
+          <div className="grid gap-4 sm:gap-6 py-3 sm:py-4 pr-2 sm:pr-4">
             {/* Status */}
             <div className="flex items-center gap-2">
               {appointment.cancelled ? (
@@ -523,7 +523,7 @@ export function AppointmentDetailsDialog({
                 <h3 className="font-semibold text-sm text-muted-foreground">
                   Informações Adicionais
                 </h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                   <div>
                     <span className="text-muted-foreground">Timezone:</span>
                     <p className="font-medium">{appointment.time_zone}</p>

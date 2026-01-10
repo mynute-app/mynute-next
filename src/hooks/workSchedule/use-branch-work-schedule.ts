@@ -35,24 +35,10 @@ export const useBranchWorkSchedule = (props?: UseBranchWorkScheduleProps) => {
     setSuccess(false);
     setError(null);
 
-    console.log(
-      "🚀 Hook Branch - Iniciando createBranchWorkSchedule para branchId:",
-      branchId
-    );
-    console.log(
-      "📋 Hook Branch - WorkScheduleData:",
-      JSON.stringify(workScheduleData, null, 2)
-    );
-
     try {
       const payload = {
         work_schedule: workScheduleData,
       };
-
-      console.log(
-        "📤 Hook Branch - Payload que será enviado:",
-        JSON.stringify(payload, null, 2)
-      );
 
       const response = await fetch(`/api/branch/${branchId}/work_schedule`, {
         method: "POST",
@@ -104,11 +90,6 @@ export const useBranchWorkSchedule = (props?: UseBranchWorkScheduleProps) => {
     setError(null);
     setData(null);
 
-    console.log(
-      "📥 Hook Branch - Iniciando getBranchWorkSchedule para branchId:",
-      branchId
-    );
-
     try {
       const response = await fetch(`/api/branch/${branchId}/work_schedule`, {
         method: "GET",
@@ -126,9 +107,6 @@ export const useBranchWorkSchedule = (props?: UseBranchWorkScheduleProps) => {
 
       const result = await response.json();
 
-      console.log("✅ Hook Branch - Dados recebidos:", result);
-
-      // Normalizar os dados - o backend retorna { branch_work_ranges: [...] }
       let workScheduleRanges = [];
 
       if (
@@ -144,14 +122,11 @@ export const useBranchWorkSchedule = (props?: UseBranchWorkScheduleProps) => {
 
       setData(workScheduleRanges);
 
-      console.log("📋 Hook Branch - Work schedule ranges:", workScheduleRanges);
-
       return workScheduleRanges;
     } catch (err: any) {
       const errorMessage = err.message || "Erro interno do servidor";
       setError(errorMessage);
 
-      // Não mostrar toast para erro de "not found" - é normal não ter work_schedule
       if (
         !errorMessage.toLowerCase().includes("not found") &&
         !errorMessage.toLowerCase().includes("não encontrado")

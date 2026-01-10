@@ -1,17 +1,10 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { UseFormRegister, UseFormWatch } from "react-hook-form";
-import { Trash2 } from "lucide-react";
-import { TfiLocationPin } from "react-icons/tfi";
+import { Trash2, MapPin, Save } from "lucide-react";
 import { useAddressField } from "@/hooks/branch/use-address-field";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Branch {
   id: number;
@@ -42,7 +35,6 @@ export function AddressField({
   index,
   onDelete,
 }: AddressFieldProps) {
-  // Validação de segurança: se não tiver branch ou ID, não renderiza nada
   if (!branch || !branch.id) {
     console.warn("AddressField: branch ou branch.id está undefined", {
       branch,
@@ -55,81 +47,144 @@ export function AddressField({
     useAddressField(branch, index, onDelete, watch);
 
   return (
-    <div>
-      <Accordion type="single" collapsible>
-        <AccordionItem value={`branch-${index}`}>
-          <AccordionTrigger className="text-base font-medium flex items-center gap-3 px-2 py-2 hover:no-underline hover:bg-muted rounded-md transition">
-            <div className="text-foreground flex justify-center items-center gap-3">
-              <TfiLocationPin />
-              {branch.name}
-            </div>
-          </AccordionTrigger>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MapPin className="w-5 h-5" />
+          Endereço da Filial
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {/* Nome da Filial */}
+          <div>
+            <Label
+              htmlFor={`branches.${index}.name`}
+              className="text-sm font-medium"
+            >
+              Nome da Filial
+            </Label>
+            <Input
+              id={`branches.${index}.name`}
+              placeholder="Nome da filial"
+              {...register(`branches.${index}.name`)}
+              defaultValue={branch.name || ""}
+              className="mt-1.5"
+            />
+          </div>
 
-          <AccordionContent>
-            <div className="p-4 rounded-md bg-gray-50 border">
-              <div className="grid grid-cols-12 gap-4">
-                {/* Campo Nome da Filial */}
-                <div className="col-span-12">
-                  <Label htmlFor={`branches.${index}.name`}>
-                    Nome da Filial
+          {/* Seção: CEP e Localização */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              Localização
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <Label
+                  htmlFor={`branches.${index}.zip_code`}
+                  className="text-sm"
+                >
+                  CEP
+                </Label>
+                <Input
+                  id={`branches.${index}.zip_code`}
+                  placeholder="00000-000"
+                  {...register(`branches.${index}.zip_code`)}
+                  defaultValue={branch.zip_code || ""}
+                  className="mt-1.5"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor={`branches.${index}.city`} className="text-sm">
+                  Cidade
+                </Label>
+                <Input
+                  id={`branches.${index}.city`}
+                  placeholder="Cidade"
+                  {...register(`branches.${index}.city`)}
+                  defaultValue={branch.city || ""}
+                  className="mt-1.5"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor={`branches.${index}.state`} className="text-sm">
+                  Estado
+                </Label>
+                <Input
+                  id={`branches.${index}.state`}
+                  placeholder="Estado"
+                  {...register(`branches.${index}.state`)}
+                  defaultValue={branch.state || ""}
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Seção: Endereço Completo */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              Endereço Completo
+            </h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="sm:col-span-3">
+                  <Label
+                    htmlFor={`branches.${index}.street`}
+                    className="text-sm"
+                  >
+                    Rua
                   </Label>
                   <Input
-                    id={`branches.${index}.name`}
-                    placeholder="Nome da filial"
-                    {...register(`branches.${index}.name`)}
-                    defaultValue={branch.name || ""}
-                    className="bg-white shadow"
-                  />
-                </div>
-
-                <div className="col-span-4">
-                  <Label htmlFor={`branches.${index}.zip_code`}>CEP</Label>
-                  <Input
-                    id={`branches.${index}.zip_code`}
-                    placeholder="00000-000"
-                    {...register(`branches.${index}.zip_code`)}
-                    defaultValue={branch.zip_code || ""}
-                    className="bg-white shadow"
-                  />
-                </div>
-
-                <div className="col-span-6">
-                  <Label htmlFor={`branches.${index}.street`}>Rua</Label>
-                  <Input
                     id={`branches.${index}.street`}
-                    placeholder="Rua"
+                    placeholder="Nome da rua"
                     {...register(`branches.${index}.street`)}
                     defaultValue={branch.street || ""}
-                    className="bg-white shadow"
+                    className="mt-1.5"
                   />
                 </div>
 
-                <div className="col-span-2">
-                  <Label htmlFor={`branches.${index}.number`}>Número</Label>
+                <div>
+                  <Label
+                    htmlFor={`branches.${index}.number`}
+                    className="text-sm"
+                  >
+                    Número
+                  </Label>
                   <Input
                     id={`branches.${index}.number`}
-                    placeholder="Número"
+                    placeholder="Nº"
                     {...register(`branches.${index}.number`)}
                     defaultValue={branch.number || ""}
-                    className="bg-white shadow"
+                    className="mt-1.5"
                   />
                 </div>
+              </div>
 
-                <div className="col-span-4">
-                  <Label htmlFor={`branches.${index}.complement`}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <Label
+                    htmlFor={`branches.${index}.complement`}
+                    className="text-sm"
+                  >
                     Complemento
                   </Label>
                   <Input
                     id={`branches.${index}.complement`}
-                    placeholder="Apt, sala, etc."
+                    placeholder="Apt, sala, etc. (opcional)"
                     {...register(`branches.${index}.complement`)}
                     defaultValue={branch.complement || ""}
-                    className="bg-white shadow"
+                    className="mt-1.5"
                   />
                 </div>
 
-                <div className="col-span-4">
-                  <Label htmlFor={`branches.${index}.neighborhood`}>
+                <div>
+                  <Label
+                    htmlFor={`branches.${index}.neighborhood`}
+                    className="text-sm"
+                  >
                     Bairro
                   </Label>
                   <Input
@@ -137,71 +192,52 @@ export function AddressField({
                     placeholder="Bairro"
                     {...register(`branches.${index}.neighborhood`)}
                     defaultValue={branch.neighborhood || ""}
-                    className="bg-white shadow"
+                    className="mt-1.5"
                   />
                 </div>
 
-                <div className="col-span-4">
-                  <Label htmlFor={`branches.${index}.city`}>Cidade</Label>
-                  <Input
-                    id={`branches.${index}.city`}
-                    placeholder="Cidade"
-                    {...register(`branches.${index}.city`)}
-                    defaultValue={branch.city || ""}
-                    className="bg-white shadow"
-                  />
-                </div>
-
-                <div className="col-span-4">
-                  <Label htmlFor={`branches.${index}.state`}>Estado</Label>
-                  <Input
-                    id={`branches.${index}.state`}
-                    placeholder="Estado"
-                    {...register(`branches.${index}.state`)}
-                    defaultValue={branch.state || ""}
-                    className="bg-white shadow"
-                  />
-                </div>
-
-                <div className="col-span-4">
-                  <Label htmlFor={`branches.${index}.country`}>País</Label>
+                <div>
+                  <Label
+                    htmlFor={`branches.${index}.country`}
+                    className="text-sm"
+                  >
+                    País
+                  </Label>
                   <Input
                     id={`branches.${index}.country`}
                     placeholder="País"
                     {...register(`branches.${index}.country`)}
                     defaultValue={branch.country || ""}
-                    className="bg-white shadow"
+                    className="mt-1.5"
                   />
-                </div>
-
-                {/* Botões de Ação */}
-                <div className="col-span-12 flex justify-end gap-2 mt-4">
-                  <Button
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="bg-red-500 text-white hover:bg-red-700 flex items-center gap-2"
-                  >
-                    <Trash2 size={16} />
-                    {isDeleting ? "Excluindo..." : "Excluir"}
-                  </Button>
-
-                  <Button
-                    onClick={handleSave}
-                    disabled={!hasChanges || isSaving}
-                    className={`rounded-md px-4 py-2 ${
-                      hasChanges
-                        ? "bg-primary text-white hover:bg-blue-950"
-                        : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                    }`}
-                  >
-                    {isSaving ? "Salvando..." : "Salvar"}
-                  </Button>
                 </div>
               </div>
             </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </div>
+          </div>
+
+          {/* Botões de Ação */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t">
+            <Button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              variant="destructive"
+              className="w-full sm:w-auto"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {isDeleting ? "Excluindo..." : "Excluir Filial"}
+            </Button>
+
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges || isSaving}
+              className="w-full sm:w-auto"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? "Salvando..." : "Salvar Alterações"}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

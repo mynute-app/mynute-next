@@ -5,6 +5,7 @@ import { CalendarToolbar } from "./calendar-toolbar";
 import { CalendarHeader } from "./calendar-header";
 import { WeekView } from "./week-view";
 import { MonthView } from "./month-view";
+import { DayView } from "./day-view";
 import { useBranchAppointments } from "@/hooks/branch/use-branch-appointments";
 import { useEmployeeAppointments } from "@/hooks/employee/use-employee-appointments";
 import { useGetCompany } from "@/hooks/get-company";
@@ -57,22 +58,8 @@ export function CalendarView() {
     }
   }, [company, selectedBranchId]);
 
-  // Calcular datas de início e fim da semana para filtro da API (apenas para visualização semanal)
-  const getWeekDates = React.useMemo(() => {
-    if (viewType !== "week") {
-      return { startDate: undefined, endDate: undefined };
-    }
-
-    // Calcular o início da semana (domingo)
-    const startOfWeek = new Date(currentDate);
-    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    // Calcular o fim da semana (sábado)
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
-
+  // Calcular datas de início e fim para filtro da API
+  const getDateRange = React.useMemo(() => {
     // Formatar para DD/MM/YYYY
     const formatDate = (date: Date) => {
       const day = date.getDate().toString().padStart(2, "0");
@@ -81,10 +68,38 @@ export function CalendarView() {
       return `${day}/${month}/${year}`;
     };
 
-    return {
-      startDate: formatDate(startOfWeek),
-      endDate: formatDate(endOfWeek),
-    };
+    if (viewType === "day") {
+      // Para visualização de dia, apenas o dia atual
+      const dayStart = new Date(currentDate);
+      dayStart.setHours(0, 0, 0, 0);
+
+      const dayEnd = new Date(currentDate);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      return {
+        startDate: formatDate(dayStart),
+        endDate: formatDate(dayEnd),
+      };
+    }
+
+    if (viewType === "week") {
+      // Calcular o início da semana (domingo)
+      const startOfWeek = new Date(currentDate);
+      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      // Calcular o fim da semana (sábado)
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+
+      return {
+        startDate: formatDate(startOfWeek),
+        endDate: formatDate(endOfWeek),
+      };
+    }
+
+    return { startDate: undefined, endDate: undefined };
   }, [currentDate, viewType]);
 
   // Hook para buscar agendamentos da filial (quando não há filtro de funcionário)
@@ -100,8 +115,8 @@ export function CalendarView() {
     branchId: selectedBranchId,
     page: 1,
     pageSize: 100,
-    startDate: getWeekDates.startDate,
-    endDate: getWeekDates.endDate,
+    startDate: getDateRange.startDate,
+    endDate: getDateRange.endDate,
     enabled: !!selectedBranchId && !filters.employeeId, // Desabilitar se houver filtro de funcionário
   });
 
@@ -118,8 +133,8 @@ export function CalendarView() {
     employeeId: filters.employeeId || "",
     page: 1,
     pageSize: 100,
-    startDate: getWeekDates.startDate,
-    endDate: getWeekDates.endDate,
+    startDate: getDateRange.startDate,
+    endDate: getDateRange.endDate,
     branchId: selectedBranchId,
     serviceId: filters.serviceId || undefined,
     enabled: !!filters.employeeId, // Habilitar apenas se houver filtro de funcionário
@@ -186,12 +201,14 @@ export function CalendarView() {
 
   // Log para debug
   React.useEffect(() => {
-    if (viewType === "week" && getWeekDates.startDate) {
-      console.log("📅 Semana atual - Filtros de data:");
-      console.log("  Start Date:", getWeekDates.startDate);
-      console.log("  End Date:", getWeekDates.endDate);
+    if (getDateRange.startDate) {
+      console.log(
+        `📅 ${viewType === "day" ? "Dia" : "Semana"} atual - Filtros de data:`
+      );
+      console.log("  Start Date:", getDateRange.startDate);
+      console.log("  End Date:", getDateRange.endDate);
     }
-  }, [getWeekDates, viewType]);
+  }, [getDateRange, viewType]);
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -250,6 +267,19 @@ export function CalendarView() {
       <div className="flex-1 overflow-hidden">
         {viewType === "week" && (
           <WeekView
+            currentDate={currentDate}
+            onDateChange={handleDateChange}
+            appointments={appointments}
+            clientInfo={clientInfo}
+            serviceInfo={serviceInfo}
+            employeeInfo={employeeInfo}
+            isLoading={isLoading}
+            services={company?.services || []}
+            onAppointmentClick={handleAppointmentClick}
+          />
+        )}
+        {viewType === "day" && (
+          <DayView
             currentDate={currentDate}
             onDateChange={handleDateChange}
             appointments={appointments}
