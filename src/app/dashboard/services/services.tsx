@@ -48,6 +48,11 @@ export const ServicesPage = () => {
     return ["Todos", ...Array.from(new Set(uniqueCategories))];
   }, [services]);
 
+  const categoryOptions = useMemo(
+    () => categories.filter(category => category !== "Todos"),
+    [categories]
+  );
+
   const filteredServices = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     return services.filter(service => {
@@ -86,10 +91,10 @@ export const ServicesPage = () => {
 
   const formatPrice = (price: Service["price"]) => {
     if (price === undefined || price === null || price === "") {
-      return "Pre\u00e7o n\u00e3o informado";
+      return "Preço não informado";
     }
     const numericPrice = Number(price);
-    if (Number.isNaN(numericPrice)) return "Pre\u00e7o n\u00e3o informado";
+    if (Number.isNaN(numericPrice)) return "Preço não informado";
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
@@ -98,7 +103,7 @@ export const ServicesPage = () => {
 
   const formatDuration = (duration: Service["duration"]) => {
     if (duration === undefined || duration === null || duration === "") {
-      return "Dura\u00e7\u00e3o n\u00e3o informada";
+      return "Duração não informada";
     }
     const numericDuration = Number(duration);
     if (!Number.isNaN(numericDuration) && numericDuration > 0) {
@@ -107,14 +112,14 @@ export const ServicesPage = () => {
     if (typeof duration === "string") {
       return duration;
     }
-    return "Dura\u00e7\u00e3o n\u00e3o informada";
+    return "Duração não informada";
   };
 
   const hasFilters =
     searchTerm.trim().length > 0 || selectedCategory !== "Todos";
 
   return (
-    <div className="services-page flex h-full flex-1 flex-col bg-background text-foreground">
+    <div className="services-page flex min-h-0 flex-1 flex-col bg-background text-foreground">
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="mx-auto w-full max-w-7xl p-6 lg:p-8">
           <div className="space-y-6 pt-12 lg:pt-0">
@@ -139,7 +144,7 @@ export const ServicesPage = () => {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar servi\u00e7o..."
+                    placeholder="Buscar serviço..."
                     className="pl-9 input-focus"
                     value={searchTerm}
                     onChange={event => setSearchTerm(event.target.value)}
@@ -243,6 +248,14 @@ export const ServicesPage = () => {
                         ) : (
                           <Briefcase className="h-8 w-8 text-muted-foreground" />
                         )}
+                        {service.hidden && (
+                          <Badge
+                            variant="destructive"
+                            className="absolute right-3 top-3"
+                          >
+                            Inativo
+                          </Badge>
+                        )}
                       </div>
 
                       <div className="p-5">
@@ -334,6 +347,7 @@ export const ServicesPage = () => {
         isOpen={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onCreate={handleAddService}
+        categories={categoryOptions}
       />
 
       {editingService && (
