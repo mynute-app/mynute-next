@@ -360,7 +360,9 @@ export const ServicesPage = () => {
               : "",
             price: editingService.price ? String(editingService.price) : "",
             imageUrl: editingService.design?.images?.profile?.url,
+            category: editingService.category,
           }}
+          categories={categoryOptions}
           onOpenChange={open => {
             if (!open) {
               setEditingService(null);
