@@ -138,7 +138,9 @@ body {
 
 @layer base {
   .services-page,
-  .services-dialog {
+  .services-dialog,
+  .team-page,
+  .team-dialog {
     --background: 210 20% 98%;
     --foreground: 215 25% 15%;
     --card: 0 0% 100%;
@@ -184,73 +186,92 @@ body {
 }
 
 @layer components {
-  .services-page .card-hover {
+  .services-page .card-hover,
+  .team-page .card-hover {
     @apply transition-all duration-300 ease-out;
   }
 
-  .services-page .card-hover:hover {
+  .services-page .card-hover:hover,
+  .team-page .card-hover:hover {
     @apply -translate-y-1;
     box-shadow: var(--shadow-lg);
   }
 
   .services-page .btn-gradient,
-  .services-dialog .btn-gradient {
+  .services-dialog .btn-gradient,
+  .team-page .btn-gradient,
+  .team-dialog .btn-gradient {
     background: var(--gradient-primary);
     @apply text-white font-medium transition-all duration-300;
   }
 
   .services-page .btn-gradient:hover,
-  .services-dialog .btn-gradient:hover {
+  .services-dialog .btn-gradient:hover,
+  .team-page .btn-gradient:hover,
+  .team-dialog .btn-gradient:hover {
     @apply opacity-90 scale-[1.02];
     box-shadow: var(--shadow-glow);
   }
 
-  .services-page .page-header {
+  .services-page .page-header,
+  .team-page .page-header {
     @apply mb-8;
   }
 
-  .services-page .page-title {
+  .services-page .page-title,
+  .team-page .page-title {
     @apply text-2xl font-bold text-foreground tracking-tight;
   }
 
-  .services-page .page-description {
+  .services-page .page-description,
+  .team-page .page-description {
     @apply text-muted-foreground mt-1;
   }
 
-  .services-page .input-focus {
+  .services-page .input-focus,
+  .team-page .input-focus {
     @apply focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
   }
 
-  .services-page .text-success {
+  .services-page .text-success,
+  .team-page .text-success {
     color: hsl(var(--success));
   }
 }
 
 @layer utilities {
-  .services-page .animate-in {
+  .services-page .animate-in,
+  .team-page .animate-in {
     animation: animateIn 0.3s ease-out forwards;
   }
 
-  .services-page .stagger-children > * {
+  .services-page .stagger-children > *,
+  .team-page .stagger-children > * {
     animation: animateIn 0.3s ease-out forwards;
   }
 
-  .services-page .stagger-children > *:nth-child(1) {
+  .services-page .stagger-children > *:nth-child(1),
+  .team-page .stagger-children > *:nth-child(1) {
     animation-delay: 0ms;
   }
-  .services-page .stagger-children > *:nth-child(2) {
+  .services-page .stagger-children > *:nth-child(2),
+  .team-page .stagger-children > *:nth-child(2) {
     animation-delay: 50ms;
   }
-  .services-page .stagger-children > *:nth-child(3) {
+  .services-page .stagger-children > *:nth-child(3),
+  .team-page .stagger-children > *:nth-child(3) {
     animation-delay: 100ms;
   }
-  .services-page .stagger-children > *:nth-child(4) {
+  .services-page .stagger-children > *:nth-child(4),
+  .team-page .stagger-children > *:nth-child(4) {
     animation-delay: 150ms;
   }
-  .services-page .stagger-children > *:nth-child(5) {
+  .services-page .stagger-children > *:nth-child(5),
+  .team-page .stagger-children > *:nth-child(5) {
     animation-delay: 200ms;
   }
-  .services-page .stagger-children > *:nth-child(6) {
+  .services-page .stagger-children > *:nth-child(6),
+  .team-page .stagger-children > *:nth-child(6) {
     animation-delay: 250ms;
   }
 

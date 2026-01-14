@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookingHeader } from "@/components/booking/BookingHeader";
 import { BookingProgress } from "@/components/booking/BookingProgress";
+import { BranchSelection } from "@/components/booking/BranchSelection";
 import { ServiceSelection } from "@/components/booking/ServiceSelection";
 import { StaffSelection } from "@/components/booking/StaffSelection";
 import { DateTimeSelection } from "@/components/booking/DateTimeSelection";
@@ -10,54 +12,73 @@ import { CustomerForm } from "@/components/booking/CustomerForm";
 import { BookingConfirmation } from "@/components/booking/BookingConfirmation";
 import { toast } from "@/hooks/use-toast";
 
-// Mock data - será substituído por dados reais do banco
-const mockServices = [
+// Mock data - filiais
+const mockBranches = [
   {
     id: "1",
-    name: "Corte de Cabelo",
-    description: "Corte masculino ou feminino com finalização completa",
-    duration: 45,
-    price: 50,
-    category: "Cabelo"
+    name: "Unidade Centro",
+    address: "Rua das Flores, 123",
+    city: "São Paulo",
+    state: "SP",
+    workingHoursSummary: "Seg-Sex 08h-18h, Sáb 09h-14h",
   },
   {
     id: "2",
-    name: "Barba",
-    description: "Aparar e modelar a barba com navalha e produtos premium",
-    duration: 30,
-    price: 35,
-    category: "Barba"
+    name: "Unidade Shopping",
+    address: "Shopping Center, Loja 45",
+    city: "São Paulo",
+    state: "SP",
+    workingHoursSummary: "Seg-Dom 10h-22h",
   },
   {
     id: "3",
-    name: "Corte + Barba",
-    description: "Combo completo de corte e barba com desconto especial",
-    duration: 60,
-    price: 75,
-    category: "Combos"
-  },
-  {
-    id: "4",
-    name: "Coloração",
-    description: "Tintura profissional com produtos de alta qualidade",
-    duration: 90,
-    price: 120,
-    category: "Cabelo"
-  },
-  {
-    id: "5",
-    name: "Hidratação Capilar",
-    description: "Tratamento intensivo para cabelos danificados",
-    duration: 45,
-    price: 80,
-    category: "Tratamentos"
+    name: "Unidade Zona Sul",
+    address: "Av. Santo Amaro, 789",
+    city: "São Paulo",
+    state: "SP",
+    workingHoursSummary: "Seg-Sex 09h-19h, Sáb 09h-15h",
   },
 ];
 
-const mockStaff = [
+// Mock data - serviços (filtrados por filial)
+const mockServicesByBranch: Record<string, typeof mockServicesBase> = {
+  "1": [
+    { id: "1", name: "Corte de Cabelo", description: "Corte masculino ou feminino", duration: 45, price: 50, category: "Cabelo" },
+    { id: "2", name: "Barba", description: "Aparar e modelar a barba", duration: 30, price: 35, category: "Barba" },
+    { id: "3", name: "Corte + Barba", description: "Combo completo", duration: 60, price: 75, category: "Combos" },
+  ],
+  "2": [
+    { id: "1", name: "Corte de Cabelo", description: "Corte masculino ou feminino", duration: 45, price: 50, category: "Cabelo" },
+    { id: "6", name: "Manicure", description: "Tratamento completo das unhas", duration: 45, price: 40, category: "Unhas" },
+    { id: "7", name: "Pedicure", description: "Tratamento completo dos pés", duration: 60, price: 50, category: "Unhas" },
+  ],
+  "3": [
+    { id: "1", name: "Corte de Cabelo", description: "Corte masculino ou feminino", duration: 45, price: 50, category: "Cabelo" },
+    { id: "2", name: "Barba", description: "Aparar e modelar a barba", duration: 30, price: 35, category: "Barba" },
+  ],
+};
+
+const mockServicesBase = [
+  { id: "1", name: "Corte de Cabelo", description: "Corte masculino ou feminino", duration: 45, price: 50, category: "Cabelo" },
+];
+
+// Mock data - equipe (filtrada por filial)
+const mockStaffByBranch: Record<string, typeof mockStaffBase> = {
+  "1": [
+    { id: "1", name: "Carlos Silva", role: "Barbeiro Senior", rating: 4.9 },
+    { id: "2", name: "Ana Costa", role: "Cabeleireira", rating: 4.8 },
+  ],
+  "2": [
+    { id: "3", name: "Pedro Santos", role: "Barbeiro", rating: 4.7 },
+    { id: "4", name: "Maria Oliveira", role: "Manicure", rating: 4.9 },
+  ],
+  "3": [
+    { id: "1", name: "Carlos Silva", role: "Barbeiro Senior", rating: 4.9 },
+  ],
+};
+
+const mockStaffBase = [
   { id: "1", name: "Carlos Silva", role: "Barbeiro Senior", rating: 4.9 },
-  { id: "2", name: "Ana Costa", role: "Cabeleireira", rating: 4.8 },
-  { id: "3", name: "Pedro Santos", role: "Barbeiro", rating: 4.7 },
 ];
 
 interface CustomerData {
@@ -67,13 +88,23 @@ interface CustomerData {
   notes: string;
 }
 
-const STEPS = ["Serviço", "Profissional", "Horário", "Dados", "Confirmação"];
+const STEPS = ["Filial", "Serviço", "Profissional", "Horário", "Dados", "Confirmação"];
 
 const Agendar = () => {
-  const [currentStep, setCurrentStep] = useState(1);
+  const { branchSlug } = useParams<{ branchSlug?: string }>();
+  
+  // Se veio por URL direta, pular etapa de filial
+  const initialBranchId = branchSlug ? mockBranches.find(b => 
+    b.name.toLowerCase().replace(/\s+/g, '-').includes(branchSlug.toLowerCase())
+  )?.id || null : null;
+  
+  const skipBranchStep = !!initialBranchId;
+  
+  const [currentStep, setCurrentStep] = useState(skipBranchStep ? 2 : 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Booking state
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(initialBranchId);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -86,30 +117,41 @@ const Agendar = () => {
   });
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof CustomerData, string>>>({});
 
-  const selectedService = mockServices.find(s => s.id === selectedServiceId);
-  const selectedStaff = mockStaff.find(s => s.id === selectedStaffId);
+  // Dados filtrados por filial
+  const currentServices = selectedBranchId ? (mockServicesByBranch[selectedBranchId] || []) : [];
+  const currentStaff = selectedBranchId ? (mockStaffByBranch[selectedBranchId] || []) : [];
+
+  const selectedBranch = mockBranches.find(b => b.id === selectedBranchId);
+  const selectedService = currentServices.find(s => s.id === selectedServiceId);
+  const selectedStaff = currentStaff.find(s => s.id === selectedStaffId);
 
   const validateStep = (): boolean => {
     switch (currentStep) {
       case 1:
+        if (!selectedBranchId) {
+          toast({ title: "Selecione uma filial", variant: "destructive" });
+          return false;
+        }
+        return true;
+      case 2:
         if (!selectedServiceId) {
           toast({ title: "Selecione um serviço", variant: "destructive" });
           return false;
         }
         return true;
-      case 2:
+      case 3:
         if (!selectedStaffId) {
           toast({ title: "Selecione um profissional", variant: "destructive" });
           return false;
         }
         return true;
-      case 3:
+      case 4:
         if (!selectedDate || !selectedTime) {
           toast({ title: "Selecione data e horário", variant: "destructive" });
           return false;
         }
         return true;
-      case 4:
+      case 5:
         const errors: Partial<Record<keyof CustomerData, string>> = {};
         if (!customerData.name.trim()) errors.name = "Nome é obrigatório";
         if (!customerData.phone.trim()) errors.phone = "Telefone é obrigatório";
@@ -130,16 +172,11 @@ const Agendar = () => {
   const handleNext = async () => {
     if (!validateStep()) return;
 
-    if (currentStep === 4) {
-      // Submit booking
+    if (currentStep === 5) {
       setIsSubmitting(true);
-      
-      // Simular envio para API
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
       setIsSubmitting(false);
-      setCurrentStep(5);
-      
+      setCurrentStep(6);
       toast({
         title: "Agendamento confirmado!",
         description: "Você receberá uma confirmação por WhatsApp.",
@@ -150,23 +187,19 @@ const Agendar = () => {
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
+    if (currentStep > (skipBranchStep ? 2 : 1)) {
       setCurrentStep(currentStep - 1);
     }
   };
 
   const canGoNext = (): boolean => {
     switch (currentStep) {
-      case 1:
-        return !!selectedServiceId;
-      case 2:
-        return !!selectedStaffId;
-      case 3:
-        return !!selectedDate && !!selectedTime;
-      case 4:
-        return !!customerData.name.trim() && !!customerData.phone.trim();
-      default:
-        return false;
+      case 1: return !!selectedBranchId;
+      case 2: return !!selectedServiceId;
+      case 3: return !!selectedStaffId;
+      case 4: return !!selectedDate && !!selectedTime;
+      case 5: return !!customerData.name.trim() && !!customerData.phone.trim();
+      default: return false;
     }
   };
 
@@ -174,22 +207,30 @@ const Agendar = () => {
     switch (currentStep) {
       case 1:
         return (
-          <ServiceSelection
-            services={mockServices}
-            selectedServiceId={selectedServiceId}
-            onSelect={setSelectedServiceId}
+          <BranchSelection
+            branches={mockBranches}
+            selectedBranchId={selectedBranchId}
+            onSelect={setSelectedBranchId}
           />
         );
       case 2:
         return (
+          <ServiceSelection
+            services={currentServices}
+            selectedServiceId={selectedServiceId}
+            onSelect={setSelectedServiceId}
+          />
+        );
+      case 3:
+        return (
           <StaffSelection
-            staff={mockStaff}
+            staff={currentStaff}
             selectedStaffId={selectedStaffId}
             onSelect={setSelectedStaffId}
             allowSkip={true}
           />
         );
-      case 3:
+      case 4:
         return (
           <DateTimeSelection
             selectedDate={selectedDate}

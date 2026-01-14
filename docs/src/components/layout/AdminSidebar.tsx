@@ -17,6 +17,7 @@ import {
   Droplets,
   Menu,
   X,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -118,6 +119,11 @@ export function AdminSidebar() {
         <div className="sidebar-section mt-4">
           <p className="sidebar-section-title">Cadastros</p>
           <div className="space-y-1">
+            <NavItem 
+              to="/filiais" 
+              icon={<Building2 className="w-5 h-5" />} 
+              label="Filiais" 
+            />
             <NavItem 
               to="/clientes" 
               icon={<Users className="w-5 h-5" />} 

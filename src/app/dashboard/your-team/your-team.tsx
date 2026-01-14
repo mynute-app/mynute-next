@@ -1,312 +1,401 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  PlusIcon,
-  User,
-  Briefcase,
-  Clock,
-  MapPin,
-  Calendar,
-} from "lucide-react";
-import AddTeamMemberDialog from "./add-team-member-modal";
-import { Branch } from "./branch-section";
-import { ServicesSection } from "./services-section";
-import { WorkRangeServicesSection } from "./work-range-services-section";
-import { AboutSection } from "./about-section";
-import TeamMemberActions from "./team-member-actions";
-import { Employee } from "../../../../types/company";
-import { WorkScheduleManager } from "@/components/work-schedule";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { TeamMemberList } from "./team-member-list";
-import { useGetEmployeeById } from "@/hooks/get-employee-by-id";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Calendar,
+  Edit,
+  Mail,
+  MoreHorizontal,
+  Phone,
+  Plus,
+  Search,
+  Star,
+  Trash2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useGetCompany } from "@/hooks/get-company";
-import { UserAvatar } from "@/components/ui/user-avatar";
-import { useToast } from "@/hooks/use-toast";
+import { useGetEmployeeById } from "@/hooks/get-employee-by-id";
+import { useDeleteEmployee } from "@/hooks/employee/use-delete-employee";
+import type { Employee } from "../../../../types/company";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import AddTeamMemberDialog from "./add-team-member-modal";
+import EditUserDialog from "./info-team/edit-user-dialog";
+
+const getInitials = (member: Employee) => {
+  const first = member.name?.trim().charAt(0);
+  const last = member.surname?.trim().charAt(0);
+  const initials = [first, last].filter(Boolean).join("");
+  return initials ? initials.toUpperCase() : "?";
+};
 
 export default function YourTeam() {
-  const [activeTab, setActiveTab] = useState("about");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Employee | null>(null);
+  const [memberToDelete, setMemberToDelete] = useState<Employee | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [activeById, setActiveById] = useState<Record<number, boolean>>({});
 
   const { company, loading, refetch } = useGetCompany();
   const employees: Employee[] = company?.employees ?? [];
-  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
 
   const { employee: selectedEmployeeData } =
     useGetEmployeeById(selectedMemberId);
 
-  const [selectedMember, setSelectedMember] = useState<Employee | null>(null);
-  const { toast } = useToast();
+  const { deleteEmployee, isDeleting } = useDeleteEmployee({
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
   useEffect(() => {
     if (selectedEmployeeData) {
       setSelectedMember(selectedEmployeeData);
     }
   }, [selectedEmployeeData]);
 
-  const handleSelectMember = (id: number) => {
-    setSelectedMemberId(id);
-    setActiveTab("about");
+  useEffect(() => {
+    setActiveById(prev => {
+      const next = { ...prev };
+      employees.forEach(employee => {
+        if (next[employee.id] === undefined) {
+          next[employee.id] = true;
+        }
+      });
+      return next;
+    });
+  }, [employees]);
+
+  const availableServices = useMemo(() => {
+    if (!Array.isArray(company?.services)) return [];
+    const names = company.services
+      .map(service => service?.name?.trim())
+      .filter((name): name is string => Boolean(name));
+    return Array.from(new Set(names));
+  }, [company?.services]);
+
+  const filteredEmployees = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    if (!normalizedSearch) return employees;
+
+    return employees.filter(employee => {
+      const fullName = `${employee.name || ""} ${employee.surname || ""}`
+        .trim()
+        .toLowerCase();
+      const email = (employee.email || "").toLowerCase();
+      const role = (employee.role || "").toLowerCase();
+      const matchesServices = Array.isArray(employee.services)
+        ? employee.services.some(service =>
+            (service.name || "").toLowerCase().includes(normalizedSearch)
+          )
+        : false;
+
+      return (
+        fullName.includes(normalizedSearch) ||
+        email.includes(normalizedSearch) ||
+        role.includes(normalizedSearch) ||
+        matchesServices
+      );
+    });
+  }, [employees, searchTerm]);
+
+  const handleCreateMember = () => {
+    setAddDialogOpen(true);
   };
 
-  const handleDeleteMember = () => {
+  const handleEditMember = (member: Employee) => {
     setSelectedMember(null);
-    setSelectedMemberId(null);
-    refetch();
+    setSelectedMemberId(member.id);
+    setEditDialogOpen(true);
   };
 
-  const handleImageChange = (newImageUrl: string | null) => {
-    setSelectedMember((prev: any) => ({
-      ...prev,
-      meta: {
-        ...prev?.meta,
-        design: {
-          ...prev?.meta?.design,
-          images: {
-            ...prev?.meta?.design?.images,
-            profile: {
-              ...prev?.meta?.design?.images?.profile,
-              url: newImageUrl,
-            },
-          },
-        },
-      },
-    }));
+  const handleDeleteClick = (member: Employee) => {
+    setMemberToDelete(member);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!memberToDelete) return;
+    const success = await deleteEmployee(memberToDelete.id);
+    if (success) {
+      setMemberToDelete(null);
+      setDeleteDialogOpen(false);
+    }
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-[100vh] border rounded-lg shadow overflow-hidden bg-background">
-      {/* Sidebar - Lista de Membros */}
-      <aside className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r bg-muted/30 overflow-hidden flex flex-col">
-        <div className="p-4 border-b bg-background">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold">Meu Time</h2>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsDialogOpen(true)}
-              className="h-8 gap-1.5"
-            >
-              <PlusIcon className="w-4 h-4" />
-              Adicionar
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {employees.length}{" "}
-            {employees.length === 1 ? "funcionário" : "funcionários"} cadastrado
-            {employees.length === 1 ? "" : "s"}
-          </p>
-        </div>
+    <div className="team-page flex min-h-0 flex-1 flex-col bg-background text-foreground">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="mx-auto w-full max-w-7xl p-6 lg:p-8">
+          <div className="space-y-6 pt-12 lg:pt-0">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="page-header mb-0">
+                <h1 className="page-title">Equipe</h1>
+                <p className="page-description">
+                  Gerencie os profissionais da equipe.
+                </p>
+              </div>
+              <Button className="btn-gradient" onClick={handleCreateMember}>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Profissional
+              </Button>
+            </div>
 
-        <div className="flex-1 overflow-y-auto p-3">
-          <TeamMemberList
-            employees={employees}
-            loading={loading}
-            selectedMember={selectedMember}
-            onSelectMember={member => handleSelectMember(member.id)}
-          />
-        </div>
-      </aside>
-
-      {/* Main Content - Detalhes do Membro */}
-      <main className="flex-1 overflow-hidden flex flex-col">
-        {selectedMember ? (
-          <>
-            {/* Header do Membro */}
-            <div className="p-6 border-b bg-background">
-              <div className="flex items-start gap-4">
-                <UserAvatar
-                  name={selectedMember?.name}
-                  surname={selectedMember?.surname}
-                  imageUrl={selectedMember?.meta?.design?.images?.profile?.url}
-                  size="lg"
-                  editable={true}
-                  employeeId={selectedMember?.id}
-                  onImageChange={handleImageChange}
-                  className="h-20 w-20 flex-shrink-0"
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar profissional..."
+                  className="pl-9 input-focus"
+                  value={searchTerm}
+                  onChange={event => setSearchTerm(event.target.value)}
                 />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h2 className="text-2xl font-bold truncate">
-                        {selectedMember?.name} {selectedMember?.surname}
-                      </h2>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Briefcase className="w-4 h-4" />
-                          <span>
-                            {Array.isArray(selectedMember?.services)
-                              ? selectedMember.services.length
-                              : 0}{" "}
-                            serviço
-                            {selectedMember?.services?.length !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          <span>
-                            {Array.isArray(selectedMember?.branches)
-                              ? selectedMember.branches.length
-                              : 0}{" "}
-                            filial
-                            {selectedMember?.branches?.length !== 1 ? "is" : ""}
-                          </span>
-                        </div>
-                      </div>
-                      {process.env.NODE_ENV === "development" && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          ID: {selectedMember?.id}
-                        </p>
-                      )}
-                    </div>
-                    <TeamMemberActions
-                      selectedMember={selectedMember}
-                      onDelete={handleDeleteMember}
-                    />
-                  </div>
-                </div>
               </div>
             </div>
 
-            {/* Tabs de Conteúdo */}
-            <div className="flex-1 overflow-y-auto">
-              <Tabs
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="w-full"
-              >
-                <div className="border-b px-6 bg-background sticky top-0 z-10">
-                  <TabsList className="w-full justify-start h-12 bg-transparent">
-                    <TabsTrigger value="about" className="gap-2">
-                      <User className="w-4 h-4" />
-                      Sobre
-                    </TabsTrigger>
-                    <TabsTrigger value="services" className="gap-2">
-                      <Briefcase className="w-4 h-4" />
-                      Serviços
-                      <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-primary/10 text-primary">
-                        {Array.isArray(selectedMember?.services)
-                          ? selectedMember.services.length
-                          : 0}
-                      </span>
-                    </TabsTrigger>
-                    <TabsTrigger value="work-range-services" className="gap-2">
-                      <Clock className="w-4 h-4" />
-                      Serviços por Horário
-                    </TabsTrigger>
-                    <TabsTrigger value="working-hours" className="gap-2">
-                      <MapPin className="w-4 h-4" />
-                      Filiais
-                      <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-primary/10 text-primary">
-                        {Array.isArray(selectedMember?.branches)
-                          ? selectedMember.branches.length
-                          : 0}
-                      </span>
-                    </TabsTrigger>
-                    <TabsTrigger value="breaks" className="gap-2">
-                      <Calendar className="w-4 h-4" />
-                      Jornada de Trabalho
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-
-                <div className="p-6">
-                  {/* Tab: Sobre */}
-                  <TabsContent value="about" className="mt-0">
-                    <AboutSection selectedMember={selectedMember} />
-                  </TabsContent>
-
-                  {/* Tab: Serviços */}
-                  <TabsContent value="services" className="mt-0">
-                    <ServicesSection
-                      selectedMember={selectedMember}
-                      setSelectedMember={setSelectedMember}
-                    />
-                  </TabsContent>
-
-                  {/* Tab: Serviços por Horário */}
-                  <TabsContent value="work-range-services" className="mt-0">
-                    <WorkRangeServicesSection
-                      selectedMember={selectedMember}
-                      setSelectedMember={setSelectedMember}
-                    />
-                  </TabsContent>
-
-                  {/* Tab: Filiais */}
-                  <TabsContent value="working-hours" className="mt-0">
-                    <Branch
-                      selectedMember={selectedMember}
-                      setSelectedMember={setSelectedMember}
-                    />
-                  </TabsContent>
-
-                  {/* Tab: Jornada de Trabalho */}
-                  <TabsContent value="breaks" className="mt-0">
-                    <WorkScheduleManager
-                      employeeId={selectedMember.id.toString()}
-                      initialData={
-                        Array.isArray(selectedMember.work_schedule)
-                          ? selectedMember.work_schedule
-                          : []
-                      }
-                      branches={
-                        Array.isArray(selectedMember.branches)
-                          ? selectedMember.branches.map(branch => ({
-                              id: branch.id.toString(),
-                              name: branch.name,
-                            }))
-                          : []
-                      }
-                      services={
-                        Array.isArray(selectedMember.services)
-                          ? selectedMember.services.map(service => ({
-                              id: service.id.toString(),
-                              name: service.name,
-                            }))
-                          : []
-                      }
-                      onSuccess={() => {
-                        toast({
-                          title: "Horários atualizados",
-                          description:
-                            "A jornada de trabalho foi salva com sucesso.",
-                        });
-                        if (selectedMember?.id) {
-                          setSelectedMemberId(selectedMember.id);
-                        }
-                      }}
-                    />
-                  </TabsContent>
-                </div>
-              </Tabs>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center p-6">
-            <Card className="max-w-md w-full border-none shadow-none">
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <User className="w-16 h-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">
-                  Selecione um membro
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="rounded-xl border border-border bg-card p-5 shadow-sm"
+                  >
+                    <div className="flex items-start gap-4">
+                      <Skeleton className="h-16 w-16 rounded-xl" />
+                      <div className="flex-1 space-y-3">
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-3 w-3/4" />
+                        <Skeleton className="h-3 w-2/3" />
+                        <div className="flex gap-2">
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-4 w-16" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredEmployees.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+                <h3 className="text-sm font-medium">
+                  Nenhum profissional encontrado
                 </h3>
-                <p className="text-sm text-muted-foreground text-center">
-                  Escolha um funcionário na lista ao lado para visualizar e
-                  gerenciar seus detalhes
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Tente ajustar a busca ou cadastre um novo profissional.
                 </p>
-              </CardContent>
-            </Card>
+                <Button
+                  className="mt-4 gap-2 btn-gradient"
+                  onClick={handleCreateMember}
+                >
+                  <Plus className="h-4 w-4" />
+                  Criar profissional
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
+                {filteredEmployees.map(member => {
+                  const isActive = activeById[member.id] ?? true;
+                  const services = Array.isArray(member.services)
+                    ? member.services
+                    : [];
+                  const serviceNames = services
+                    .map(service => service?.name)
+                    .filter(Boolean) as string[];
+                  const rating = 0;
+                  const appointmentsCount = 0;
+                  const workingDaysLabel = "Sem agenda";
+
+                  return (
+                    <div
+                      key={member.id}
+                      className={cn(
+                        "bg-card rounded-xl border border-border shadow-sm p-5 card-hover",
+                        !isActive && "opacity-60"
+                      )}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center text-primary-foreground text-xl font-bold flex-shrink-0">
+                          {getInitials(member)}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-semibold text-foreground">
+                                {member.name} {member.surname}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {member.role || "Profissional"}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Switch
+                                checked={isActive}
+                                onCheckedChange={checked =>
+                                  setActiveById(prev => ({
+                                    ...prev,
+                                    [member.id]: checked,
+                                  }))
+                                }
+                              />
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                  >
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditMember(member)}
+                                  >
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteClick(member)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Excluir
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+
+                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                            Nenhuma descri\u00e7\u00e3o cadastrada.
+                          </p>
+
+                          <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Mail className="w-3.5 h-3.5" />
+                              {member.email || "Email n\u00e3o informado"}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Phone className="w-3.5 h-3.5" />
+                              {member.phone || "Telefone n\u00e3o informado"}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1 mt-3">
+                            {serviceNames.length > 0 ? (
+                              serviceNames.map(service => (
+                                <Badge
+                                  key={`${member.id}-${service}`}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
+                                  {service}
+                                </Badge>
+                              ))
+                            ) : (
+                              <Badge variant="outline" className="text-xs">
+                                Sem servi\u00e7os
+                              </Badge>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
+                            {rating > 0 && (
+                              <div className="flex items-center gap-1">
+                                <Star className="w-4 h-4 text-accent fill-accent" />
+                                <span className="font-medium text-foreground">
+                                  {rating.toFixed(1)}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Calendar className="w-4 h-4" />
+                              <span>{appointmentsCount} atendimentos</span>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {workingDaysLabel}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
-      </main>
+        </div>
+      </div>
 
       <AddTeamMemberDialog
-        isOpen={isDialogOpen}
-        setIsOpen={setIsDialogOpen}
+        isOpen={addDialogOpen}
+        setIsOpen={setAddDialogOpen}
         onSuccess={() => {
           refetch();
         }}
+        availableServices={availableServices}
       />
+
+      <EditUserDialog
+        user={selectedMember}
+        isOpen={editDialogOpen}
+        onClose={() => {
+          setEditDialogOpen(false);
+          setSelectedMemberId(null);
+          setSelectedMember(null);
+        }}
+        onReloadMember={id => setSelectedMemberId(id)}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir profissional</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir{" "}
+              <strong>
+                {memberToDelete?.name} {memberToDelete?.surname}
+              </strong>
+              ? Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

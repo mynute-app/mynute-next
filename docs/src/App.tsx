@@ -10,6 +10,9 @@ import Agendamentos from "@/pages/Agendamentos";
 import Clientes from "@/pages/Clientes";
 import Servicos from "@/pages/Servicos";
 import Equipe from "@/pages/Equipe";
+import Filiais from "@/pages/Filiais";
+import FilialServicos from "@/pages/FilialServicos";
+import FilialEquipe from "@/pages/FilialEquipe";
 import ConfigBranding from "@/pages/configuracoes/Branding";
 import ConfigServicos from "@/pages/configuracoes/ServicosConfig";
 import ConfigEquipe from "@/pages/configuracoes/EquipeConfig";
@@ -28,12 +31,16 @@ const App = () => (
         <Routes>
           {/* Public booking page */}
           <Route path="/agendar" element={<Agendar />} />
+          <Route path="/agendar/:branchSlug" element={<Agendar />} />
           
           {/* Admin routes */}
           <Route element={<AdminLayout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/agenda" element={<Agenda />} />
             <Route path="/agendamentos" element={<Agendamentos />} />
+            <Route path="/filiais" element={<Filiais />} />
+            <Route path="/filiais/:branchId/servicos" element={<FilialServicos />} />
+            <Route path="/filiais/:branchId/equipe" element={<FilialEquipe />} />
             <Route path="/clientes" element={<Clientes />} />
             <Route path="/servicos" element={<Servicos />} />
             <Route path="/equipe" element={<Equipe />} />
