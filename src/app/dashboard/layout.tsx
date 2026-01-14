@@ -17,7 +17,7 @@ export default async function RootLayout({
       <SidebarProvider className="flex h-full flex-col">
         <div className="flex h-full flex-1">
           <AppSidebar />
-          <SidebarInset className="flex flex-col overflow-hidden">
+          <SidebarInset className="flex h-full flex-col overflow-hidden">
             {children}
           </SidebarInset>
         </div>

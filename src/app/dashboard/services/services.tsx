@@ -114,7 +114,7 @@ export const ServicesPage = () => {
     searchTerm.trim().length > 0 || selectedCategory !== "Todos";
 
   return (
-    <div className="services-page flex flex-1 flex-col bg-background text-foreground">
+    <div className="services-page flex h-full flex-1 flex-col bg-background text-foreground">
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="mx-auto w-full max-w-7xl p-6 lg:p-8">
           <div className="space-y-6 pt-12 lg:pt-0">
