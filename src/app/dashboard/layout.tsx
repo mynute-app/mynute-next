@@ -13,12 +13,13 @@ export default async function RootLayout({
     redirect("/auth/login");
   }
   return (
-    <div className="[--header-height:calc(theme(spacing.14))]">
-      <SidebarProvider className="flex flex-col">
-        <SiteHeader />
-        <div className="flex flex-1">
+    <div className="h-screen [--header-height:calc(theme(spacing.0))]">
+      <SidebarProvider className="flex h-full flex-col">
+        <div className="flex h-full flex-1">
           <AppSidebar />
-          <SidebarInset>{children}</SidebarInset>
+          <SidebarInset className="flex flex-col overflow-hidden">
+            {children}
+          </SidebarInset>
         </div>
       </SidebarProvider>
     </div>

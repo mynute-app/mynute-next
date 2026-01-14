@@ -39,14 +39,14 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 215 28% 12%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 173 58% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 25% 18%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 215 20% 20%;
+    --sidebar-ring: 173 58% 50%;
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -73,14 +73,14 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 215 30% 6%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 173 58% 55%;
+    --sidebar-primary-foreground: 215 28% 8%;
+    --sidebar-accent: 215 25% 12%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 215 20% 15%;
+    --sidebar-ring: 173 58% 55%;
   }
 }
 
@@ -134,4 +134,131 @@ body {
   height: 100%;
   width: 100%;
   overflow: hidden;
+}
+
+@layer base {
+  .services-page {
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+    --primary: 173 58% 39%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 173 58% 34%;
+    --primary-glow: 173 58% 50%;
+    --secondary: 215 16% 94%;
+    --secondary-foreground: 215 25% 27%;
+    --muted: 215 16% 96%;
+    --muted-foreground: 215 13% 50%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 38 92% 15%;
+    --accent-hover: 38 92% 45%;
+    --success: 152 60% 40%;
+    --warning: 25 95% 53%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 20% 90%;
+    --input: 215 20% 90%;
+    --ring: 173 58% 39%;
+    --radius: 0.625rem;
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(173 58% 39%),
+      hsl(173 58% 50%)
+    );
+    --gradient-accent: linear-gradient(
+      135deg,
+      hsl(38 92% 50%),
+      hsl(25 95% 53%)
+    );
+    --shadow-sm: 0 1px 2px 0 hsl(215 25% 15% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(215 25% 15% / 0.07),
+      0 2px 4px -2px hsl(215 25% 15% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(215 25% 15% / 0.08),
+      0 4px 6px -4px hsl(215 25% 15% / 0.05);
+    --shadow-glow: 0 0 20px hsl(173 58% 50% / 0.3);
+  }
+}
+
+@layer components {
+  .services-page .card-hover {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .services-page .card-hover:hover {
+    @apply -translate-y-1;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .services-page .btn-gradient {
+    background: var(--gradient-primary);
+    @apply text-white font-medium transition-all duration-300;
+  }
+
+  .services-page .btn-gradient:hover {
+    @apply opacity-90 scale-[1.02];
+    box-shadow: var(--shadow-glow);
+  }
+
+  .services-page .page-header {
+    @apply mb-8;
+  }
+
+  .services-page .page-title {
+    @apply text-2xl font-bold text-foreground tracking-tight;
+  }
+
+  .services-page .page-description {
+    @apply text-muted-foreground mt-1;
+  }
+
+  .services-page .input-focus {
+    @apply focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
+  }
+
+  .services-page .text-success {
+    color: hsl(var(--success));
+  }
+}
+
+@layer utilities {
+  .services-page .animate-in {
+    animation: animateIn 0.3s ease-out forwards;
+  }
+
+  .services-page .stagger-children > * {
+    animation: animateIn 0.3s ease-out forwards;
+  }
+
+  .services-page .stagger-children > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .services-page .stagger-children > *:nth-child(2) {
+    animation-delay: 50ms;
+  }
+  .services-page .stagger-children > *:nth-child(3) {
+    animation-delay: 100ms;
+  }
+  .services-page .stagger-children > *:nth-child(4) {
+    animation-delay: 150ms;
+  }
+  .services-page .stagger-children > *:nth-child(5) {
+    animation-delay: 200ms;
+  }
+  .services-page .stagger-children > *:nth-child(6) {
+    animation-delay: 250ms;
+  }
+
+  @keyframes animateIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

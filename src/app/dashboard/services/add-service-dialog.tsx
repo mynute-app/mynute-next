@@ -30,12 +30,14 @@ type AddServiceDialogProps = {
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   onCreate: (service: Service) => void;
+  trigger?: React.ReactNode;
 };
 
 export const AddServiceDialog = ({
   isOpen: controlledOpen,
   onOpenChange,
   onCreate,
+  trigger,
 }: AddServiceDialogProps) => {
   const { form, handleSubmit } = useAddServiceForm();
   const {
@@ -50,7 +52,8 @@ export const AddServiceDialog = ({
   const [internalOpen, setInternalOpen] = useState(false);
 
   // Se controlado externamente, usar isOpen; senão usar estado interno
-  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const isControlled = controlledOpen !== undefined;
+  const isOpen = isControlled ? controlledOpen : internalOpen;
   const setIsOpen = onOpenChange || setInternalOpen;
 
   // Watch dos valores para aplicar máscaras
@@ -65,14 +68,16 @@ export const AddServiceDialog = ({
     }
   };
 
+  const defaultTrigger = (
+    <Button variant="outline">
+      <BsPlus className="w-6 h-6" />
+    </Button>
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {!controlledOpen && (
-        <DialogTrigger asChild>
-          <Button variant="outline" onClick={() => setIsOpen(true)}>
-            <BsPlus className="w-6 h-6" />
-          </Button>
-        </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
       )}
       <DialogContent className="max-w-xl rounded-lg">
         <DialogHeader>
