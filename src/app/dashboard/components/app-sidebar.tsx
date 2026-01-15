@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen,
+  Building2,
   Calendar,
   CalendarCheck,
   ChevronDown,
@@ -142,6 +143,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 icon={<UserCog className="h-5 w-5" />}
                 label="Equipe"
                 isActive={isActive("/dashboard/your-team")}
+              />
+              <NavItem
+                href="/dashboard/branch"
+                icon={<Building2 className="h-5 w-5" />}
+                label="Filiais"
+                isActive={isActive("/dashboard/branch")}
               />
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 // Tipos baseados na especificação da API para branch
@@ -27,10 +27,8 @@ export const useBranchWorkSchedule = (props?: UseBranchWorkScheduleProps) => {
   const [data, setData] = useState<BranchWorkScheduleRange[] | null>(null);
   const { toast } = useToast();
 
-  const createBranchWorkSchedule = async (
-    branchId: string,
-    workScheduleData: BranchWorkScheduleData
-  ) => {
+  const createBranchWorkSchedule = useCallback(
+    async (branchId: string, workScheduleData: BranchWorkScheduleData) => {
     setLoading(true);
     setSuccess(false);
     setError(null);
@@ -83,9 +81,12 @@ export const useBranchWorkSchedule = (props?: UseBranchWorkScheduleProps) => {
     } finally {
       setLoading(false);
     }
-  };
+    },
+    [props?.onSuccess, props?.onError, toast]
+  );
 
-  const getBranchWorkSchedule = async (branchId: string) => {
+  const getBranchWorkSchedule = useCallback(
+    async (branchId: string) => {
     setLoading(true);
     setError(null);
     setData(null);
@@ -146,7 +147,9 @@ export const useBranchWorkSchedule = (props?: UseBranchWorkScheduleProps) => {
     } finally {
       setLoading(false);
     }
-  };
+    },
+    [props?.onError, toast]
+  );
 
   const reset = () => {
     setSuccess(false);
