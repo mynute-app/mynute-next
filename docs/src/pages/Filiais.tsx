@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Search, MapPin, Clock, Phone, Users, Sparkles, MoreHorizontal, Building2, Edit, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Search, MapPin, Clock, Phone, Users, Sparkles, MoreHorizontal, Building2, Edit, Trash2, Briefcase, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -90,6 +92,7 @@ const initialBranches: Branch[] = [
 ];
 
 const Filiais = () => {
+  const navigate = useNavigate();
   const [branches, setBranches] = useState<Branch[]>(initialBranches);
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -189,6 +192,14 @@ const Filiais = () => {
     return enabledDays.join(", ");
   };
 
+  const getFirstWorkingHours = (hours: Branch["workingHours"]): string => {
+    const firstEnabled = Object.values(hours).find(h => h.enabled);
+    if (firstEnabled) {
+      return `${firstEnabled.open} - ${firstEnabled.close}`;
+    }
+    return "Fechado";
+  };
+
   return (
     <div className="space-y-6 animate-in">
       {/* Header */}
@@ -231,8 +242,8 @@ const Filiais = () => {
         </div>
         <div className="bg-card rounded-xl p-4 border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-green-500" />
+            <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-success" />
             </div>
             <div>
               <p className="text-2xl font-bold">{branches.filter(b => b.active).length}</p>
@@ -243,7 +254,7 @@ const Filiais = () => {
         <div className="bg-card rounded-xl p-4 border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-accent-foreground" />
+              <Users className="w-5 h-5 text-accent" />
             </div>
             <div>
               <p className="text-2xl font-bold">{branches.reduce((sum, b) => sum + b.staffCount, 0)}</p>
@@ -253,7 +264,7 @@ const Filiais = () => {
         </div>
         <div className="bg-card rounded-xl p-4 border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-secondary-foreground" />
             </div>
             <div>
@@ -269,74 +280,108 @@ const Filiais = () => {
         {filteredBranches.map((branch) => (
           <div
             key={branch.id}
-            className="bg-card rounded-xl border p-5 card-hover"
+            className="bg-card rounded-xl border overflow-hidden card-hover"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-primary" />
+            {/* Header with gradient */}
+            <div className="h-24 bg-gradient-to-br from-primary/20 to-primary/5 relative">
+              <div className="absolute top-3 right-3">
+                <Badge variant={branch.active ? "default" : "secondary"}>
+                  {branch.active ? "Ativa" : "Inativa"}
+                </Badge>
+              </div>
+              <div className="absolute -bottom-8 left-5">
+                <div className="w-16 h-16 rounded-xl bg-card border-4 border-card flex items-center justify-center shadow-lg">
+                  <Building2 className="w-7 h-7 text-primary" />
                 </div>
-                <div>
-                  <h3 className="font-semibold">{branch.name}</h3>
-                  <Badge variant={branch.active ? "default" : "secondary"}>
-                    {branch.active ? "Ativa" : "Inativa"}
-                  </Badge>
+              </div>
+            </div>
+
+            <div className="pt-10 px-5 pb-5">
+              {/* Title & Actions */}
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="font-semibold text-lg">{branch.name}</h3>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 -mt-1 -mr-2">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => handleEditBranch(branch)}>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar Filial
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate(`/filiais/${branch.id}/servicos`)}>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Gerenciar Serviços
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate(`/filiais/${branch.id}/equipe`)}>
+                      <Users className="w-4 h-4 mr-2" />
+                      Gerenciar Equipe
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => handleDeleteClick(branch)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Info */}
+              <div className="space-y-2.5 text-sm">
+                <div className="flex items-start gap-2 text-muted-foreground">
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span className="line-clamp-2">{branch.address}, {branch.city} - {branch.state}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Phone className="w-4 h-4 flex-shrink-0" />
+                  <span>{branch.phone}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Mail className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{branch.email}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="w-4 h-4 flex-shrink-0" />
+                  <span>{getWorkingDaysSummary(branch.workingHours)} • {getFirstWorkingHours(branch.workingHours)}</span>
                 </div>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleEditBranch(branch)}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleDeleteClick(branch)}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Excluir
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
 
-            <div className="space-y-3 text-sm">
-              <div className="flex items-start gap-2 text-muted-foreground">
-                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>{branch.address}, {branch.city} - {branch.state}</span>
+              {/* Quick Action Buttons */}
+              <div className="flex gap-2 mt-4 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => navigate(`/filiais/${branch.id}/servicos`)}
+                >
+                  <Sparkles className="w-4 h-4 mr-1.5" />
+                  {branch.servicesCount} Serviços
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => navigate(`/filiais/${branch.id}/equipe`)}
+                >
+                  <Users className="w-4 h-4 mr-1.5" />
+                  {branch.staffCount} Equipe
+                </Button>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="w-4 h-4" />
-                <span>{branch.phone}</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Clock className="w-4 h-4" />
-                <span>{getWorkingDaysSummary(branch.workingHours)}</span>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-4 mt-4 pt-4 border-t">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm">{branch.staffCount} profissionais</span>
+              {/* Status Toggle */}
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <span className="text-sm text-muted-foreground">Status da Filial</span>
+                <Switch
+                  checked={branch.active}
+                  onCheckedChange={() => handleToggleActive(branch.id)}
+                />
               </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm">{branch.servicesCount} serviços</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between mt-4 pt-4 border-t">
-              <span className="text-sm text-muted-foreground">Status</span>
-              <Switch
-                checked={branch.active}
-                onCheckedChange={() => handleToggleActive(branch.id)}
-              />
             </div>
           </div>
         ))}
