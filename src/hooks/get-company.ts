@@ -8,7 +8,6 @@ export const useGetCompany = () => {
   const hasFetched = useRef(false);
 
   const fetchCompany = useCallback(async () => {
-    // Evita múltiplas chamadas simultâneas
     if (hasFetched.current) return;
     hasFetched.current = true;
 
@@ -24,7 +23,7 @@ export const useGetCompany = () => {
     } catch (e) {
       setCompany(null);
       setError(e instanceof Error ? e.message : "Erro desconhecido");
-      hasFetched.current = false; // Permite tentar novamente em caso de erro
+      hasFetched.current = false;
     } finally {
       setLoading(false);
     }

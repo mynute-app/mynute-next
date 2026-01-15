@@ -84,7 +84,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <Droplets className="h-6 w-6 text-sidebar-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">Lavable</h1>
+            <h1 className="text-lg font-bold text-sidebar-foreground">
+              Mynute App
+            </h1>
             <p className="text-xs text-sidebar-foreground/60">
               Sistema de Agendamento
             </p>
@@ -176,16 +178,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <div className="space-y-1 py-1">
                   <SubNavItem
-                    href="/dashboard/configuracoes/branding"
+                    href="/dashboard/your-brand"
                     icon={<Palette className="h-4 w-4" />}
                     label="Branding e Midias"
-                    isActive={isActive("/dashboard/configuracoes/branding", true)}
+                    isActive={isActive("/dashboard/your-brand", true)}
                   />
                   <SubNavItem
                     href="/dashboard/configuracoes/servicos"
                     icon={<Wrench className="h-4 w-4" />}
                     label="Servicos"
-                    isActive={isActive("/dashboard/configuracoes/servicos", true)}
+                    isActive={isActive(
+                      "/dashboard/configuracoes/servicos",
+                      true
+                    )}
                   />
                   <SubNavItem
                     href="/dashboard/configuracoes/equipe"

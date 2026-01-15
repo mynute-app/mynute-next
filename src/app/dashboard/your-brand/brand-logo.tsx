@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PiBuildingApartment } from "react-icons/pi";
-import { RiLandscapeLine, RiDeleteBin6Line } from "react-icons/ri";
-import React from "react";
+import { Button } from "@/components/ui/button";
+import { Upload, Trash2 } from "lucide-react";
 
 type Props = {
   initialLogoUrl?: string | null;
@@ -20,7 +19,6 @@ const BrandLogoUpload: React.FC<Props> = ({
     initialLogoUrl ?? null
   );
 
-  // 🔁 Atualiza logoPreview se a prop mudar após o fetch
   useEffect(() => {
     setLogoPreview(initialLogoUrl ?? null);
   }, [initialLogoUrl]);
@@ -40,75 +38,54 @@ const BrandLogoUpload: React.FC<Props> = ({
   };
 
   const handleRemoveLogo = async () => {
-    // Se existe uma imagem inicial (do backend), remove do backend primeiro
     if (initialLogoUrl && onRemoveFromBackend) {
       await onRemoveFromBackend();
     }
-    // Sempre remove localmente
     setLogoPreview(null);
     onFileChange?.(null);
   };
 
   return (
-    <div className="space-y-2">
-      <div>
-        <div className="text-lg font-semibold">Logo da Empresa</div>
-        <p className="text-sm text-gray-500">
-          Logo principal da sua empresa, usado em toda a plataforma
-        </p>
-      </div>
-
-      <div className="flex flex-row justify-start items-center gap-4">
-        <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full border border-gray-300 overflow-hidden">
-          {logoPreview ? (
-            <img
-              src={logoPreview}
-              alt="Logo preview"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <PiBuildingApartment className="size-6 text-gray-600" />
-          )}
-        </div>
-
-        <div>
-          <div className="text-start">
-            <p className="text-sm text-gray-700 font-medium">Brand logo</p>
-            <p className="text-xs text-gray-500">
-              Select a 200 × 200 px image, up to 10 MB in size
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-2">
-            <label
-              htmlFor="upload-logo"
-              className="cursor-pointer text-gray-700 border border-gray-300 rounded-full px-4 py-1 text-sm hover:bg-gray-100 transition items-center gap-2 inline-flex"
-            >
-              <RiLandscapeLine />
-              Upload logo
-            </label>
-
-            {logoPreview && (
-              <button
-                type="button"
-                onClick={handleRemoveLogo}
-                className="text-red-600 border border-red-300 rounded-full px-4 py-1 text-sm hover:bg-red-50 transition items-center gap-2 inline-flex"
-              >
-                <RiDeleteBin6Line />
-                Remover logo
-              </button>
-            )}
-          </div>
-
-          <input
-            id="upload-logo"
-            type="file"
-            className="hidden"
-            accept="image/*"
-            onChange={handleFileChange}
+    <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
+      <label htmlFor="upload-logo" className="block cursor-pointer">
+        {logoPreview ? (
+          <img
+            src={logoPreview}
+            alt="Logo"
+            className="mx-auto max-h-24 object-contain mb-2"
           />
+        ) : (
+          <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+        )}
+        <p className="text-sm text-muted-foreground">
+          Arraste uma imagem ou clique para fazer upload
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          PNG, SVG ate 2MB
+        </p>
+      </label>
+
+      <input
+        id="upload-logo"
+        type="file"
+        className="hidden"
+        accept="image/*"
+        onChange={handleFileChange}
+      />
+
+      {logoPreview && (
+        <div className="mt-4 flex justify-center">
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={handleRemoveLogo}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Remover logo
+          </Button>
         </div>
-      </div>
+      )}
     </div>
   );
 };

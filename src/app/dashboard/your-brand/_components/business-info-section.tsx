@@ -5,13 +5,6 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Building2, Save } from "lucide-react";
 import { Company } from "../../../../../types/company";
 import { useToast } from "@/hooks/use-toast";
@@ -40,17 +33,16 @@ export default function BusinessInfoSection({
   const onSubmit = async (data: any) => {
     setIsSaving(true);
     try {
-      // TODO: Implementar chamada da API para atualizar informações
-      console.log("Salvando informações:", data);
+      console.log("Salvando informacoes:", data);
 
       toast({
-        title: "Informações atualizadas",
-        description: "As informações da empresa foram atualizadas com sucesso.",
+        title: "Informacoes bloqueadas",
+        description: "Estes campos estao bloqueados para edicao no momento.",
       });
     } catch (error) {
       toast({
         title: "Erro ao atualizar",
-        description: "Ocorreu um erro ao atualizar as informações.",
+        description: "Ocorreu um erro ao atualizar as informacoes.",
         variant: "destructive",
       });
     } finally {
@@ -60,64 +52,72 @@ export default function BusinessInfoSection({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Informações Básicas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="w-5 h-5" />
-            Informações Básicas
-          </CardTitle>
-          <CardDescription>Dados principais da sua empresa</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground mb-1 flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-primary" />
+            Informacoes do Negocio
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Dados principais da sua empresa
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="businessName">Nome Fantasia</Label>
             <Input
               id="businessName"
               placeholder="Nome da empresa"
-              {...register("businessName", {
-                required: "O nome da empresa é obrigatório.",
-              })}
-            />
-            {errors.businessName && (
-              <p className="text-sm text-destructive">
-                {errors.businessName.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="legalName">Razão Social</Label>
-            <Input
-              id="legalName"
-              placeholder="Razão social da empresa"
-              {...register("legalName")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="taxId">CNPJ/CPF</Label>
-            <Input
-              id="taxId"
-              placeholder="CNPJ da empresa"
-              {...register("taxId")}
+              {...register("businessName")}
               readOnly
               className="bg-muted cursor-not-allowed"
             />
             <p className="text-xs text-muted-foreground">
-              Este campo não pode ser alterado.
+              Este campo nao pode ser alterado.
             </p>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Botão de Salvar */}
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isSaving} className="gap-2">
-          <Save className="w-4 h-4" />
-          {isSaving ? "Salvando..." : "Salvar Alterações"}
-        </Button>
+          <div className="space-y-2">
+            <Label htmlFor="legalName">Razao Social</Label>
+            <Input
+              id="legalName"
+              placeholder="Razao social da empresa"
+              {...register("legalName")}
+              readOnly
+              className="bg-muted cursor-not-allowed"
+            />
+            <p className="text-xs text-muted-foreground">
+              Este campo nao pode ser alterado.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="taxId">CNPJ/CPF</Label>
+          <Input
+            id="taxId"
+            placeholder="CNPJ da empresa"
+            {...register("taxId")}
+            readOnly
+            className="bg-muted cursor-not-allowed"
+          />
+          <p className="text-xs text-muted-foreground">
+            Este campo nao pode ser alterado.
+          </p>
+        </div>
       </div>
+
+      {/* <div className="flex justify-end">
+        <Button
+          type="submit"
+          disabled={true}
+          className="gap-2 opacity-50 cursor-not-allowed"
+        >
+          <Save className="w-4 h-4" />
+          Campos Bloqueados
+        </Button>
+      </div> */}
     </form>
   );
 }
