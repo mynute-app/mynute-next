@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { CheckCircle2 } from "lucide-react";
 import {
   Dialog,
@@ -14,7 +13,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { useGetCompany } from "@/hooks/get-company";
 import type { Employee, Service } from "../../../../../types/company";
 
 type TeamMemberServicesDialogProps = {
@@ -23,6 +21,8 @@ type TeamMemberServicesDialogProps = {
   member: Employee | null;
   setMember: React.Dispatch<React.SetStateAction<Employee | null>>;
   onReloadMember?: () => void;
+  services?: Service[];
+  loadingServices?: boolean;
 };
 
 export function TeamMemberServicesDialog({
@@ -31,16 +31,12 @@ export function TeamMemberServicesDialog({
   member,
   setMember,
   onReloadMember,
+  services = [],
+  loadingServices = false,
 }: TeamMemberServicesDialogProps) {
   const { toast } = useToast();
-  const { company, loading: isCompanyLoading } = useGetCompany();
-
-  const services = useMemo(
-    () =>
-      (company?.services ?? []).filter(
-        service => service && typeof service.name === "string"
-      ),
-    [company?.services]
+  const availableServices = services.filter(
+    service => service && typeof service.name === "string"
   );
 
   const linkedServiceIds = new Set(
@@ -149,17 +145,17 @@ export function TeamMemberServicesDialog({
                 <p className="text-sm text-muted-foreground">
                   Selecione os servicos que este profissional realiza.
                 </p>
-                {isCompanyLoading ? (
+                {loadingServices ? (
                   <span className="text-sm text-muted-foreground">
                     Carregando servicos...
                   </span>
-                ) : services.length === 0 ? (
+                ) : availableServices.length === 0 ? (
                   <span className="text-sm text-muted-foreground">
                     Nenhum servico cadastrado
                   </span>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {services.map(service => {
+                    {availableServices.map(service => {
                       const isLinked = linkedServiceIds.has(service.id);
                       const price =
                         service.price && Number(service.price) > 0
@@ -217,8 +213,8 @@ export function TeamMemberServicesDialog({
                     })}
                   </div>
                 )}
-                {!isCompanyLoading &&
-                  services.length > 0 &&
+                {!loadingServices &&
+                  availableServices.length > 0 &&
                   linkedServiceIds.size === 0 && (
                     <p className="text-sm text-muted-foreground">
                       Selecione pelo menos um servico

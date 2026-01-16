@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { useGetCompany } from "@/hooks/get-company";
 import { useEmployeeWorkRange } from "@/hooks/workSchedule/use-employee-work-range";
 import type { Branch, Employee } from "../../../../../types/company";
 
@@ -50,6 +49,8 @@ type TeamMemberScheduleDialogProps = {
   member: Employee | null;
   setMember: React.Dispatch<React.SetStateAction<Employee | null>>;
   onReloadMember?: () => void;
+  branches?: Branch[];
+  loadingBranches?: boolean;
 };
 
 const WEEKDAYS: Array<Pick<ScheduleDayState, "weekday" | "label">> = [
@@ -155,15 +156,16 @@ export function TeamMemberScheduleDialog({
   member,
   setMember,
   onReloadMember,
+  branches = [],
+  loadingBranches = false,
 }: TeamMemberScheduleDialogProps) {
   const { toast } = useToast();
-  const { company, loading: isCompanyLoading } = useGetCompany();
-  const branches = useMemo(
+  const availableBranches = useMemo(
     () =>
-      (company?.branches ?? []).filter(
+      (branches ?? []).filter(
         branch => branch && typeof branch.name === "string"
       ),
-    [company?.branches]
+    [branches]
   );
 
   const [branchSchedules, setBranchSchedules] = useState<BranchScheduleState[]>(
@@ -185,8 +187,8 @@ export function TeamMemberScheduleDialog({
     const normalizedRanges = normalizeWorkSchedule(
       Array.isArray(member.work_schedule) ? member.work_schedule : []
     );
-    setBranchSchedules(buildBranchSchedules(branches, normalizedRanges));
-  }, [member, branches]);
+    setBranchSchedules(buildBranchSchedules(availableBranches, normalizedRanges));
+  }, [member, availableBranches]);
 
   const linkedBranchIds = new Set(
     member?.branches?.map(branch => branch.id.toString()) ?? []
@@ -436,16 +438,16 @@ export function TeamMemberScheduleDialog({
                   Selecione as filiais onde este profissional atende.
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {isCompanyLoading ? (
+                  {loadingBranches ? (
                     <span className="text-sm text-muted-foreground">
                       Carregando filiais...
                     </span>
-                  ) : branches.length === 0 ? (
+                  ) : availableBranches.length === 0 ? (
                     <span className="text-sm text-muted-foreground">
                       Nenhuma filial cadastrada
                     </span>
                   ) : (
-                    branches.map(branch => {
+                    availableBranches.map(branch => {
                       const isLinked = linkedBranchIds.has(
                         branch.id.toString()
                       );

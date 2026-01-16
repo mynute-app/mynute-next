@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Employee } from "../../../../../types/company";
+import type { Employee, Service } from "../../../../../types/company";
 import { WorkRangeServicesSection } from "../work-range-services-section";
 
 type TeamMemberServicesScheduleDialogProps = {
@@ -18,6 +18,8 @@ type TeamMemberServicesScheduleDialogProps = {
   member: Employee | null;
   setMember: React.Dispatch<React.SetStateAction<Employee | null>>;
   onReloadMember?: () => void;
+  services?: Service[];
+  loadingServices?: boolean;
 };
 
 export function TeamMemberServicesScheduleDialog({
@@ -26,6 +28,8 @@ export function TeamMemberServicesScheduleDialog({
   member,
   setMember,
   onReloadMember,
+  services,
+  loadingServices,
 }: TeamMemberServicesScheduleDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,6 +56,8 @@ export function TeamMemberServicesScheduleDialog({
                 selectedMember={member}
                 setSelectedMember={setMember}
                 onReloadMember={onReloadMember}
+                services={services}
+                loadingServices={loadingServices}
               />
             </div>
           )}

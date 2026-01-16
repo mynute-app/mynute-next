@@ -6,16 +6,7 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -26,15 +17,15 @@ import {
   CheckCircle,
   Clock,
   Calendar,
-  Plus,
   Trash2,
 } from "lucide-react";
-import { useGetCompany } from "@/hooks/get-company";
 
 type Props = {
   selectedMember: any | null;
   setSelectedMember: (member: any) => void;
   onReloadMember?: () => void;
+  services?: Service[];
+  loadingServices?: boolean;
 };
 
 type WorkRange = {
@@ -91,15 +82,15 @@ export function WorkRangeServicesSection({
   selectedMember,
   setSelectedMember,
   onReloadMember,
+  services = [],
+  loadingServices = false,
 }: Props) {
-  const { company, loading: loadingCompany } = useGetCompany();
-  const allServices: Service[] = company?.services ?? [];
+  const allServices: Service[] = services ?? [];
   const employeeServices: Service[] = selectedMember?.services ?? [];
 
   const [selectedWorkRangeId, setSelectedWorkRangeId] = useState<string>("");
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [workRanges, setWorkRanges] = useState<WorkRange[]>([]);
-  const [showServiceManager, setShowServiceManager] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
   const previousMemberIdRef = useRef<string | number | null>(null);
 
@@ -357,7 +348,7 @@ export function WorkRangeServicesSection({
     range => range.id.toString() === selectedWorkRangeId
   );
 
-  if (loadingCompany) {
+  if (loadingServices) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-5 w-40" />

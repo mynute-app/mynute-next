@@ -485,6 +485,8 @@ export default function YourTeam() {
         member={selectedMember}
         setMember={setSelectedMember}
         onReloadMember={handleReloadMember}
+        services={company?.services ?? []}
+        loadingServices={loading}
       />
       <TeamMemberScheduleDialog
         open={activeDialog === "schedule"}
@@ -494,6 +496,8 @@ export default function YourTeam() {
         member={selectedMember}
         setMember={setSelectedMember}
         onReloadMember={handleReloadMember}
+        branches={company?.branches ?? []}
+        loadingBranches={loading}
       />
       <TeamMemberServicesScheduleDialog
         open={activeDialog === "services-schedule"}
@@ -503,6 +507,8 @@ export default function YourTeam() {
         member={selectedMember}
         setMember={setSelectedMember}
         onReloadMember={handleReloadMember}
+        services={company?.services ?? []}
+        loadingServices={loading}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
