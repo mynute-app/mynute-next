@@ -60,7 +60,10 @@ const SubNavItem = ({
   label,
   isActive = false,
 }: SubNavItemProps) => (
-  <Link href={href} className={cn(subNavItemBase, isActive && subNavItemActive)}>
+  <Link
+    href={href}
+    className={cn(subNavItemBase, isActive && subNavItemActive)}
+  >
     {icon}
     <span>{label}</span>
   </Link>
@@ -107,10 +110,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 isActive={isActive("/dashboard", true)}
               />
               <NavItem
-                href="/dashboard/agenda"
+                href="/dashboard/scheduling/view"
                 icon={<Calendar className="h-5 w-5" />}
                 label="Agenda"
-                isActive={isActive("/dashboard/agenda")}
+                isActive={isActive("/dashboard/scheduling/view")}
               />
               <NavItem
                 href="/dashboard/agendamentos"

@@ -79,12 +79,32 @@ interface SelectedSlot {
 
 interface CreateAppointmentDialogProps {
   onAppointmentCreated?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+  initialSlot?: {
+    date: string;
+    time: string;
+    branchId?: string;
+  } | null;
 }
 
 export function CreateAppointmentDialog({
   onAppointmentCreated,
+  open,
+  onOpenChange,
+  hideTrigger,
+  initialSlot,
 }: CreateAppointmentDialogProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
+  const isControlled = typeof open === "boolean";
+  const dialogOpen = isControlled ? open : isOpen;
+  const setDialogOpen = (value: boolean) => {
+    if (!isControlled) {
+      setIsOpen(value);
+    }
+    onOpenChange?.(value);
+  };
   const [currentStep, setCurrentStep] = useState<Step>("service");
   const [formData, setFormData] = useState<FormData>({
     serviceId: "",
@@ -255,7 +275,7 @@ export function CreateAppointmentDialog({
 
   // Reset all state when dialog closes
   useEffect(() => {
-    if (!isOpen) {
+    if (!dialogOpen) {
       setFormData({
         serviceId: "",
         selectedDate: null,
@@ -271,7 +291,18 @@ export function CreateAppointmentDialog({
       setShowClientForm(false);
       form.reset();
     }
-  }, [isOpen, form]);
+  }, [dialogOpen, form]);
+
+  useEffect(() => {
+    if (!dialogOpen || !initialSlot) return;
+    setFormData(prev => ({
+      ...prev,
+      selectedDate: initialSlot.date,
+      selectedTime: initialSlot.time,
+      branchId: initialSlot.branchId ?? null,
+    }));
+    setSelectedSlot(null);
+  }, [dialogOpen, initialSlot?.date, initialSlot?.time, initialSlot?.branchId]);
 
   const handleSlotSelect = (date: string, slot: any, branchId: string) => {
     setSelectedSlot({
@@ -376,17 +407,19 @@ export function CreateAppointmentDialog({
   };
 
   const handleReset = () => {
-    setIsOpen(false);
+    setDialogOpen(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="gap-2">
-          <Plus className="h-4 w-4" />
-          Criar Agendamento
-        </Button>
-      </DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
+            Criar Agendamento
+          </Button>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
         <DialogHeader>

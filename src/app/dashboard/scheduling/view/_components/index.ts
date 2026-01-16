@@ -1,4 +1,4 @@
-// Componentes principais
+// Componentes principais (deprecated)
 export { CalendarView } from "./calendar-view";
 export { CalendarHeader } from "./calendar-header";
 export { CalendarToolbar } from "./calendar-toolbar";
