@@ -1,9 +1,6 @@
 "use client";
-
-import { useState } from "react";
 import { useCompanyImageDelete } from "@/hooks/use-company-image-delete";
 import { useCompanyImageUpload } from "@/hooks/use-company-image-upload";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Image as ImageIcon, Upload } from "lucide-react";
 import BannerImageUpload from "./banner-image-upload";
@@ -13,55 +10,21 @@ import { Company } from "../../../../../types/company";
 
 interface YourBrandUploadFormProps {
   company: Company;
-  onUploadSuccess?: () => void;
 }
 
 export default function YourBrandUploadForm({
   company,
-  onUploadSuccess,
 }: YourBrandUploadFormProps) {
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
-  const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
-
   const { deleteImage, isDeleting } = useCompanyImageDelete();
   const { uploadImage, isUploading: isUploadingImage } =
     useCompanyImageUpload();
 
   const handleDeleteImage = async (imageType: string) => {
-    const success = await deleteImage(imageType);
-    if (success) {
-      switch (imageType) {
-        case "logo":
-          setLogoFile(null);
-          break;
-        case "banner":
-          setBannerFile(null);
-          break;
-        case "background":
-          setBackgroundFile(null);
-          break;
-      }
-      onUploadSuccess?.();
-    }
+    await deleteImage(imageType);
   };
 
   const handleUploadImage = async (imageType: string, file: File) => {
-    const success = await uploadImage(imageType, file);
-    if (success) {
-      switch (imageType) {
-        case "logo":
-          setLogoFile(file);
-          break;
-        case "banner":
-          setBannerFile(file);
-          break;
-        case "background":
-          setBackgroundFile(file);
-          break;
-      }
-      onUploadSuccess?.();
-    }
+    await uploadImage(imageType, file);
   };
 
   return (
@@ -86,9 +49,11 @@ export default function YourBrandUploadForm({
             <Label>Logo Principal (claro)</Label>
             <BrandLogoUpload
               initialLogoUrl={company?.design?.images?.logo?.url || ""}
-              onFileChange={file =>
-                file ? handleUploadImage("logo", file) : setLogoFile(null)
-              }
+              onFileChange={file => {
+                if (file) {
+                  handleUploadImage("logo", file);
+                }
+              }}
               onRemoveFromBackend={() => handleDeleteImage("logo")}
             />
           </div>
@@ -107,59 +72,20 @@ export default function YourBrandUploadForm({
         </div>
       </div>
 
-      {/* <div className="bg-card rounded-xl border border-border shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Favicon</h2>
-        <div className="flex items-center gap-6">
-          <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center border-2 border-dashed border-border">
-            <ImageIcon className="w-6 h-6 text-muted-foreground" />
-          </div>
-          <div className="space-y-2">
-            <Button variant="outline" size="sm" type="button">
-              <Upload className="w-4 h-4 mr-2" />
-              Fazer upload
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Recomendado: 32x32px ou 64x64px, formato ICO ou PNG
-            </p>
-          </div>
-        </div>
-      </div> */}
-
       <div className="bg-card rounded-xl border border-border shadow-sm p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">
           Banner Principal (Hero)
         </h2>
         <BannerImageUpload
           initialBannerUrl={company?.design?.images?.banner?.url || ""}
-          onFileChange={file =>
-            file ? handleUploadImage("banner", file) : setBannerFile(null)
-          }
+          onFileChange={file => {
+            if (file) {
+              handleUploadImage("banner", file);
+            }
+          }}
           onRemoveFromBackend={() => handleDeleteImage("banner")}
         />
       </div>
-
-      {/* <div className="bg-card rounded-xl border border-border shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">
-          Galeria do Negocio
-        </h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Imagens do espaco, equipamentos, antes/depois de servicos
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => (
-            <div
-              key={i}
-              className="aspect-square rounded-xl border-2 border-dashed border-border flex items-center justify-center hover:border-primary/50 transition-colors cursor-pointer"
-            >
-              <Upload className="w-6 h-6 text-muted-foreground" />
-            </div>
-          ))}
-        </div>
-        <Button variant="outline" className="mt-4" type="button">
-          <Upload className="w-4 h-4 mr-2" />
-          Adicionar mais imagens
-        </Button>
-      </div> */}
 
       <div className="bg-card rounded-xl border border-border shadow-sm p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">
@@ -167,11 +93,11 @@ export default function YourBrandUploadForm({
         </h2>
         <BackgroundImageUpload
           initialBackgroundUrl={company?.design?.images?.background?.url || ""}
-          onFileChange={file =>
-            file
-              ? handleUploadImage("background", file)
-              : setBackgroundFile(null)
-          }
+          onFileChange={file => {
+            if (file) {
+              handleUploadImage("background", file);
+            }
+          }}
           onRemoveFromBackend={() => handleDeleteImage("background")}
         />
       </div>

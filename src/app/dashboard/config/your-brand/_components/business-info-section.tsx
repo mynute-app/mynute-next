@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Building2, Save } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { Company } from "../../../../../types/company";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,13 +14,8 @@ interface BusinessInfoSectionProps {
 export default function BusinessInfoSection({
   company,
 }: BusinessInfoSectionProps) {
-  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
+  const { register, handleSubmit } = useForm({
     defaultValues: {
       businessName: company.name || "",
       legalName: company.legal_name || "",
@@ -31,7 +24,6 @@ export default function BusinessInfoSection({
   });
 
   const onSubmit = async (data: any) => {
-    setIsSaving(true);
     try {
       console.log("Salvando informacoes:", data);
 
@@ -45,8 +37,6 @@ export default function BusinessInfoSection({
         description: "Ocorreu um erro ao atualizar as informacoes.",
         variant: "destructive",
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -107,17 +97,6 @@ export default function BusinessInfoSection({
           </p>
         </div>
       </div>
-
-      {/* <div className="flex justify-end">
-        <Button
-          type="submit"
-          disabled={true}
-          className="gap-2 opacity-50 cursor-not-allowed"
-        >
-          <Save className="w-4 h-4" />
-          Campos Bloqueados
-        </Button>
-      </div> */}
     </form>
   );
 }

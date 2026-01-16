@@ -126,12 +126,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               Cadastros
             </p>
             <div className="space-y-1">
-              <NavItem
+              {/* <NavItem
                 href="/dashboard/clientes"
                 icon={<Users className="h-5 w-5" />}
                 label="Clientes / Familias"
                 isActive={isActive("/dashboard/clientes")}
-              />
+              /> */}
               <NavItem
                 href="/dashboard/services"
                 icon={<Sparkles className="h-5 w-5" />}
@@ -185,12 +185,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <div className="space-y-1 py-1">
                   <SubNavItem
-                    href="/dashboard/your-brand"
+                    href="/dashboard/config/your-brand"
                     icon={<Palette className="h-4 w-4" />}
                     label="Branding e Midias"
-                    isActive={isActive("/dashboard/your-brand", true)}
+                    isActive={isActive("/dashboard/config/your-brand", true)}
                   />
-                  <SubNavItem
+                  {/* <SubNavItem
                     href="/dashboard/configuracoes/servicos"
                     icon={<Wrench className="h-4 w-4" />}
                     label="Servicos"
@@ -213,7 +213,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       "/dashboard/configuracoes/agendamento",
                       true
                     )}
-                  />
+                  /> */}
                 </div>
               </div>
             </div>

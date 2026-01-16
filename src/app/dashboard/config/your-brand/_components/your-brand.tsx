@@ -3,7 +3,6 @@
 import { useGetCompany } from "@/hooks/get-company";
 import YourBrandSkeleton from "./your-brand-skeleton";
 import YourBrandUploadForm from "./your-brand-upload-form";
-import BrandAppearanceSettings from "./BrandAppearanceSettings";
 import BusinessInfoSection from "./business-info-section";
 
 export default function YourBrand() {
@@ -29,7 +28,6 @@ export default function YourBrand() {
             </div>
 
             <YourBrandUploadForm company={company} />
-            {/* <BrandAppearanceSettings /> */}
             <BusinessInfoSection company={company} />
           </div>
         </div>
