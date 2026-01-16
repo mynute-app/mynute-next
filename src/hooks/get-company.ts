@@ -67,14 +67,19 @@ const fetchCompanyOnce = (force = false) => {
 };
 
 export const useGetCompany = () => {
-  const [company, setCompany] = useState<Company | null>(() =>
-    hydrateCompanyCache()
-  );
+  const [company, setCompany] = useState<Company | null>(() => companyCache);
   const [loading, setLoading] = useState<boolean>(() => !companyCache);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
+
+    const cached = hydrateCompanyCache();
+    if (cached && active) {
+      setCompany(cached);
+      setLoading(false);
+      setError(null);
+    }
 
     fetchCompanyOnce()
       .then(data => {
