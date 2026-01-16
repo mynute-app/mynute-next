@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Calendar,
   Clock,
@@ -72,6 +72,7 @@ export default function YourTeam() {
   const [memberToDelete, setMemberToDelete] = useState<Employee | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [activeById, setActiveById] = useState<Record<number, boolean>>({});
+  const ignoreMenuAutoFocusRef = useRef(false);
 
   const { company, loading, refetch } = useGetCompany();
   const employees = useMemo<Employee[]>(
@@ -162,6 +163,17 @@ export default function YourTeam() {
       setSelectedMemberId(member.id);
     }
     setActiveDialog(dialog);
+  };
+
+  const handleMenuSelect = (action: () => void) => {
+    ignoreMenuAutoFocusRef.current = true;
+    if (typeof document !== "undefined") {
+      const activeElement = document.activeElement;
+      if (activeElement instanceof HTMLElement) {
+        activeElement.blur();
+      }
+    }
+    setTimeout(action, 0);
   };
 
   const handleCloseDialog = () => {
@@ -330,36 +342,52 @@ export default function YourTeam() {
                                     <MoreHorizontal className="w-4 h-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
+                                <DropdownMenuContent
+                                  align="end"
+                                  onCloseAutoFocus={event => {
+                                    if (ignoreMenuAutoFocusRef.current) {
+                                      event.preventDefault();
+                                      ignoreMenuAutoFocusRef.current = false;
+                                    }
+                                  }}
+                                >
                                   <DropdownMenuItem
-                                    onClick={() =>
-                                      handleOpenDialog(member, "info")
+                                    onSelect={() =>
+                                      handleMenuSelect(() =>
+                                        handleOpenDialog(member, "info")
+                                      )
                                     }
                                   >
                                     <Edit className="w-4 h-4 mr-2" />
                                     Editar
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() =>
-                                      handleOpenDialog(member, "services")
+                                    onSelect={() =>
+                                      handleMenuSelect(() =>
+                                        handleOpenDialog(member, "services")
+                                      )
                                     }
                                   >
                                     <Sparkles className="w-4 h-4 mr-2" />
                                     Servicos
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() =>
-                                      handleOpenDialog(member, "schedule")
+                                    onSelect={() =>
+                                      handleMenuSelect(() =>
+                                        handleOpenDialog(member, "schedule")
+                                      )
                                     }
                                   >
                                     <Clock className="w-4 h-4 mr-2" />
                                     Filiais e horarios
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() =>
-                                      handleOpenDialog(
-                                        member,
-                                        "services-schedule"
+                                    onSelect={() =>
+                                      handleMenuSelect(() =>
+                                        handleOpenDialog(
+                                          member,
+                                          "services-schedule"
+                                        )
                                       )
                                     }
                                   >
@@ -368,7 +396,11 @@ export default function YourTeam() {
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
-                                    onClick={() => handleDeleteClick(member)}
+                                    onSelect={() =>
+                                      handleMenuSelect(() =>
+                                        handleDeleteClick(member)
+                                      )
+                                    }
                                     className="text-destructive focus:text-destructive"
                                   >
                                     <Trash2 className="w-4 h-4 mr-2" />

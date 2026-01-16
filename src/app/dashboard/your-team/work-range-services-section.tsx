@@ -567,13 +567,21 @@ export function WorkRangeServicesSection({
                     : "--";
 
                   return (
-                    <button
+                    <div
                       key={service.id}
-                      type="button"
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
                       onClick={() =>
                         handleServiceToggle(service.id.toString())
                       }
-                      className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all ${
+                      onKeyDown={event => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          handleServiceToggle(service.id.toString());
+                        }
+                      }}
+                      className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
                         isSelected
                           ? "border-primary bg-primary/5"
                           : "border-border hover:border-primary/50 opacity-60"
@@ -582,6 +590,8 @@ export function WorkRangeServicesSection({
                       <Checkbox
                         checked={isSelected}
                         className="mt-0.5 pointer-events-none"
+                        tabIndex={-1}
+                        aria-hidden="true"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1">
@@ -601,7 +611,7 @@ export function WorkRangeServicesSection({
                           <span>{price}</span>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   );
                 })
               )}

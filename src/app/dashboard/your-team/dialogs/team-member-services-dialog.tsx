@@ -170,11 +170,19 @@ export function TeamMemberServicesDialog({
                         : "--";
 
                       return (
-                        <button
+                        <div
                           key={service.id}
-                          type="button"
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={isLinked}
                           onClick={() => handleToggleService(service)}
-                          className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                          onKeyDown={event => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              handleToggleService(service);
+                            }
+                          }}
+                          className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
                             isLinked
                               ? "border-primary bg-primary/5 shadow-sm"
                               : "border-border hover:border-primary/50"
@@ -183,6 +191,8 @@ export function TeamMemberServicesDialog({
                           <Checkbox
                             checked={isLinked}
                             className="pointer-events-none"
+                            tabIndex={-1}
+                            aria-hidden="true"
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
@@ -202,7 +212,7 @@ export function TeamMemberServicesDialog({
                               <span>{price}</span>
                             </div>
                           </div>
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
