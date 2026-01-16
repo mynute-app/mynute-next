@@ -126,7 +126,7 @@ export function WorkRangeServicesSection({
 
       toast({
         title: "Servico vinculado",
-        description: `O servico foi vinculado ao funcionario ${selectedMember.name}.`,
+        description: `O servico foi vinculado ao profissional ${selectedMember.name}.`,
       });
       onReloadMember?.();
     } catch (err) {
@@ -167,7 +167,7 @@ export function WorkRangeServicesSection({
 
       toast({
         title: "Servico desvinculado",
-        description: `O servico foi removido do funcionario ${selectedMember.name}.`,
+        description: `O servico foi removido do profissional ${selectedMember.name}.`,
         variant: "destructive",
       });
       onReloadMember?.();
@@ -231,7 +231,7 @@ export function WorkRangeServicesSection({
     if (!selectedMember?.id || !selectedWorkRangeId) {
       toast({
         title: "Erro",
-        description: "Selecione um funcionario e um horario",
+        description: "Selecione um profissional e um horario",
         variant: "destructive",
       });
       return;
@@ -287,7 +287,7 @@ export function WorkRangeServicesSection({
     if (!selectedMember?.id || !selectedWorkRangeId) {
       toast({
         title: "Erro",
-        description: "Selecione um funcionario e um horario",
+        description: "Selecione um profissional e um horario",
         variant: "destructive",
       });
       return;
@@ -382,7 +382,7 @@ export function WorkRangeServicesSection({
   if (!selectedMember) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-muted-foreground">
-        Selecione um funcionario para gerenciar os servicos por horario.
+        Selecione um profissional para gerenciar os servicos por horario.
       </div>
     );
   }
@@ -407,7 +407,7 @@ export function WorkRangeServicesSection({
           <h3 className="text-lg font-semibold">Servicos por horario</h3>
         </div>
         <p className="text-sm text-muted-foreground">
-          Configure quais servicos o funcionario pode realizar em cada horario
+          Configure quais servicos o profissional pode realizar em cada horario
           especifico.
         </p>
       </div>
@@ -548,7 +548,7 @@ export function WorkRangeServicesSection({
               {!employeeServices.length ? (
                 <div className="col-span-full text-center py-8 text-muted-foreground">
                   <p>
-                    Este funcionario nao possui servicos vinculados. Vincule
+                    Este profissional nao possui servicos vinculados. Vincule
                     servicos na aba "Servicos" ou use "Gerenciar servicos"
                     acima.
                   </p>

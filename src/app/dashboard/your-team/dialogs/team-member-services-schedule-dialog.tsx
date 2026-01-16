@@ -29,22 +29,22 @@ export function TeamMemberServicesScheduleDialog({
 }: TeamMemberServicesScheduleDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="max-w-5xl max-h-[90vh] min-h-0 flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>
             {member ? "Servicos por horario" : "Carregando profissional..."}
           </DialogTitle>
           <DialogDescription>
             {member
-              ? "Configure os servicos disponiveis para cada horario."
-              : "Aguarde enquanto carregamos as informacoes."}
+              ? "Configure os servicos disponiveis em cada horario."
+              : "Aguarde enquanto carregamos as informacoes do profissional."}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6">
+        <ScrollArea className="flex-1 min-h-0 px-6">
           {!member ? (
             <div className="py-6 text-sm text-muted-foreground">
-              Buscando dados do profissional.
+              Buscando dados do profissional...
             </div>
           ) : (
             <div className="mt-4 pb-6">

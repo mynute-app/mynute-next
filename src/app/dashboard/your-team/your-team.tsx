@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Calendar,
   Clock,
@@ -54,11 +54,7 @@ const getInitials = (member: Employee) => {
   return initials ? initials.toUpperCase() : "?";
 };
 
-type MemberDialogKey =
-  | "info"
-  | "services"
-  | "schedule"
-  | "services-schedule";
+type MemberDialogKey = "info" | "services" | "schedule" | "services-schedule";
 
 export default function YourTeam() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -72,7 +68,6 @@ export default function YourTeam() {
   const [memberToDelete, setMemberToDelete] = useState<Employee | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [activeById, setActiveById] = useState<Record<number, boolean>>({});
-  const ignoreMenuAutoFocusRef = useRef(false);
 
   const { company, loading, refetch } = useGetCompany();
   const employees = useMemo<Employee[]>(
@@ -166,7 +161,6 @@ export default function YourTeam() {
   };
 
   const handleMenuSelect = (action: () => void) => {
-    ignoreMenuAutoFocusRef.current = true;
     if (typeof document !== "undefined") {
       const activeElement = document.activeElement;
       if (activeElement instanceof HTMLElement) {
@@ -342,15 +336,7 @@ export default function YourTeam() {
                                     <MoreHorizontal className="w-4 h-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                  align="end"
-                                  onCloseAutoFocus={event => {
-                                    if (ignoreMenuAutoFocusRef.current) {
-                                      event.preventDefault();
-                                      ignoreMenuAutoFocusRef.current = false;
-                                    }
-                                  }}
-                                >
+                                <DropdownMenuContent align="end">
                                   <DropdownMenuItem
                                     onSelect={() =>
                                       handleMenuSelect(() =>
@@ -489,6 +475,7 @@ export default function YourTeam() {
           if (!open) handleCloseDialog();
         }}
         member={selectedMember}
+        onReloadMember={handleReloadMember}
       />
       <TeamMemberServicesDialog
         open={activeDialog === "services"}

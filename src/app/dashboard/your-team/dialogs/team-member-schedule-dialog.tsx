@@ -213,7 +213,7 @@ export function TeamMemberScheduleDialog({
 
       toast({
         title: "Filial vinculada",
-        description: `A filial foi vinculada a ${member.name}.`,
+        description: `A filial foi vinculada ao profissional ${member.name}.`,
       });
       onReloadMember?.();
     } catch (err) {
@@ -246,7 +246,7 @@ export function TeamMemberScheduleDialog({
 
       toast({
         title: "Filial desvinculada",
-        description: `A filial foi removida de ${member.name}.`,
+        description: `A filial foi removida do profissional ${member.name}.`,
         variant: "destructive",
       });
       onReloadMember?.();
@@ -411,29 +411,29 @@ export function TeamMemberScheduleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="max-w-4xl h-[90vh] min-h-0 flex flex-col overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>
             {member ? "Filiais e horarios" : "Carregando profissional..."}
           </DialogTitle>
           <DialogDescription>
             {member
-              ? "Selecione as filiais onde este profissional trabalha e configure os horarios."
-              : "Aguarde enquanto carregamos as informacoes."}
+              ? "Selecione as filiais onde este profissional atende e ajuste os horarios de atendimento."
+              : "Aguarde enquanto carregamos as informacoes do profissional."}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6">
+        <ScrollArea className="flex-1 min-h-0 px-6">
           {!member ? (
             <div className="py-6 text-sm text-muted-foreground">
-              Buscando dados do profissional.
+              Buscando dados do profissional...
             </div>
           ) : (
             <div className="mt-4 pb-6 space-y-6">
               <div className="space-y-3">
-                <Label>Filiais vinculadas</Label>
+                <Label>Filiais vinculadas ao profissional</Label>
                 <p className="text-sm text-muted-foreground">
-                  Selecione as filiais onde este profissional trabalha
+                  Selecione as filiais onde este profissional atende.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {isCompanyLoading ? (
@@ -473,7 +473,7 @@ export function TeamMemberScheduleDialog({
                 <div className="text-center py-8 text-muted-foreground">
                   <Building2 className="w-10 h-10 mx-auto mb-2 opacity-50" />
                   <p>
-                    Selecione pelo menos uma filial para configurar os horarios
+                    Selecione ao menos uma filial para configurar os horarios.
                   </p>
                 </div>
               ) : (

@@ -68,7 +68,7 @@ export function TeamMemberServicesDialog({
 
       toast({
         title: "Servico vinculado",
-        description: `O servico foi vinculado a ${member.name}.`,
+        description: `O servico foi vinculado ao profissional ${member.name}.`,
       });
       onReloadMember?.();
     } catch (err) {
@@ -101,7 +101,7 @@ export function TeamMemberServicesDialog({
 
       toast({
         title: "Servico desvinculado",
-        description: `O servico foi removido de ${member.name}.`,
+        description: `O servico foi removido do profissional ${member.name}.`,
         variant: "destructive",
       });
       onReloadMember?.();
@@ -125,29 +125,29 @@ export function TeamMemberServicesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] min-h-0 flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>
             {member ? "Servicos do profissional" : "Carregando profissional..."}
           </DialogTitle>
           <DialogDescription>
             {member
-              ? "Selecione os servicos que este profissional pode realizar."
-              : "Aguarde enquanto carregamos as informacoes."}
+              ? "Selecione os servicos que este profissional realiza."
+              : "Aguarde enquanto carregamos as informacoes do profissional."}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6">
+        <ScrollArea className="flex-1 min-h-0 px-6">
           {!member ? (
             <div className="py-6 text-sm text-muted-foreground">
-              Buscando dados do profissional.
+              Buscando dados do profissional...
             </div>
           ) : (
             <div className="mt-4 pb-6 space-y-6">
               <div className="space-y-3">
-                <Label>Servicos que atende</Label>
+                <Label>Servicos que o profissional atende</Label>
                 <p className="text-sm text-muted-foreground">
-                  Selecione os servicos que este profissional pode realizar
+                  Selecione os servicos que este profissional realiza.
                 </p>
                 {isCompanyLoading ? (
                   <span className="text-sm text-muted-foreground">
