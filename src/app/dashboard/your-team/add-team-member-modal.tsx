@@ -42,11 +42,11 @@ const defaultExtraFields: ExtraFields = {
 
 const weekDays = [
   { key: "Seg", label: "Segunda" },
-  { key: "Ter", label: "Ter\u00e7a" },
+  { key: "Ter", label: "Terça " },
   { key: "Qua", label: "Quarta" },
   { key: "Qui", label: "Quinta" },
   { key: "Sex", label: "Sexta" },
-  { key: "S\u00e1b", label: "S\u00e1bado" },
+  { key: "Sáb", label: "Sábado" },
   { key: "Dom", label: "Domingo" },
 ];
 

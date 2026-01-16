@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Upload, Mail, Phone, Building2 } from "lucide-react";
+import { Upload, Mail, Phone, Building2, Clock, Calendar, CheckCircle2, Briefcase } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,22 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Serviços por horário/dia
+export interface TimeSlotServices {
+  dayKey: string;
+  open: string;
+  close: string;
+  services: string[];
+}
 
 export interface StaffBranchSchedule {
   branchId: string;
@@ -21,6 +37,7 @@ export interface StaffBranchSchedule {
   schedule: {
     [key: string]: { enabled: boolean; open: string; close: string };
   };
+  timeSlotServices?: TimeSlotServices[];
 }
 
 export interface Staff {
@@ -39,12 +56,20 @@ export interface Staff {
   branchSchedules?: StaffBranchSchedule[];
 }
 
+interface ServiceInfo {
+  id: string;
+  name: string;
+  duration: number;
+  price: number;
+}
+
 interface StaffDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   staff?: Staff | null;
   onSave: (staff: Omit<Staff, "id" | "rating" | "appointmentsCount"> & { id?: string }) => void;
   availableServices: string[];
+  availableServicesInfo?: ServiceInfo[];
   availableBranches?: { id: string; name: string }[];
 }
 
@@ -73,6 +98,16 @@ const mockBranches = [
   { id: "3", name: "Unidade Zona Sul" },
 ];
 
+const mockServicesInfo: ServiceInfo[] = [
+  { id: "1", name: "Lavagem Tradicional (Hatch)", duration: 120, price: 70 },
+  { id: "2", name: "Lavagem Tradicional (SUV)", duration: 120, price: 90 },
+  { id: "3", name: "Lavagem Tradicional (Caminhonete)", duration: 120, price: 110 },
+  { id: "4", name: "Lavagem Tradicional (Moto)", duration: 120, price: 50 },
+  { id: "5", name: "Lavagem Completa", duration: 180, price: 150 },
+  { id: "6", name: "Polimento", duration: 240, price: 300 },
+  { id: "7", name: "Higienização Interna", duration: 90, price: 120 },
+];
+
 const defaultStaff: Omit<Staff, "id" | "rating" | "appointmentsCount"> = {
   name: "",
   nickname: "",
@@ -91,9 +126,11 @@ export function StaffDialog({
   staff,
   onSave,
   availableServices,
+  availableServicesInfo = mockServicesInfo,
   availableBranches = mockBranches,
 }: StaffDialogProps) {
   const [formData, setFormData] = useState<Omit<Staff, "id" | "rating" | "appointmentsCount"> & { id?: string }>(defaultStaff);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const isEditing = !!staff;
 
   useEffect(() => {
@@ -114,6 +151,7 @@ export function StaffDialog({
           branchName: b.name,
           enabled: false,
           schedule: { ...defaultSchedule },
+          timeSlotServices: [],
         })),
       });
     } else {
@@ -124,9 +162,11 @@ export function StaffDialog({
           branchName: b.name,
           enabled: false,
           schedule: { ...defaultSchedule },
+          timeSlotServices: [],
         })),
       });
     }
+    setSelectedTimeSlot(null);
   }, [staff, open, availableBranches]);
 
   const handleChange = (field: keyof Staff, value: any) => {
@@ -173,6 +213,126 @@ export function StaffDialog({
     }));
   };
 
+  // Get all enabled time slots across all branches
+  const getAvailableTimeSlots = () => {
+    const slots: { id: string; branchId: string; branchName: string; dayKey: string; dayLabel: string; open: string; close: string }[] = [];
+    
+    formData.branchSchedules?.forEach(bs => {
+      if (bs.enabled) {
+        weekDays.forEach(day => {
+          if (bs.schedule[day.key]?.enabled) {
+            slots.push({
+              id: `${bs.branchId}-${day.key}`,
+              branchId: bs.branchId,
+              branchName: bs.branchName,
+              dayKey: day.key,
+              dayLabel: day.label,
+              open: bs.schedule[day.key].open,
+              close: bs.schedule[day.key].close,
+            });
+          }
+        });
+      }
+    });
+    
+    return slots;
+  };
+
+  const getTimeSlotServices = (branchId: string, dayKey: string): string[] => {
+    const bs = formData.branchSchedules?.find(b => b.branchId === branchId);
+    const slot = bs?.timeSlotServices?.find(ts => ts.dayKey === dayKey);
+    return slot?.services || formData.services; // fallback to all services
+  };
+
+  const toggleTimeSlotService = (branchId: string, dayKey: string, serviceName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      branchSchedules: prev.branchSchedules?.map(bs => {
+        if (bs.branchId !== branchId) return bs;
+        
+        const existingSlot = bs.timeSlotServices?.find(ts => ts.dayKey === dayKey);
+        const currentServices = existingSlot?.services || [...prev.services];
+        
+        const newServices = currentServices.includes(serviceName)
+          ? currentServices.filter(s => s !== serviceName)
+          : [...currentServices, serviceName];
+        
+        if (existingSlot) {
+          return {
+            ...bs,
+            timeSlotServices: bs.timeSlotServices?.map(ts =>
+              ts.dayKey === dayKey ? { ...ts, services: newServices } : ts
+            ),
+          };
+        } else {
+          return {
+            ...bs,
+            timeSlotServices: [
+              ...(bs.timeSlotServices || []),
+              { dayKey, open: bs.schedule[dayKey].open, close: bs.schedule[dayKey].close, services: newServices },
+            ],
+          };
+        }
+      }),
+    }));
+  };
+
+  const setAllServicesForSlot = (branchId: string, dayKey: string) => {
+    setFormData(prev => ({
+      ...prev,
+      branchSchedules: prev.branchSchedules?.map(bs => {
+        if (bs.branchId !== branchId) return bs;
+        
+        const existingSlot = bs.timeSlotServices?.find(ts => ts.dayKey === dayKey);
+        
+        if (existingSlot) {
+          return {
+            ...bs,
+            timeSlotServices: bs.timeSlotServices?.map(ts =>
+              ts.dayKey === dayKey ? { ...ts, services: [...prev.services] } : ts
+            ),
+          };
+        } else {
+          return {
+            ...bs,
+            timeSlotServices: [
+              ...(bs.timeSlotServices || []),
+              { dayKey, open: bs.schedule[dayKey].open, close: bs.schedule[dayKey].close, services: [...prev.services] },
+            ],
+          };
+        }
+      }),
+    }));
+  };
+
+  const clearServicesForSlot = (branchId: string, dayKey: string) => {
+    setFormData(prev => ({
+      ...prev,
+      branchSchedules: prev.branchSchedules?.map(bs => {
+        if (bs.branchId !== branchId) return bs;
+        
+        const existingSlot = bs.timeSlotServices?.find(ts => ts.dayKey === dayKey);
+        
+        if (existingSlot) {
+          return {
+            ...bs,
+            timeSlotServices: bs.timeSlotServices?.map(ts =>
+              ts.dayKey === dayKey ? { ...ts, services: [] } : ts
+            ),
+          };
+        } else {
+          return {
+            ...bs,
+            timeSlotServices: [
+              ...(bs.timeSlotServices || []),
+              { dayKey, open: bs.schedule[dayKey].open, close: bs.schedule[dayKey].close, services: [] },
+            ],
+          };
+        }
+      }),
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Update workingDays based on branchSchedules for backwards compatibility
@@ -196,6 +356,10 @@ export function StaffDialog({
   };
 
   const enabledBranches = formData.branchSchedules?.filter(bs => bs.enabled) || [];
+  const availableTimeSlots = getAvailableTimeSlots();
+  const selectedSlotInfo = selectedTimeSlot 
+    ? availableTimeSlots.find(s => s.id === selectedTimeSlot) 
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -208,10 +372,11 @@ export function StaffDialog({
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <Tabs defaultValue="info" className="flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-3 mx-6 max-w-[calc(100%-3rem)]">
+            <TabsList className="grid w-full grid-cols-4 mx-6 max-w-[calc(100%-3rem)]">
               <TabsTrigger value="info">Informações</TabsTrigger>
               <TabsTrigger value="services">Serviços</TabsTrigger>
-              <TabsTrigger value="schedule">Filiais & Horários</TabsTrigger>
+              <TabsTrigger value="schedule">Horários</TabsTrigger>
+              <TabsTrigger value="services-schedule">Por Horário</TabsTrigger>
             </TabsList>
 
             <ScrollArea className="flex-1 px-6">
@@ -323,26 +488,38 @@ export function StaffDialog({
                 <div className="space-y-3">
                   <Label>Serviços que Atende</Label>
                   <p className="text-sm text-muted-foreground">
-                    Selecione os serviços que este profissional pode realizar
+                    Selecione os serviços que este profissional pode realizar (disponíveis em todos os horários por padrão)
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    {availableServices.map((service) => (
-                      <button
-                        key={service}
-                        type="button"
-                        onClick={() => toggleService(service)}
-                        className={`px-4 py-2 rounded-lg text-sm transition-all ${
-                          formData.services.includes(service)
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        }`}
-                      >
-                        {formData.services.includes(service) && (
-                          <span className="mr-1.5">✓</span>
-                        )}
-                        {service}
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {availableServicesInfo.map((service) => {
+                      const isSelected = formData.services.includes(service.name);
+                      return (
+                        <button
+                          key={service.id}
+                          type="button"
+                          onClick={() => toggleService(service.name)}
+                          className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                            isSelected
+                              ? "border-primary bg-primary/5 shadow-sm"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          <Checkbox checked={isSelected} className="pointer-events-none" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              {isSelected && <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />}
+                              <span className={`text-sm font-medium truncate ${isSelected ? "text-primary" : ""}`}>
+                                {service.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                              <span>{service.duration} min</span>
+                              <span>R$ {service.price.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                   {formData.services.length === 0 && (
                     <p className="text-sm text-destructive">
@@ -435,6 +612,179 @@ export function StaffDialog({
                   <div className="text-center py-8 text-muted-foreground">
                     <Building2 className="w-10 h-10 mx-auto mb-2 opacity-50" />
                     <p>Selecione pelo menos uma filial para configurar os horários</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Nova aba: Serviços por Horário */}
+              <TabsContent value="services-schedule" className="mt-4 space-y-6 pb-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-primary" />
+                    <Label className="text-lg font-semibold">Serviços por Horário</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Configure quais serviços o funcionário pode realizar em cada horário específico.
+                    Por padrão, todos os serviços selecionados na aba "Serviços" estão disponíveis em todos os horários.
+                  </p>
+                </div>
+
+                {availableTimeSlots.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground rounded-lg border-2 border-dashed">
+                    <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p className="font-medium">Nenhum horário configurado</p>
+                    <p className="text-sm mt-1">Configure os horários na aba "Horários" primeiro</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Seletor de Horário */}
+                    <div className="rounded-lg border bg-card p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <Label>Selecionar Horário</Label>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Escolha o horário específico para configurar os serviços
+                      </p>
+                      
+                      <Select
+                        value={selectedTimeSlot || ""}
+                        onValueChange={setSelectedTimeSlot}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione um horário..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableTimeSlots.map(slot => (
+                            <SelectItem key={slot.id} value={slot.id}>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{slot.dayLabel}</span>
+                                <span className="text-muted-foreground">
+                                  {slot.open} - {slot.close}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  ({slot.branchName})
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      {/* Lista rápida de horários */}
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {availableTimeSlots.map(slot => {
+                          const slotServices = getTimeSlotServices(slot.branchId, slot.dayKey);
+                          const isSelected = selectedTimeSlot === slot.id;
+                          return (
+                            <button
+                              key={slot.id}
+                              type="button"
+                              onClick={() => setSelectedTimeSlot(slot.id)}
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all border ${
+                                isSelected
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border hover:border-primary/50"
+                              }`}
+                            >
+                              <Calendar className="w-3.5 h-3.5" />
+                              <span className="font-medium">{slot.dayLabel}</span>
+                              <Clock className="w-3 h-3 ml-1" />
+                              <span className="text-xs text-muted-foreground">
+                                {slot.open} - {slot.close}
+                              </span>
+                              <span className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                                {slotServices.length} serviços
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Configurar Serviços para o horário selecionado */}
+                    {selectedSlotInfo && (
+                      <div className="rounded-lg border bg-card p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Briefcase className="w-4 h-4 text-muted-foreground" />
+                              <Label>Configurar Serviços</Label>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Selecione os serviços disponíveis para{" "}
+                              <span className="font-medium text-foreground">{selectedSlotInfo.dayLabel}</span>{" "}
+                              ({selectedSlotInfo.open} - {selectedSlotInfo.close}) - {selectedSlotInfo.branchName}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setAllServicesForSlot(selectedSlotInfo.branchId, selectedSlotInfo.dayKey)}
+                            >
+                              Marcar Todos
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => clearServicesForSlot(selectedSlotInfo.branchId, selectedSlotInfo.dayKey)}
+                            >
+                              Limpar
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="text-sm text-muted-foreground">
+                          {getTimeSlotServices(selectedSlotInfo.branchId, selectedSlotInfo.dayKey).length} serviço(s) selecionado(s)
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {formData.services.length === 0 ? (
+                            <div className="col-span-full text-center py-8 text-muted-foreground">
+                              <p>Selecione serviços na aba "Serviços" primeiro</p>
+                            </div>
+                          ) : (
+                            formData.services.map((serviceName) => {
+                              const serviceInfo = availableServicesInfo.find(s => s.name === serviceName);
+                              const slotServices = getTimeSlotServices(selectedSlotInfo.branchId, selectedSlotInfo.dayKey);
+                              const isSelected = slotServices.includes(serviceName);
+                              
+                              return (
+                                <button
+                                  key={serviceName}
+                                  type="button"
+                                  onClick={() => toggleTimeSlotService(selectedSlotInfo.branchId, selectedSlotInfo.dayKey, serviceName)}
+                                  className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all ${
+                                    isSelected
+                                      ? "border-primary bg-primary/5"
+                                      : "border-border hover:border-primary/50 opacity-60"
+                                  }`}
+                                >
+                                  <Checkbox checked={isSelected} className="mt-0.5 pointer-events-none" />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1">
+                                      {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
+                                      <span className={`text-sm font-medium truncate ${isSelected ? "text-primary" : ""}`}>
+                                        {serviceName}
+                                      </span>
+                                    </div>
+                                    {serviceInfo && (
+                                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                        <span>{serviceInfo.duration} min</span>
+                                        <span>R$ {serviceInfo.price.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </TabsContent>

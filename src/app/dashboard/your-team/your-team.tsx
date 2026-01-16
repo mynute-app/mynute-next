@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Calendar,
+  Clock,
   Edit,
   Mail,
   MoreHorizontal,
   Phone,
   Plus,
   Search,
+  Sparkles,
   Star,
   Trash2,
 } from "lucide-react";
@@ -36,10 +38,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import AddTeamMemberDialog from "./add-team-member-modal";
-import EditUserDialog from "./info-team/edit-user-dialog";
+import { TeamMemberInfoDialog } from "./dialogs/team-member-info-dialog";
+import { TeamMemberScheduleDialog } from "./dialogs/team-member-schedule-dialog";
+import { TeamMemberServicesDialog } from "./dialogs/team-member-services-dialog";
+import { TeamMemberServicesScheduleDialog } from "./dialogs/team-member-services-schedule-dialog";
 
 const getInitials = (member: Employee) => {
   const first = member.name?.trim().charAt(0);
@@ -48,21 +54,35 @@ const getInitials = (member: Employee) => {
   return initials ? initials.toUpperCase() : "?";
 };
 
+type MemberDialogKey =
+  | "info"
+  | "services"
+  | "schedule"
+  | "services-schedule";
+
 export default function YourTeam() {
   const [searchTerm, setSearchTerm] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [activeDialog, setActiveDialog] = useState<MemberDialogKey | null>(
+    null
+  );
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
   const [selectedMember, setSelectedMember] = useState<Employee | null>(null);
+  const [memberReloadKey, setMemberReloadKey] = useState(0);
   const [memberToDelete, setMemberToDelete] = useState<Employee | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [activeById, setActiveById] = useState<Record<number, boolean>>({});
 
   const { company, loading, refetch } = useGetCompany();
-  const employees: Employee[] = company?.employees ?? [];
+  const employees = useMemo<Employee[]>(
+    () => company?.employees ?? [],
+    [company?.employees]
+  );
 
-  const { employee: selectedEmployeeData } =
-    useGetEmployeeById(selectedMemberId);
+  const { employee: selectedEmployeeData } = useGetEmployeeById(
+    selectedMemberId,
+    memberReloadKey
+  );
 
   const { deleteEmployee, isDeleting } = useDeleteEmployee({
     onSuccess: () => {
@@ -71,20 +91,31 @@ export default function YourTeam() {
   });
 
   useEffect(() => {
+    if (!selectedMemberId) {
+      setSelectedMember(null);
+      return;
+    }
+
     if (selectedEmployeeData) {
       setSelectedMember(selectedEmployeeData);
     }
-  }, [selectedEmployeeData]);
+  }, [selectedEmployeeData, selectedMemberId]);
 
   useEffect(() => {
+    if (employees.length === 0) return;
+
     setActiveById(prev => {
+      let changed = false;
       const next = { ...prev };
+
       employees.forEach(employee => {
         if (next[employee.id] === undefined) {
           next[employee.id] = true;
+          changed = true;
         }
       });
-      return next;
+
+      return changed ? next : prev;
     });
   }, [employees]);
 
@@ -125,10 +156,22 @@ export default function YourTeam() {
     setAddDialogOpen(true);
   };
 
-  const handleEditMember = (member: Employee) => {
+  const handleOpenDialog = (member: Employee, dialog: MemberDialogKey) => {
+    if (selectedMemberId !== member.id) {
+      setSelectedMember(null);
+      setSelectedMemberId(member.id);
+    }
+    setActiveDialog(dialog);
+  };
+
+  const handleCloseDialog = () => {
+    setActiveDialog(null);
+    setSelectedMemberId(null);
     setSelectedMember(null);
-    setSelectedMemberId(member.id);
-    setEditDialogOpen(true);
+  };
+
+  const handleReloadMember = () => {
+    setMemberReloadKey(prev => prev + 1);
   };
 
   const handleDeleteClick = (member: Employee) => {
@@ -223,6 +266,23 @@ export default function YourTeam() {
                   const serviceNames = services
                     .map(service => service?.name)
                     .filter(Boolean) as string[];
+                  const roleLabel =
+                    member.role || member.permission || "Profissional";
+                  const emailValue =
+                    member.email ||
+                    (member as { email?: string; user?: { email?: string } })
+                      .user?.email ||
+                    "";
+                  const phoneValue =
+                    member.phone ||
+                    (member as { phone?: string; phone_number?: string })
+                      .phone_number ||
+                    "";
+                  const descriptionValue =
+                    (member as { bio?: string; description?: string })?.bio ||
+                    (member as { bio?: string; description?: string })
+                      ?.description ||
+                    "";
                   const rating = 0;
                   const appointmentsCount = 0;
                   const workingDaysLabel = "Sem agenda";
@@ -247,7 +307,7 @@ export default function YourTeam() {
                                 {member.name} {member.surname}
                               </h3>
                               <p className="text-sm text-muted-foreground">
-                                {member.role || "Profissional"}
+                                {roleLabel}
                               </p>
                             </div>
                             <div className="flex items-center gap-1">
@@ -272,11 +332,41 @@ export default function YourTeam() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
-                                    onClick={() => handleEditMember(member)}
+                                    onClick={() =>
+                                      handleOpenDialog(member, "info")
+                                    }
                                   >
                                     <Edit className="w-4 h-4 mr-2" />
                                     Editar
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleOpenDialog(member, "services")
+                                    }
+                                  >
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Servicos
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleOpenDialog(member, "schedule")
+                                    }
+                                  >
+                                    <Clock className="w-4 h-4 mr-2" />
+                                    Filiais e horarios
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleOpenDialog(
+                                        member,
+                                        "services-schedule"
+                                      )
+                                    }
+                                  >
+                                    <Calendar className="w-4 h-4 mr-2" />
+                                    Servicos por horario
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     onClick={() => handleDeleteClick(member)}
                                     className="text-destructive focus:text-destructive"
@@ -290,17 +380,19 @@ export default function YourTeam() {
                           </div>
 
                           <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                            Nenhuma descri\u00e7\u00e3o cadastrada.
+                            {descriptionValue
+                              ? descriptionValue
+                              : "Nenhuma descricao cadastrada."}
                           </p>
 
                           <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Mail className="w-3.5 h-3.5" />
-                              {member.email || "Email n\u00e3o informado"}
+                              {emailValue || "Email nao informado"}
                             </span>
                             <span className="flex items-center gap-1">
                               <Phone className="w-3.5 h-3.5" />
-                              {member.phone || "Telefone n\u00e3o informado"}
+                              {phoneValue || "Telefone nao informado"}
                             </span>
                           </div>
 
@@ -317,7 +409,7 @@ export default function YourTeam() {
                               ))
                             ) : (
                               <Badge variant="outline" className="text-xs">
-                                Sem servi\u00e7os
+                                Sem servicos
                               </Badge>
                             )}
                           </div>
@@ -359,15 +451,39 @@ export default function YourTeam() {
         availableServices={availableServices}
       />
 
-      <EditUserDialog
-        user={selectedMember}
-        isOpen={editDialogOpen}
-        onClose={() => {
-          setEditDialogOpen(false);
-          setSelectedMemberId(null);
-          setSelectedMember(null);
+      <TeamMemberInfoDialog
+        open={activeDialog === "info"}
+        onOpenChange={open => {
+          if (!open) handleCloseDialog();
         }}
-        onReloadMember={id => setSelectedMemberId(id)}
+        member={selectedMember}
+      />
+      <TeamMemberServicesDialog
+        open={activeDialog === "services"}
+        onOpenChange={open => {
+          if (!open) handleCloseDialog();
+        }}
+        member={selectedMember}
+        setMember={setSelectedMember}
+        onReloadMember={handleReloadMember}
+      />
+      <TeamMemberScheduleDialog
+        open={activeDialog === "schedule"}
+        onOpenChange={open => {
+          if (!open) handleCloseDialog();
+        }}
+        member={selectedMember}
+        setMember={setSelectedMember}
+        onReloadMember={handleReloadMember}
+      />
+      <TeamMemberServicesScheduleDialog
+        open={activeDialog === "services-schedule"}
+        onOpenChange={open => {
+          if (!open) handleCloseDialog();
+        }}
+        member={selectedMember}
+        setMember={setSelectedMember}
+        onReloadMember={handleReloadMember}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -379,7 +495,7 @@ export default function YourTeam() {
               <strong>
                 {memberToDelete?.name} {memberToDelete?.surname}
               </strong>
-              ? Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.
+              ? Esta acao nao pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
