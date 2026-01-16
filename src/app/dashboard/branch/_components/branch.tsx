@@ -41,9 +41,8 @@ import { useGetCompany } from "@/hooks/get-company";
 import { useBranchApi } from "@/hooks/branch/use-branch-api";
 import type { Branch } from "../../../../../types/company";
 import { AddAddressDialog } from "./add-address-dialog";
-import { BranchEditDialog } from "./branch-edit-dialog";
-
-type EditTab = "info" | "schedule";
+import { BranchInfoDialog } from "./branch-info-dialog";
+import { BranchScheduleDialog } from "./branch-schedule-dialog";
 
 type BranchCardProps = {
   branch: Branch;
@@ -51,7 +50,7 @@ type BranchCardProps = {
   employeesCount: number;
   scheduleSummary: string | null;
   hasBranchStatus: boolean;
-  onEdit: (branch: Branch, tab?: EditTab) => void;
+  onEdit: (branch: Branch) => void;
   onViewSchedule: (branch: Branch) => void;
   onManageServices: (branch: Branch) => void;
   onManageEmployees: (branch: Branch) => void;
@@ -106,9 +105,7 @@ const formatBranchAddress = (branch: Branch) => {
   const addressParts = [branch.street, branch.number, branch.neighborhood]
     .filter(Boolean)
     .join(", ");
-  const locationParts = [branch.city, branch.state]
-    .filter(Boolean)
-    .join(" - ");
+  const locationParts = [branch.city, branch.state].filter(Boolean).join(" - ");
   const pieces = [addressParts, locationParts].filter(Boolean);
   return pieces.length ? pieces.join(" - ") : "Endereco nao informado";
 };
@@ -180,8 +177,7 @@ const BranchCard = ({
   onDelete,
 }: BranchCardProps) => {
   const branchStatus = (branch as BranchStatus).active;
-  const showStatusBadge =
-    hasBranchStatus && typeof branchStatus === "boolean";
+  const showStatusBadge = hasBranchStatus && typeof branchStatus === "boolean";
   const handleMenuAction = (action: () => void) => () => {
     setTimeout(action, 0);
   };
@@ -210,13 +206,17 @@ const BranchCard = ({
           </h3>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="-mr-2 -mt-1 h-8 w-8">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="-mr-2 -mt-1 h-8 w-8"
+              >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem
-                onSelect={handleMenuAction(() => onEdit(branch, "info"))}
+                onSelect={handleMenuAction(() => onEdit(branch))}
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Editar filial
@@ -301,9 +301,9 @@ export default function BranchManager() {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [branchToDelete, setBranchToDelete] = useState<Branch | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editBranch, setEditBranch] = useState<Branch | null>(null);
-  const [editDefaultTab, setEditDefaultTab] = useState<EditTab>("info");
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [activeBranch, setActiveBranch] = useState<Branch | null>(null);
   useEffect(() => {
     if (company?.branches) {
       setBranches(company.branches);
@@ -350,7 +350,10 @@ export default function BranchManager() {
   }, [branches]);
 
   const hasBranchStatus = useMemo(
-    () => branches.some(branch => typeof (branch as BranchStatus).active === "boolean"),
+    () =>
+      branches.some(
+        branch => typeof (branch as BranchStatus).active === "boolean"
+      ),
     [branches]
   );
 
@@ -360,7 +363,7 @@ export default function BranchManager() {
 
   const handleDeleteBranch = useCallback((id: number) => {
     setBranches(prev => prev.filter(branch => branch.id !== id));
-    setEditBranch(prev => (prev?.id === id ? null : prev));
+    setActiveBranch(prev => (prev?.id === id ? null : prev));
   }, []);
 
   const handleDeleteRequest = useCallback((branch: Branch) => {
@@ -389,8 +392,10 @@ export default function BranchManager() {
       setDeleteDialogOpen(false);
       setBranchToDelete(null);
 
-      if (editBranch?.id === branchToDelete.id) {
-        setEditDialogOpen(false);
+      if (activeBranch?.id === branchToDelete.id) {
+        setInfoDialogOpen(false);
+        setScheduleDialogOpen(false);
+        setActiveBranch(null);
       }
     } catch (error) {
       toast({
@@ -399,19 +404,38 @@ export default function BranchManager() {
         variant: "destructive",
       });
     }
-  }, [branchToDelete, editBranch?.id, handleDeleteBranch, toast]);
+  }, [branchToDelete, activeBranch?.id, handleDeleteBranch, toast]);
 
-  const handleOpenEditDialog = useCallback(
-    async (branch: Branch, tab: EditTab = "info") => {
-      setEditDefaultTab(tab);
-      setEditDialogOpen(true);
-      setEditBranch(branch);
+  const handleOpenInfoDialog = useCallback(
+    async (branch: Branch) => {
+      setInfoDialogOpen(true);
+      setActiveBranch(branch);
 
       const updatedBranch = await fetchBranchById(branch.id);
       if (updatedBranch) {
-        setEditBranch(updatedBranch);
+        setActiveBranch(updatedBranch);
         setBranches(prev =>
-          prev.map(item => (item.id === updatedBranch.id ? updatedBranch : item))
+          prev.map(item =>
+            item.id === updatedBranch.id ? updatedBranch : item
+          )
+        );
+      }
+    },
+    [fetchBranchById]
+  );
+
+  const handleOpenScheduleDialog = useCallback(
+    async (branch: Branch) => {
+      setScheduleDialogOpen(true);
+      setActiveBranch(branch);
+
+      const updatedBranch = await fetchBranchById(branch.id);
+      if (updatedBranch) {
+        setActiveBranch(updatedBranch);
+        setBranches(prev =>
+          prev.map(item =>
+            item.id === updatedBranch.id ? updatedBranch : item
+          )
         );
       }
     },
@@ -432,13 +456,25 @@ export default function BranchManager() {
     [router]
   );
 
-  const handleDialogChange = useCallback((open: boolean) => {
-    setEditDialogOpen(open);
-    if (!open) {
-      setEditBranch(null);
-      setEditDefaultTab("info");
-    }
-  }, []);
+  const handleInfoDialogChange = useCallback(
+    (open: boolean) => {
+      setInfoDialogOpen(open);
+      if (!open && !scheduleDialogOpen) {
+        setActiveBranch(null);
+      }
+    },
+    [scheduleDialogOpen]
+  );
+
+  const handleScheduleDialogChange = useCallback(
+    (open: boolean) => {
+      setScheduleDialogOpen(open);
+      if (!open && !infoDialogOpen) {
+        setActiveBranch(null);
+      }
+    },
+    [infoDialogOpen]
+  );
 
   const handleBranchSaved = useCallback((updatedBranch: Branch) => {
     setBranches(prev =>
@@ -446,7 +482,7 @@ export default function BranchManager() {
         branch.id === updatedBranch.id ? updatedBranch : branch
       )
     );
-    setEditBranch(updatedBranch);
+    setActiveBranch(updatedBranch);
   }, []);
 
   return (
@@ -504,9 +540,10 @@ export default function BranchManager() {
               <BranchStatCard
                 icon={Building2}
                 label="Ativas"
-                value={branches.filter(
-                  branch => (branch as BranchStatus).active
-                ).length}
+                value={
+                  branches.filter(branch => (branch as BranchStatus).active)
+                    .length
+                }
                 iconClassName="text-success"
                 iconBgClassName="bg-[hsl(var(--success)/0.12)]"
               />
@@ -553,10 +590,8 @@ export default function BranchManager() {
                   employeesCount={employeesCount}
                   scheduleSummary={scheduleSummary}
                   hasBranchStatus={hasBranchStatus}
-                  onEdit={handleOpenEditDialog}
-                  onViewSchedule={branchItem =>
-                    handleOpenEditDialog(branchItem, "schedule")
-                  }
+                  onEdit={handleOpenInfoDialog}
+                  onViewSchedule={handleOpenScheduleDialog}
                   onManageServices={handleManageServices}
                   onManageEmployees={handleManageEmployees}
                   onDelete={handleDeleteRequest}
@@ -592,11 +627,17 @@ export default function BranchManager() {
         )}
       </div>
 
-      <BranchEditDialog
-        open={editDialogOpen}
-        onOpenChange={handleDialogChange}
-        branch={editBranch}
-        defaultTab={editDefaultTab}
+      <BranchInfoDialog
+        open={infoDialogOpen}
+        onOpenChange={handleInfoDialogChange}
+        branch={activeBranch}
+        onSaved={handleBranchSaved}
+      />
+
+      <BranchScheduleDialog
+        open={scheduleDialogOpen}
+        onOpenChange={handleScheduleDialogChange}
+        branch={activeBranch}
         onSaved={handleBranchSaved}
       />
 
@@ -606,8 +647,8 @@ export default function BranchManager() {
             <AlertDialogTitle>Excluir filial?</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja excluir a filial "{branchToDelete?.name}"?
-              Esta acao nao pode ser desfeita e todos os vinculos com profissionais
-              e servicos serao removidos.
+              Esta acao nao pode ser desfeita e todos os vinculos com
+              profissionais e servicos serao removidos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

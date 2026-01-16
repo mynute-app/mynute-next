@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import type { Branch } from "../../../../../types/company";
 import { useAddAddressForm } from "../actions/useAddAddressForm";
@@ -23,23 +22,23 @@ type AddBranchDialogProps = {
   trigger?: React.ReactNode;
 };
 
-type CreateTab = "info" | "schedule";
-
 export const AddAddressDialog = ({
   onCreate,
   trigger,
 }: AddBranchDialogProps) => {
   const { form, handleSubmit } = useAddAddressForm();
-  const { register, handleSubmit: submitHandler, setValue, formState, reset } =
-    form;
+  const {
+    register,
+    handleSubmit: submitHandler,
+    setValue,
+    formState,
+    reset,
+  } = form;
   const { errors, isSubmitting } = formState;
 
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<CreateTab>("info");
-
   useEffect(() => {
     if (!isOpen) return;
-    setActiveTab("info");
     reset();
   }, [isOpen, reset]);
 
@@ -89,154 +88,145 @@ export const AddAddressDialog = ({
           onSubmit={submitHandler(onSubmit)}
           className="flex min-h-0 flex-1 flex-col"
         >
-          <Tabs
-            value={activeTab}
-            onValueChange={value => setActiveTab(value as CreateTab)}
-            className="flex min-h-0 flex-1 flex-col"
-          >
-            <TabsList className="mx-6 mt-4 grid w-full grid-cols-2 max-w-[calc(100%-3rem)]">
-              <TabsTrigger value="info">Informacoes</TabsTrigger>
-              <TabsTrigger value="schedule">Horarios</TabsTrigger>
-            </TabsList>
+          <ScrollArea className="flex-1 px-6">
+            <div className="mt-4 space-y-4 pb-4 px-2">
+              <div className="space-y-2">
+                <Label htmlFor="branch-name">Nome da filial *</Label>
+                <Input
+                  id="branch-name"
+                  placeholder="Nome da filial"
+                  {...register("name")}
+                />
+                {errors.name && (
+                  <p className="text-xs text-destructive">
+                    {String(errors.name.message)}
+                  </p>
+                )}
+              </div>
 
-            <ScrollArea className="flex-1 px-6">
-              <TabsContent value="info" className="mt-4 space-y-4 pb-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="branch-name">Nome da filial *</Label>
+                  <Label htmlFor="branch-zip">CEP *</Label>
                   <Input
-                    id="branch-name"
-                    placeholder="Nome da filial"
-                    {...register("name")}
+                    id="branch-zip"
+                    placeholder="00000-000"
+                    {...register("zip_code")}
+                    maxLength={8}
+                    onBlur={event => fetchAddressByCEP(event.target.value)}
                   />
-                  {errors.name && (
+                  {errors.zip_code && (
                     <p className="text-xs text-destructive">
-                      {String(errors.name.message)}
+                      {String(errors.zip_code.message)}
                     </p>
                   )}
                 </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-zip">CEP *</Label>
-                    <Input
-                      id="branch-zip"
-                      placeholder="00000-000"
-                      {...register("zip_code")}
-                      maxLength={8}
-                      onBlur={event => fetchAddressByCEP(event.target.value)}
-                    />
-                    {errors.zip_code && (
-                      <p className="text-xs text-destructive">
-                        {String(errors.zip_code.message)}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-street">Rua *</Label>
-                    <Input
-                      id="branch-street"
-                      placeholder="Nome da rua"
-                      {...register("street")}
-                    />
-                    {errors.street && (
-                      <p className="text-xs text-destructive">
-                        {String(errors.street.message)}
-                      </p>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="branch-street">Rua *</Label>
+                  <Input
+                    id="branch-street"
+                    placeholder="Nome da rua"
+                    {...register("street")}
+                  />
+                  {errors.street && (
+                    <p className="text-xs text-destructive">
+                      {String(errors.street.message)}
+                    </p>
+                  )}
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-number">Numero *</Label>
-                    <Input
-                      id="branch-number"
-                      placeholder="Numero"
-                      {...register("number")}
-                    />
-                    {errors.number && (
-                      <p className="text-xs text-destructive">
-                        {String(errors.number.message)}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-complement">Complemento</Label>
-                    <Input
-                      id="branch-complement"
-                      placeholder="Apartamento, bloco, etc."
-                      {...register("complement")}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="branch-number">Numero *</Label>
+                  <Input
+                    id="branch-number"
+                    placeholder="Numero"
+                    {...register("number")}
+                  />
+                  {errors.number && (
+                    <p className="text-xs text-destructive">
+                      {String(errors.number.message)}
+                    </p>
+                  )}
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="branch-complement">Complemento</Label>
+                  <Input
+                    id="branch-complement"
+                    placeholder="Apartamento, bloco, etc."
+                    {...register("complement")}
+                  />
+                </div>
+              </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-neighborhood">Bairro</Label>
-                    <Input
-                      id="branch-neighborhood"
-                      placeholder="Bairro"
-                      {...register("neighborhood")}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-city">Cidade *</Label>
-                    <Input
-                      id="branch-city"
-                      placeholder="Cidade"
-                      {...register("city")}
-                    />
-                    {errors.city && (
-                      <p className="text-xs text-destructive">
-                        {String(errors.city.message)}
-                      </p>
-                    )}
-                  </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="branch-neighborhood">Bairro</Label>
+                  <Input
+                    id="branch-neighborhood"
+                    placeholder="Bairro"
+                    {...register("neighborhood")}
+                  />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="branch-city">Cidade *</Label>
+                  <Input
+                    id="branch-city"
+                    placeholder="Cidade"
+                    {...register("city")}
+                  />
+                  {errors.city && (
+                    <p className="text-xs text-destructive">
+                      {String(errors.city.message)}
+                    </p>
+                  )}
+                </div>
+              </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-state">Estado *</Label>
-                    <Input
-                      id="branch-state"
-                      placeholder="Estado"
-                      {...register("state")}
-                    />
-                    {errors.state && (
-                      <p className="text-xs text-destructive">
-                        {String(errors.state.message)}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-country">Pais *</Label>
-                    <Input
-                      id="branch-country"
-                      placeholder="Pais"
-                      {...register("country")}
-                    />
-                    {errors.country && (
-                      <p className="text-xs text-destructive">
-                        {String(errors.country.message)}
-                      </p>
-                    )}
-                  </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="branch-state">Estado *</Label>
+                  <Input
+                    id="branch-state"
+                    placeholder="Estado"
+                    {...register("state")}
+                  />
+                  {errors.state && (
+                    <p className="text-xs text-destructive">
+                      {String(errors.state.message)}
+                    </p>
+                  )}
                 </div>
-              </TabsContent>
-
-              <TabsContent value="schedule" className="mt-4 pb-6">
-                <div className="rounded-lg border border-muted/50 bg-muted/5 p-4 text-sm text-muted-foreground">
-                  Salve a filial para configurar os horarios.
+                <div className="space-y-2">
+                  <Label htmlFor="branch-country">Pais *</Label>
+                  <Input
+                    id="branch-country"
+                    placeholder="Pais"
+                    {...register("country")}
+                  />
+                  {errors.country && (
+                    <p className="text-xs text-destructive">
+                      {String(errors.country.message)}
+                    </p>
+                  )}
                 </div>
-              </TabsContent>
-            </ScrollArea>
-          </Tabs>
+              </div>
+            </div>
+          </ScrollArea>
 
           <div className="flex items-center justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+            >
               Cancelar
             </Button>
-            <Button type="submit" className="btn-gradient" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              className="btn-gradient"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Salvando..." : "Criar filial"}
             </Button>
           </div>

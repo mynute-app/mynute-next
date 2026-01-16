@@ -81,7 +81,7 @@ export const useGetCompany = () => {
       setError(null);
     }
 
-    fetchCompanyOnce()
+    fetchCompanyOnce(true)
       .then(data => {
         if (!active) return;
         setCompany(data);
