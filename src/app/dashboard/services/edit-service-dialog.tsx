@@ -64,6 +64,7 @@ type Props = {
         id: string;
         imageUrl?: string;
         category?: string;
+        hidden?: boolean;
       })
     | null;
   onSave: (updatedService: any) => void;

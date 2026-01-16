@@ -6,7 +6,8 @@ import { Image as ImageIcon, Upload } from "lucide-react";
 import BannerImageUpload from "./banner-image-upload";
 import BrandLogoUpload from "../brand-logo";
 import BackgroundImageUpload from "./background-image-upload";
-import { Company } from "../../../../../types/company";
+import { Company } from "../../../../../../types/company";
+
 
 interface YourBrandUploadFormProps {
   company: Company;

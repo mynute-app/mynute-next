@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Building2 } from "lucide-react";
-import { Company } from "../../../../../types/company";
 import { useToast } from "@/hooks/use-toast";
+import { Company } from "../../../../../../types/company";
 
 interface BusinessInfoSectionProps {
   company: Company;
