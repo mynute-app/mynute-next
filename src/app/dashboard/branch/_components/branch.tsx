@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -304,66 +304,11 @@ export default function BranchManager() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editBranch, setEditBranch] = useState<Branch | null>(null);
   const [editDefaultTab, setEditDefaultTab] = useState<EditTab>("info");
-  const requestedBranchIdsRef = useRef<Set<number>>(new Set());
-
   useEffect(() => {
     if (company?.branches) {
       setBranches(company.branches);
     }
   }, [company?.branches]);
-
-  useEffect(() => {
-    if (!company?.branches?.length) return;
-
-    const branchesToFetch = company.branches.filter(
-      branch => !requestedBranchIdsRef.current.has(branch.id)
-    );
-
-    if (branchesToFetch.length === 0) return;
-
-    branchesToFetch.forEach(branch =>
-      requestedBranchIdsRef.current.add(branch.id)
-    );
-
-    let cancelled = false;
-
-    const loadBranchDetails = async () => {
-      const results = await Promise.allSettled(
-        branchesToFetch.map(branch => fetchBranchById(branch.id))
-      );
-
-      if (cancelled) return;
-
-      const updates = results
-        .filter(
-          (
-            result
-          ): result is PromiseFulfilledResult<Branch | null> =>
-            result.status === "fulfilled"
-        )
-        .map(result => result.value)
-        .filter(Boolean) as Branch[];
-
-      if (updates.length === 0) return;
-
-      const updatesById = new Map(
-        updates.map(updatedBranch => [updatedBranch.id, updatedBranch])
-      );
-
-      setBranches(prev =>
-        prev.map(branch => {
-          const updated = updatesById.get(branch.id);
-          return updated ? { ...branch, ...updated } : branch;
-        })
-      );
-    };
-
-    loadBranchDetails();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [company?.branches, fetchBranchById]);
 
   const filteredBranches = useMemo(() => {
     const normalizedTerm = searchTerm.trim().toLowerCase();
@@ -475,14 +420,14 @@ export default function BranchManager() {
 
   const handleManageServices = useCallback(
     (branch: Branch) => {
-      router.push(`/filiais/${branch.id}/servicos`);
+      router.push(`/dashboard/branch/${branch.id}/servicos`);
     },
     [router]
   );
 
   const handleManageEmployees = useCallback(
     (branch: Branch) => {
-      router.push(`/filiais/${branch.id}/equipe`);
+      router.push(`/dashboard/branch/${branch.id}/equipe`);
     },
     [router]
   );

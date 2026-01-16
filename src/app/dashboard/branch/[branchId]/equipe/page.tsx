@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Clock, Search } from "lucide-react";
@@ -10,10 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { useBranchApi } from "@/hooks/branch/use-branch-api";
 import { useGetCompany } from "@/hooks/get-company";
 import { useToast } from "@/hooks/use-toast";
-import type { Branch, Employee } from "../../../../../types/company";
+import type { Branch, Employee } from "../../../../../../types/company";
 
 const PageShell = ({ children }: { children: React.ReactNode }) => (
   <div className="dashboard-page flex min-h-0 flex-1 flex-col bg-background text-foreground">
@@ -32,8 +31,7 @@ const resolveInitialEmployeeIds = (
   branchData: Branch | null,
   employees: Employee[]
 ) => {
-  const fromBranch =
-    branchData?.employees?.map(employee => employee.id) ?? [];
+  const fromBranch = branchData?.employees?.map(employee => employee.id) ?? [];
 
   const fromCompany = employees
     .filter(employee =>
@@ -46,7 +44,7 @@ const resolveInitialEmployeeIds = (
   return new Set<number>([...fromBranch, ...fromCompany]);
 };
 
-export default function FilialEquipePage() {
+export default function BranchEquipePage() {
   const params = useParams();
   const branchIdParam = Array.isArray(params?.branchId)
     ? params.branchId[0]
@@ -54,7 +52,6 @@ export default function FilialEquipePage() {
   const branchId = typeof branchIdParam === "string" ? branchIdParam : "";
 
   const { company, loading: isCompanyLoading } = useGetCompany();
-  const { fetchBranchById } = useBranchApi();
   const { toast } = useToast();
 
   const employees = useMemo(
@@ -62,8 +59,12 @@ export default function FilialEquipePage() {
     [company?.employees]
   );
 
-  const [branch, setBranch] = useState<Branch | null>(null);
-  const [isBranchLoading, setIsBranchLoading] = useState(false);
+  const branch = useMemo(
+    () =>
+      company?.branches?.find(item => String(item.id) === branchId) ?? null,
+    [company?.branches, branchId]
+  );
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<number>>(
     new Set()
@@ -72,58 +73,35 @@ export default function FilialEquipePage() {
     new Set()
   );
   const [isSaving, setIsSaving] = useState(false);
-  const hasManualChangesRef = useRef(false);
-
-  const branchName = useMemo(() => {
-    if (branch?.name) return branch.name;
-    const fallback = company?.branches?.find(
-      item => String(item.id) === branchId
-    );
-    return fallback?.name ?? "Filial";
-  }, [branch?.name, company?.branches, branchId]);
+  const [initializedBranchId, setInitializedBranchId] = useState("");
 
   useEffect(() => {
-    if (!branchId) return;
-
-    let cancelled = false;
-    setIsBranchLoading(true);
-
-    const loadBranch = async () => {
-      const data = await fetchBranchById(branchId);
-      if (cancelled) return;
-
-      if (data) {
-        setBranch(data);
-      }
-
-      setIsBranchLoading(false);
-    };
-
-    loadBranch();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [branchId, fetchBranchById]);
-
-  useEffect(() => {
-    if (!branchId || hasManualChangesRef.current) return;
+    if (!branchId || isCompanyLoading || initializedBranchId === branchId) {
+      return;
+    }
 
     const initialIds = branch
       ? resolveInitialEmployeeIds(branch, employees)
       : new Set(
           employees
             .filter(employee =>
-              employee.branches?.some(
-                item => String(item.id) === branchId
-              )
+              employee.branches?.some(item => String(item.id) === branchId)
             )
             .map(employee => employee.id)
         );
 
     setSelectedEmployeeIds(initialIds);
     setInitialEmployeeIds(new Set(initialIds));
-  }, [branch, branchId, employees]);
+    setInitializedBranchId(branchId);
+  }, [
+    branchId,
+    branch,
+    employees,
+    isCompanyLoading,
+    initializedBranchId,
+  ]);
+
+  const branchName = branch?.name ?? "Filial";
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredEmployees = useMemo(() => {
@@ -162,7 +140,6 @@ export default function FilialEquipePage() {
   }, [selectedEmployeeIds, initialEmployeeIds]);
 
   const toggleEmployee = (employeeId: number) => {
-    hasManualChangesRef.current = true;
     setSelectedEmployeeIds(prev => {
       const next = new Set(prev);
       if (next.has(employeeId)) {
@@ -214,18 +191,6 @@ export default function FilialEquipePage() {
       result => result.status === "rejected" || !result.value?.ok
     );
 
-    const refreshed = await fetchBranchById(branchId);
-    if (refreshed) {
-      setBranch(refreshed);
-      const initialIds = resolveInitialEmployeeIds(refreshed, employees);
-      setSelectedEmployeeIds(initialIds);
-      setInitialEmployeeIds(new Set(initialIds));
-      hasManualChangesRef.current = false;
-    } else {
-      setInitialEmployeeIds(new Set(selectedEmployeeIds));
-      hasManualChangesRef.current = false;
-    }
-
     if (failed) {
       toast({
         title: "Erro ao salvar equipe",
@@ -233,6 +198,8 @@ export default function FilialEquipePage() {
           "Nem todas as alteracoes foram aplicadas. Revise a equipe.",
         variant: "destructive",
       });
+    } else {
+      setInitialEmployeeIds(new Set(selectedEmployeeIds));
     }
 
     setIsSaving(false);
@@ -246,14 +213,14 @@ export default function FilialEquipePage() {
     );
   }
 
-  const isLoading = isCompanyLoading || isBranchLoading;
+  const isLoading = isCompanyLoading;
 
   return (
     <PageShell>
       <div className="space-y-6 pt-12 lg:pt-0">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/filiais">
+            <Link href="/dashboard/branch">
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
@@ -326,7 +293,9 @@ export default function FilialEquipePage() {
                       className="flex-shrink-0"
                     />
                     <div>
-                      <h3 className="font-medium">{getEmployeeName(employee)}</h3>
+                      <h3 className="font-medium">
+                        {getEmployeeName(employee)}
+                      </h3>
                       {roleLabel && (
                         <p className="text-sm text-muted-foreground">
                           {roleLabel}

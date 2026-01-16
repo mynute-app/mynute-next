@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { useBranchApi } from "@/hooks/branch/use-branch-api";
 import { useGetCompany } from "@/hooks/get-company";
 import { useToast } from "@/hooks/use-toast";
-import type { Branch, Service } from "../../../../../types/company";
+import type { Branch, Service } from "../../../../../../types/company";
 
 const PageShell = ({ children }: { children: React.ReactNode }) => (
   <div className="dashboard-page flex min-h-0 flex-1 flex-col bg-background text-foreground">
@@ -38,7 +38,25 @@ const formatPrice = (price?: Service["price"]) => {
   return `R$ ${numericValue.toFixed(2)}`;
 };
 
-export default function FilialServicosPage() {
+const normalizeServiceIds = (services?: Branch["services"]) => {
+  if (!Array.isArray(services)) return [];
+  return (
+    services as Array<number | string | { id?: number | string }>
+  )
+    .map(service => {
+      if (typeof service === "number" || typeof service === "string") {
+        return service;
+      }
+      if (service && typeof service === "object" && "id" in service) {
+        return service.id;
+      }
+      return undefined;
+    })
+    .filter((id): id is number | string => id !== undefined && id !== null)
+    .map(id => String(id));
+};
+
+export default function BranchServicesPage() {
   const params = useParams();
   const branchIdParam = Array.isArray(params?.branchId)
     ? params.branchId[0]
@@ -46,11 +64,23 @@ export default function FilialServicosPage() {
   const branchId = typeof branchIdParam === "string" ? branchIdParam : "";
 
   const { company, loading: isCompanyLoading } = useGetCompany();
-  const { fetchBranchById, linkService, unlinkService } = useBranchApi();
+  const { linkService, unlinkService } = useBranchApi();
   const { toast } = useToast();
 
-  const [services, setServices] = useState<Service[]>([]);
-  const [branch, setBranch] = useState<Branch | null>(null);
+  const services = useMemo(
+    () =>
+      Array.isArray(company?.services)
+        ? (company.services as Service[])
+        : [],
+    [company?.services]
+  );
+
+  const branch = useMemo(
+    () =>
+      company?.branches?.find(item => String(item.id) === branchId) ?? null,
+    [company?.branches, branchId]
+  );
+
   const [searchTerm, setSearchTerm] = useState("");
   const [enabledServiceIds, setEnabledServiceIds] = useState<Set<string>>(
     new Set()
@@ -59,76 +89,37 @@ export default function FilialServicosPage() {
     new Set()
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [initializedBranchId, setInitializedBranchId] = useState("");
+
+  const normalizedServiceIds = useMemo(
+    () => normalizeServiceIds(branch?.services),
+    [branch?.services]
+  );
 
   useEffect(() => {
-    if (Array.isArray(company?.services)) {
-      setServices(company.services as Service[]);
-    } else {
-      setServices([]);
+    if (!branchId || isCompanyLoading || initializedBranchId === branchId) {
+      return;
     }
-  }, [company?.services]);
 
-  const branchName = useMemo(() => {
-    if (branch?.name) return branch.name;
-    const fallback = company?.branches?.find(
-      item => String(item.id) === branchId
-    );
-    return fallback?.name ?? "Filial";
-  }, [branch?.name, company?.branches, branchId]);
-
-  useEffect(() => {
-    if (!branchId) return;
-
-    let cancelled = false;
-    const loadBranch = async () => {
-      const data = await fetchBranchById(branchId);
-      if (cancelled) return;
-
-      if (data) {
-        setBranch(data);
-        const ids = new Set((data.services ?? []).map(id => String(id)));
-        setEnabledServiceIds(ids);
-        setInitialServiceIds(new Set(ids));
-      }
-    };
-
-    loadBranch();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [branchId, fetchBranchById]);
-
-  useEffect(() => {
-    if (!branchId || branch || !company?.branches?.length) return;
-    if (enabledServiceIds.size > 0 || initialServiceIds.size > 0) return;
-
-    const fallbackBranch = company.branches.find(
-      item => String(item.id) === branchId
-    );
-
-    if (!fallbackBranch || !Array.isArray(fallbackBranch.services)) return;
-
-    const ids = new Set(fallbackBranch.services.map(id => String(id)));
+    const ids = new Set(normalizedServiceIds);
     setEnabledServiceIds(ids);
     setInitialServiceIds(new Set(ids));
+    setInitializedBranchId(branchId);
   }, [
     branchId,
-    branch,
-    company?.branches,
-    enabledServiceIds.size,
-    initialServiceIds.size,
+    isCompanyLoading,
+    initializedBranchId,
+    normalizedServiceIds,
   ]);
+
+  const branchName = branch?.name ?? "Filial";
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredServices = useMemo(() => {
     if (!normalizedSearch) return services;
 
     return services.filter(service => {
-      const haystack = [
-        service.name,
-        service.category ?? "",
-      ]
+      const haystack = [service.name, service.category ?? ""]
         .join(" ")
         .toLowerCase();
       return haystack.includes(normalizedSearch);
@@ -221,16 +212,6 @@ export default function FilialServicosPage() {
       result => result.status === "rejected" || result.value === false
     );
 
-    const refreshed = await fetchBranchById(branchId);
-    if (refreshed) {
-      setBranch(refreshed);
-      const ids = new Set((refreshed.services ?? []).map(id => String(id)));
-      setEnabledServiceIds(ids);
-      setInitialServiceIds(new Set(ids));
-    } else {
-      setInitialServiceIds(new Set(enabledServiceIds));
-    }
-
     if (failed) {
       toast({
         title: "Erro ao salvar servicos",
@@ -238,6 +219,8 @@ export default function FilialServicosPage() {
           "Nem todas as alteracoes foram aplicadas. Revise os servicos.",
         variant: "destructive",
       });
+    } else {
+      setInitialServiceIds(new Set(enabledServiceIds));
     }
 
     setIsSaving(false);
@@ -251,15 +234,15 @@ export default function FilialServicosPage() {
     );
   }
 
-  const isLoading = isCompanyLoading && !company && services.length === 0;
-  const isCompanyBusy = isLoading;
+  const isLoading = isCompanyLoading;
+  const isBusy = isCompanyLoading || isSaving;
 
   return (
     <PageShell>
       <div className="space-y-6 pt-12 lg:pt-0">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/filiais">
+            <Link href="/dashboard/branch">
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
@@ -277,14 +260,14 @@ export default function FilialServicosPage() {
               value={searchTerm}
               onChange={event => setSearchTerm(event.target.value)}
               className="pl-10"
-              disabled={isCompanyBusy}
+              disabled={isBusy}
             />
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               onClick={enableAll}
-              disabled={isCompanyBusy || isSaving}
+              disabled={isBusy}
             >
               <Check className="mr-2 h-4 w-4" />
               Ativar todos
@@ -292,7 +275,7 @@ export default function FilialServicosPage() {
             <Button
               variant="outline"
               onClick={disableAll}
-              disabled={isCompanyBusy || isSaving}
+              disabled={isBusy}
             >
               <X className="mr-2 h-4 w-4" />
               Desativar todos
@@ -303,13 +286,13 @@ export default function FilialServicosPage() {
         <div className="flex flex-wrap gap-4">
           <div className="rounded-lg border bg-card px-4 py-3">
             <span className="text-2xl font-bold text-primary">
-              {isCompanyBusy ? "-" : activeCount}
+              {isLoading ? "-" : activeCount}
             </span>
             <span className="ml-2 text-muted-foreground">ativos</span>
           </div>
           <div className="rounded-lg border bg-card px-4 py-3">
             <span className="text-2xl font-bold">
-              {isCompanyBusy ? "-" : inactiveCount}
+              {isLoading ? "-" : inactiveCount}
             </span>
             <span className="ml-2 text-muted-foreground">inativos</span>
           </div>
@@ -373,7 +356,7 @@ export default function FilialServicosPage() {
           <Button
             className="btn-gradient"
             onClick={handleSave}
-            disabled={!hasChanges || isSaving || isCompanyBusy}
+            disabled={!hasChanges || isSaving || isCompanyLoading}
           >
             {isSaving ? "Salvando..." : "Salvar alteracoes"}
           </Button>
