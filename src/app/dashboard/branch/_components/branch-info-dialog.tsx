@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useCompanyImageUpload } from "@/hooks/use-company-image-upload";
 import type { Branch } from "../../../../../types/company";
 
 type BranchInfoDialogProps = {
@@ -56,6 +58,11 @@ export function BranchInfoDialog({
 }: BranchInfoDialogProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const { uploadImage, isUploading } = useCompanyImageUpload();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
 
   const defaultValues = useMemo(() => buildDefaultValues(branch), [branch]);
   const { register, handleSubmit, reset, formState } =
@@ -66,12 +73,51 @@ export function BranchInfoDialog({
   useEffect(() => {
     if (open) {
       reset(defaultValues);
+      const currentImage = branch?.design?.images?.logo?.url || "";
+      setImageUrl(currentImage);
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+        setImagePreviewUrl(null);
+      }
+      setPendingImageFile(null);
     }
-  }, [open, reset, defaultValues]);
+  }, [open, reset, defaultValues, branch?.design?.images?.logo?.url]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
+
+  const handleImageClick = () => {
+    if (isSaving || isUploading) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const previewUrl = URL.createObjectURL(file);
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImagePreviewUrl(previewUrl);
+    setImageUrl(previewUrl);
+    setPendingImageFile(file);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleSave = async (values: BranchEditFormValues) => {
     if (!branch) return;
-    if (!formState.isDirty) {
+
+    const hasPendingImage = Boolean(pendingImageFile);
+    if (!formState.isDirty && !hasPendingImage) {
       onOpenChange(false);
       return;
     }
@@ -79,26 +125,38 @@ export function BranchInfoDialog({
     setIsSaving(true);
 
     try {
-      const response = await fetch(`/api/branch/${branch.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Erro ao atualizar filial");
+      if (hasPendingImage && pendingImageFile) {
+        const ok = await uploadImage("logo", pendingImageFile);
+        if (!ok) {
+          throw new Error("Erro ao enviar a imagem da filial.");
+        }
+        setPendingImageFile(null);
       }
 
-      const updatedBranch = await response.json();
-      reset(buildDefaultValues(updatedBranch));
+      let updatedBranch = branch;
 
-      toast({
-        title: "Filial atualizada!",
-        description: "Os dados foram salvos com sucesso.",
-      });
+      if (formState.isDirty) {
+        const response = await fetch(`/api/branch/${branch.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(values),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || "Erro ao atualizar filial");
+        }
+
+        updatedBranch = await response.json();
+        reset(buildDefaultValues(updatedBranch));
+
+        toast({
+          title: "Filial atualizada!",
+          description: "Os dados foram salvos com sucesso.",
+        });
+      }
 
       onSaved?.(updatedBranch);
       onOpenChange(false);
@@ -141,6 +199,47 @@ export function BranchInfoDialog({
           >
             <ScrollArea className="flex-1 px-6">
               <div className="mt-4 space-y-4 pb-4 px-1">
+                <div className="flex items-start gap-6">
+                  <div
+                    className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center text-primary-foreground text-xl font-bold flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={handleImageClick}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={event => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleImageClick();
+                      }
+                    }}
+                  >
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={branch?.name || "Filial"}
+                        className="h-full w-full rounded-xl object-cover"
+                      />
+                    ) : (
+                      <Upload className="w-6 h-6" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <Label>Foto da filial</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Clique na imagem para selecionar uma nova foto. Ela sera
+                      enviada ao salvar.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleImageClick}
+                      disabled={isSaving || isUploading}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {isUploading ? "Enviando..." : "Escolher arquivo"}
+                    </Button>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="branch-name">Nome da filial *</Label>
                   <Input
@@ -149,6 +248,13 @@ export function BranchInfoDialog({
                     {...register("name", { required: true })}
                   />
                 </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
 
                 <div className="space-y-2">
                   <Label htmlFor="branch-street">Rua *</Label>
@@ -238,7 +344,12 @@ export function BranchInfoDialog({
               <Button
                 type="submit"
                 className="btn-gradient"
-                disabled={!branch || isSaving || !formState.isDirty}
+                disabled={
+                  !branch ||
+                  isSaving ||
+                  isUploading ||
+                  (!formState.isDirty && !pendingImageFile)
+                }
               >
                 {isSaving ? "Salvando..." : "Salvar alteracoes"}
               </Button>

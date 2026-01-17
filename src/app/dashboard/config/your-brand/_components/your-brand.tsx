@@ -4,6 +4,7 @@ import { useGetCompany } from "@/hooks/get-company";
 import YourBrandSkeleton from "./your-brand-skeleton";
 import YourBrandUploadForm from "./your-brand-upload-form";
 import BusinessInfoSection from "./business-info-section";
+import BrandColorsSection from "./brand-colors-section";
 
 export default function YourBrand() {
   const { company, loading: loadingCompany } = useGetCompany();
@@ -28,6 +29,10 @@ export default function YourBrand() {
             </div>
 
             <YourBrandUploadForm company={company} />
+            {/* <BrandColorsSection
+              companyId={company.id}
+              initialColors={company.design?.colors}
+            /> */}
             <BusinessInfoSection company={company} />
           </div>
         </div>
