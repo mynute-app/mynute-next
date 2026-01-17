@@ -16,6 +16,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useEmployeeWorkRange } from "@/hooks/workSchedule/use-employee-work-range";
+import { useBranchApi } from "@/hooks/branch/use-branch-api";
+import { useBranchWorkSchedule } from "@/hooks/workSchedule/use-branch-work-schedule";
 import type { Branch, Employee } from "../../../../../types/company";
 
 type ScheduleDayState = {
@@ -53,6 +55,11 @@ type TeamMemberScheduleDialogProps = {
   loadingBranches?: boolean;
 };
 
+type BranchScheduleSource = {
+  id: string | number;
+  work_schedule?: any[];
+};
+
 const WEEKDAYS: Array<Pick<ScheduleDayState, "weekday" | "label">> = [
   { weekday: 1, label: "Segunda" },
   { weekday: 2, label: "Terca" },
@@ -66,6 +73,83 @@ const WEEKDAYS: Array<Pick<ScheduleDayState, "weekday" | "label">> = [
 const DEFAULT_START_TIME = "08:00";
 const DEFAULT_END_TIME = "17:00";
 const DEFAULT_TIME_ZONE = "America/Sao_Paulo";
+
+const toMinutes = (time: string) => {
+  const [h, m] = time.split(":").map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  return h * 60 + m;
+};
+
+const getBranchDayRangeFromBranch = (
+  branch: BranchScheduleSource | null,
+  weekday: number
+) => {
+  const ranges = Array.isArray(branch?.work_schedule)
+    ? branch?.work_schedule
+    : [];
+
+  const match = ranges.find(
+    (range: any) => Number(range?.weekday) === Number(weekday)
+  );
+
+  if (!match) return null;
+
+  const start = extractTime(match.start_time || match.start || "");
+  const end = extractTime(match.end_time || match.end || "");
+  if (!start || !end) return null;
+
+  return { start, end };
+};
+
+const clampToBranchRange = (
+  start: string,
+  end: string,
+  range: { start: string; end: string }
+) => {
+  const startMin = toMinutes(start);
+  const endMin = toMinutes(end);
+  const branchStartMin = toMinutes(range.start);
+  const branchEndMin = toMinutes(range.end);
+
+  if (
+    startMin === null ||
+    endMin === null ||
+    branchStartMin === null ||
+    branchEndMin === null
+  ) {
+    return { start, end, adjusted: false };
+  }
+
+  let nextStart = startMin;
+  let nextEnd = endMin;
+  let adjusted = false;
+
+  if (nextStart < branchStartMin) {
+    nextStart = branchStartMin;
+    adjusted = true;
+  }
+  if (nextEnd > branchEndMin) {
+    nextEnd = branchEndMin;
+    adjusted = true;
+  }
+
+  if (nextStart >= nextEnd) {
+    nextStart = branchStartMin;
+    nextEnd = branchEndMin;
+    adjusted = true;
+  }
+
+  const format = (value: number) =>
+    `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(
+      value % 60
+    ).padStart(2, "0")}`;
+
+  return {
+    start: format(nextStart),
+    end: format(nextEnd),
+    adjusted,
+  };
+};
 
 const extractTime = (value?: string) => {
   if (!value) return "";
@@ -160,6 +244,8 @@ export function TeamMemberScheduleDialog({
   loadingBranches = false,
 }: TeamMemberScheduleDialogProps) {
   const { toast } = useToast();
+  const { fetchBranchById } = useBranchApi();
+  const { getBranchWorkSchedule } = useBranchWorkSchedule();
   const availableBranches = useMemo(
     () =>
       (branches ?? []).filter(
@@ -171,12 +257,52 @@ export function TeamMemberScheduleDialog({
   const [branchSchedules, setBranchSchedules] = useState<BranchScheduleState[]>(
     []
   );
+  const [branchScheduleCache, setBranchScheduleCache] = useState<
+    Record<string, BranchScheduleSource | null>
+  >({});
   const {
     createEmployeeWorkRange,
     updateEmployeeWorkRange,
     deleteEmployeeWorkRange,
     loading: isScheduleLoading,
   } = useEmployeeWorkRange();
+
+  const resolveBranchSchedule = async (branchId: string) => {
+    if (branchScheduleCache[branchId]) {
+      return branchScheduleCache[branchId];
+    }
+
+    const localBranch = availableBranches.find(
+      branch => String(branch.id) === String(branchId)
+    );
+
+    if (localBranch?.work_schedule) {
+      setBranchScheduleCache(prev => ({ ...prev, [branchId]: localBranch }));
+      return localBranch;
+    }
+
+    const fetched = await fetchBranchById(branchId);
+
+    if (fetched?.work_schedule) {
+      setBranchScheduleCache(prev => ({ ...prev, [branchId]: fetched }));
+      return fetched;
+    }
+
+    try {
+      const ranges = await getBranchWorkSchedule(branchId);
+      const hydrated: BranchScheduleSource = fetched
+        ? { ...fetched, work_schedule: ranges }
+        : { id: branchId, work_schedule: ranges };
+      setBranchScheduleCache(prev => ({ ...prev, [branchId]: hydrated }));
+      return hydrated;
+    } catch {
+      setBranchScheduleCache(prev => ({
+        ...prev,
+        [branchId]: fetched ?? null,
+      }));
+      return fetched ?? null;
+    }
+  };
 
   useEffect(() => {
     if (!member) {
@@ -187,7 +313,9 @@ export function TeamMemberScheduleDialog({
     const normalizedRanges = normalizeWorkSchedule(
       Array.isArray(member.work_schedule) ? member.work_schedule : []
     );
-    setBranchSchedules(buildBranchSchedules(availableBranches, normalizedRanges));
+    setBranchSchedules(
+      buildBranchSchedules(availableBranches, normalizedRanges)
+    );
   }, [member, availableBranches]);
 
   const linkedBranchIds = new Set(
@@ -302,12 +430,44 @@ export function TeamMemberScheduleDialog({
     if (!day) return;
 
     const previousDay = { ...day };
+    let nextStart = day.start_time || DEFAULT_START_TIME;
+    let nextEnd = day.end_time || DEFAULT_END_TIME;
+
+    const branchData = enabled ? await resolveBranchSchedule(branchId) : null;
+    const branchRange = enabled
+      ? getBranchDayRangeFromBranch(branchData, weekday)
+      : null;
+
+    if (enabled && !branchRange) {
+      toast({
+        title: "Horario da filial nao configurado",
+        description:
+          "Defina o horario de funcionamento da filial para este dia antes de vincular o profissional.",
+        variant: "destructive",
+      });
+      updateBranchDayState(branchId, weekday, () => previousDay);
+      return;
+    }
+
+    if (branchRange) {
+      const adjusted = clampToBranchRange(nextStart, nextEnd, branchRange);
+      if (adjusted.adjusted) {
+        nextStart = adjusted.start;
+        nextEnd = adjusted.end;
+        toast({
+          title: "Horario ajustado",
+          description:
+            "O horario do profissional foi ajustado para respeitar o horario da filial.",
+        });
+      }
+    }
+
     const nextDay = enabled
       ? {
           ...day,
           enabled: true,
-          start_time: day.start_time || DEFAULT_START_TIME,
-          end_time: day.end_time || DEFAULT_END_TIME,
+          start_time: nextStart,
+          end_time: nextEnd,
           time_zone: day.time_zone || DEFAULT_TIME_ZONE,
         }
       : { ...day, enabled: false };
@@ -352,6 +512,25 @@ export function TeamMemberScheduleDialog({
 
       onReloadMember?.();
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (
+        message
+          .toLowerCase()
+          .includes("not within any defined branch operating hours")
+      ) {
+        toast({
+          title: "Horario invalido",
+          description:
+            "O horario do profissional precisa estar dentro do horario da filial.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao salvar horario",
+          description: "Nao foi possivel salvar o horario do profissional.",
+          variant: "destructive",
+        });
+      }
       updateBranchDayState(branchId, weekday, () => previousDay);
     }
   };
@@ -371,10 +550,44 @@ export function TeamMemberScheduleDialog({
     if (!day) return;
 
     const previousDay = { ...day };
-    const nextDay = {
+    let nextDay = {
       ...day,
       [field]: value,
     };
+
+    const branchData = await resolveBranchSchedule(branchId);
+    const branchRange = getBranchDayRangeFromBranch(branchData, weekday);
+
+    if (!branchRange) {
+      toast({
+        title: "Horario da filial nao configurado",
+        description:
+          "Defina o horario de funcionamento da filial para este dia antes de ajustar o horario do profissional.",
+        variant: "destructive",
+      });
+      updateBranchDayState(branchId, weekday, () => previousDay);
+      return;
+    }
+
+    if (branchRange && nextDay.start_time && nextDay.end_time) {
+      const adjusted = clampToBranchRange(
+        nextDay.start_time,
+        nextDay.end_time,
+        branchRange
+      );
+      if (adjusted.adjusted) {
+        nextDay = {
+          ...nextDay,
+          start_time: adjusted.start,
+          end_time: adjusted.end,
+        };
+        toast({
+          title: "Horario ajustado",
+          description:
+            "O horario do profissional precisa estar dentro do horario da filial.",
+        });
+      }
+    }
 
     updateBranchDayState(branchId, weekday, () => nextDay);
 
@@ -407,13 +620,32 @@ export function TeamMemberScheduleDialog({
 
       onReloadMember?.();
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (
+        message
+          .toLowerCase()
+          .includes("not within any defined branch operating hours")
+      ) {
+        toast({
+          title: "Horario invalido",
+          description:
+            "O horario do profissional precisa estar dentro do horario da filial.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao salvar horario",
+          description: "Nao foi possivel salvar o horario do profissional.",
+          variant: "destructive",
+        });
+      }
       updateBranchDayState(branchId, weekday, () => previousDay);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[90vh] min-h-0 flex flex-col overflow-hidden p-0">
+      <DialogContent className="max-w-xl h-[90vh] min-h-0 flex flex-col overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>
             {member ? "Filiais e horarios" : "Carregando profissional..."}
