@@ -23,7 +23,8 @@ const PageShell = ({ children }: { children: React.ReactNode }) => (
 );
 
 const formatDuration = (duration?: Service["duration"]) => {
-  if (duration === undefined || duration === null || duration === "") return null;
+  if (duration === undefined || duration === null || duration === "")
+    return null;
   if (typeof duration === "number") return `${duration} min`;
   const numericValue = Number(duration);
   if (Number.isFinite(numericValue)) return `${numericValue} min`;
@@ -40,9 +41,7 @@ const formatPrice = (price?: Service["price"]) => {
 
 const normalizeServiceIds = (services?: Branch["services"]) => {
   if (!Array.isArray(services)) return [];
-  return (
-    services as Array<number | string | { id?: number | string }>
-  )
+  return (services as Array<number | string | { id?: number | string }>)
     .map(service => {
       if (typeof service === "number" || typeof service === "string") {
         return service;
@@ -63,22 +62,25 @@ export default function BranchServicesPage() {
     : params?.branchId;
   const branchId = typeof branchIdParam === "string" ? branchIdParam : "";
 
-  const { company, loading: isCompanyLoading } = useGetCompany();
-  const { linkService, unlinkService } = useBranchApi();
+  const { company, loading: isCompanyLoading, refetch } = useGetCompany();
+  const { linkService, unlinkService, fetchBranchById } = useBranchApi();
   const { toast } = useToast();
 
   const services = useMemo(
     () =>
-      Array.isArray(company?.services)
-        ? (company.services as Service[])
-        : [],
+      Array.isArray(company?.services) ? (company.services as Service[]) : [],
     [company?.services]
   );
 
+  const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
+  const [isBranchLoading, setIsBranchLoading] = useState(false);
+
   const branch = useMemo(
     () =>
-      company?.branches?.find(item => String(item.id) === branchId) ?? null,
-    [company?.branches, branchId]
+      branchDetails ??
+      company?.branches?.find(item => String(item.id) === branchId) ??
+      null,
+    [branchDetails, company?.branches, branchId]
   );
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -97,6 +99,28 @@ export default function BranchServicesPage() {
   );
 
   useEffect(() => {
+    if (!branchId) return;
+
+    let active = true;
+    setIsBranchLoading(true);
+
+    fetchBranchById(branchId)
+      .then(data => {
+        if (!active || !data) return;
+        setBranchDetails(data);
+        setInitializedBranchId("");
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsBranchLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [branchId, fetchBranchById]);
+
+  useEffect(() => {
     if (!branchId || isCompanyLoading || initializedBranchId === branchId) {
       return;
     }
@@ -105,12 +129,7 @@ export default function BranchServicesPage() {
     setEnabledServiceIds(ids);
     setInitialServiceIds(new Set(ids));
     setInitializedBranchId(branchId);
-  }, [
-    branchId,
-    isCompanyLoading,
-    initializedBranchId,
-    normalizedServiceIds,
-  ]);
+  }, [branchId, isCompanyLoading, initializedBranchId, normalizedServiceIds]);
 
   const branchName = branch?.name ?? "Filial";
 
@@ -220,6 +239,12 @@ export default function BranchServicesPage() {
         variant: "destructive",
       });
     } else {
+      const refreshedBranch = await fetchBranchById(branchId);
+      if (refreshedBranch) {
+        setBranchDetails(refreshedBranch);
+      }
+      await refetch();
+      setInitializedBranchId("");
       setInitialServiceIds(new Set(enabledServiceIds));
     }
 
@@ -234,8 +259,8 @@ export default function BranchServicesPage() {
     );
   }
 
-  const isLoading = isCompanyLoading;
-  const isBusy = isCompanyLoading || isSaving;
+  const isLoading = isCompanyLoading || isBranchLoading;
+  const isBusy = isCompanyLoading || isBranchLoading || isSaving;
 
   return (
     <PageShell>
@@ -264,19 +289,11 @@ export default function BranchServicesPage() {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={enableAll}
-              disabled={isBusy}
-            >
+            <Button variant="outline" onClick={enableAll} disabled={isBusy}>
               <Check className="mr-2 h-4 w-4" />
               Ativar todos
             </Button>
-            <Button
-              variant="outline"
-              onClick={disableAll}
-              disabled={isBusy}
-            >
+            <Button variant="outline" onClick={disableAll} disabled={isBusy}>
               <X className="mr-2 h-4 w-4" />
               Desativar todos
             </Button>

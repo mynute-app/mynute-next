@@ -79,6 +79,20 @@ export const POST = auth(async function POST(req, ctx) {
 
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const normalized = message.toLowerCase();
+
+    if (
+      normalized.includes("already has service") ||
+      normalized.includes("já possui") ||
+      normalized.includes("already has")
+    ) {
+      return NextResponse.json(
+        { message: "Servico ja vinculado a filial" },
+        { status: 200 }
+      );
+    }
+
     console.error("Erro ao vincular servico:", error);
     return NextResponse.json(
       {

@@ -28,6 +28,20 @@ export const POST = auth(async function POST(req, ctx) {
     // Não é necessário verificar response.ok, pois fetchFromBackend já trata erros
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const normalized = message.toLowerCase();
+
+    if (
+      normalized.includes("already exists in branch") ||
+      normalized.includes("já existe") ||
+      normalized.includes("already exists")
+    ) {
+      return NextResponse.json(
+        { message: "Funcionario ja vinculado a filial" },
+        { status: 200 }
+      );
+    }
+
     console.error("❌ Erro ao processar a requisição:", error);
     return NextResponse.json(
       { message: "Erro interno ao vincular a filial ao funcionário" },

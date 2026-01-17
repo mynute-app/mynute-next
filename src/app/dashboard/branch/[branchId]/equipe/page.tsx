@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useGetCompany } from "@/hooks/get-company";
 import { useToast } from "@/hooks/use-toast";
+import { useBranchApi } from "@/hooks/branch/use-branch-api";
 import type { Branch, Employee } from "../../../../../../types/company";
 
 const PageShell = ({ children }: { children: React.ReactNode }) => (
@@ -51,7 +52,8 @@ export default function BranchEquipePage() {
     : params?.branchId;
   const branchId = typeof branchIdParam === "string" ? branchIdParam : "";
 
-  const { company, loading: isCompanyLoading } = useGetCompany();
+  const { company, loading: isCompanyLoading, refetch } = useGetCompany();
+  const { fetchBranchById } = useBranchApi();
   const { toast } = useToast();
 
   const employees = useMemo(
@@ -59,10 +61,15 @@ export default function BranchEquipePage() {
     [company?.employees]
   );
 
+  const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
+  const [isBranchLoading, setIsBranchLoading] = useState(false);
+
   const branch = useMemo(
     () =>
-      company?.branches?.find(item => String(item.id) === branchId) ?? null,
-    [company?.branches, branchId]
+      branchDetails ??
+      company?.branches?.find(item => String(item.id) === branchId) ??
+      null,
+    [branchDetails, company?.branches, branchId]
   );
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,13 +100,29 @@ export default function BranchEquipePage() {
     setSelectedEmployeeIds(initialIds);
     setInitialEmployeeIds(new Set(initialIds));
     setInitializedBranchId(branchId);
-  }, [
-    branchId,
-    branch,
-    employees,
-    isCompanyLoading,
-    initializedBranchId,
-  ]);
+  }, [branchId, branch, employees, isCompanyLoading, initializedBranchId]);
+
+  useEffect(() => {
+    if (!branchId) return;
+
+    let active = true;
+    setIsBranchLoading(true);
+
+    fetchBranchById(branchId)
+      .then(data => {
+        if (!active || !data) return;
+        setBranchDetails(data);
+        setInitializedBranchId("");
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsBranchLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [branchId, fetchBranchById]);
 
   const branchName = branch?.name ?? "Filial";
 
@@ -199,6 +222,12 @@ export default function BranchEquipePage() {
         variant: "destructive",
       });
     } else {
+      const refreshedBranch = await fetchBranchById(branchId);
+      if (refreshedBranch) {
+        setBranchDetails(refreshedBranch);
+      }
+      await refetch();
+      setInitializedBranchId("");
       setInitialEmployeeIds(new Set(selectedEmployeeIds));
     }
 
@@ -213,7 +242,7 @@ export default function BranchEquipePage() {
     );
   }
 
-  const isLoading = isCompanyLoading;
+  const isLoading = isCompanyLoading || isBranchLoading;
 
   return (
     <PageShell>
