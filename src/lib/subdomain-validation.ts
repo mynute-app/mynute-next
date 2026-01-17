@@ -131,17 +131,16 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
     };
   }
 
-  // Buscar empresa pelo subdomínio usando a rota /api/company/name
-  // que já faz todas as tentativas de variações de nome
+  // Buscar empresa diretamente pelo subdomínio
   const apiUrl =
     process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 
   try {
     const res = await fetch(
-      `${apiUrl}/api/company/name/${encodeURIComponent(subdomain)}`,
+      `${apiUrl}/api/company/subdomain/${encodeURIComponent(subdomain)}`,
       {
         cache: "no-store",
-      }
+      },
     );
 
     if (!res.ok) {
