@@ -19,24 +19,37 @@ export async function getCompanyFromRequest(req: NextRequest) {
   const baseUrl =
     req.nextUrl?.origin || process.env.NEXTAUTH_URL || "http://localhost:3000";
 
-  const target = `${baseUrl}/api/company/subdomain/${subdomain}`;
-  const res = await fetch(target, {
+  const bySubdomainUrl = `${baseUrl}/api/company/subdomain/${subdomain}`;
+  const subdomainRes = await fetch(bySubdomainUrl, {
     cache: "no-store",
   });
 
-  if (!res.ok) {
-    let details: string | undefined;
-    try {
-      details = await res.text();
-    } catch (e) {}
-    throw new Error(
-      `Empresa não encontrada para esse subdomínio. host=${host} subdomain=${subdomain} url=${target} status=${
-        res.status
-      }${details ? ` body=${details}` : ""}`
-    );
-  }
+  let company: any;
 
-  const company = await res.json();
+  if (subdomainRes.ok) {
+    company = await subdomainRes.json();
+  } else {
+    const byNameUrl = `${baseUrl}/api/company/name/${encodeURIComponent(
+      subdomain,
+    )}`;
+    const nameRes = await fetch(byNameUrl, {
+      cache: "no-store",
+    });
+
+    if (!nameRes.ok) {
+      let details: string | undefined;
+      try {
+        details = await nameRes.text();
+      } catch (e) {}
+      throw new Error(
+        `Empresa não encontrada para esse subdomínio. host=${host} subdomain=${subdomain} url=${bySubdomainUrl} fallback=${byNameUrl} status=${
+          nameRes.status
+        }${details ? ` body=${details}` : ""}`,
+      );
+    }
+
+    company = await nameRes.json();
+  }
 
   const minimal = {
     id: company.id,

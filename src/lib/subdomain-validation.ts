@@ -131,19 +131,70 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
     };
   }
 
-  // Buscar empresa diretamente pelo subdomínio
+  // Buscar empresa pelo subdomínio e, se não encontrar, tentar por nome
   const apiUrl =
     process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 
   try {
-    const res = await fetch(
+    const subdomainRes = await fetch(
       `${apiUrl}/api/company/subdomain/${encodeURIComponent(subdomain)}`,
       {
         cache: "no-store",
       },
     );
 
-    if (!res.ok) {
+    if (subdomainRes.ok) {
+      const company = await subdomainRes.json();
+
+      const hasContent =
+        (Array.isArray(company?.services) && company.services.length > 0) ||
+        (Array.isArray(company?.employees) && company.employees.length > 0) ||
+        (Array.isArray(company?.branches) && company.branches.length > 0);
+
+      if (hasContent) {
+        return {
+          success: true,
+          company,
+          subdomain,
+          isMainDomain: false,
+        };
+      }
+
+      // Se o subdomínio veio "vazio", tenta enriquecer pelo nome
+      const nameRes = await fetch(
+        `${apiUrl}/api/company/name/${encodeURIComponent(subdomain)}`,
+        {
+          cache: "no-store",
+        },
+      );
+
+      if (nameRes.ok) {
+        const enriched = await nameRes.json();
+        return {
+          success: true,
+          company: enriched,
+          subdomain,
+          isMainDomain: false,
+        };
+      }
+
+      // Fallback: mantém o resultado do subdomínio mesmo sem conteúdo
+      return {
+        success: true,
+        company,
+        subdomain,
+        isMainDomain: false,
+      };
+    }
+
+    const nameRes = await fetch(
+      `${apiUrl}/api/company/name/${encodeURIComponent(subdomain)}`,
+      {
+        cache: "no-store",
+      },
+    );
+
+    if (!nameRes.ok) {
       return {
         success: false,
         error: "company_not_found",
@@ -152,7 +203,7 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
       };
     }
 
-    const company = await res.json();
+    const company = await nameRes.json();
 
     return {
       success: true,
