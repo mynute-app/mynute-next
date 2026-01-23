@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { ChevronsUpDown, LogOut } from "lucide-react";
+import Link from "next/link";
+import { ChevronsUpDown, KeyRound, LogOut } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
 import {
@@ -78,6 +79,15 @@ export function NavUser() {
             </div>
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuItem
+          asChild
+          className="cursor-pointer"
+        >
+          <Link href="/dashboard/config/account">
+            <KeyRound className="mr-2 h-4 w-4" />
+            Configuracoes da conta
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => signOut({ callbackUrl: "/" })}
