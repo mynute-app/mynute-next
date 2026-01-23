@@ -15,7 +15,7 @@ export default async function RootLayout({
   }
   return (
     <DashboardTheme>
-      <div className="h-screen [--header-height:calc(theme(spacing.0))]">
+      <div className="dashboard-theme h-screen [--header-height:calc(theme(spacing.0))]">
         <SidebarProvider className="flex h-full flex-col">
           <div className="flex h-full flex-1">
             <AppSidebar />

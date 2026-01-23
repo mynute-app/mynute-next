@@ -39,14 +39,14 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 215 28% 12%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 173 58% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 18%;
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 20% 92%;
+    --sidebar-primary: 0 0% 94%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 222 40% 16%;
     --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 215 20% 20%;
-    --sidebar-ring: 173 58% 50%;
+    --sidebar-border: 222 35% 18%;
+    --sidebar-ring: 213 94% 55%;
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -73,14 +73,14 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 215 30% 6%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 173 58% 55%;
-    --sidebar-primary-foreground: 215 28% 8%;
-    --sidebar-accent: 215 25% 12%;
+    --sidebar-background: 222 47% 9%;
+    --sidebar-foreground: 210 20% 92%;
+    --sidebar-primary: 0 0% 92%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 222 40% 14%;
     --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 215 20% 15%;
-    --sidebar-ring: 173 58% 55%;
+    --sidebar-border: 222 35% 16%;
+    --sidebar-ring: 213 94% 60%;
   }
 }
 
@@ -116,9 +116,14 @@ body {
       hsl(var(--brand-secondary-hover))
     );
     --shadow-glow: 0 0 20px hsl(var(--brand-primary-glow) / 0.3);
-    --sidebar-primary: var(--brand-primary);
-    --sidebar-primary-foreground: var(--brand-primary-foreground);
-    --sidebar-ring: var(--brand-primary);
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 16%;
+    --sidebar-primary: 0 0% 94%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-ring: 0 0% 94%;
   }
 
   * {
@@ -139,28 +144,28 @@ body {
 
 /* Estilo da barra de rolagem */
 .custom-scrollbar {
-    scrollbar-width: thin; /* Para Firefox */
-    scrollbar-color: #a0aec0 #edf2f7; /* Para Firefox */
+  scrollbar-width: thin; /* Para Firefox */
+  scrollbar-color: #a0aec0 #edf2f7; /* Para Firefox */
 }
 
 /* Para navegadores baseados em WebKit */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 2px; /* Largura da barra */
-    height: 2px; /* Altura da barra horizontal */
+  width: 2px; /* Largura da barra */
+  height: 2px; /* Altura da barra horizontal */
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #a0aec0; /* Cor do "polegar" */
-    border-radius: 3px; /* Deixa as bordas arredondadas */
+  background-color: #a0aec0; /* Cor do "polegar" */
+  border-radius: 3px; /* Deixa as bordas arredondadas */
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: #718096; /* Cor ao passar o mouse */
+  background-color: #718096; /* Cor ao passar o mouse */
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background-color: #edf2f7; /* Cor do trilho */
-    border-radius: 3px;
+  background-color: #edf2f7; /* Cor do trilho */
+  border-radius: 3px;
 }
 
 html,
@@ -195,9 +200,11 @@ body {
     --input: 215 20% 90%;
     --radius: 0.625rem;
     --shadow-sm: 0 1px 2px 0 hsl(215 25% 15% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(215 25% 15% / 0.07),
+    --shadow-md:
+      0 4px 6px -1px hsl(215 25% 15% / 0.07),
       0 2px 4px -2px hsl(215 25% 15% / 0.05);
-    --shadow-lg: 0 10px 15px -3px hsl(215 25% 15% / 0.08),
+    --shadow-lg:
+      0 10px 15px -3px hsl(215 25% 15% / 0.08),
       0 4px 6px -4px hsl(215 25% 15% / 0.05);
   }
 }

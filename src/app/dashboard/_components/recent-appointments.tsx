@@ -1,8 +1,16 @@
-import { Building2, Car, Clock, MoreHorizontal, User } from "lucide-react";
+import {
+  Building2,
+  Car,
+  Clock,
+  MoreHorizontal,
+  Plus,
+  User,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export type DashboardAppointment = {
   id: string;
@@ -108,8 +116,8 @@ export function RecentAppointments({
               )}
             </p>
           </div>
-          <Button variant="outline" size="sm" type="button">
-            Ver todos
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/agendamentos">Ver todos</Link>
           </Button>
         </div>
       </div>
@@ -187,19 +195,19 @@ export function RecentAppointments({
                         variant="outline"
                         className={cn(
                           "text-xs font-medium",
-                          statusConfig[appointment.status].className
+                          statusConfig[appointment.status].className,
                         )}
                       >
                         {statusConfig[appointment.status].label}
                       </Badge>
-                      <Button
+                      {/* <Button
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
                         type="button"
                       >
                         <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
                 </div>
