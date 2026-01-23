@@ -317,7 +317,7 @@ export default function YourTeam() {
                               </p>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Switch
+                              {/* <Switch
                                 checked={isActive}
                                 onCheckedChange={checked =>
                                   setActiveById(prev => ({
@@ -325,7 +325,7 @@ export default function YourTeam() {
                                     [member.id]: checked,
                                   }))
                                 }
-                              />
+                              /> */}
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button
