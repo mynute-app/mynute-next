@@ -10,7 +10,7 @@ export const POST = auth(async function POST(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { employee_id } = ctx.params as {
+    const { employee_id } = (await ctx.params) as {
       employee_id: string;
     };
 
@@ -83,3 +83,4 @@ export const POST = auth(async function POST(req, ctx) {
     );
   }
 });
+

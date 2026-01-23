@@ -10,7 +10,7 @@ export const PATCH = auth(async function PATCH(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { branch_id } = ctx.params as {
+    const { branch_id } = (await ctx.params) as {
       branch_id: string;
     };
 
@@ -106,7 +106,7 @@ export const PATCH = auth(async function PATCH(req, ctx) {
 
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
-    const { branch_id } = ctx.params as { branch_id: string };
+    const { branch_id } = (await ctx.params) as { branch_id: string };
 
     if (error instanceof Error && error.message.includes("fetch failed")) {
       const errorCause = error.cause as any;
@@ -148,3 +148,4 @@ export const PATCH = auth(async function PATCH(req, ctx) {
     );
   }
 });
+

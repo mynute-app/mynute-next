@@ -10,7 +10,7 @@ export const POST = auth(async function POST(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { employee_id, work_range_id } = ctx.params as {
+    const { employee_id, work_range_id } = (await ctx.params) as {
       employee_id: string;
       work_range_id: string;
     };
@@ -59,7 +59,7 @@ export const GET = auth(async function GET(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { employee_id, work_range_id } = ctx.params as {
+    const { employee_id, work_range_id } = (await ctx.params) as {
       employee_id: string;
       work_range_id: string;
     };
@@ -101,7 +101,7 @@ export const PUT = auth(async function PUT(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { employee_id, work_range_id } = ctx.params as {
+    const { employee_id, work_range_id } = (await ctx.params) as {
       employee_id: string;
       work_range_id: string;
     };
@@ -150,7 +150,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { employee_id, work_range_id } = ctx.params as {
+    const { employee_id, work_range_id } = (await ctx.params) as {
       employee_id: string;
       work_range_id: string;
     };
@@ -183,3 +183,4 @@ export const DELETE = auth(async function DELETE(req, ctx) {
     );
   }
 });
+

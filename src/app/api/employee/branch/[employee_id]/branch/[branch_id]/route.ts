@@ -10,7 +10,7 @@ export const POST = auth(async function POST(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { employee_id, branch_id } = ctx.params as {
+    const { employee_id, branch_id } = (await ctx.params) as {
       employee_id: string;
       branch_id: string;
     };
@@ -58,7 +58,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { employee_id, branch_id } = ctx.params as {
+    const { employee_id, branch_id } = (await ctx.params) as {
       employee_id: string;
       branch_id: string;
     }; // Usando fetchFromBackend para desvincular filial do funcionário
@@ -80,3 +80,4 @@ export const DELETE = auth(async function DELETE(req, ctx) {
     );
   }
 });
+

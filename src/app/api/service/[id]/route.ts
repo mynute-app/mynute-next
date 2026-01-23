@@ -18,7 +18,8 @@ export const GET = auth(async function GET(req, { params }) {
       return NextResponse.json({ message: "Token inválido" }, { status: 401 });
     }
 
-    const serviceId = params?.id;
+    const resolvedParams = await params;
+    const serviceId = resolvedParams?.id;
 
     if (!serviceId) {
       return NextResponse.json(
@@ -75,7 +76,8 @@ export const PATCH = auth(async function PATCH(req, { params }) {
       return NextResponse.json({ message: "Token inválido" }, { status: 401 });
     }
 
-    const serviceId = params?.id;
+    const resolvedParams = await params;
+    const serviceId = resolvedParams?.id;
     const body = await req.json();
 
     const requestBody = {
@@ -121,7 +123,8 @@ export const PATCH = auth(async function PATCH(req, { params }) {
 export const DELETE = auth(async function DELETE(req, { params }) {
   try {
     const token = req.auth?.accessToken;
-    const serviceId = params?.id;
+    const resolvedParams = await params;
+    const serviceId = resolvedParams?.id;
 
     if (!token) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });

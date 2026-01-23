@@ -10,7 +10,7 @@ export const PUT = auth(async function PUT(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { company_id } = ctx.params as { company_id: string };
+    const { company_id } = (await ctx.params) as { company_id: string };
     const body = await req.json();
 
     const responseData = await fetchFromBackend(
@@ -32,3 +32,4 @@ export const PUT = auth(async function PUT(req, ctx) {
     );
   }
 });
+

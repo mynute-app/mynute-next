@@ -68,11 +68,11 @@ export function NavUser() {
                 {initials || "U"}
               </span>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold text-sidebar-foreground">
+            <div className="min-w-0 flex-1 ">
+              <p className="truncate font-semibold text-primary">
                 {displayName}
               </p>
-              <p className="truncate text-xs text-sidebar-foreground/60">
+              <p className="truncate text-xs text-primary/60">
                 {displayEmail}
               </p>
             </div>

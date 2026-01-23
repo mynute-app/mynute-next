@@ -61,7 +61,7 @@ export const POST = auth(async function POST(req, ctx) {
       );
     }
 
-    const { branch_id, service_id } = ctx.params as {
+    const { branch_id, service_id } = (await ctx.params) as {
       branch_id: string;
       service_id: string;
     };
@@ -114,7 +114,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       );
     }
 
-    const { branch_id, service_id } = ctx.params as {
+    const { branch_id, service_id } = (await ctx.params) as {
       branch_id: string;
       service_id: string;
     };
@@ -145,3 +145,4 @@ export const DELETE = auth(async function DELETE(req, ctx) {
     );
   }
 });
+

@@ -52,7 +52,8 @@ export const GET = auth(async function GET(req, { params }) {
       );
     }
 
-    const branchId = params?.branch_id;
+    const resolvedParams = await params;
+    const branchId = resolvedParams?.branch_id;
     console.log("🏢 Buscando filial:", branchId);
 
     const schemaName = resolveSchemaFromHost(req);
@@ -92,7 +93,8 @@ export const PATCH = auth(async function PATCH(req, { params }) {
       );
     }
     const body = await req.json();
-    const branchId = params?.branch_id;
+    const resolvedParams = await params;
+    const branchId = resolvedParams?.branch_id;
     console.log("🏢 Atualizando filial:", branchId);
     console.log("📋 Dados recebidos:", authData.companyId);
 
@@ -150,7 +152,8 @@ export const DELETE = auth(async function DELETE(req, { params }) {
       );
     }
 
-    const branchId = params?.branch_id;
+    const resolvedParams = await params;
+    const branchId = resolvedParams?.branch_id;
     console.log("🗑️ Deletando filial:", branchId);
 
     const schemaName = resolveSchemaFromHost(req);

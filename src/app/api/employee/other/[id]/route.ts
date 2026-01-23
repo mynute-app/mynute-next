@@ -10,7 +10,7 @@ export const GET = auth(async function GET(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { id } = ctx.params as { id: string };
+    const { id } = (await ctx.params) as { id: string };
 
     // Usando fetchFromBackend para buscar dados do funcionário
     const employeeData = await fetchFromBackend(req, `/employee/${id}`, token);
@@ -21,3 +21,4 @@ export const GET = auth(async function GET(req, ctx) {
     return NextResponse.json({ message: "Erro interno" }, { status: 500 });
   }
 });
+

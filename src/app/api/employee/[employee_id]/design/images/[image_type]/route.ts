@@ -10,7 +10,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { employee_id, image_type } = ctx.params as {
+    const { employee_id, image_type } = (await ctx.params) as {
       employee_id: string;
       image_type: string;
     };
@@ -62,3 +62,4 @@ export const DELETE = auth(async function DELETE(req, ctx) {
     );
   }
 });
+

@@ -22,7 +22,7 @@ export const GET = auth(async function GET(req, ctx) {
       );
     }
 
-    const { id } = ctx.params as { id: string };
+    const { id } = (await ctx.params) as { id: string };
 
     if (!id) {
       return NextResponse.json(
@@ -72,7 +72,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       );
     }
 
-    const { id } = ctx.params as { id: string };
+    const { id } = (await ctx.params) as { id: string };
 
     if (!id) {
       return NextResponse.json(
@@ -100,3 +100,4 @@ export const DELETE = auth(async function DELETE(req, ctx) {
     );
   }
 });
+

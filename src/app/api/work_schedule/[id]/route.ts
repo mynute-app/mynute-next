@@ -10,7 +10,7 @@ export const PATCH = auth(async function PATCH(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { id } = ctx.params as { id: string };
+    const { id } = (await ctx.params) as { id: string };
     const body = await req.json();
 
     // Usando fetchFromBackend para atualizar os horários de trabalho
@@ -28,3 +28,4 @@ export const PATCH = auth(async function PATCH(req, ctx) {
     );
   }
 });
+
