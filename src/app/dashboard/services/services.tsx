@@ -157,14 +157,13 @@ export const ServicesPage = () => {
                   {categories.map(category => (
                     <Button
                       key={category}
-                      variant={
-                        selectedCategory === category ? "default" : "ghost"
-                      }
+                      variant="ghost"
                       size="sm"
                       className={cn(
                         "whitespace-nowrap",
-                        selectedCategory === category &&
-                          "bg-background shadow-sm",
+                        selectedCategory === category
+                          ? "bg-background text-foreground shadow-sm border border-border"
+                          : "text-muted-foreground hover:text-foreground",
                       )}
                       onClick={() => setSelectedCategory(category)}
                     >
