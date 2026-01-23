@@ -45,7 +45,7 @@ export const POST = auth(async function POST(req) {
 
     console.log("✅ Funcionário criado com sucesso:", createdEmployee);
 
-    revalidateTag("company");
+    revalidateTag("company", "max");
 
     return NextResponse.json(createdEmployee, { status: 201 });
   } catch (error) {

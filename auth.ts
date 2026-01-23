@@ -65,8 +65,11 @@ export const { handlers, auth, signIn } = NextAuth({
             throw new Error("Token não encontrado na resposta.");
           }
 
+          const fallbackName = email?.split("@")[0] || "Funcionario";
+
           return {
             email,
+            name: fallbackName,
             token,
             companyId: company.id,
             subdomain,
@@ -142,8 +145,11 @@ export const { handlers, auth, signIn } = NextAuth({
             throw new Error("Token não encontrado na resposta.");
           }
 
+          const fallbackName = email?.split("@")[0] || "Funcionario";
+
           return {
             email,
+            name: fallbackName,
             token,
             companyId: company.id,
             subdomain,
@@ -163,6 +169,7 @@ export const { handlers, auth, signIn } = NextAuth({
         token.companyId = u.companyId;
         token.subdomain = u.subdomain;
         token.email = u.email ?? token.email;
+        token.name = u.name ?? token.name ?? u.email ?? token.email;
       }
       return token;
     },
@@ -172,6 +179,11 @@ export const { handlers, auth, signIn } = NextAuth({
       session.user = {
         ...session.user,
         email: (token as any).email ?? session.user?.email ?? "",
+        name:
+          (token as any).name ??
+          session.user?.name ??
+          (token as any).email ??
+          "Funcionario",
       } as any;
       return session;
     },

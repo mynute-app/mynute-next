@@ -19,7 +19,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       method: "DELETE",
     });
 
-    revalidateTag("company");
+    revalidateTag("company", "max");
 
     return NextResponse.json(
       { message: "Funcionário deletado com sucesso" },
