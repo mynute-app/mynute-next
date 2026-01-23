@@ -228,6 +228,7 @@ body {
   .dashboard-page .btn-gradient,
   .services-page .btn-gradient,
   .services-dialog .btn-gradient,
+  .clients-page .btn-gradient,
   .team-page .btn-gradient,
   .team-dialog .btn-gradient,
   .branding-page .btn-gradient {
@@ -237,6 +238,7 @@ body {
 
   .dashboard-page .btn-gradient:hover,
   .services-page .btn-gradient:hover,
+  .clients-page .btn-gradient:hover,
   .services-dialog .btn-gradient:hover,
   .team-page .btn-gradient:hover,
   .team-dialog .btn-gradient:hover,
@@ -247,6 +249,7 @@ body {
 
   .dashboard-page .page-header,
   .services-page .page-header,
+  .clients-page .page-header,
   .team-page .page-header,
   .branding-page .page-header {
     @apply mb-8;
@@ -254,6 +257,7 @@ body {
 
   .dashboard-page .page-title,
   .services-page .page-title,
+  .clients-page .page-title,
   .team-page .page-title,
   .branding-page .page-title {
     @apply text-2xl font-bold text-foreground tracking-tight;
@@ -261,6 +265,7 @@ body {
 
   .dashboard-page .page-description,
   .services-page .page-description,
+  .clients-page .page-description,
   .team-page .page-description,
   .branding-page .page-description {
     @apply text-muted-foreground mt-1;
@@ -268,6 +273,7 @@ body {
 
   .dashboard-page .input-focus,
   .services-page .input-focus,
+  .clients-page .input-focus,
   .team-page .input-focus,
   .branding-page .input-focus {
     @apply focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
@@ -275,6 +281,7 @@ body {
 
   .dashboard-page .text-success,
   .services-page .text-success,
+  .clients-page .text-success,
   .team-page .text-success,
   .branding-page .text-success {
     color: hsl(var(--success));
