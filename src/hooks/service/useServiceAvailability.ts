@@ -86,7 +86,7 @@ export interface ServiceAvailability {
 
 export const useServiceAvailability = () => {
   const [availability, setAvailability] = useState<ServiceAvailability | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -181,10 +181,10 @@ export const useServiceAvailability = () => {
 // Hook alternativo para busca automática com parâmetros
 export const useServiceAvailabilityAuto = (
   params: ServiceAvailabilityParams | null,
-  enabled: boolean = true
+  enabled: boolean = true,
 ) => {
   const [availability, setAvailability] = useState<ServiceAvailability | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

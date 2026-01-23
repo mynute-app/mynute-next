@@ -47,7 +47,7 @@ export function AppointmentBookingNew({
 
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date | null>(
-    null
+    null,
   );
   const [showCalendarTimeSlots, setShowCalendarTimeSlots] = useState(false);
   const [extendedAvailability, setExtendedAvailability] = useState<any>(null);
@@ -94,17 +94,17 @@ export function AppointmentBookingNew({
     const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
     const todayData = availability.available_dates.find(
-      (d: any) => d.date === todayStr
+      (d: any) => d.date === todayStr,
     );
     const tomorrowData = availability.available_dates.find(
-      (d: any) => d.date === tomorrowStr
+      (d: any) => d.date === tomorrowStr,
     );
 
     const formatDateInfo = (dateInfo: any, label: string) => ({
       ...dateInfo,
       label,
       time_slots: [...dateInfo.time_slots].sort((a: any, b: any) =>
-        a.time.localeCompare(b.time)
+        a.time.localeCompare(b.time),
       ),
       formattedDate: new Intl.DateTimeFormat("pt-BR", {
         weekday: "long",
@@ -137,7 +137,7 @@ export function AppointmentBookingNew({
 
     const selectedDateStr = calendarSelectedDate.toISOString().split("T")[0];
     const dateData = availability.available_dates.find(
-      (d: any) => d.date === selectedDateStr
+      (d: any) => d.date === selectedDateStr,
     );
 
     if (!dateData) {
@@ -395,7 +395,6 @@ export function AppointmentBookingNew({
                           Vincule o serviço a uma filial, profissionais e dias
                           de trabalho para liberar os horários.
                         </p>
-                     
                       </div>
                     ) : (
                       <>
@@ -418,6 +417,3 @@ export function AppointmentBookingNew({
     </div>
   );
 }
-
-
-

@@ -162,22 +162,22 @@ export default function AgendamentosPage() {
 
   const clientById = useMemo(
     () => new Map(clientInfo.map(client => [client.id, client])),
-    [clientInfo]
+    [clientInfo],
   );
   const serviceById = useMemo(
     () => new Map(serviceInfo.map(service => [service.id, service])),
-    [serviceInfo]
+    [serviceInfo],
   );
   const employeeById = useMemo(
     () => new Map(employeeInfo.map(employee => [employee.id, employee])),
-    [employeeInfo]
+    [employeeInfo],
   );
   const branchById = useMemo(
     () =>
       new Map(
-        company?.branches?.map(branch => [branch.id.toString(), branch]) || []
+        company?.branches?.map(branch => [branch.id.toString(), branch]) || [],
       ),
-    [company?.branches]
+    [company?.branches],
   );
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -224,7 +224,7 @@ export default function AgendamentosPage() {
         };
       })
       .filter(item =>
-        normalizedSearch ? item.searchStack.includes(normalizedSearch) : true
+        normalizedSearch ? item.searchStack.includes(normalizedSearch) : true,
       );
   }, [
     appointments,
@@ -305,7 +305,7 @@ export default function AgendamentosPage() {
                     className={cn(
                       filter === item
                         ? "bg-background text-foreground shadow-sm border border-border"
-                        : "text-muted-foreground hover:text-foreground"
+                        : "text-muted-foreground hover:text-foreground",
                     )}
                     onClick={() => setFilter(item)}
                     disabled={!hasBranches}
@@ -313,8 +313,8 @@ export default function AgendamentosPage() {
                     {item === "all"
                       ? "Todos"
                       : item === "today"
-                      ? "Hoje"
-                      : "Semana"}
+                        ? "Hoje"
+                        : "Semana"}
                   </Button>
                 ))}
               </div>
@@ -429,7 +429,7 @@ export default function AgendamentosPage() {
                         variant="outline"
                         className={cn(
                           "text-xs",
-                          statusConfig[appointment.status].className
+                          statusConfig[appointment.status].className,
                         )}
                       >
                         {statusConfig[appointment.status].label}
