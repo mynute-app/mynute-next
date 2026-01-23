@@ -13,7 +13,7 @@ export const PATCH = auth(async function PATCH(req, ctx) {
       );
     }
 
-    const { id } = ctx.params as {
+    const { id } = (await ctx.params) as {
       id: string;
     };
 
@@ -113,7 +113,7 @@ export const PATCH = auth(async function PATCH(req, ctx) {
 
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
-    const { id } = ctx.params as { id: string };
+    const { id } = (await ctx.params) as { id: string };
 
     if (error instanceof Error && error.message.includes("fetch failed")) {
       const errorCause = error.cause as any;
@@ -160,3 +160,4 @@ export const PATCH = auth(async function PATCH(req, ctx) {
     );
   }
 });
+

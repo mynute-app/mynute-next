@@ -16,6 +16,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   FiClock,
   FiDollarSign,
@@ -25,6 +33,7 @@ import {
   FiUsers,
   FiScissors,
 } from "react-icons/fi";
+import { Star } from "lucide-react";
 import { useEditService } from "@/hooks/services/use-edit-service";
 import { useServiceImage } from "@/hooks/services/use-service-image";
 import { useGetService } from "@/hooks/services/use-get-service";
@@ -50,8 +59,16 @@ export type EditServiceFormValues = z.infer<typeof editServiceSchema>;
 type Props = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  service: (EditServiceFormValues & { id: string; imageUrl?: string }) | null;
+  service:
+    | (EditServiceFormValues & {
+        id: string;
+        imageUrl?: string;
+        category?: string;
+        hidden?: boolean;
+      })
+    | null;
   onSave: (updatedService: any) => void;
+  categories?: string[];
 };
 
 export const EditServiceDialog = ({
@@ -59,10 +76,21 @@ export const EditServiceDialog = ({
   onOpenChange,
   service,
   onSave,
+  categories = [],
 }: Props) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [durationDisplay, setDurationDisplay] = React.useState("");
   const [priceDisplay, setPriceDisplay] = React.useState("");
+  const isBufferLocked = true;
+
+  // Estados extras (não serão enviados ao backend ainda)
+  const [extraFields, setExtraFields] = React.useState({
+    priceFrom: false,
+    bufferTime: 15,
+    category: "",
+    active: true,
+    featured: false,
+  });
 
   // Hook para atualizar serviço
   const { isUpdating, updateService } = useEditService();
@@ -98,6 +126,15 @@ export const EditServiceDialog = ({
 
       setDurationDisplay(duration > 0 ? formatTimeMask(duration) : "");
       setPriceDisplay(price > 0 ? formatCurrencyMask(price) : "");
+
+      // Inicializar campos extras (valores padrão por enquanto)
+      setExtraFields({
+        priceFrom: false,
+        bufferTime: 15,
+        category: service.category || "",
+        active: !service.hidden,
+        featured: false,
+      });
 
       reset({
         name: service.name || "",
@@ -168,97 +205,123 @@ export const EditServiceDialog = ({
         }
       }}
     >
-      <DialogContent className="max-w-xl rounded-lg">
+      <DialogContent className="services-dialog max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Serviço</DialogTitle>
-          <DialogDescription>
-            Atualize os detalhes do serviço abaixo.
-          </DialogDescription>
+          <DialogDescription>Atualize os dados do serviço e salve as alterações.</DialogDescription>
         </DialogHeader>
 
-        {/* Formulário */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Título do Serviço com Imagem */}
-          <div className="flex items-start gap-4">
-            <div className="relative group">
-              <div
-                className="relative w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-300 transition-colors"
-                onClick={handleImageClick}
-              >
-                {imagePreview ? (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-2">
+            <Label>Imagem do Serviço</Label>
+            <div
+              className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+              onClick={handleImageClick}
+              role="button"
+              tabIndex={0}
+              onKeyDown={event => {
+                if (event.key === "Enter" || event.key === " ") {
+                  handleImageClick();
+                }
+              }}
+            >
+              {imagePreview ? (
+                <div className="relative inline-block">
                   <img
                     src={imagePreview}
                     alt="Preview"
-                    className="w-full h-full object-cover"
+                    className="mx-auto h-24 w-24 rounded-lg object-cover"
                   />
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <FiCamera className="w-5 h-5 text-gray-500" />
-                    <span className="text-xs text-gray-500 mt-1">Foto</span>
-                  </div>
-                )}
-
-                {/* Overlay para hover */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
-                  <FiCamera className="w-5 h-5 text-white" />
-                </div>
-              </div>
-
-              {/* Botão de remover imagem */}
-              {imagePreview && (
-                <button
-                  type="button"
-                  onClick={e => {
-                    e.stopPropagation();
-                    handleRemoveImage();
-                  }}
-                  disabled={isRemoving}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                >
-                  {isRemoving ? (
-                    <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <FiX className="w-3 h-3" />
+                  {isUploading && (
+                    <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    </div>
                   )}
-                </button>
+                </div>
+              ) : (
+                <>
+                  <FiCamera className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Clique para fazer upload ou arraste uma imagem
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PNG, JPG até 5MB
+                  </p>
+                </>
               )}
             </div>
+          </div>
 
-            <div className="flex-1">
-              <Label htmlFor="name">Digite o título do serviço*</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="name"
-                  placeholder="Digite o título do serviço"
-                  {...register("name")}
-                  className="flex-1"
-                />
-              </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="name">Nome do Serviço *</Label>
+              <Input
+                id="name"
+                placeholder="Ex: Corte de cabelo masculino"
+                {...register("name")}
+                required
+              />
               {formState.errors.name && (
                 <p className="text-sm text-red-500">
                   {formState.errors.name.message}
                 </p>
               )}
             </div>
-          </div>
 
-          {/* Input file escondido */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/jpg,image/png,image/webp"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea
+                id="description"
+                placeholder="Descreva o serviço..."
+                rows={3}
+                {...register("description")}
+              />
+              {formState.errors.description && (
+                <p className="text-sm text-red-500">
+                  {formState.errors.description.message}
+                </p>
+              )}
+            </div>
 
-          {/* Duração */}
-          <div className="flex items-center gap-3">
-            <FiClock className="text-gray-500 w-5 h-5 mt-7" />
-            <div className="flex-1">
-              <Label htmlFor="duration">Duração*</Label>
+            {/* <div className="space-y-2">
+              <Label htmlFor="category">Categoria</Label>
+              <Select
+                value={extraFields.category}
+                onValueChange={value =>
+                  setExtraFields(prev => ({ ...prev, category: value }))
+                }
+                disabled={categories.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      categories.length > 0 ? "Selecione..." : "Sem categorias"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div> */}
+
+            <div className="space-y-2">
+              <Label htmlFor="duration">Duração (minutos) *</Label>
               <Input
                 id="duration"
-                placeholder="Ex.: 30 min"
+                placeholder="Ex: 30"
                 value={durationDisplay}
                 onChange={handleDurationChange}
               />
@@ -268,88 +331,96 @@ export const EditServiceDialog = ({
                 </p>
               )}
             </div>
-          </div>
 
-          {/* Custo */}
-          <div className="flex items-center gap-3">
-            <FiDollarSign className="text-gray-500 w-5 h-5 mt-7" />
-            <div className="flex-1">
-              <Label htmlFor="price">Custo</Label>
+            <div className="space-y-2">
+             
+                <Label htmlFor="price">Preço (R$)</Label>
+                {/* <div className="flex items-center gap-2 ml-auto">
+                  <Switch
+                    id="priceFrom"
+                    checked={extraFields.priceFrom}
+                    onCheckedChange={checked =>
+                      setExtraFields(prev => ({ ...prev, priceFrom: checked }))
+                    }
+                  />
+                  <Label
+                    htmlFor="priceFrom"
+                    className="text-sm font-normal text-muted-foreground"
+                  >
+                    A partir de
+                  </Label>
+                </div> */}
+         
               <Input
                 id="price"
-                placeholder="Ex.: R$ 50,00"
+                placeholder="Ex: 50,00"
                 value={priceDisplay}
                 onChange={handlePriceChange}
               />
             </div>
+
+            {/* <div className="space-y-2">
+              <Label htmlFor="bufferTime">Intervalo após (min)</Label>
+              <Select
+                value={isBufferLocked ? "" : String(extraFields.bufferTime)}
+                onValueChange={value =>
+                  setExtraFields(prev => ({
+                    ...prev,
+                    bufferTime: Number.parseInt(value, 10),
+                  }))
+                }
+                disabled={isBufferLocked}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Em breve" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Sem intervalo</SelectItem>
+                  <SelectItem value="5">5 minutos</SelectItem>
+                  <SelectItem value="10">10 minutos</SelectItem>
+                  <SelectItem value="15">15 minutos</SelectItem>
+                  <SelectItem value="30">30 minutos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div> */}
           </div>
 
-          {/* Descrição */}
-          <div className="flex items-start gap-3">
-            <FiAlignLeft className="text-gray-500 w-5 h-5 mt-3" />
-            <div className="flex-1">
-              <Label htmlFor="description">Descrição*</Label>
-              <Textarea
-                id="description"
-                placeholder="Digite uma breve descrição do serviço"
-                {...register("description")}
-              />
-              {formState.errors.description && (
-                <p className="text-sm text-red-500">
-                  {formState.errors.description.message}
+          {/* <div className="space-y-4 pt-4 border-t border-border">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Serviço Ativo</Label>
+                <p className="text-sm text-muted-foreground">
+                  Serviços inativos não aparecem na página pública
                 </p>
-              )}
-            </div>
-          </div>
-
-          {/* Funcionários Vinculados */}
-          <div className="flex items-start gap-3">
-            <FiUsers className="text-gray-500 w-5 h-5 mt-3" />
-            <div className="flex-1">
-              <Label>Funcionários Vinculados</Label>
-              <div className="mt-2 p-3 border rounded-md bg-gray-50 max-h-48 overflow-y-auto">
-                {loadingServiceData ? (
-                  <div className="flex items-center justify-center py-4">
-                    <div className="w-5 h-5 border border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-                    <span className="ml-2 text-sm text-gray-600">
-                      Carregando funcionários...
-                    </span>
-                  </div>
-                ) : serviceData?.employees &&
-                  serviceData.employees.length > 0 ? (
-                  <div className="space-y-2">
-                    {serviceData.employees.map((employee: any) => (
-                      <div
-                        key={employee.id}
-                        className="flex items-center gap-3 p-2 bg-white rounded border"
-                      >
-                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-600">
-                            {employee.name?.charAt(0).toUpperCase() || "?"}
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">
-                            {employee.name} {employee.surname}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {employee.role}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    Nenhum funcionário vinculado a este serviço
-                  </p>
-                )}
               </div>
+              <Switch
+                checked={extraFields.active}
+                onCheckedChange={checked =>
+                  setExtraFields(prev => ({ ...prev, active: checked }))
+                }
+              />
             </div>
-          </div>
 
-          {/* Botões no Rodapé */}
-          <DialogFooter>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-accent" />
+                  Destaque
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Serviços em destaque aparecem primeiro
+                </p>
+              </div>
+              <Switch
+                checked={extraFields.featured}
+                onCheckedChange={checked =>
+                  setExtraFields(prev => ({ ...prev, featured: checked }))
+                }
+              />
+            </div>
+          </div> */}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button
               type="button"
               variant="outline"
@@ -360,18 +431,22 @@ export const EditServiceDialog = ({
             </Button>
             <Button
               type="submit"
-              variant="default"
+              className="btn-gradient"
               disabled={isUpdating || isUploading}
             >
               {isUpdating
-                ? "Salvando dados..."
+                ? "Salvando..."
                 : isUploading
                 ? "Enviando imagem..."
-                : "Salvar"}
+                : "Salvar Alterações"}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
   );
 };
+
+
+
+

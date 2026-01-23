@@ -10,7 +10,7 @@ export const POST = auth(async function POST(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { branch_id } = ctx.params as {
+    const { branch_id } = (await ctx.params) as {
       branch_id: string;
     };
 
@@ -54,7 +54,7 @@ export const GET = auth(async function GET(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { branch_id } = ctx.params as {
+    const { branch_id } = (await ctx.params) as {
       branch_id: string;
     };
 
@@ -79,3 +79,4 @@ export const GET = auth(async function GET(req, ctx) {
     );
   }
 });
+

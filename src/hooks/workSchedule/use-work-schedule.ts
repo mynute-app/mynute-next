@@ -1,32 +1,124 @@
-import { useState, useEffect } from "react";
+import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-// Tipos baseados na especificação da API
 export interface WorkScheduleRange {
-  id?: string; // ID vem do backend após criação
-  branch_id: string;
+  id?: string;
   employee_id: string;
-  end_time: string;
-  services: Array<{ id?: string; [key: string]: any }>;
-  start_time: string;
-  time_zone: string;
+  branch_id: string;
   weekday: number;
+  start_time: string;
+  end_time: string;
+  time_zone: string;
+  services: Array<{ id?: string; [key: string]: any }>;
 }
 
-export interface WorkScheduleData {
+export interface WorkSchedulePayload {
   employee_work_ranges: WorkScheduleRange[];
 }
 
 interface UseWorkScheduleProps {
   onSuccess?: () => void;
   onError?: (error: string) => void;
-  autoFetch?: boolean;
-  employeeId?: string;
 }
+
+const extractTime = (value?: string) => {
+  if (!value) return "";
+
+  try {
+    if (/^\d{2}:\d{2}$/.test(value)) {
+      return value;
+    }
+
+    if (value.includes("T") || value.includes("-") || value.length > 8) {
+      const date = new Date(value);
+      if (!Number.isNaN(date.getTime())) {
+        return date.toTimeString().slice(0, 5);
+      }
+    }
+
+    if (value.includes(":")) {
+      const match = value.match(/(\d{1,2}:\d{2})/);
+      if (match) {
+        return match[1].padStart(5, "0");
+      }
+    }
+
+    return "";
+  } catch {
+    return "";
+  }
+};
+
+const normalizeWorkScheduleRanges = (
+  raw: any,
+  employeeId?: string
+): WorkScheduleRange[] => {
+  const ranges =
+    raw?.employee_work_ranges ||
+    raw?.work_schedule?.employee_work_ranges ||
+    raw?.data ||
+    raw ||
+    [];
+
+  if (!Array.isArray(ranges)) return [];
+
+  return ranges.map((range: any) => ({
+    id: range?.id ? String(range.id) : undefined,
+    employee_id: String(range?.employee_id || employeeId || ""),
+    branch_id: String(range?.branch_id || ""),
+    weekday: Number(range?.weekday ?? 1),
+    start_time: extractTime(range?.start_time || range?.start),
+    end_time: extractTime(range?.end_time || range?.end),
+    time_zone: String(range?.time_zone || "America/Sao_Paulo"),
+    services: Array.isArray(range?.services) ? range.services : [],
+  }));
+};
+
+const normalizeForPayload = (
+  ranges: WorkScheduleRange[],
+  employeeId: string
+): WorkScheduleRange[] => {
+  return ranges.map(range => ({
+    id: range.id,
+    employee_id: range.employee_id || employeeId,
+    branch_id: range.branch_id || "",
+    weekday: Number(range.weekday ?? 1),
+    start_time: range.start_time || "",
+    end_time: range.end_time || "",
+    time_zone: range.time_zone || "America/Sao_Paulo",
+    services: Array.isArray(range.services) ? range.services : [],
+  }));
+};
+
+const mergeWorkRanges = (
+  existingRanges: WorkScheduleRange[],
+  newRanges: WorkScheduleRange[]
+) => {
+  const merged = new Map<string, WorkScheduleRange>();
+
+  const makeKey = (range: WorkScheduleRange) => {
+    return [
+      range.weekday,
+      range.start_time,
+      range.end_time,
+      range.branch_id,
+      range.time_zone,
+    ].join("|");
+  };
+
+  existingRanges.forEach(range => {
+    merged.set(makeKey(range), range);
+  });
+
+  newRanges.forEach(range => {
+    merged.set(makeKey(range), range);
+  });
+
+  return Array.from(merged.values());
+};
 
 export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
   const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [workScheduleData, setWorkScheduleData] = useState<WorkScheduleRange[]>(
@@ -34,45 +126,8 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
   );
   const { toast } = useToast();
 
-  // Função para normalizar dados do backend
-  const normalizeWorkScheduleData = (ranges: any[]): WorkScheduleRange[] => {
-    return ranges.map(range => ({
-      id: range.id,
-      branch_id: range.branch_id,
-      employee_id: range.employee_id,
-      // Converter timestamps para formato HH:MM
-      start_time: range.start_time.includes("T")
-        ? new Date(range.start_time).toLocaleTimeString("pt-BR", {
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: range.time_zone || "America/Sao_Paulo",
-          })
-        : range.start_time,
-      end_time: range.end_time.includes("T")
-        ? new Date(range.end_time).toLocaleTimeString("pt-BR", {
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: range.time_zone || "America/Sao_Paulo",
-          })
-        : range.end_time,
-      time_zone: range.time_zone,
-      weekday: range.weekday,
-      services: range.services || [],
-    }));
-  };
-
-  // Buscar dados automaticamente se autoFetch estiver habilitado e employeeId fornecido
-  useEffect(() => {
-    if (props?.autoFetch && props?.employeeId) {
-      fetchWorkSchedule(props.employeeId);
-    }
-  }, [props?.autoFetch, props?.employeeId]);
-
-  const fetchWorkSchedule = async (employeeId: string) => {
-    setFetchLoading(true);
-    setError(null);
-
-    try {
+  const requestWorkSchedule = useCallback(
+    async (employeeId: string, options?: { silent?: boolean }) => {
       const response = await fetch(
         `/api/employee/${employeeId}/work_schedule`,
         {
@@ -84,171 +139,54 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "Erro ao buscar horário de trabalho"
-        );
-      }
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage =
+          errorData?.message || "Erro ao buscar horário de trabalho";
 
-      const result = await response.json();
-
-      // Normalizar dados se necessário
-      const ranges =
-        result.employee_work_ranges || result.data?.employee_work_ranges || [];
-
-      // Normalizar os dados vindos do backend
-      const normalizedRanges = normalizeWorkScheduleData(ranges);
-      setWorkScheduleData(normalizedRanges);
-
-      return normalizedRanges;
-    } catch (err: any) {
-      const errorMessage = err.message || "Erro interno do servidor";
-      setError(errorMessage);
-
-      props?.onError?.(errorMessage);
-      throw err;
-    } finally {
-      setFetchLoading(false);
-    }
-  };
-
-  const createWorkSchedule = async (
-    employeeId: string,
-    workScheduleData: WorkScheduleData
-  ) => {
-    setLoading(true);
-    setSuccess(false);
-    setError(null);
-
-    try {
-      const payload = {
-        work_schedule: workScheduleData,
-      };
-
-      const response = await fetch(
-        `/api/employee/${employeeId}/work_schedule`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+        if (
+          !options?.silent &&
+          !errorMessage.toLowerCase().includes("not found") &&
+          !errorMessage.toLowerCase().includes("não encontrado")
+        ) {
+          toast({
+            title: "Erro ao buscar horários",
+            description: errorMessage,
+            variant: "destructive",
+          });
         }
-      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "Erro ao criar horário de trabalho"
-        );
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
+      return normalizeWorkScheduleRanges(result, employeeId);
+    },
+    [toast]
+  );
 
-      setSuccess(true);
+  const fetchWorkSchedule = useCallback(
+    async (employeeId: string) => {
+      setLoading(true);
+      setError(null);
 
-      toast({
-        title: "Horário de trabalho criado!",
-        description: "O horário de trabalho foi configurado com sucesso.",
-      });
-
-      // Recarregar dados após sucesso
-      if (props?.autoFetch) {
-        await fetchWorkSchedule(employeeId);
-      }
-
-      props?.onSuccess?.();
-
-      return result;
-    } catch (err: any) {
-      const errorMessage = err.message || "Erro interno do servidor";
-      setError(errorMessage);
-
-      toast({
-        title: "Erro ao configurar horário",
-        description: errorMessage,
-        variant: "destructive",
-      });
-
-      props?.onError?.(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Nova função para adicionar horários sem sobrescrever existentes
-  const addWorkScheduleRanges = async (
-    employeeId: string,
-    newRanges: WorkScheduleRange[]
-  ) => {
-    setLoading(true);
-    setSuccess(false);
-    setError(null);
-
-    try {
-      const rangesWithoutId = newRanges.filter(range => !range.id);
-
-      if (rangesWithoutId.length === 0) {
-        toast({
-          title: "Nenhum horário novo",
-          description: "Todos os horários já existem.",
-        });
-        return;
-      }
-
-      let existingRanges: WorkScheduleRange[] = [];
       try {
-        existingRanges = await fetchWorkSchedule(employeeId);
-      } catch (error) {
-        console.error("Erro ao buscar horários existentes:", error);
-        existingRanges = [];
+        const normalized = await requestWorkSchedule(employeeId);
+        setWorkScheduleData(normalized);
+        return normalized;
+      } catch (err: any) {
+        const message = err?.message || "Erro interno do servidor";
+        setError(message);
+        props?.onError?.(message);
+        return [];
+      } finally {
+        setLoading(false);
       }
+    },
+    [props, requestWorkSchedule]
+  );
 
-      // 3. Validar sobreposição de horários no mesmo dia
-      for (const newRange of rangesWithoutId) {
-        const existingInSameDay = existingRanges.filter(
-          existing => existing.weekday === newRange.weekday
-        );
-
-        for (const existing of existingInSameDay) {
-          const newStart = parseInt(newRange.start_time.replace(":", ""));
-          const newEnd = parseInt(newRange.end_time.replace(":", ""));
-          const existingStart = parseInt(existing.start_time.replace(":", ""));
-          const existingEnd = parseInt(existing.end_time.replace(":", ""));
-
-          // Verificar sobreposição
-          if (
-            (newStart >= existingStart && newStart < existingEnd) ||
-            (newEnd > existingStart && newEnd <= existingEnd) ||
-            (newStart <= existingStart && newEnd >= existingEnd)
-          ) {
-            const dayNames: { [key: number]: string } = {
-              0: "Domingo",
-              1: "Segunda",
-              2: "Terça",
-              3: "Quarta",
-              4: "Quinta",
-              5: "Sexta",
-              6: "Sábado",
-            };
-
-            throw new Error(
-              `Conflito de horários na ${dayNames[newRange.weekday]}! ` +
-                `O horário ${newRange.start_time}-${newRange.end_time} sobrepõe com ` +
-                `o horário existente ${existing.start_time}-${existing.end_time}. ` +
-                `Um funcionário não pode ter horários sobrepostos no mesmo dia.`
-            );
-          }
-        }
-      }
-
-      const payload = {
-        work_schedule: {
-          employee_work_ranges: rangesWithoutId,
-        },
-      };
-
+  const postWorkSchedule = useCallback(
+    async (employeeId: string, payload: WorkSchedulePayload) => {
       const response = await fetch(
         `/api/employee/${employeeId}/work_schedule`,
         {
@@ -256,50 +194,106 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ work_schedule: payload }),
         }
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.message || "Erro ao adicionar horários de trabalho"
+          errorData?.message || "Erro ao salvar horário de trabalho"
         );
       }
 
       const result = await response.json();
-
-      setSuccess(true);
-
-      toast({
-        title: "Horários adicionados!",
-        description: "Os novos horários foram adicionados com sucesso.",
-      });
-
-      // Recarregar dados após sucesso
-      if (props?.autoFetch) {
-        await fetchWorkSchedule(employeeId);
+      const normalized = normalizeWorkScheduleRanges(result, employeeId);
+      if (normalized.length > 0) {
+        setWorkScheduleData(normalized);
       }
 
-      props?.onSuccess?.();
-
       return result;
-    } catch (err: any) {
-      const errorMessage = err.message || "Erro interno do servidor";
-      setError(errorMessage);
+    },
+    []
+  );
 
-      toast({
-        title: "Erro ao adicionar horários",
-        description: errorMessage,
-        variant: "destructive",
-      });
+  const createWorkSchedule = useCallback(
+    async (employeeId: string, workScheduleData: WorkSchedulePayload) => {
+      setLoading(true);
+      setSuccess(false);
+      setError(null);
 
-      props?.onError?.(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        const result = await postWorkSchedule(employeeId, workScheduleData);
+        setSuccess(true);
+        props?.onSuccess?.();
+        return result;
+      } catch (err: any) {
+        const message = err?.message || "Erro interno do servidor";
+        setError(message);
+        toast({
+          title: "Erro ao salvar horários",
+          description: message,
+          variant: "destructive",
+        });
+        props?.onError?.(message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [postWorkSchedule, props, toast]
+  );
+
+  const addWorkScheduleRanges = useCallback(
+    async (employeeId: string, ranges: WorkScheduleRange[]) => {
+      setLoading(true);
+      setSuccess(false);
+      setError(null);
+
+      try {
+        let existingRanges: WorkScheduleRange[] = [];
+
+        try {
+          existingRanges = await requestWorkSchedule(employeeId, {
+            silent: true,
+          });
+        } catch {
+          existingRanges = [];
+        }
+
+        const normalizedNewRanges = normalizeForPayload(ranges, employeeId);
+        const normalizedExisting = normalizeForPayload(
+          existingRanges,
+          employeeId
+        );
+        const mergedRanges = mergeWorkRanges(
+          normalizedExisting,
+          normalizedNewRanges
+        );
+
+        const result = await postWorkSchedule(employeeId, {
+          employee_work_ranges: mergedRanges,
+        });
+
+        setSuccess(true);
+        props?.onSuccess?.();
+        return result;
+      } catch (err: any) {
+        const message = err?.message || "Erro interno do servidor";
+        setError(message);
+        toast({
+          title: "Erro ao salvar horários",
+          description: message,
+          variant: "destructive",
+        });
+        props?.onError?.(message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [postWorkSchedule, props, requestWorkSchedule, toast]
+  );
 
   const reset = () => {
     setSuccess(false);
@@ -307,14 +301,13 @@ export const useWorkSchedule = (props?: UseWorkScheduleProps) => {
   };
 
   return {
+    fetchWorkSchedule,
     createWorkSchedule,
     addWorkScheduleRanges,
-    fetchWorkSchedule,
-    workScheduleData,
     loading,
-    fetchLoading,
     success,
     error,
+    workScheduleData,
     reset,
   };
 };

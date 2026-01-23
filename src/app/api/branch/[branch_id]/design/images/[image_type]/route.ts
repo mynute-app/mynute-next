@@ -15,7 +15,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       );
     }
 
-    const { branch_id, image_type } = ctx.params as {
+    const { branch_id, image_type } = (await ctx.params) as {
       branch_id: string;
       image_type: string;
     };
@@ -78,3 +78,4 @@ export const DELETE = auth(async function DELETE(req, ctx) {
     );
   }
 });
+

@@ -38,7 +38,7 @@ export const useVerifyLoginCode = (): UseVerifyLoginCodeResult => {
         description: "Redirecionando para o dashboard...",
       });
 
-      router.push("/dashboard/your-brand");
+      router.push("/dashboard");
 
       return true;
     } catch (err: any) {

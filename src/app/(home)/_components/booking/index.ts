@@ -4,7 +4,6 @@
  */
 
 export { BookingProvider, useBooking } from "./BookingProvider";
-export { BookingFlow } from "./BookingFlow";
 export { BookingStep, FirstChoice } from "./types";
 export type {
   BookingState,

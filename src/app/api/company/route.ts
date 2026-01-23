@@ -3,6 +3,17 @@ import { auth } from "../../../../auth";
 import { getAuthDataFromToken } from "../../../utils/decode-jwt";
 import { fetchFromBackend } from "../../../lib/api/fetch-from-backend";
 
+const resolveSchemaFromHost = (req: Request) => {
+  const hostHeader = req.headers.get("host") || "";
+  const host = hostHeader.split(":")[0];
+  const subdomain = host.split(".")[0];
+  const isIpHost = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+  if (!subdomain || subdomain === "localhost" || isIpHost) {
+    return null;
+  }
+  return subdomain;
+};
+
 export const GET = auth(async function GET(req) {
   try {
     const token = req.auth?.accessToken;
@@ -14,6 +25,12 @@ export const GET = auth(async function GET(req) {
     }
     const authData = getAuthDataFromToken(token);
     const companyId = authData.companyId;
+    if (!companyId) {
+      return NextResponse.json(
+        { status: 401, message: "Company ID nao encontrado" },
+        { status: 401 }
+      );
+    }
     try {
       const companyData = await fetchFromBackend(
         req,
@@ -22,15 +39,33 @@ export const GET = auth(async function GET(req) {
       );
       return NextResponse.json(companyData);
     } catch (fetchError) {
-      return NextResponse.json(
-        {
-          error:
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Erro ao buscar empresa",
-        },
-        { status: 500 }
-      );
+      const schemaName = resolveSchemaFromHost(req);
+      try {
+        const companyData = await fetchFromBackend(
+          req,
+          `/company/${companyId}`,
+          token,
+          {
+            method: "GET",
+            skipCompanyContext: true,
+            headers: {
+              "X-Company-ID": companyId,
+              ...(schemaName ? { "X-Company-Schema": schemaName } : {}),
+            },
+          }
+        );
+        return NextResponse.json(companyData);
+      } catch (fallbackError) {
+        return NextResponse.json(
+          {
+            error:
+              fallbackError instanceof Error
+                ? fallbackError.message
+                : "Erro ao buscar empresa",
+          },
+          { status: 500 }
+        );
+      }
     }
   } catch (error) {
     console.error("❌ Erro ao buscar empresa:", error);

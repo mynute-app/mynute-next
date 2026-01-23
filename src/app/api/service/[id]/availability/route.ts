@@ -3,10 +3,11 @@ import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const serviceId = params?.id;
+    const resolvedParams = await params;
+    const serviceId = resolvedParams?.id;
 
     if (!serviceId) {
       return NextResponse.json(

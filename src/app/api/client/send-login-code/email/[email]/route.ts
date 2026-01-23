@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { email: string } }
+  { params }: { params: Promise<{ email: string }> }
 ) {
   try {
-    const email = decodeURIComponent(params.email);
+    const { email } = await params;
+    const decodedEmail = decodeURIComponent(email);
 
     const apiUrl = process.env.BACKEND_URL;
     if (!apiUrl) {
@@ -13,7 +14,7 @@ export async function POST(
     }
 
     const backendUrl = `${apiUrl}/client/send-login-code/email/${encodeURIComponent(
-      email
+      decodedEmail
     )}?language=pt`;
 
     const response = await fetch(backendUrl, {

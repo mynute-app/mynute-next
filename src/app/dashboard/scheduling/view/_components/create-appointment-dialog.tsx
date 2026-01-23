@@ -79,12 +79,32 @@ interface SelectedSlot {
 
 interface CreateAppointmentDialogProps {
   onAppointmentCreated?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+  initialSlot?: {
+    date: string;
+    time: string;
+    branchId?: string;
+  } | null;
 }
 
 export function CreateAppointmentDialog({
   onAppointmentCreated,
+  open,
+  onOpenChange,
+  hideTrigger,
+  initialSlot,
 }: CreateAppointmentDialogProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
+  const isControlled = typeof open === "boolean";
+  const dialogOpen = isControlled ? open : isOpen;
+  const setDialogOpen = (value: boolean) => {
+    if (!isControlled) {
+      setIsOpen(value);
+    }
+    onOpenChange?.(value);
+  };
   const [currentStep, setCurrentStep] = useState<Step>("service");
   const [formData, setFormData] = useState<FormData>({
     serviceId: "",
@@ -246,16 +266,11 @@ export function CreateAppointmentDialog({
     }
   }, [client, isCheckingEmail]);
 
-  // Debug company and services
-  useEffect(() => {
-    console.log("Company:", company);
-    console.log("Services:", company?.services);
-    console.log("Loading Company:", loadingCompany);
-  }, [company, loadingCompany]);
+
 
   // Reset all state when dialog closes
   useEffect(() => {
-    if (!isOpen) {
+    if (!dialogOpen) {
       setFormData({
         serviceId: "",
         selectedDate: null,
@@ -271,7 +286,18 @@ export function CreateAppointmentDialog({
       setShowClientForm(false);
       form.reset();
     }
-  }, [isOpen, form]);
+  }, [dialogOpen, form]);
+
+  useEffect(() => {
+    if (!dialogOpen || !initialSlot) return;
+    setFormData(prev => ({
+      ...prev,
+      selectedDate: initialSlot.date,
+      selectedTime: initialSlot.time,
+      branchId: initialSlot.branchId ?? null,
+    }));
+    setSelectedSlot(null);
+  }, [dialogOpen, initialSlot?.date, initialSlot?.time, initialSlot?.branchId]);
 
   const handleSlotSelect = (date: string, slot: any, branchId: string) => {
     setSelectedSlot({
@@ -376,17 +402,19 @@ export function CreateAppointmentDialog({
   };
 
   const handleReset = () => {
-    setIsOpen(false);
+    setDialogOpen(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="gap-2">
-          <Plus className="h-4 w-4" />
-          Criar Agendamento
-        </Button>
-      </DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
+            Criar Agendamento
+          </Button>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
         <DialogHeader>
@@ -723,11 +751,11 @@ export function CreateAppointmentDialog({
                     />
 
                     {existingClient && (
-                      <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                        <p className="text-sm text-green-800 font-medium">
+                      <div className="p-3 rounded-md border border-[hsl(var(--success)/0.3)] bg-[hsl(var(--success)/0.12)]">
+                        <p className="text-sm text-[hsl(var(--success))] font-medium">
                           ✓ Cliente encontrado no sistema
                         </p>
-                        <p className="text-xs text-green-700 mt-1">
+                        <p className="text-xs text-[hsl(var(--success)/0.85)] mt-1">
                           {existingClient.name} {existingClient.surname}
                         </p>
                       </div>
@@ -887,3 +915,4 @@ export function CreateAppointmentDialog({
     </Dialog>
   );
 }
+

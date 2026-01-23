@@ -11,7 +11,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const { employee_id } = ctx.params as {
+    const { employee_id } = (await ctx.params) as {
       employee_id: string;
     };
 
@@ -19,7 +19,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       method: "DELETE",
     });
 
-    revalidateTag("company");
+    revalidateTag("company", "max");
 
     return NextResponse.json(
       { message: "Funcionário deletado com sucesso" },
@@ -33,3 +33,4 @@ export const DELETE = auth(async function DELETE(req, ctx) {
     );
   }
 });
+

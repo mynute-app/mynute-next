@@ -8,10 +8,11 @@ import { NextRequest, NextResponse } from "next/server";
 //   - Converts hyphens to spaces => "abc planejados"
 export async function GET(
   req: NextRequest,
-  { params }: { params: { name?: string } }
+  { params }: { params: Promise<{ name?: string }> }
 ) {
   try {
-    const providedName = decodeURIComponent((params?.name ?? "").trim());
+    const resolvedParams = await params;
+    const providedName = decodeURIComponent((resolvedParams?.name ?? "").trim());
 
     // Build candidates: from param and from host, both spaced and hyphenated variants
     const hostHeader = req.headers.get("host") || req.nextUrl.host || "";

@@ -59,7 +59,7 @@ export function LoginFormEmployee({
     if (result?.error) {
       setError("Usuário não verificado ou senha incorreta.");
     } else {
-      router.push("/dashboard/your-brand");
+      router.push("/dashboard");
     }
 
     setLoading(false);

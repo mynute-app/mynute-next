@@ -80,8 +80,6 @@ export function useGetService({
       setError(null);
 
       try {
-        console.log("🔍 Buscando serviço:", serviceId);
-
         const response = await fetch(`/api/service/${serviceId}`, {
           method: "GET",
           headers: {
@@ -90,8 +88,6 @@ export function useGetService({
           },
         });
 
-        console.log("📡 Status da resposta:", response.status);
-
         if (!response.ok) {
           const errorData = await response.json();
           console.error("❌ Erro na resposta:", errorData);
@@ -99,7 +95,6 @@ export function useGetService({
         }
 
         const serviceData = await response.json();
-        console.log("✅ Serviço encontrado:", serviceData);
 
         // Adicionar imageUrl computada para compatibilidade
         const processedService = {
@@ -137,8 +132,6 @@ export function useGetService({
     setError(null);
 
     try {
-      console.log("🔄 Refazendo busca do serviço:", serviceId);
-
       const response = await fetch(`/api/service/${serviceId}`, {
         method: "GET",
         headers: {
@@ -147,8 +140,6 @@ export function useGetService({
         },
       });
 
-      console.log("📡 Status da resposta refetch:", response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
         console.error("❌ Erro na resposta refetch:", errorData);
@@ -156,7 +147,6 @@ export function useGetService({
       }
 
       const serviceData = await response.json();
-      console.log("✅ Serviço refetch com sucesso:", serviceData);
 
       // Adicionar imageUrl computada para compatibilidade
       const processedService = {
@@ -182,3 +172,6 @@ export function useGetService({
     refetch,
   };
 }
+
+
+

@@ -16,7 +16,7 @@ export const GET = auth(async function GET(req, ctx) {
       );
     }
 
-    const { branch_id } = ctx.params as { branch_id: string };
+    const { branch_id } = (await ctx.params) as { branch_id: string };
 
     if (!branch_id) {
       return NextResponse.json(

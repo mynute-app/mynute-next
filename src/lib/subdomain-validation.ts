@@ -108,7 +108,8 @@ function isMainDomain(host: string): boolean {
  * @returns Objeto com os dados da empresa ou erro
  */
 export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidationResponse> {
-  const host = headers().get("host") || "";
+  const headerList = await headers();
+  const host = headerList.get("host") || "";
 
   // Verifica se é o domínio principal
   if (isMainDomain(host)) {

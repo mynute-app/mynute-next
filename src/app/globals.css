@@ -39,14 +39,14 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 20% 92%;
+    --sidebar-primary: 0 0% 94%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 222 40% 16%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 222 35% 18%;
+    --sidebar-ring: 213 94% 55%;
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -73,18 +73,59 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 222 47% 9%;
+    --sidebar-foreground: 210 20% 92%;
+    --sidebar-primary: 0 0% 92%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 222 40% 14%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 222 35% 16%;
+    --sidebar-ring: 213 94% 60%;
   }
 }
 
 @layer base {
+  .dashboard-theme {
+    --brand-primary: 0 0% 4%;
+    --brand-primary-hover: 0 0% 10%;
+    --brand-primary-glow: 0 0% 16%;
+    --brand-primary-foreground: 0 0% 100%;
+    --brand-secondary: 38 92% 50%;
+    --brand-secondary-hover: 38 92% 45%;
+    --brand-secondary-foreground: 38 92% 15%;
+    --brand-tertiary: 152 60% 40%;
+    --brand-quaternary: 230 90% 60%;
+    --primary: var(--brand-primary);
+    --primary-foreground: var(--brand-primary-foreground);
+    --primary-hover: var(--brand-primary-hover);
+    --primary-glow: var(--brand-primary-glow);
+    --accent: var(--brand-secondary);
+    --accent-foreground: var(--brand-secondary-foreground);
+    --accent-hover: var(--brand-secondary-hover);
+    --success: var(--brand-tertiary);
+    --warning: var(--brand-quaternary);
+    --ring: var(--brand-primary);
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(var(--brand-primary)),
+      hsl(var(--brand-primary-glow))
+    );
+    --gradient-accent: linear-gradient(
+      135deg,
+      hsl(var(--brand-secondary)),
+      hsl(var(--brand-secondary-hover))
+    );
+    --shadow-glow: 0 0 20px hsl(var(--brand-primary-glow) / 0.3);
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 16%;
+    --sidebar-primary: 0 0% 94%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-ring: 0 0% 94%;
+  }
+
   * {
     @apply border-border;
   }
@@ -103,28 +144,28 @@ body {
 
 /* Estilo da barra de rolagem */
 .custom-scrollbar {
-    scrollbar-width: thin; /* Para Firefox */
-    scrollbar-color: #a0aec0 #edf2f7; /* Para Firefox */
+  scrollbar-width: thin; /* Para Firefox */
+  scrollbar-color: #a0aec0 #edf2f7; /* Para Firefox */
 }
 
 /* Para navegadores baseados em WebKit */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 2px; /* Largura da barra */
-    height: 2px; /* Altura da barra horizontal */
+  width: 2px; /* Largura da barra */
+  height: 2px; /* Altura da barra horizontal */
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #a0aec0; /* Cor do "polegar" */
-    border-radius: 3px; /* Deixa as bordas arredondadas */
+  background-color: #a0aec0; /* Cor do "polegar" */
+  border-radius: 3px; /* Deixa as bordas arredondadas */
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: #718096; /* Cor ao passar o mouse */
+  background-color: #718096; /* Cor ao passar o mouse */
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background-color: #edf2f7; /* Cor do trilho */
-    border-radius: 3px;
+  background-color: #edf2f7; /* Cor do trilho */
+  border-radius: 3px;
 }
 
 html,
@@ -134,4 +175,195 @@ body {
   height: 100%;
   width: 100%;
   overflow: hidden;
+}
+
+@layer base {
+  .dashboard-page,
+  .services-page,
+  .services-dialog,
+  .team-page,
+  .team-dialog,
+  .branding-page {
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+    --secondary: 215 16% 94%;
+    --secondary-foreground: 215 25% 27%;
+    --muted: 215 16% 96%;
+    --muted-foreground: 215 13% 50%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 20% 90%;
+    --input: 215 20% 90%;
+    --radius: 0.625rem;
+    --shadow-sm: 0 1px 2px 0 hsl(215 25% 15% / 0.05);
+    --shadow-md:
+      0 4px 6px -1px hsl(215 25% 15% / 0.07),
+      0 2px 4px -2px hsl(215 25% 15% / 0.05);
+    --shadow-lg:
+      0 10px 15px -3px hsl(215 25% 15% / 0.08),
+      0 4px 6px -4px hsl(215 25% 15% / 0.05);
+  }
+}
+
+@layer components {
+  .dashboard-page .card-hover,
+  .services-page .card-hover,
+  .team-page .card-hover,
+  .branding-page .card-hover {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .dashboard-page .card-hover:hover,
+  .services-page .card-hover:hover,
+  .team-page .card-hover:hover,
+  .branding-page .card-hover:hover {
+    @apply -translate-y-1;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .dashboard-page .btn-gradient,
+  .services-page .btn-gradient,
+  .services-dialog .btn-gradient,
+  .team-page .btn-gradient,
+  .team-dialog .btn-gradient,
+  .branding-page .btn-gradient {
+    background: var(--gradient-primary);
+    @apply text-white font-medium transition-all duration-300;
+  }
+
+  .dashboard-page .btn-gradient:hover,
+  .services-page .btn-gradient:hover,
+  .services-dialog .btn-gradient:hover,
+  .team-page .btn-gradient:hover,
+  .team-dialog .btn-gradient:hover,
+  .branding-page .btn-gradient:hover {
+    @apply opacity-90 scale-[1.02];
+    box-shadow: var(--shadow-glow);
+  }
+
+  .dashboard-page .page-header,
+  .services-page .page-header,
+  .team-page .page-header,
+  .branding-page .page-header {
+    @apply mb-8;
+  }
+
+  .dashboard-page .page-title,
+  .services-page .page-title,
+  .team-page .page-title,
+  .branding-page .page-title {
+    @apply text-2xl font-bold text-foreground tracking-tight;
+  }
+
+  .dashboard-page .page-description,
+  .services-page .page-description,
+  .team-page .page-description,
+  .branding-page .page-description {
+    @apply text-muted-foreground mt-1;
+  }
+
+  .dashboard-page .input-focus,
+  .services-page .input-focus,
+  .team-page .input-focus,
+  .branding-page .input-focus {
+    @apply focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
+  }
+
+  .dashboard-page .text-success,
+  .services-page .text-success,
+  .team-page .text-success,
+  .branding-page .text-success {
+    color: hsl(var(--success));
+  }
+
+  .table-row-hover {
+    @apply transition-colors duration-150 hover:bg-muted/50;
+  }
+}
+
+@layer utilities {
+  .dashboard-page .animate-in,
+  .services-page .animate-in,
+  .team-page .animate-in,
+  .branding-page .animate-in {
+    animation: animateIn 0.3s ease-out forwards;
+  }
+
+  .dashboard-page .stagger-children > *,
+  .services-page .stagger-children > *,
+  .team-page .stagger-children > *,
+  .branding-page .stagger-children > * {
+    animation: animateIn 0.3s ease-out forwards;
+  }
+
+  .dashboard-page .stagger-children > *:nth-child(1),
+  .services-page .stagger-children > *:nth-child(1),
+  .team-page .stagger-children > *:nth-child(1),
+  .branding-page .stagger-children > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .dashboard-page .stagger-children > *:nth-child(2),
+  .services-page .stagger-children > *:nth-child(2),
+  .team-page .stagger-children > *:nth-child(2),
+  .branding-page .stagger-children > *:nth-child(2) {
+    animation-delay: 50ms;
+  }
+  .dashboard-page .stagger-children > *:nth-child(3),
+  .services-page .stagger-children > *:nth-child(3),
+  .team-page .stagger-children > *:nth-child(3),
+  .branding-page .stagger-children > *:nth-child(3) {
+    animation-delay: 100ms;
+  }
+  .dashboard-page .stagger-children > *:nth-child(4),
+  .services-page .stagger-children > *:nth-child(4),
+  .team-page .stagger-children > *:nth-child(4),
+  .branding-page .stagger-children > *:nth-child(4) {
+    animation-delay: 150ms;
+  }
+  .dashboard-page .stagger-children > *:nth-child(5),
+  .services-page .stagger-children > *:nth-child(5),
+  .team-page .stagger-children > *:nth-child(5),
+  .branding-page .stagger-children > *:nth-child(5) {
+    animation-delay: 200ms;
+  }
+  .dashboard-page .stagger-children > *:nth-child(6),
+  .services-page .stagger-children > *:nth-child(6),
+  .team-page .stagger-children > *:nth-child(6),
+  .branding-page .stagger-children > *:nth-child(6) {
+    animation-delay: 250ms;
+  }
+
+  @keyframes animateIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+}
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  .btn-gradient {
+    @apply bg-gradient-to-r from-gray-900 to-black text-white hover:from-black hover:to-gray-900;
+  }
+
+  .card-hover {
+    @apply transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg;
+  }
 }

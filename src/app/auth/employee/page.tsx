@@ -6,7 +6,7 @@ import { auth } from "../../../../auth";
 export default async function LoginPage() {
   const session = await auth();
   if (session?.user) {
-    redirect("/dashboard/your-brand");
+    redirect("/dashboard");
   }
 
   const { company, errorComponent } = await useSubdomainValidation();

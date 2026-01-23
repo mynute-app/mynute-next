@@ -13,7 +13,19 @@ export async function getCompanyFromRequest(req: NextRequest) {
 
   const cached = getCachedCompany(subdomain);
   if (cached) {
-    return cached;
+    if (cached.schema_name) {
+      return cached;
+    }
+
+    const isIpHost = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+    if (!isIpHost && subdomain && subdomain !== "localhost") {
+      const patched = {
+        ...cached,
+        schema_name: subdomain,
+      };
+      setCachedCompany(subdomain, patched);
+      return patched;
+    }
   }
 
   const baseUrl =
@@ -51,9 +63,20 @@ export async function getCompanyFromRequest(req: NextRequest) {
     company = await nameRes.json();
   }
 
+  const schemaFromApi =
+    typeof company.schema_name === "string" && company.schema_name.trim()
+      ? company.schema_name
+      : undefined;
+  const isIpHost = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+  const schemaName =
+    schemaFromApi ??
+    (!isIpHost && subdomain && subdomain !== "localhost"
+      ? subdomain
+      : undefined);
+
   const minimal = {
     id: company.id,
-    schema_name: company.schema_name ?? undefined,
+    schema_name: schemaName,
   };
 
   setCachedCompany(subdomain, minimal);

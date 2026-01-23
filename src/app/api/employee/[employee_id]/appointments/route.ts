@@ -29,7 +29,7 @@ export const GET = auth(async function GET(req, ctx) {
       );
     }
 
-    const { employee_id } = ctx.params as { employee_id: string };
+    const { employee_id } = (await ctx.params) as { employee_id: string };
 
     if (!employee_id) {
       return NextResponse.json(

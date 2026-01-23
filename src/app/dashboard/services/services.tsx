@@ -1,308 +1,409 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { AddServiceDialog } from "./add-service-dialog";
 import { EditServiceDialog } from "./edit-service-dialog";
 import { DeleteServiceDialog } from "./delete-service-dailog";
-import ServiceListSkeleton from "./ServiceListSkeleton";
-import { Service } from "../../../../types/company";
+import type { Service } from "../../../../types/company";
 import { useDeleteService } from "../../../hooks/service/useDeleteServiceForm";
 import { useGetCompany } from "@/hooks/get-company";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Briefcase, Clock, DollarSign } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { autoLinkService } from "@/lib/services/auto-link-service";
+import {
+  Briefcase,
+  Clock,
+  DollarSign,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 export const ServicesPage = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [deletingService, setDeletingService] = useState<Service | null>(null);
   const [services, setServices] = useState<Service[]>([]);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+
   const { company, loading } = useGetCompany();
   const { handleDelete } = useDeleteService();
-  console.log(
-    "🏢 Company data in ServicesPage:",
-    selectedService?.design?.images?.profile?.url
-  );
+  const { toast } = useToast();
+
   useEffect(() => {
     if (company?.services) {
       setServices(company.services);
     }
   }, [company]);
 
-  const handleUpdateService = async (updatedService: Service) => {
-    // Apenas atualiza o estado local com o serviço já processado
+  const categories = useMemo(() => {
+    const uniqueCategories = services
+      .map(service => service.category?.trim())
+      .filter((category): category is string => Boolean(category));
+    return ["Todos", ...Array.from(new Set(uniqueCategories))];
+  }, [services]);
+
+  const categoryOptions = useMemo(
+    () => categories.filter(category => category !== "Todos"),
+    [categories],
+  );
+
+  const filteredServices = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    return services.filter(service => {
+      const name = service.name?.toLowerCase() || "";
+      const description = service.description?.toLowerCase() || "";
+      const matchesSearch =
+        !normalizedSearch ||
+        name.includes(normalizedSearch) ||
+        description.includes(normalizedSearch);
+      const matchesCategory =
+        selectedCategory === "Todos" || service.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [services, searchTerm, selectedCategory]);
+
+  const handleUpdateService = (updatedService: Service) => {
     setServices(prev =>
       prev.map(service =>
-        service.id === updatedService.id ? updatedService : service
-      )
+        service.id === updatedService.id
+          ? { ...service, ...updatedService }
+          : service,
+      ),
     );
-    // Atualiza o serviço selecionado se for o mesmo
-    if (selectedService?.id === updatedService.id) {
-      setSelectedService(updatedService);
-    }
   };
 
   const handleDeleteService = async (id: string) => {
     const success = await handleDelete(id);
     if (success) {
       setServices(prev => prev.filter(service => service.id !== id));
-      if (selectedService?.id === id) {
-        setSelectedService(null);
-      }
     }
   };
 
   const handleAddService = (newService: Service) => {
     setServices(prev => [...prev, newService]);
+    void (async () => {
+      try {
+        const result = await autoLinkService({
+          serviceId: newService.id,
+          branches: company?.branches ?? [],
+          employees: company?.employees ?? [],
+        });
+
+        if (result.skipped) {
+          return;
+        }
+
+        if (result.failed > 0) {
+          toast({
+            title: "Servico criado",
+            description:
+              "Nao foi possivel vincular automaticamente o servico. Verifique as filiais e a equipe.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        toast({
+          title: "Vinculo automatico aplicado",
+          description: "Servico vinculado as filiais e equipe.",
+        });
+      } catch (error) {
+        toast({
+          title: "Servico criado",
+          description:
+            "Falha ao vincular automaticamente o servico. Verifique as filiais e a equipe.",
+          variant: "destructive",
+        });
+      }
+    })();
   };
 
-  const handleSelectService = (service: Service) => {
-    setSelectedService(service);
+  const formatPrice = (price: Service["price"]) => {
+    if (price === undefined || price === null || price === "") {
+      return "Preço não informado";
+    }
+    const numericPrice = Number(price);
+    if (Number.isNaN(numericPrice)) return "Preço não informado";
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(numericPrice);
   };
+
+  const formatDuration = (duration: Service["duration"]) => {
+    if (duration === undefined || duration === null || duration === "") {
+      return "Duração não informada";
+    }
+    const numericDuration = Number(duration);
+    if (!Number.isNaN(numericDuration) && numericDuration > 0) {
+      return `${numericDuration} min`;
+    }
+    if (typeof duration === "string") {
+      return duration;
+    }
+    return "Duração não informada";
+  };
+
+  const hasFilters =
+    searchTerm.trim().length > 0 || selectedCategory !== "Todos";
+  const firstImageIndex = filteredServices.findIndex(
+    service => service.design?.images?.profile?.url,
+  );
 
   return (
-    <div className="flex flex-col lg:flex-row h-[100vh] border rounded-lg shadow overflow-hidden bg-background">
-      {/* Sidebar - Lista de Serviços */}
-      <aside className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r bg-muted/30 overflow-hidden flex flex-col">
-        <div className="p-4 border-b bg-background">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold">Serviços</h2>
-            <AddServiceDialog onCreate={handleAddService} />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {services.length} {services.length === 1 ? "serviço" : "serviços"}{" "}
-            cadastrado{services.length === 1 ? "" : "s"}
-          </p>
-        </div>
- 
-        <div className="flex-1 overflow-y-auto p-3">
-          {loading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Card key={i} className="p-3">
-                  <Skeleton className="h-4 w-2/3 mb-2" />
-                  <Skeleton className="h-3 w-1/2" />
-                </Card>
-              ))}
-            </div>
-          ) : services.length === 0 ? (
-            <Card className="p-6 text-center">
-              <Briefcase className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Nenhum serviço cadastrado
-              </p>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {services.map(service => (
-                <Card
-                  key={service.id}
-                  onClick={() => handleSelectService(service)}
-                  className={`p-3 cursor-pointer transition-all hover:shadow-md ${
-                    selectedService?.id === service.id
-                      ? "border-primary bg-primary/5 shadow-sm"
-                      : "hover:bg-accent"
-                  }`}
-                >
-                  <p className="font-medium text-sm truncate">{service.name}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <DollarSign className="w-3 h-3 text-muted-foreground" />
-                    <p className="text-xs text-muted-foreground truncate">
-                      R$ {service.price}
-                    </p>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      </aside>
-
-      {/* Main Content - Detalhes do Serviço */}
-      <main className="flex-1 overflow-hidden flex flex-col">
-        {selectedService ? (
-          <>
-            {/* Header do Serviço */}
-            <div className="p-6 border-b bg-background ">
-              <div className="flex items-start gap-4 ">
-                {/* Imagem do Serviço */}
-                <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                  {selectedService.design?.images?.profile?.url ? (
-                    <Image
-                      src={selectedService.design.images.profile.url}
-                      alt={selectedService.name}
-                      width={80}
-                      height={80}
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <Briefcase className="w-8 h-8 text-muted-foreground" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h2 className="text-2xl font-bold truncate">
-                        {selectedService.name}
-                      </h2>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="w-4 h-4" />
-                          <span>R$ {selectedService.price}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{selectedService.duration} min</span>
-                        </div>
-                      </div>
-                      {process.env.NODE_ENV === "development" && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          ID: {selectedService.id}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingService(selectedService)}
-                      >
-                        <Pencil className="w-4 h-4 mr-1" />
-                        Editar
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setDeletingService(selectedService)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Excluir
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <Card className="border hover:border-primary/30 transition-colors shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <div className="p-1.5 rounded-md bg-primary/10">
-                          <Clock className="w-4 h-4 text-primary" />
-                        </div>
-                        <h3 className="text-xs font-medium text-muted-foreground">
-                          Duração
-                        </h3>
-                      </div>
-                      <p className="text-xl font-bold">
-                        {selectedService.duration}
-                        <span className="text-sm font-normal text-muted-foreground ml-1">
-                          min
-                        </span>
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Card Intervalo */}
-                  <Card className="border hover:border-orange-500/30 transition-colors shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <div className="p-1.5 rounded-md bg-orange-500/10">
-                          <Clock className="w-4 h-4 text-orange-500" />
-                        </div>
-                        <h3 className="text-xs font-medium text-muted-foreground">
-                          Intervalo
-                        </h3>
-                      </div>
-                      <p className="text-xl font-bold">
-                        {selectedService.buffer}
-                        <span className="text-sm font-normal text-muted-foreground ml-1">
-                          min
-                        </span>
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Card Preço */}
-                  <Card className="border hover:border-green-500/30 transition-colors shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <div className="p-1.5 rounded-md bg-green-500/10">
-                          <DollarSign className="w-4 h-4 text-green-500" />
-                        </div>
-                        <h3 className="text-xs font-medium text-muted-foreground">
-                          Preço
-                        </h3>
-                      </div>
-                      <p className="text-xl font-bold">
-                        R${" "}
-                        {Number(selectedService.price).toLocaleString("pt-BR", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Card Descrição */}
-                <Card className="shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="p-1.5 rounded-md bg-blue-500/10">
-                        <Briefcase className="w-4 h-4 text-blue-500" />
-                      </div>
-                      <h3 className="text-sm font-semibold">
-                        Descrição do Serviço
-                      </h3>
-                    </div>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      {selectedService.description || (
-                        <span className="italic">
-                          Nenhuma descrição cadastrada para este serviço.
-                        </span>
-                      )}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center p-6">
-            <Card className="max-w-md w-full border-none shadow-none">
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Briefcase className="w-16 h-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">
-                  Selecione um serviço
-                </h3>
-                <p className="text-sm text-muted-foreground text-center">
-                  Escolha um serviço na lista ao lado para visualizar e
-                  gerenciar seus detalhes
+    <div className="services-page flex min-h-0 flex-1 flex-col bg-background text-foreground">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="mx-auto w-full max-w-7xl p-6 lg:p-8">
+          <div className="space-y-6 pt-12 lg:pt-0">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="page-header mb-0">
+                <h1 className="page-title">Serviços</h1>
+                <p className="page-description">
+                  Gerencie os serviços oferecidos pela sua empresa.
                 </p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </main>
+              </div>
+              <Button
+                className="btn-gradient"
+                onClick={() => setAddDialogOpen(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Serviço
+              </Button>
+            </div>
 
-      {/* Modais - renderizar apenas um por vez */}
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar serviço..."
+                    className="pl-9 input-focus"
+                    value={searchTerm}
+                    onChange={event => setSearchTerm(event.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-1 rounded-lg bg-muted p-1 overflow-x-auto">
+                  {categories.map(category => (
+                    <Button
+                      key={category}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "whitespace-nowrap",
+                        selectedCategory === category
+                          ? "bg-background text-foreground shadow-sm border border-border"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                      onClick={() => setSelectedCategory(category)}
+                    >
+                      {category}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+                  >
+                    <Skeleton className="h-32 w-full" />
+                    <div className="space-y-3 p-5">
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-3 w-2/3" />
+                      <div className="flex gap-3">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                      <Skeleton className="h-8 w-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredServices.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+                <Briefcase className="mx-auto h-10 w-10 text-muted-foreground" />
+                <h3 className="mt-3 text-sm font-medium">
+                  {hasFilters
+                    ? "Nenhum serviço encontrado"
+                    : "Nenhum serviço cadastrado"}
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {hasFilters
+                    ? "Tente ajustar a busca ou os filtros."
+                    : "Crie seu primeiro serviço para começar a gerenciá-los aqui."}
+                </p>
+                {!hasFilters && (
+                  <Button
+                    className="mt-4 gap-2 btn-gradient"
+                    onClick={() => setAddDialogOpen(true)}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Criar serviço
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 stagger-children">
+                {filteredServices.map((service, index) => {
+                  const imageUrl = service.design?.images?.profile?.url;
+                  const priceLabel = formatPrice(service.price);
+                  const durationLabel = formatDuration(service.duration);
+                  const hasPrice =
+                    service.price !== undefined &&
+                    service.price !== null &&
+                    service.price !== "" &&
+                    !Number.isNaN(Number(service.price));
+
+                  return (
+                    <div
+                      key={service.id}
+                      className={cn(
+                        "overflow-hidden rounded-xl border border-border bg-card shadow-sm card-hover",
+                        service.hidden && "opacity-60",
+                      )}
+                    >
+                      <div className="relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+                        {imageUrl ? (
+                          <Image
+                            src={imageUrl}
+                            alt={service.name}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            priority={index === firstImageIndex}
+                            className="object-cover"
+                          />
+                        ) : (
+                          <Briefcase className="h-8 w-8 text-muted-foreground" />
+                        )}
+                        {service.hidden && (
+                          <Badge
+                            variant="destructive"
+                            className="absolute right-3 top-3"
+                          >
+                            Inativo
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="p-5">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h3 className="font-semibold text-foreground">
+                              {service.name}
+                            </h3>
+                            {service.category && (
+                              <Badge variant="outline" className="mt-1 text-xs">
+                                {service.category}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
+                          {service.description ? (
+                            service.description
+                          ) : (
+                            <span className="italic">
+                              Nenhuma descrição cadastrada.
+                            </span>
+                          )}
+                        </p>
+
+                        <div className="mb-4 flex items-center gap-4">
+                          <div className="flex items-center gap-1 text-sm">
+                            <DollarSign
+                              className={cn(
+                                "h-4 w-4",
+                                hasPrice
+                                  ? "text-success"
+                                  : "text-muted-foreground",
+                              )}
+                            />
+                            <span
+                              className={cn(
+                                "font-semibold text-foreground",
+                                !hasPrice && "text-muted-foreground",
+                              )}
+                            >
+                              {priceLabel}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            <span>{durationLabel}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end border-t border-border pt-4">
+                          {/* <div className="flex items-center gap-2">
+                            <Switch />
+                            <span className="text-sm text-muted-foreground">
+                              Ativo
+                            </span>
+                          </div> */}
+                          <div className="flex items-center gap-1 ">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => setEditingService(service)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => setDeletingService(service)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <AddServiceDialog
+        isOpen={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onCreate={handleAddService}
+        categories={categoryOptions}
+      />
+
       {editingService && (
         <EditServiceDialog
           isOpen={!!editingService}
           service={{
             ...editingService,
-            duration: String(editingService.duration),
-            price: editingService.price
-              ? String(editingService.price)
-              : undefined,
+            duration: editingService.duration
+              ? String(editingService.duration)
+              : "",
+            price: editingService.price ? String(editingService.price) : "",
+            imageUrl: editingService.design?.images?.profile?.url,
+            category: editingService.category,
           }}
+          categories={categoryOptions}
           onOpenChange={open => {
             if (!open) {
               setEditingService(null);

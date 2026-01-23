@@ -1,62 +1,58 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Service } from "../../../../types/company";
 import { toast } from "@/hooks/use-toast";
 import {
+  Briefcase,
   CheckCircle,
   Clock,
   Calendar,
-  Plus,
   Trash2,
-  Search,
 } from "lucide-react";
-import { useGetCompany } from "@/hooks/get-company";
-import { useEmployeeWorkRangeServices } from "@/hooks/employee/use-employee-work-range-services";
-import { useEmployeeWorkRange } from "@/hooks/workSchedule/use-employee-work-range";
-import { Checkbox } from "@/components/ui/checkbox";
 
 type Props = {
   selectedMember: any | null;
   setSelectedMember: (member: any) => void;
+  onReloadMember?: () => void;
+  services?: Service[];
+  loadingServices?: boolean;
+};
+
+type WorkRange = {
+  id: string | number;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  branch?: { name?: string };
+  services?: Array<{ id: string | number } | string | number>;
 };
 
 const weekdayNames = [
   "Domingo",
   "Segunda",
-  "Terça",
+  "Terca",
   "Quarta",
   "Quinta",
   "Sexta",
-  "Sábado",
+  "Sabado",
 ];
 
-// Formata horário ISO 8601 para "HH:MM"
 const formatTime = (time: string): string => {
   if (!time) return "";
 
-  // Se for formato ISO 8601: "2020-01-01T09:00:00-03:00"
   if (time.includes("T")) {
-    const timePart = time.split("T")[1]; // Pega "09:00:00-03:00"
-    return timePart.substring(0, 5); // Pega "09:00"
+    const timePart = time.split("T")[1];
+    return timePart.substring(0, 5);
   }
 
   if (time.includes(" ")) {
@@ -67,56 +63,37 @@ const formatTime = (time: string): string => {
   return time.substring(0, 5);
 };
 
+const toServiceIds = (
+  services: WorkRange["services"] | undefined
+): string[] => {
+  if (!Array.isArray(services)) return [];
+
+  return services
+    .map(service =>
+      typeof service === "object" && service !== null
+        ? service.id
+        : service
+    )
+    .filter(value => value !== undefined && value !== null)
+    .map(value => value.toString());
+};
+
 export function WorkRangeServicesSection({
   selectedMember,
   setSelectedMember,
+  onReloadMember,
+  services = [],
+  loadingServices = false,
 }: Props) {
-  const { company, loading: loadingCompany } = useGetCompany();
-  const allServices: Service[] = company?.services ?? [];
-
+  const allServices: Service[] = services ?? [];
   const employeeServices: Service[] = selectedMember?.services ?? [];
 
   const [selectedWorkRangeId, setSelectedWorkRangeId] = useState<string>("");
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
-  const [workRanges, setWorkRanges] = useState<any[]>([]);
-  const [showServiceManager, setShowServiceManager] = useState<boolean>(false);
-
-  // Estados locais para loading
+  const [workRanges, setWorkRanges] = useState<WorkRange[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const previousMemberIdRef = useRef<string | number | null>(null);
 
-  // Comentado temporariamente para evitar erro 405
-  // const {
-  //   // getEmployeeWorkRangeServices, // Comentado temporariamente
-  //   addServicesToEmployeeWorkRange,
-  //   updateEmployeeWorkRangeServices,
-  //   removeAllEmployeeWorkRangeServices,
-  //   loading: servicesLoading,
-  //   data: workRangeServices,
-  //   error: servicesError,
-  // } = useEmployeeWorkRangeServices({
-  //   onSuccess: () => {
-  //     toast({
-  //       title: "Sucesso",
-  //       description: "Operação realizada com sucesso!",
-  //     });
-  //     // TODO: Recarregar services do work_range quando GET estiver funcionando
-  //     // if (selectedWorkRangeId && selectedMember?.id) {
-  //     //   getEmployeeWorkRangeServices(
-  //     //     selectedMember.id.toString(),
-  //     //     selectedWorkRangeId
-  //     //   );
-  //     // }
-  //   },
-  //   onError: error => {
-  //     toast({
-  //       title: "Erro",
-  //       description: error,
-  //       variant: "destructive",
-  //     });
-  //   },
-  // });
-
-  // Funções para vincular/desvincular serviços do employee (reutilizadas da aba Serviços)
   const handleLinkService = async (serviceId: number) => {
     if (!selectedMember) return;
 
@@ -128,9 +105,9 @@ export function WorkRangeServicesSection({
         }
       );
 
-      if (!res.ok) throw new Error("Erro ao vincular o serviço");
+      if (!res.ok) throw new Error("Erro ao vincular o servico");
 
-      const newService = allServices.find(s => s.id === serviceId);
+      const newService = allServices.find(service => service.id === serviceId);
       if (newService) {
         setSelectedMember({
           ...selectedMember,
@@ -139,9 +116,10 @@ export function WorkRangeServicesSection({
       }
 
       toast({
-        title: "Serviço vinculado",
-        description: `O serviço foi vinculado ao funcionário ${selectedMember.name}.`,
+        title: "Servico vinculado",
+        description: `O servico foi vinculado ao profissional ${selectedMember.name}.`,
       });
+      onReloadMember?.();
     } catch (err) {
       toast({
         title: "Erro ao vincular",
@@ -162,27 +140,28 @@ export function WorkRangeServicesSection({
         }
       );
 
-      if (!res.ok) throw new Error("Erro ao desvincular o serviço");
+      if (!res.ok) throw new Error("Erro ao desvincular o servico");
 
       const updatedServices =
-        selectedMember.services?.filter((s: Service) => s.id !== serviceId) ??
-        [];
+        selectedMember.services?.filter((service: Service) =>
+          service.id !== serviceId
+        ) ?? [];
 
       setSelectedMember({
         ...selectedMember,
         services: updatedServices,
       });
 
-      // Se o serviço estava selecionado para o work_range, remover da seleção
       setSelectedServiceIds(prev =>
         prev.filter(id => id !== serviceId.toString())
       );
 
       toast({
-        title: "Serviço desvinculado",
-        description: `O serviço foi removido do funcionário ${selectedMember.name}.`,
+        title: "Servico desvinculado",
+        description: `O servico foi removido do profissional ${selectedMember.name}.`,
         variant: "destructive",
       });
+      onReloadMember?.();
     } catch (err) {
       toast({
         title: "Erro ao desvincular",
@@ -192,13 +171,11 @@ export function WorkRangeServicesSection({
     }
   };
 
-  // Carregar work_ranges do employee quando selecionar um membro
   useEffect(() => {
     if (
       selectedMember?.work_schedule &&
       Array.isArray(selectedMember.work_schedule)
     ) {
-      // Converter work_schedule para work_ranges se necessário
       const ranges = selectedMember.work_schedule.map((schedule: any) => ({
         id: schedule.id,
         weekday: schedule.weekday,
@@ -212,66 +189,32 @@ export function WorkRangeServicesSection({
       setWorkRanges([]);
     }
 
-    // Reset seleções quando mudar de funcionário
-    setSelectedWorkRangeId("");
-    setSelectedServiceIds([]);
+    const nextMemberId = selectedMember?.id ?? null;
+    if (previousMemberIdRef.current !== nextMemberId) {
+      setSelectedWorkRangeId("");
+      setSelectedServiceIds([]);
+      previousMemberIdRef.current = nextMemberId;
+    }
   }, [selectedMember]);
 
-  // Carregar services do work_range quando selecionar um
   useEffect(() => {
     if (selectedWorkRangeId && selectedMember?.id) {
-      // Em vez de fazer uma chamada GET, vamos usar os dados já disponíveis
-      // no selectedMember para evitar erro 405
-      console.log("🔍 Work range selecionado:", selectedWorkRangeId);
-
-      // Buscar os services do work_range nos dados locais
       const selectedRange = workRanges.find(
-        wr => wr.id.toString() === selectedWorkRangeId
+        range => range.id.toString() === selectedWorkRangeId
       );
-      if (selectedRange?.services && Array.isArray(selectedRange.services)) {
-        const serviceIds = selectedRange.services.map((service: any) =>
-          service.id.toString()
-        );
-        setSelectedServiceIds(serviceIds);
-        console.log("✅ Services carregados dos dados locais:", serviceIds);
-      } else {
-        setSelectedServiceIds([]);
-        console.log("ℹ️ Nenhum service encontrado para este work_range");
-      }
-
-      // TODO: Implementar chamada GET quando o backend estiver pronto
-      // getEmployeeWorkRangeServices(
-      //   selectedMember.id.toString(),
-      //   selectedWorkRangeId
-      // );
-    } else {
-      // Limpar seleção quando não há work_range selecionado
-      setSelectedServiceIds([]);
+      setSelectedServiceIds(toServiceIds(selectedRange?.services));
+      return;
     }
-  }, [selectedWorkRangeId, selectedMember?.id, workRanges]);
 
-  // Comentado temporariamente até o backend suportar GET
-  // useEffect(() => {
-  //   if (
-  //     workRangeServices?.services &&
-  //     Array.isArray(workRangeServices.services)
-  //   ) {
-  //     const serviceIds = workRangeServices.services.map((service: any) =>
-  //       service.id.toString()
-  //     );
-  //     setSelectedServiceIds(serviceIds);
-  //   } else {
-  //     setSelectedServiceIds([]);
-  //   }
-  // }, [workRangeServices]);
+    setSelectedServiceIds([]);
+  }, [selectedWorkRangeId, selectedMember?.id, workRanges]);
 
   const handleServiceToggle = (serviceId: string) => {
     setSelectedServiceIds(prev => {
       if (prev.includes(serviceId)) {
         return prev.filter(id => id !== serviceId);
-      } else {
-        return [...prev, serviceId];
       }
+      return [...prev, serviceId];
     });
   };
 
@@ -279,7 +222,7 @@ export function WorkRangeServicesSection({
     if (!selectedMember?.id || !selectedWorkRangeId) {
       toast({
         title: "Erro",
-        description: "Selecione um funcionário e um horário",
+        description: "Selecione um profissional e um horario",
         variant: "destructive",
       });
       return;
@@ -287,7 +230,6 @@ export function WorkRangeServicesSection({
 
     setIsLoading(true);
     try {
-      // Fazer chamada direta sem usar o hook para evitar problemas
       const response = await fetch(
         `/api/employee/${selectedMember.id}/work_range/${selectedWorkRangeId}/services`,
         {
@@ -302,33 +244,29 @@ export function WorkRangeServicesSection({
       );
 
       if (!response.ok) {
-        throw new Error("Erro ao salvar services");
+        throw new Error("Erro ao salvar servicos");
       }
 
-      const result = await response.json();
-      console.log("✅ Services salvos com sucesso:", result);
-
-      // Atualizar dados localmente
-      const updatedWorkRanges = workRanges.map(wr => {
-        if (wr.id.toString() === selectedWorkRangeId) {
+      const updatedWorkRanges = workRanges.map(range => {
+        if (range.id.toString() === selectedWorkRangeId) {
           const updatedServices = employeeServices.filter(service =>
             selectedServiceIds.includes(service.id.toString())
           );
-          return { ...wr, services: updatedServices };
+          return { ...range, services: updatedServices };
         }
-        return wr;
+        return range;
       });
       setWorkRanges(updatedWorkRanges);
+      onReloadMember?.();
 
       toast({
         title: "Sucesso",
-        description: "Services configurados com sucesso!",
+        description: "Servicos configurados com sucesso!",
       });
     } catch (error) {
-      console.error("Erro ao salvar services:", error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar services do horário",
+        description: "Erro ao salvar servicos do horario",
         variant: "destructive",
       });
     } finally {
@@ -340,7 +278,7 @@ export function WorkRangeServicesSection({
     if (!selectedMember?.id || !selectedWorkRangeId) {
       toast({
         title: "Erro",
-        description: "Selecione um funcionário e um horário",
+        description: "Selecione um profissional e um horario",
         variant: "destructive",
       });
       return;
@@ -348,7 +286,6 @@ export function WorkRangeServicesSection({
 
     setIsLoading(true);
     try {
-      // Fazer chamada direta para remover todos os services
       const response = await fetch(
         `/api/employee/${selectedMember.id}/work_range/${selectedWorkRangeId}/services`,
         {
@@ -356,39 +293,33 @@ export function WorkRangeServicesSection({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            services: [], // Array vazio para remover todos
-          }),
+          body: JSON.stringify({ services: [] }),
         }
       );
 
       if (!response.ok) {
-        throw new Error("Erro ao remover services");
+        throw new Error("Erro ao remover servicos");
       }
-
-      const result = await response.json();
-      console.log("✅ Services removidos com sucesso:", result);
 
       setSelectedServiceIds([]);
 
-      // Atualizar dados localmente
-      const updatedWorkRanges = workRanges.map(wr => {
-        if (wr.id.toString() === selectedWorkRangeId) {
-          return { ...wr, services: [] };
+      const updatedWorkRanges = workRanges.map(range => {
+        if (range.id.toString() === selectedWorkRangeId) {
+          return { ...range, services: [] };
         }
-        return wr;
+        return range;
       });
       setWorkRanges(updatedWorkRanges);
+      onReloadMember?.();
 
       toast({
         title: "Sucesso",
-        description: "Todos os services foram removidos do horário!",
+        description: "Todos os servicos foram removidos do horario!",
       });
     } catch (error) {
-      console.error("Erro ao remover services:", error);
       toast({
         title: "Erro",
-        description: "Erro ao remover services do horário",
+        description: "Erro ao remover servicos do horario",
         variant: "destructive",
       });
     } finally {
@@ -396,19 +327,37 @@ export function WorkRangeServicesSection({
     }
   };
 
+  const handleSelectAllServices = () => {
+    setSelectedServiceIds(
+      employeeServices.map(service => service.id.toString())
+    );
+  };
+
+  const handleClearSelectedServices = () => {
+    setSelectedServiceIds([]);
+  };
+
+  const getRangeServiceCount = (range: WorkRange) => {
+    if (range.id.toString() === selectedWorkRangeId) {
+      return selectedServiceIds.length;
+    }
+    return toServiceIds(range.services).length;
+  };
+
   const selectedWorkRange = workRanges.find(
-    wr => wr.id.toString() === selectedWorkRangeId
+    range => range.id.toString() === selectedWorkRangeId
   );
 
-  if (loadingCompany) {
+  if (loadingServices) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-1/3" />
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="space-y-4">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-10 w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i}>
               <CardHeader>
-                <Skeleton className="h-6 w-1/2 mb-2" />
+                <Skeleton className="h-5 w-1/2 mb-2" />
                 <Skeleton className="h-4 w-1/3" />
               </CardHeader>
               <CardContent>
@@ -423,297 +372,248 @@ export function WorkRangeServicesSection({
 
   if (!selectedMember) {
     return (
-      <div className="flex justify-center items-center h-40 text-muted-foreground">
-        Selecione um funcionário para gerenciar os serviços por horário.
+      <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-muted-foreground">
+        Selecione um profissional para gerenciar os servicos por horario.
       </div>
     );
   }
 
   if (!workRanges.length) {
     return (
-      <div className="flex justify-center items-center h-40 text-muted-foreground">
-        Este funcionário não possui horários configurados. Configure os horários
-        na aba "Jornada de trabalho" primeiro.
+      <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
+        <Clock className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
+        <p className="font-medium text-foreground">Sem horarios configurados</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Configure os horarios na aba "Filiais e horarios" primeiro.
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Serviços por Horário</h3>
-          <p className="text-sm text-muted-foreground">
-            Configure quais serviços o funcionário pode realizar em cada horário
-            específico
-          </p>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Briefcase className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold">Servicos por horario</h3>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Configure quais servicos o profissional pode realizar em cada horario
+          especifico.
+        </p>
       </div>
 
-      {/* Work Range Selector */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Selecionar Horário
-          </CardTitle>
-          <CardDescription>
-            Escolha o horário específico para configurar os serviços
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Select
-            value={selectedWorkRangeId}
-            onValueChange={setSelectedWorkRangeId}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um horário..." />
-            </SelectTrigger>
-            <SelectContent>
-              {workRanges.map(workRange => (
-                <SelectItem key={workRange.id} value={workRange.id.toString()}>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">
-                      {weekdayNames[workRange.weekday]}
-                    </Badge>
-                    <span>
-                      {formatTime(workRange.start_time)} -{" "}
-                      {formatTime(workRange.end_time)}
-                    </span>
-                    {workRange.branch?.name && (
-                      <span className="text-muted-foreground">
-                        • {workRange.branch.name}
-                      </span>
-                    )}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {selectedWorkRange && (
-            <div className="mt-4 p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span className="font-medium">
-                    {weekdayNames[selectedWorkRange.weekday]}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  <span>
-                    {formatTime(selectedWorkRange.start_time)} -{" "}
-                    {formatTime(selectedWorkRange.end_time)}
-                  </span>
-                </div>
-                {selectedWorkRange.branch?.name && (
-                  <Badge variant="secondary">
-                    {selectedWorkRange.branch.name}
-                  </Badge>
-                )}
-              </div>
-              {isLoading && (
-                <div className="mt-2 text-sm text-muted-foreground">
-                  Carregando serviços...
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Services Configuration */}
-      {selectedWorkRangeId && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+      <div className="space-y-4">
+        <div className="rounded-lg border bg-card p-4 space-y-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Search className="w-5 h-5" />
-                Configurar Serviços
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <Label>Selecionar horario</Label>
               </div>
-              <div className="flex gap-2">
+              <p className="text-sm text-muted-foreground">
+                Escolha o horario especifico para configurar os servicos.
+              </p>
+            </div>
+           
+          </div>
+
+          <div className="flex flex-wrap gap-2 pt-2">
+            {workRanges.map(range => {
+              const isSelected =
+                range.id.toString() === selectedWorkRangeId;
+              const rangeLabel = weekdayNames[range.weekday] || "Dia";
+              const serviceCount = getRangeServiceCount(range);
+
+              return (
+                <button
+                  key={range.id}
+                  type="button"
+                  onClick={() => setSelectedWorkRangeId(range.id.toString())}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all border ${
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span className="font-medium">{rangeLabel}</span>
+                  <Clock className="w-3 h-3 ml-1" />
+                  <span className="text-xs text-muted-foreground">
+                    {formatTime(range.start_time)} -{" "}
+                    {formatTime(range.end_time)}
+                  </span>
+                  {range.branch?.name && (
+                    <span className="text-xs text-muted-foreground">
+                      ({range.branch.name})
+                    </span>
+                  )}
+                  <span className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                    {serviceCount} servico(s)
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {selectedWorkRange ? (
+          <div className="rounded-lg border bg-card p-4 space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-muted-foreground" />
+                  <Label>Configurar servicos</Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Selecione os servicos disponiveis para{" "}
+                  <span className="font-medium text-foreground">
+                    {weekdayNames[selectedWorkRange.weekday] || "Dia"}
+                  </span>{" "}
+                  ({formatTime(selectedWorkRange.start_time)} -{" "}
+                  {formatTime(selectedWorkRange.end_time)})
+                  {selectedWorkRange.branch?.name && (
+                    <span> - {selectedWorkRange.branch.name}</span>
+                  )}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowServiceManager(!showServiceManager)}
+                  onClick={handleSelectAllServices}
+                  disabled={
+                    !selectedWorkRangeId ||
+                    isLoading ||
+                    employeeServices.length === 0
+                  }
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Gerenciar Serviços
+                  Marcar todos
                 </Button>
                 <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearSelectedServices}
+                  disabled={!selectedWorkRangeId || isLoading}
+                >
+                  Limpar
+                </Button>
+                <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={handleRemoveAllServices}
-                  disabled={isLoading || selectedServiceIds.length === 0}
+                  disabled={
+                    !selectedWorkRangeId ||
+                    isLoading ||
+                    selectedServiceIds.length === 0
+                  }
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Remover Todos
+                  Remover todos
                 </Button>
                 <Button
+                  type="button"
                   size="sm"
                   onClick={handleSaveServices}
-                  disabled={isLoading}
+                  disabled={!selectedWorkRangeId || isLoading}
                 >
-                  Salvar Alterações
+                  Salvar alteracoes
                 </Button>
               </div>
-            </CardTitle>
-            <CardDescription>
-              Selecione os serviços que o funcionário pode realizar neste
-              horário.
-              {selectedServiceIds.length > 0 && (
-                <span className="ml-2 font-medium">
-                  {selectedServiceIds.length} serviço(s) selecionado(s)
-                </span>
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!employeeServices.length ? (
-              <div className="text-center text-muted-foreground py-8">
-                <p>Este funcionário não possui serviços vinculados.</p>
-                <p className="text-sm mt-2">
-                  Vincule serviços na aba "Serviços" primeiro, ou use o botão
-                  "Gerenciar Serviços" abaixo.
-                </p>
+            </div>
+
+            {isLoading && (
+              <div className="text-xs text-muted-foreground">
+                Salvando servicos...
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {employeeServices.map((service: Service) => {
+            )}
+
+            <div className="text-sm text-muted-foreground">
+              {selectedServiceIds.length} servico(s) selecionado(s)
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {!employeeServices.length ? (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  <p>
+                    Este profissional nao possui servicos vinculados. Vincule
+                    servicos na aba "Servicos" ou use "Gerenciar servicos"
+                    acima.
+                  </p>
+                </div>
+              ) : (
+                employeeServices.map(service => {
                   const isSelected = selectedServiceIds.includes(
                     service.id.toString()
                   );
+                  const price =
+                    service.price && Number(service.price) > 0
+                      ? `R$ ${Number(service.price).toFixed(2)}`
+                      : "Gratuito";
+                  const durationLabel = service.duration
+                    ? `${service.duration} min`
+                    : "--";
 
                   return (
-                    <Card
+                    <div
                       key={service.id}
-                      className={`cursor-pointer transition-all ${
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
+                      onClick={() =>
+                        handleServiceToggle(service.id.toString())
+                      }
+                      onKeyDown={event => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          handleServiceToggle(service.id.toString());
+                        }
+                      }}
+                      className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
                         isSelected
-                          ? "ring-2 ring-primary bg-primary/5"
-                          : "hover:bg-muted/50"
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50 opacity-60"
                       }`}
-                      onClick={() => handleServiceToggle(service.id.toString())}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() =>
-                              handleServiceToggle(service.id.toString())
-                            }
-                            className="mt-1"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              {isSelected && (
-                                <CheckCircle className="text-green-500 w-4 h-4 flex-shrink-0" />
-                              )}
-                              <h4 className="font-medium truncate">
-                                {service.name}
-                              </h4>
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {service.duration} min
-                            </div>
-                            <div className="text-sm font-medium mt-1">
-                              {service.price && Number(service.price) > 0
-                                ? `R$ ${Number(service.price).toFixed(2)}`
-                                : "Gratuito"}
-                            </div>
-                          </div>
+                      <Checkbox
+                        checked={isSelected}
+                        className="mt-0.5 pointer-events-none"
+                        tabIndex={-1}
+                        aria-hidden="true"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1">
+                          {isSelected && (
+                            <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                          )}
+                          <span
+                            className={`text-sm font-medium truncate ${
+                              isSelected ? "text-primary" : ""
+                            }`}
+                          >
+                            {service.name}
+                          </span>
                         </div>
-                      </CardContent>
-                    </Card>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                          <span>{durationLabel}</span>
+                          <span>{price}</span>
+                        </div>
+                      </div>
+                    </div>
                   );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Service Manager */}
-      {showServiceManager && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Plus className="w-5 h-5" />
-                Gerenciar Serviços do Funcionário
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowServiceManager(false)}
-              >
-                ✕
-              </Button>
-            </CardTitle>
-            <CardDescription>
-              Vincule ou desvincule serviços do funcionário. Apenas serviços
-              vinculados podem ser configurados por horário.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {allServices.map((service: Service) => {
-                const isLinked = employeeServices.some(
-                  s => s.id === service.id
-                );
-
-                return (
-                  <Card
-                    key={service.id}
-                    className="flex flex-col justify-between"
-                  >
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2">
-                        {isLinked && (
-                          <CheckCircle className="text-green-500 w-5 h-5" />
-                        )}
-                        <span className="text-sm font-medium">
-                          {service.name}
-                        </span>
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        {service.duration} min •{" "}
-                        {service.price && Number(service.price) > 0
-                          ? `R$ ${Number(service.price).toFixed(2)}`
-                          : "Gratuito"}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      {isLinked ? (
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => handleUnlinkService(service.id)}
-                        >
-                          Desvincular
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => handleLinkService(service.id)}
-                        >
-                          Vincular
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                })
+              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Removido card de erro temporariamente */}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center text-sm text-muted-foreground">
+            Selecione um horario para visualizar os servicos.
+          </div>
+        )}
+      </div>
     </div>
   );
 }
