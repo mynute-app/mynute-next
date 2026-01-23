@@ -138,8 +138,18 @@ export const useServiceAvailability = () => {
       }
 
       const data: ServiceAvailability = await res.json();
-      setAvailability(data);
-      return data;
+      const normalized: ServiceAvailability = {
+        ...data,
+        available_dates: Array.isArray(data.available_dates)
+          ? data.available_dates
+          : [],
+        employee_info: Array.isArray(data.employee_info)
+          ? data.employee_info
+          : [],
+        branch_info: Array.isArray(data.branch_info) ? data.branch_info : [],
+      };
+      setAvailability(normalized);
+      return normalized;
     } catch (e) {
       const errorMessage =
         e instanceof Error
@@ -217,7 +227,17 @@ export const useServiceAvailabilityAuto = (
       }
 
       const data: ServiceAvailability = await res.json();
-      setAvailability(data);
+      const normalized: ServiceAvailability = {
+        ...data,
+        available_dates: Array.isArray(data.available_dates)
+          ? data.available_dates
+          : [],
+        employee_info: Array.isArray(data.employee_info)
+          ? data.employee_info
+          : [],
+        branch_info: Array.isArray(data.branch_info) ? data.branch_info : [],
+      };
+      setAvailability(normalized);
     } catch (e) {
       const errorMessage =
         e instanceof Error

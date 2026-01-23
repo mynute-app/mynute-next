@@ -167,6 +167,8 @@ export default function AddTeamMemberDialog({
         </DialogHeader>
 
         <form onSubmit={submitHandler(onSubmit)} className="space-y-6">
+          {/* TODO (edição): Foto do profissional ainda não disponível na criação */}
+          {/*
           <div className="flex items-start gap-6">
             <div
               className="w-24 h-24 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center text-primary-foreground text-2xl font-bold flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
@@ -215,6 +217,7 @@ export default function AddTeamMemberDialog({
             className="hidden"
             onChange={handleImageChange}
           />
+          */}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -249,6 +252,8 @@ export default function AddTeamMemberDialog({
               <FormError message={errors.surname?.message} />
             </div>
 
+            {/* TODO (edição): Apelido só estará disponível após criação */}
+            {/*
             <div className="space-y-2">
               <Label htmlFor="nickname">Apelido</Label>
               <Input
@@ -263,6 +268,7 @@ export default function AddTeamMemberDialog({
                 }
               />
             </div>
+            */}
 
             <div className="space-y-2">
               <Label htmlFor="email">E-mail *</Label>
@@ -312,6 +318,8 @@ export default function AddTeamMemberDialog({
               <FormError message={errors.phone?.message} />
             </div>
 
+            {/* TODO (edição): Bio será editada depois da criação */}
+            {/*
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="bio">Bio / Descri\u00e7\u00e3o</Label>
               <Textarea
@@ -327,8 +335,11 @@ export default function AddTeamMemberDialog({
                 }
               />
             </div>
+            */}
           </div>
 
+          {/* TODO (edição): Dias de trabalho, serviços e status serão editados após criação */}
+          {/*
           <div className="space-y-3">
             <Label>Dias de Trabalho</Label>
             <div className="flex flex-wrap gap-2">
@@ -399,6 +410,7 @@ export default function AddTeamMemberDialog({
             />
           </div>
 
+          */}
           <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button
               variant="outline"
@@ -407,7 +419,11 @@ export default function AddTeamMemberDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" className="btn-gradient" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              className="btn-gradient"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Criando..." : "Adicionar"}
             </Button>
           </div>

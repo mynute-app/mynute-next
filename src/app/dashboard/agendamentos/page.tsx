@@ -182,7 +182,14 @@ export default function AgendamentosPage() {
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const rows = useMemo(() => {
-    return appointments
+    const sortedAppointments = [...appointments].sort((a, b) => {
+      const timeA = new Date(a.start_time).getTime();
+      const timeB = new Date(b.start_time).getTime();
+      if (Number.isNaN(timeA) || Number.isNaN(timeB)) return 0;
+      return timeB - timeA;
+    });
+
+    return sortedAppointments
       .map(appointment => {
         const client = clientById.get(appointment.client_id);
         const service = serviceById.get(appointment.service_id);

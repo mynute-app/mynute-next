@@ -304,11 +304,64 @@ export default function BranchManager() {
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [activeBranch, setActiveBranch] = useState<Branch | null>(null);
+
   useEffect(() => {
     if (company?.branches) {
       setBranches(company.branches);
     }
   }, [company?.branches]);
+
+  useEffect(() => {
+    if (!branches.length) return;
+
+    const branchesNeedingDetails = branches.filter(branch => {
+      const hasServices = Array.isArray(branch.services);
+      const hasEmployees = Array.isArray(branch.employees);
+      const hasSchedule = Array.isArray(branch.work_schedule);
+      return !(hasServices && hasEmployees && hasSchedule);
+    });
+
+    if (!branchesNeedingDetails.length) return;
+
+    let isActive = true;
+
+    const hydrateBranches = async () => {
+      const results = await Promise.allSettled(
+        branchesNeedingDetails.map(branch => fetchBranchById(branch.id))
+      );
+
+      if (!isActive) return;
+
+      const hydratedBranches = results
+        .map(result =>
+          result.status === "fulfilled" ? result.value : null
+        )
+        .filter(Boolean) as Branch[];
+
+      if (!hydratedBranches.length) return;
+
+      setBranches(prev => {
+        const byId = new Map(prev.map(item => [item.id, item]));
+        hydratedBranches.forEach(branch => {
+          const current = byId.get(branch.id);
+          byId.set(branch.id, {
+            ...current,
+            ...branch,
+            work_schedule: Array.isArray(branch.work_schedule)
+              ? branch.work_schedule
+              : [],
+          });
+        });
+        return Array.from(byId.values());
+      });
+    };
+
+    hydrateBranches();
+
+    return () => {
+      isActive = false;
+    };
+  }, [branches, fetchBranchById]);
 
   const filteredBranches = useMemo(() => {
     const normalizedTerm = searchTerm.trim().toLowerCase();

@@ -50,10 +50,6 @@ export const useCreateAppointment = () => {
         time_zone: "America/Sao_Paulo",
       };
 
-      console.log("🔵 HOOK - Enviando para /api/appointment:");
-      console.log("Headers:", { "X-Company-ID": company_id });
-      console.log("Body:", JSON.stringify(body, null, 2));
-
       const res = await fetch("/api/appointment", {
         method: "POST",
         headers: {
@@ -63,9 +59,6 @@ export const useCreateAppointment = () => {
         body: JSON.stringify(body),
       });
 
-      console.log("🔵 HOOK - Resposta recebida:");
-      console.log("Status:", res.status);
-      console.log("OK:", res.ok);
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);

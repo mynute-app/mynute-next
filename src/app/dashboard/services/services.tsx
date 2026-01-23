@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { autoLinkService } from "@/lib/services/auto-link-service";
 import {
   Briefcase,
   Clock,
@@ -34,6 +36,7 @@ export const ServicesPage = () => {
 
   const { company, loading } = useGetCompany();
   const { handleDelete } = useDeleteService();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (company?.services) {
@@ -87,6 +90,41 @@ export const ServicesPage = () => {
 
   const handleAddService = (newService: Service) => {
     setServices(prev => [...prev, newService]);
+    void (async () => {
+      try {
+        const result = await autoLinkService({
+          serviceId: newService.id,
+          branches: company?.branches ?? [],
+          employees: company?.employees ?? [],
+        });
+
+        if (result.skipped) {
+          return;
+        }
+
+        if (result.failed > 0) {
+          toast({
+            title: "Servico criado",
+            description:
+              "Nao foi possivel vincular automaticamente o servico. Verifique as filiais e a equipe.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        toast({
+          title: "Vinculo automatico aplicado",
+          description: "Servico vinculado as filiais e equipe.",
+        });
+      } catch (error) {
+        toast({
+          title: "Servico criado",
+          description:
+            "Falha ao vincular automaticamente o servico. Verifique as filiais e a equipe.",
+          variant: "destructive",
+        });
+      }
+    })();
   };
 
   const formatPrice = (price: Service["price"]) => {
