@@ -117,6 +117,12 @@ export function LoginFormEmployee({
           {errors.password?.message && (
             <p className="text-sm text-red-500">{errors.password.message}</p>
           )}
+          <Link
+            href="/auth/employee/change-password"
+            className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+          >
+            Recebeu senha temporaria? Atualize aqui.
+          </Link>
         </div>
 
         {error && (

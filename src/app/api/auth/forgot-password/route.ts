@@ -21,13 +21,13 @@ export async function POST(req: Request) {
     }
 
     const companyResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/company/subdomain/${subdomain}`,
+      `${process.env.BACKEND_URL}/company/subdomain/${subdomain}`,
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     if (!companyResponse.ok) {
@@ -45,14 +45,14 @@ export async function POST(req: Request) {
     );
 
     const resetResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/employee/reset-password/${email}`,
+      `${process.env.BACKEND_URL}/employee/reset-password/${email}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-Company-ID": company.id.toString(),
         },
-      }
+      },
     );
 
     if (!resetResponse.ok) {
@@ -72,13 +72,21 @@ export async function POST(req: Request) {
       );
     }
 
-    const resetData = await resetResponse.json();
+    const rawBody = await resetResponse.text();
+    let resetData: { password?: string } | null = null;
+    if (rawBody) {
+      try {
+        resetData = JSON.parse(rawBody) as { password?: string };
+      } catch (error) {
+        console.warn("⚠️ Resposta nao JSON ao resetar senha:", rawBody);
+      }
+    }
     console.log("✅ Senha resetada com sucesso");
 
     return Response.json({
       success: true,
       message: "Nova senha gerada com sucesso",
-      password: resetData.password,
+      password: resetData?.password,
     });
   } catch (error) {
     console.error("❌ Erro inesperado ao processar reset de senha:", error);

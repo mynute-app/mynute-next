@@ -1,14 +1,12 @@
 "use client";
 
-import { SidebarIcon } from "lucide-react";
+import { Menu } from "lucide-react";
 
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -26,7 +24,7 @@ export function SiteHeader() {
           size="icon"
           onClick={toggleSidebar}
         >
-          <SidebarIcon />
+          <Menu className="w-5 h-5" />
         </Button>
         <Separator orientation="vertical" className="mr-2 h-4" />
         <Breadcrumb className="hidden sm:block">

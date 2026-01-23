@@ -1,9 +1,9 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { SiteHeader } from "./components/site-header";
 import { AppSidebar } from "./components/app-sidebar";
 import { DashboardTheme } from "./components/dashboard-theme";
 import { auth } from "../../../auth";
 import { redirect } from "next/navigation";
+import { MobileSidebarToggle } from "./components/mobile-sidebar-toggle";
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -20,6 +20,7 @@ export default async function RootLayout({
           <div className="flex h-full flex-1">
             <AppSidebar />
             <SidebarInset className="flex h-full flex-col overflow-hidden">
+              <MobileSidebarToggle />
               {children}
             </SidebarInset>
           </div>

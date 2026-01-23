@@ -74,7 +74,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const [isConfigOpen, setIsConfigOpen] = React.useState(true);
 
-  const isConfigActive = pathname.startsWith("/dashboard/configuracoes");
+  const isConfigActive = pathname.startsWith("/dashboard/config");
   const isActive = (href: string, end = false) =>
     end ? pathname === href : pathname.startsWith(href);
 
@@ -193,6 +193,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     icon={<Palette className="h-4 w-4" />}
                     label="Branding e Midias"
                     isActive={isActive("/dashboard/config/your-brand", true)}
+                  />
+                  <SubNavItem
+                    href="/dashboard/config/account"
+                    icon={<UserCircle className="h-4 w-4" />}
+                    label="Conta e Seguranca"
+                    isActive={isActive("/dashboard/config/account", true)}
                   />
                   {/* <SubNavItem
                     href="/dashboard/configuracoes/servicos"
