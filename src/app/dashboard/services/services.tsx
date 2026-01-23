@@ -50,7 +50,7 @@ export const ServicesPage = () => {
 
   const categoryOptions = useMemo(
     () => categories.filter(category => category !== "Todos"),
-    [categories]
+    [categories],
   );
 
   const filteredServices = useMemo(() => {
@@ -73,8 +73,8 @@ export const ServicesPage = () => {
       prev.map(service =>
         service.id === updatedService.id
           ? { ...service, ...updatedService }
-          : service
-      )
+          : service,
+      ),
     );
   };
 
@@ -117,6 +117,9 @@ export const ServicesPage = () => {
 
   const hasFilters =
     searchTerm.trim().length > 0 || selectedCategory !== "Todos";
+  const firstImageIndex = filteredServices.findIndex(
+    service => service.design?.images?.profile?.url,
+  );
 
   return (
     <div className="services-page flex min-h-0 flex-1 flex-col bg-background text-foreground">
@@ -161,7 +164,7 @@ export const ServicesPage = () => {
                       className={cn(
                         "whitespace-nowrap",
                         selectedCategory === category &&
-                          "bg-background shadow-sm"
+                          "bg-background shadow-sm",
                       )}
                       onClick={() => setSelectedCategory(category)}
                     >
@@ -218,7 +221,7 @@ export const ServicesPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 stagger-children">
-                {filteredServices.map(service => {
+                {filteredServices.map((service, index) => {
                   const imageUrl = service.design?.images?.profile?.url;
                   const priceLabel = formatPrice(service.price);
                   const durationLabel = formatDuration(service.duration);
@@ -233,7 +236,7 @@ export const ServicesPage = () => {
                       key={service.id}
                       className={cn(
                         "overflow-hidden rounded-xl border border-border bg-card shadow-sm card-hover",
-                        service.hidden && "opacity-60"
+                        service.hidden && "opacity-60",
                       )}
                     >
                       <div className="relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
@@ -243,6 +246,7 @@ export const ServicesPage = () => {
                             alt={service.name}
                             fill
                             sizes="(max-width: 768px) 100vw, 33vw"
+                            priority={index === firstImageIndex}
                             className="object-cover"
                           />
                         ) : (
@@ -289,13 +293,13 @@ export const ServicesPage = () => {
                                 "h-4 w-4",
                                 hasPrice
                                   ? "text-success"
-                                  : "text-muted-foreground"
+                                  : "text-muted-foreground",
                               )}
                             />
                             <span
                               className={cn(
                                 "font-semibold text-foreground",
-                                !hasPrice && "text-muted-foreground"
+                                !hasPrice && "text-muted-foreground",
                               )}
                             >
                               {priceLabel}
@@ -307,14 +311,14 @@ export const ServicesPage = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between border-t border-border pt-4">
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-end border-t border-border pt-4">
+                          {/* <div className="flex items-center gap-2">
                             <Switch />
                             <span className="text-sm text-muted-foreground">
                               Ativo
                             </span>
-                          </div>
-                          <div className="flex items-center gap-1">
+                          </div> */}
+                          <div className="flex items-center gap-1 ">
                             <Button
                               variant="ghost"
                               size="icon"

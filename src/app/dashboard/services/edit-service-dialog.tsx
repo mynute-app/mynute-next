@@ -81,6 +81,7 @@ export const EditServiceDialog = ({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [durationDisplay, setDurationDisplay] = React.useState("");
   const [priceDisplay, setPriceDisplay] = React.useState("");
+  const isBufferLocked = true;
 
   // Estados extras (não serão enviados ao backend ainda)
   const [extraFields, setExtraFields] = React.useState({
@@ -207,6 +208,7 @@ export const EditServiceDialog = ({
       <DialogContent className="services-dialog max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Serviço</DialogTitle>
+          <DialogDescription>Atualize os dados do serviço e salve as alterações.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -289,7 +291,7 @@ export const EditServiceDialog = ({
               )}
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="category">Categoria</Label>
               <Select
                 value={extraFields.category}
@@ -313,7 +315,7 @@ export const EditServiceDialog = ({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <Label htmlFor="duration">Duração (minutos) *</Label>
@@ -331,9 +333,9 @@ export const EditServiceDialog = ({
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
+             
                 <Label htmlFor="price">Preço (R$)</Label>
-                <div className="flex items-center gap-2 ml-auto">
+                {/* <div className="flex items-center gap-2 ml-auto">
                   <Switch
                     id="priceFrom"
                     checked={extraFields.priceFrom}
@@ -347,8 +349,8 @@ export const EditServiceDialog = ({
                   >
                     A partir de
                   </Label>
-                </div>
-              </div>
+                </div> */}
+         
               <Input
                 id="price"
                 placeholder="Ex: 50,00"
@@ -357,19 +359,20 @@ export const EditServiceDialog = ({
               />
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="bufferTime">Intervalo após (min)</Label>
               <Select
-                value={String(extraFields.bufferTime)}
+                value={isBufferLocked ? "" : String(extraFields.bufferTime)}
                 onValueChange={value =>
                   setExtraFields(prev => ({
                     ...prev,
                     bufferTime: Number.parseInt(value, 10),
                   }))
                 }
+                disabled={isBufferLocked}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Em breve" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">Sem intervalo</SelectItem>
@@ -379,10 +382,10 @@ export const EditServiceDialog = ({
                   <SelectItem value="30">30 minutos</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-border">
+          {/* <div className="space-y-4 pt-4 border-t border-border">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Serviço Ativo</Label>
@@ -415,7 +418,7 @@ export const EditServiceDialog = ({
                 }
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button
@@ -443,3 +446,7 @@ export const EditServiceDialog = ({
     </Dialog>
   );
 };
+
+
+
+

@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -69,6 +70,7 @@ export const AddServiceDialog = ({
   const [extraFields, setExtraFields] = useState(defaultExtraFields);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isBufferLocked = true;
 
   const isControlled = controlledOpen !== undefined;
   const isOpen = isControlled ? controlledOpen : internalOpen;
@@ -126,6 +128,7 @@ export const AddServiceDialog = ({
       <DialogContent className="services-dialog max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Novo Serviço</DialogTitle>
+          <DialogDescription>Preencha os dados do serviço e salve para disponibilizá-lo.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={submitHandler(onSubmit)} className="space-y-6">
@@ -282,16 +285,17 @@ export const AddServiceDialog = ({
             <div className="space-y-2">
               <Label htmlFor="bufferTime">Intervalo após (min)</Label>
               <Select
-                value={String(extraFields.bufferTime)}
+                value={isBufferLocked ? "" : String(extraFields.bufferTime)}
                 onValueChange={value =>
                   setExtraFields(prev => ({
                     ...prev,
                     bufferTime: Number.parseInt(value, 10),
                   }))
                 }
+                disabled={isBufferLocked}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Em breve" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">Sem intervalo</SelectItem>
@@ -356,3 +360,7 @@ export const AddServiceDialog = ({
     </Dialog>
   );
 };
+
+
+
+

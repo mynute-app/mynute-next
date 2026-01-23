@@ -331,8 +331,8 @@ export function AgendaPage() {
               Visualize e gerencie seus agendamentos
             </p>
           </div>
-          {/* <div className="flex flex-wrap items-center gap-2">
-            <CalendarFiltersDrawer
+          <div className="flex flex-wrap items-center gap-2">
+            {/* <CalendarFiltersDrawer
               onFiltersChange={handleFiltersChange}
               employees={
                 company?.employees?.map(emp => ({
@@ -343,11 +343,11 @@ export function AgendaPage() {
               services={company?.services || []}
               isLoadingEmployees={loadingCompany}
               isLoadingServices={loadingCompany}
-            />
+            /> */}
             <span className="text-xs text-muted-foreground">
               Clique em um horario para criar
             </span>
-          </div> */}
+          </div>
         </div>
 
         <div className="bg-card rounded-xl border border-border shadow-sm">

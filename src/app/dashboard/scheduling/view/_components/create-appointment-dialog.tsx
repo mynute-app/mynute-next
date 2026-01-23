@@ -266,12 +266,7 @@ export function CreateAppointmentDialog({
     }
   }, [client, isCheckingEmail]);
 
-  // Debug company and services
-  useEffect(() => {
-    console.log("Company:", company);
-    console.log("Services:", company?.services);
-    console.log("Loading Company:", loadingCompany);
-  }, [company, loadingCompany]);
+
 
   // Reset all state when dialog closes
   useEffect(() => {
