@@ -191,31 +191,6 @@ export function BranchSelectionStep({
                     <p className="text-xs text-muted-foreground mt-1">
                       CEP: {branch.zip_code}
                     </p>
-
-                    {/* Ações - Desktop */}
-                    <div className="hidden md:flex items-center gap-4 mt-3">
-                      <button className="flex items-center gap-2 text-sm text-primary font-medium hover:underline">
-                        <Navigation className="w-4 h-4" />
-                        Ver no mapa
-                      </button>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Phone className="w-4 h-4" />
-                        <span>(11) 9999-9999</span>
-                      </div>
-                    </div>
-
-                    {/* Badges - Desktop */}
-                    <div className="hidden md:flex items-center gap-2 mt-3 flex-wrap">
-                      <Badge variant="outline" className="text-xs">
-                        Estacionamento
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        Acessível
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        Wi-Fi gratuito
-                      </Badge>
-                    </div>
                   </div>
 
                   {/* Botão - Desktop */}

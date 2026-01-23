@@ -8,6 +8,7 @@ import {
   Building2,
   Calendar,
   CalendarCheck,
+  CalendarClock,
   ChevronDown,
   ChevronRight,
   Droplets,
@@ -82,10 +83,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       className="top-[--header-height] !h-[calc(100svh-var(--header-height))]"
       {...props}
     >
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col ">
         <div className="flex items-center gap-3 border-b border-sidebar-border px-4 py-6">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 shadow-[0_0_20px_hsl(var(--sidebar-primary)_/_0.3)]">
-            <Droplets className="h-6 w-6 text-sidebar-primary-foreground" />
+            <CalendarClock className="h-6 w-6 text-sidebar-primary-foreground" />
           </div>
           <div>
             <h1 className="text-lg font-bold text-sidebar-foreground">

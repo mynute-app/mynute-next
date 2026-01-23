@@ -91,10 +91,6 @@ export function useClientLoginWithCode(): UseClientLoginWithCodeReturn {
         localStorage.setItem("client", JSON.stringify(data.client));
       }
 
-      console.log("✅ Login realizado com sucesso:", {
-        token: data.token,
-        client: data.client,
-      });
 
       return true;
     } catch (err) {

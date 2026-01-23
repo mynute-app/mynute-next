@@ -18,7 +18,7 @@ type BrandColorsSectionProps = {
 const fallbackColors: Required<
   Pick<CompanyColors, "primary" | "secondary" | "tertiary" | "quaternary">
 > = {
-  primary: "#1f9d8a",
+  primary: "#0b0b0b",
   secondary: "#f59e0b",
   tertiary: "#22c55e",
   quaternary: "#6366f1",
@@ -71,7 +71,7 @@ export default function BrandColorsSection({
         <Palette className="w-5 h-5 text-primary" />
         Cores da Marca
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="space-y-2">
           <Label>Cor Principal</Label>
           <div className="flex items-center gap-2">
@@ -119,6 +119,23 @@ export default function BrandColorsSection({
             <Input
               value={colors.tertiary ?? ""}
               onChange={event => handleChange("tertiary")(event.target.value)}
+              className="flex-1"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Cor Quaternaria</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              type="color"
+              value={colors.quaternary ?? ""}
+              onChange={event => handleChange("quaternary")(event.target.value)}
+              className="h-10 w-10 p-1"
+              aria-label="Selecionar cor quaternaria"
+            />
+            <Input
+              value={colors.quaternary ?? ""}
+              onChange={event => handleChange("quaternary")(event.target.value)}
               className="flex-1"
             />
           </div>

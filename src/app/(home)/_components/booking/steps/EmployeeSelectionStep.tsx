@@ -185,24 +185,9 @@ export function EmployeeSelectionStep({
                     Disponível agora
                   </p>
 
-                  {/* Avaliações - Desktop */}
-                  <div className="hidden md:flex items-center gap-2 mt-3">
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <Star
-                          key={star}
-                          className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      5.0 • Excelente profissional
-                    </span>
-                  </div>
-
                   <div className="hidden md:flex items-center gap-2 mt-2">
                     <Badge variant="outline" className="text-xs">
-                      Especialistaaaa
+                      Especialista
                     </Badge>
                     <Badge variant="outline" className="text-xs">
                       Experiência comprovada

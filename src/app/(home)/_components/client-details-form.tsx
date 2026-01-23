@@ -87,10 +87,10 @@ export function ClientDetailsForm({
     useClientSendLoginCode();
 
   const selectedEmployee = employees.find(
-    (emp: any) => emp.id === selectedSlot.employeeId
+    (emp: any) => emp.id === selectedSlot.employeeId,
   );
   const selectedBranch = branches.find(
-    (branch: any) => branch.id === selectedSlot.branchId
+    (branch: any) => branch.id === selectedSlot.branchId,
   );
 
   // Verificar se já existe token no localStorage ao carregar
@@ -98,10 +98,7 @@ export function ClientDetailsForm({
     const storedToken = localStorage.getItem("client_token");
 
     if (storedToken) {
-      console.log("🔑 Token encontrado no localStorage:", storedToken);
-
       const userData = decodeJWTToken(storedToken);
-      console.log("📋 Dados decodificados do token:", userData);
 
       if (userData) {
         // Preencher os dados do formulário com os dados do token
@@ -124,7 +121,6 @@ export function ClientDetailsForm({
   }, []);
 
   const handleLogout = () => {
-    console.log("👋 Fazendo logout...");
     localStorage.removeItem("client_token");
     setClientToken(null);
     setIsLoggedIn(false);
@@ -200,8 +196,7 @@ export function ClientDetailsForm({
     if (phoneDuplicate) {
       setErrors(prev => ({
         ...prev,
-        phone:
-          "Este número de telefone já está cadastrado. Use outro número.",
+        phone: "Este número de telefone já está cadastrado. Use outro número.",
       }));
       return;
     }
@@ -265,8 +260,6 @@ export function ClientDetailsForm({
     setErrors({});
     setDidAttemptCreate(true);
 
-    console.log("🚀 Iniciando criação de conta...");
-
     // Chama createClient e aguarda o erro mais recente diretamente
     const created = await createClient({
       email: clientData.email.trim(),
@@ -310,35 +303,6 @@ export function ClientDetailsForm({
       return;
     }
 
-    console.log("🎯 CONFIRMAR AGENDAMENTO - Dados completos:", {
-      clientToken,
-      clientData: {
-        name: clientData.name.trim(),
-        surname: clientData.surname.trim(),
-        phone: clientData.phone.trim(),
-        email: clientData.email.trim(),
-        notes: clientData.notes?.trim(),
-      },
-      selectedSlot: {
-        date: selectedSlot.date,
-        time: selectedSlot.time,
-        branchId: selectedSlot.branchId,
-        employeeId: selectedSlot.employeeId,
-      },
-      service: {
-        id: service.id,
-        name: service.name,
-        price: service.price,
-      },
-      client: client
-        ? {
-            id: client.id,
-            email: client.email,
-            verified: client.verified,
-          }
-        : null,
-    });
-
     onSubmit({
       ...clientData,
       name: clientData.name.trim(),
@@ -350,19 +314,13 @@ export function ClientDetailsForm({
   };
 
   const handleVerificationSuccess = (token: string) => {
-    console.log("✅ Verificação bem-sucedida! Token:", token);
-
-    // Salvar token no localStorage
     localStorage.setItem("client_token", token);
 
-    // Decodificar token para pegar os dados
     const userData = decodeJWTToken(token);
-    console.log("📋 Dados do usuário decodificados:", userData);
 
     setClientToken(token);
     setIsLoggedIn(true);
 
-    // Fechar o dialog de verificação
     setIsVerifyDialogOpen(false);
   };
 
@@ -377,7 +335,7 @@ export function ClientDetailsForm({
   };
 
   const formatTime = (timeStr: string) => {
-    return timeStr.slice(0, 5); // Remove os segundos se houver
+    return timeStr.slice(0, 5); 
   };
 
   return (

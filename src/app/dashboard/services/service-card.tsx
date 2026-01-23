@@ -24,13 +24,10 @@ type ServiceCardProps = {
 // Função para gerar uma cor fixa com base no nome
 const getFixedColor = (name: string) => {
   const colors = [
-    "border-l-blue-500",
-    "border-l-red-500",
-    "border-l-green-500",
-    "border-l-yellow-500",
-    "border-l-purple-500",
-    "border-l-pink-500",
-    "border-l-indigo-500",
+    "border-l-[hsl(var(--brand-primary))]",
+    "border-l-[hsl(var(--brand-secondary))]",
+    "border-l-[hsl(var(--brand-tertiary))]",
+    "border-l-[hsl(var(--brand-quaternary))]",
   ];
   // Calcula um índice baseado no nome
   const index =

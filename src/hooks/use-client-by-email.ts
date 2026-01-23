@@ -50,7 +50,6 @@ export function useClientByEmail(): UseClientByEmailReturn {
 
     try {
       const encodedEmail = encodeURIComponent(email.trim());
-      console.log("🔍 Buscando email:", email.trim());
 
       const response = await fetch(`/api/client/email/${encodedEmail}`, {
         method: "GET",
@@ -59,14 +58,11 @@ export function useClientByEmail(): UseClientByEmailReturn {
         },
       });
 
-      console.log("📡 Status:", response.status);
       const data = await response.json();
-      console.log("📦 Resposta:", data);
 
       if (!response.ok) {
         // Cliente não encontrado (404)
         if (response.status === 404) {
-          console.log("❌ Cliente não encontrado");
           setClient(null);
           setError("Cliente não encontrado");
         } else {
@@ -75,7 +71,6 @@ export function useClientByEmail(): UseClientByEmailReturn {
         return;
       }
 
-      console.log("✅ Cliente encontrado:", data);
       setClient(data);
       setError(null);
     } catch (err) {

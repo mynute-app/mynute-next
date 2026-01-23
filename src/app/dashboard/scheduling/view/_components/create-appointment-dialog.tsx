@@ -756,11 +756,11 @@ export function CreateAppointmentDialog({
                     />
 
                     {existingClient && (
-                      <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                        <p className="text-sm text-green-800 font-medium">
+                      <div className="p-3 rounded-md border border-[hsl(var(--success)/0.3)] bg-[hsl(var(--success)/0.12)]">
+                        <p className="text-sm text-[hsl(var(--success))] font-medium">
                           ✓ Cliente encontrado no sistema
                         </p>
-                        <p className="text-xs text-green-700 mt-1">
+                        <p className="text-xs text-[hsl(var(--success)/0.85)] mt-1">
                           {existingClient.name} {existingClient.surname}
                         </p>
                       </div>
@@ -920,3 +920,4 @@ export function CreateAppointmentDialog({
     </Dialog>
   );
 }
+

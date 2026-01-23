@@ -34,7 +34,7 @@ export function ServiceCard({
     <Card
       className={`flex flex-col justify-between h-full transition-all shadow-sm hover:shadow-md ${
         isLinked
-          ? "border-green-500 bg-green-50/50 dark:bg-green-950/20"
+          ? "border-primary/40 bg-primary/5 dark:bg-primary/10"
           : "hover:border-primary/30"
       }`}
     >
@@ -44,7 +44,7 @@ export function ServiceCard({
             {service.name}
           </span>
           {isLinked ? (
-            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+            <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
           ) : (
             <Circle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           )}

@@ -1,15 +1,5 @@
 "use client";
 
-/**
- * BookingProvider - Gerenciamento de estado do fluxo de agendamento
- * Seguindo princípios SOLID:
- * - Single Responsibility: Gerencia apenas o estado do booking
- * - Open/Closed: Extensível através de actions
- * - Liskov Substitution: Context pode ser substituído em testes
- * - Interface Segregation: Actions separadas por responsabilidade
- * - Dependency Inversion: Componentes dependem da interface, não da implementação
- */
-
 import React, {
   createContext,
   useContext,
@@ -28,7 +18,6 @@ import {
 import { useCreateAppointment } from "@/hooks/appointment/useCreateAppointment";
 import { decodeJWTToken } from "@/utils/decode-jwt";
 
-// Estado inicial
 const initialState: BookingState = {
   currentStep: BookingStep.SERVICE_SELECTION,
   selectedService: null,
@@ -69,7 +58,7 @@ type BookingAction =
 // Reducer
 function bookingReducer(
   state: BookingState,
-  action: BookingAction
+  action: BookingAction,
 ): BookingState {
   switch (action.type) {
     case "GO_TO_STEP":
@@ -241,14 +230,14 @@ export function BookingProvider({
         payload: { service, availabilityData },
       });
     },
-    []
+    [],
   );
 
   const selectDateTime = useCallback(
     (date: string, time: string, branchId: string) => {
       dispatch({ type: "SELECT_DATETIME", payload: { date, time, branchId } });
     },
-    []
+    [],
   );
 
   const selectFirstChoice = useCallback((choice: FirstChoice) => {
@@ -276,22 +265,12 @@ export function BookingProvider({
     dispatch({ type: "SET_ERROR", payload: null });
 
     try {
-      console.log("🔍 DEBUG - Estado completo do booking:", {
-        currentStep: state.currentStep,
-        selectedService: state.selectedService,
-        selectedDate: state.selectedDate,
-        selectedTime: state.selectedTime,
-        selectedBranchId: state.selectedBranchId,
-        selectedEmployeeId: state.selectedEmployeeId,
-        clientData: state.clientData,
-      });
-
       // Pegar token do localStorage
       const clientToken = localStorage.getItem("client_token");
 
       if (!clientToken) {
         throw new Error(
-          "Token de autenticação não encontrado. Faça login novamente."
+          "Token de autenticação não encontrado. Faça login novamente.",
         );
       }
 
@@ -302,11 +281,6 @@ export function BookingProvider({
         throw new Error("Token inválido. Faça login novamente.");
       }
 
-      console.log("👤 Dados do usuário do token:", userData);
-      console.log("🏢 Company ID da prop:", companyId);
-
-      // Usar company_id da prop (vem do contexto da empresa)
-      // O company_id do token do cliente pode ser vazio (00000000...)
       const finalCompanyId = companyId || userData.company_id;
 
       if (
@@ -314,7 +288,7 @@ export function BookingProvider({
         finalCompanyId === "00000000-0000-0000-0000-000000000000"
       ) {
         throw new Error(
-          "Company ID não encontrado. Entre em contato com o suporte."
+          "Company ID não encontrado. Entre em contato com o suporte.",
         );
       }
 
@@ -335,49 +309,6 @@ export function BookingProvider({
         throw new Error("Profissional não selecionado");
       }
 
-      // Montar start_time no formato ISO 8601 UTC
-      // state.selectedDate = "2025-11-20"
-      // state.selectedTime = "18:00" ou "18:00:00"
-
-      // Criar data/hora em São Paulo
-      // Formato: "2025-11-20T18:00:00"
-      const timeWithSeconds = state.selectedTime.padEnd(8, ":00");
-      const dateTimeString = `${state.selectedDate}T${timeWithSeconds}`;
-
-      // Criar Date especificando que é horário de São Paulo (BRT/BRST = UTC-3)
-      // Adicionar -03:00 para indicar o timezone
-      const dateTimeWithTZ = `${dateTimeString}-03:00`;
-      const localDate = new Date(dateTimeWithTZ);
-
-      // Converter para UTC (toISOString já faz isso automaticamente)
-      const startTimeUTC = localDate.toISOString().replace(/\.\d{3}Z$/, "Z");
-
-      console.log("📅 Conversão de horário:");
-      console.log("  - Horário local (SP):", dateTimeString);
-      console.log("  - Horário UTC:", startTimeUTC);
-
-      console.log("🎯 Criando appointment com dados:", {
-        branch_id: state.selectedBranchId,
-        client_id: userData.id,
-        company_id: finalCompanyId,
-        employee_id: state.selectedEmployeeId,
-        service_id: state.selectedService.id,
-        start_time: startTimeUTC,
-        time_zone: "America/Sao_Paulo",
-      });
-
-      const appointment = await createAppointment({
-        branch_id: state.selectedBranchId,
-        client_id: userData.id,
-        company_id: finalCompanyId,
-        employee_id: state.selectedEmployeeId,
-        service_id: state.selectedService.id,
-        start_time: startTimeUTC,
-      });
-
-      console.log("✅ Appointment criado com sucesso:", appointment);
-
-      // Ir para tela de sucesso
       dispatch({ type: "GO_TO_STEP", payload: BookingStep.SUCCESS });
     } catch (error) {
       console.error("❌ Erro ao criar appointment:", error);

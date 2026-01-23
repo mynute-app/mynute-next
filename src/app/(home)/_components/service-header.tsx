@@ -20,7 +20,7 @@ export function ServiceHeader({ service, onBack }: ServiceHeaderProps) {
   };
 
   const formatDuration = (value?: string | number) => {
-    const n = typeof value === "string" ? parseInt(value) : value ?? 0;
+    const n = typeof value === "string" ? parseInt(value) : (value ?? 0);
     return `${n} min`;
   };
 
@@ -73,7 +73,6 @@ export function ServiceHeader({ service, onBack }: ServiceHeaderProps) {
               </span>
               {service.price && (
                 <span className="flex items-center gap-1">
-                  <span>💰</span>
                   {formatPrice(service.price)}
                 </span>
               )}
