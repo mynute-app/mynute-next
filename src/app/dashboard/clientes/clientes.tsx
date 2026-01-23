@@ -171,7 +171,7 @@ export const ClientesPage = () => {
     <div className="clients-page flex min-h-0 flex-1 flex-col bg-background text-foreground">
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="mx-auto w-full max-w-7xl p-6 lg:p-8">
-          <div className="space-y-6 pt-12 lg:pt-0">
+          <div className="space-y-6 pb-12 lg:pt-0">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="page-header mb-0">
                 <h1 className="page-title">Clientes</h1>

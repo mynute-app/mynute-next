@@ -138,11 +138,11 @@ const getScheduleSummary = (workSchedule?: Branch["work_schedule"]) => {
     if (!timeLabel) {
       const start = extractTime(
         (range as { start_time?: string; start?: string }).start_time ||
-          (range as { start_time?: string; start?: string }).start
+          (range as { start_time?: string; start?: string }).start,
       );
       const end = extractTime(
         (range as { end_time?: string; end?: string }).end_time ||
-          (range as { end_time?: string; end?: string }).end
+          (range as { end_time?: string; end?: string }).end,
       );
       if (start && end) {
         timeLabel = `${start} - ${end}`;
@@ -327,15 +327,13 @@ export default function BranchManager() {
 
     const hydrateBranches = async () => {
       const results = await Promise.allSettled(
-        branchesNeedingDetails.map(branch => fetchBranchById(branch.id))
+        branchesNeedingDetails.map(branch => fetchBranchById(branch.id)),
       );
 
       if (!isActive) return;
 
       const hydratedBranches = results
-        .map(result =>
-          result.status === "fulfilled" ? result.value : null
-        )
+        .map(result => (result.status === "fulfilled" ? result.value : null))
         .filter(Boolean) as Branch[];
 
       if (!hydratedBranches.length) return;
@@ -388,11 +386,11 @@ export default function BranchManager() {
     const total = branches.length;
     const totalEmployees = branches.reduce(
       (sum, branch) => sum + (branch.employees?.length ?? 0),
-      0
+      0,
     );
     const totalServices = branches.reduce(
       (sum, branch) => sum + (branch.services?.length ?? 0),
-      0
+      0,
     );
 
     return {
@@ -405,9 +403,9 @@ export default function BranchManager() {
   const hasBranchStatus = useMemo(
     () =>
       branches.some(
-        branch => typeof (branch as BranchStatus).active === "boolean"
+        branch => typeof (branch as BranchStatus).active === "boolean",
       ),
-    [branches]
+    [branches],
   );
 
   const handleAddBranch = useCallback((newBranch: Branch) => {
@@ -469,12 +467,12 @@ export default function BranchManager() {
         setActiveBranch(updatedBranch);
         setBranches(prev =>
           prev.map(item =>
-            item.id === updatedBranch.id ? updatedBranch : item
-          )
+            item.id === updatedBranch.id ? updatedBranch : item,
+          ),
         );
       }
     },
-    [fetchBranchById]
+    [fetchBranchById],
   );
 
   const handleOpenScheduleDialog = useCallback(
@@ -487,26 +485,26 @@ export default function BranchManager() {
         setActiveBranch(updatedBranch);
         setBranches(prev =>
           prev.map(item =>
-            item.id === updatedBranch.id ? updatedBranch : item
-          )
+            item.id === updatedBranch.id ? updatedBranch : item,
+          ),
         );
       }
     },
-    [fetchBranchById]
+    [fetchBranchById],
   );
 
   const handleManageServices = useCallback(
     (branch: Branch) => {
       router.push(`/dashboard/branch/${branch.id}/servicos`);
     },
-    [router]
+    [router],
   );
 
   const handleManageEmployees = useCallback(
     (branch: Branch) => {
       router.push(`/dashboard/branch/${branch.id}/equipe`);
     },
-    [router]
+    [router],
   );
 
   const handleInfoDialogChange = useCallback(
@@ -516,7 +514,7 @@ export default function BranchManager() {
         setActiveBranch(null);
       }
     },
-    [scheduleDialogOpen]
+    [scheduleDialogOpen],
   );
 
   const handleScheduleDialogChange = useCallback(
@@ -526,21 +524,21 @@ export default function BranchManager() {
         setActiveBranch(null);
       }
     },
-    [infoDialogOpen]
+    [infoDialogOpen],
   );
 
   const handleBranchSaved = useCallback((updatedBranch: Branch) => {
     setBranches(prev =>
       prev.map(branch =>
-        branch.id === updatedBranch.id ? updatedBranch : branch
-      )
+        branch.id === updatedBranch.id ? updatedBranch : branch,
+      ),
     );
     setActiveBranch(updatedBranch);
   }, []);
 
   return (
     <BranchPageShell>
-      <div className="space-y-6 pt-12 lg:pt-0">
+      <div className="space-y-6 pb-12 lg:pt-0">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="page-title">Filiais</h1>

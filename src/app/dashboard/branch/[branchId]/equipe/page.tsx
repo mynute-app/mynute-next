@@ -30,15 +30,15 @@ const getEmployeeName = (employee: Employee) => {
 
 const resolveInitialEmployeeIds = (
   branchData: Branch | null,
-  employees: Employee[]
+  employees: Employee[],
 ) => {
   const fromBranch = branchData?.employees?.map(employee => employee.id) ?? [];
 
   const fromCompany = employees
     .filter(employee =>
       employee.branches?.some(
-        branch => String(branch.id) === String(branchData?.id)
-      )
+        branch => String(branch.id) === String(branchData?.id),
+      ),
     )
     .map(employee => employee.id);
 
@@ -58,7 +58,7 @@ export default function BranchEquipePage() {
 
   const employees = useMemo(
     () => (company?.employees ?? []) as Employee[],
-    [company?.employees]
+    [company?.employees],
   );
 
   const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
@@ -69,15 +69,15 @@ export default function BranchEquipePage() {
       branchDetails ??
       company?.branches?.find(item => String(item.id) === branchId) ??
       null,
-    [branchDetails, company?.branches, branchId]
+    [branchDetails, company?.branches, branchId],
   );
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<number>>(
-    new Set()
+    new Set(),
   );
   const [initialEmployeeIds, setInitialEmployeeIds] = useState<Set<number>>(
-    new Set()
+    new Set(),
   );
   const [isSaving, setIsSaving] = useState(false);
   const [initializedBranchId, setInitializedBranchId] = useState("");
@@ -92,9 +92,9 @@ export default function BranchEquipePage() {
       : new Set(
           employees
             .filter(employee =>
-              employee.branches?.some(item => String(item.id) === branchId)
+              employee.branches?.some(item => String(item.id) === branchId),
             )
-            .map(employee => employee.id)
+            .map(employee => employee.id),
         );
 
     setSelectedEmployeeIds(initialIds);
@@ -149,9 +149,9 @@ export default function BranchEquipePage() {
       employees.reduce(
         (total, employee) =>
           total + (selectedEmployeeIds.has(employee.id) ? 1 : 0),
-        0
+        0,
       ),
-    [employees, selectedEmployeeIds]
+    [employees, selectedEmployeeIds],
   );
 
   const hasChanges = useMemo(() => {
@@ -181,7 +181,7 @@ export default function BranchEquipePage() {
       .filter(
         employee =>
           selectedEmployeeIds.has(employee.id) &&
-          !initialEmployeeIds.has(employee.id)
+          !initialEmployeeIds.has(employee.id),
       )
       .map(employee => employee.id);
 
@@ -189,7 +189,7 @@ export default function BranchEquipePage() {
       .filter(
         employee =>
           initialEmployeeIds.has(employee.id) &&
-          !selectedEmployeeIds.has(employee.id)
+          !selectedEmployeeIds.has(employee.id),
       )
       .map(employee => employee.id);
 
@@ -201,17 +201,17 @@ export default function BranchEquipePage() {
       ...toLink.map(employeeId =>
         fetch(`/api/employee/branch/${employeeId}/branch/${branchId}`, {
           method: "POST",
-        })
+        }),
       ),
       ...toUnlink.map(employeeId =>
         fetch(`/api/employee/branch/${employeeId}/branch/${branchId}`, {
           method: "DELETE",
-        })
+        }),
       ),
     ]);
 
     const failed = results.some(
-      result => result.status === "rejected" || !result.value?.ok
+      result => result.status === "rejected" || !result.value?.ok,
     );
 
     if (failed) {
@@ -246,7 +246,7 @@ export default function BranchEquipePage() {
 
   return (
     <PageShell>
-      <div className="space-y-6 pt-12 lg:pt-0">
+      <div className="space-y-6 pb-12 lg:pt-0">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/dashboard/branch">
