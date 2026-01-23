@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  AlertTriangle,
   Calendar,
   Clock,
   Filter,
+  Loader2,
   MoreHorizontal,
   Plus,
   Search,
@@ -15,7 +17,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -149,6 +150,7 @@ export default function AgendamentosPage() {
     employeeInfo,
     isLoading: isLoadingAppointments,
     error,
+    refetch,
   } = useBranchAppointments({
     branchId: selectedBranchId,
     page: 1,
@@ -228,6 +230,12 @@ export default function AgendamentosPage() {
 
   const isLoading = isCompanyLoading || isLoadingAppointments;
   const hasBranches = (company?.branches?.length ?? 0) > 0;
+  const branches = company?.branches ?? [];
+  const hasMultipleBranches = branches.length > 1;
+  const branchLabel = branches[0]?.name || "Sem filial";
+  const handleRetry = () => {
+    refetch();
+  };
 
   return (
     <PageShell>
@@ -258,30 +266,40 @@ export default function AgendamentosPage() {
               />
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Select
-                value={selectedBranchId}
-                onValueChange={setSelectedBranchId}
-                disabled={!hasBranches}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Selecione a filial" />
-                </SelectTrigger>
-                <SelectContent>
-                  {company?.branches?.map(branch => (
-                    <SelectItem key={branch.id} value={branch.id.toString()}>
-                      {branch.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {hasMultipleBranches ? (
+                <Select
+                  value={selectedBranchId}
+                  onValueChange={setSelectedBranchId}
+                  disabled={!hasBranches}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Selecione a filial" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map(branch => (
+                      <SelectItem key={branch.id} value={branch.id.toString()}>
+                        {branch.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="w-[200px] rounded-md border border-border bg-muted/50 px-3 py-2 text-sm font-medium text-foreground">
+                  {branchLabel}
+                </div>
+              )}
 
               <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
                 {(["all", "today", "week"] as const).map(item => (
                   <Button
                     key={item}
-                    variant={filter === item ? "default" : "ghost"}
+                    variant="ghost"
                     size="sm"
-                    className={cn(filter === item && "bg-background shadow-sm")}
+                    className={cn(
+                      filter === item
+                        ? "bg-background text-foreground shadow-sm border border-border"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
                     onClick={() => setFilter(item)}
                     disabled={!hasBranches}
                   >
@@ -294,27 +312,52 @@ export default function AgendamentosPage() {
                 ))}
               </div>
 
-              <Button variant="outline" size="icon" disabled>
+              {/* <Button variant="outline" size="icon" disabled>
                 <Filter className="w-4 h-4" />
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
 
         <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
           {isLoading ? (
-            <div className="space-y-3 p-6">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton key={index} className="h-10 w-full" />
-              ))}
+            <div className="p-6">
+              <div className="rounded-xl border border-border bg-muted/30 p-6">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm font-medium">
+                    Carregando agendamentos...
+                  </span>
+                </div>
+                <div className="mt-6 space-y-3 animate-pulse">
+                  <div className="h-3 w-40 rounded-full bg-muted" />
+                  <div className="h-10 rounded-lg bg-muted/70" />
+                  <div className="h-10 rounded-lg bg-muted/70" />
+                  <div className="h-10 rounded-lg bg-muted/70" />
+                </div>
+              </div>
             </div>
           ) : !hasBranches ? (
             <div className="p-8 text-center text-muted-foreground">
               Nenhuma filial cadastrada.
             </div>
           ) : error ? (
-            <div className="p-8 text-center text-destructive">
-              Nao foi possivel carregar os agendamentos.
+            <div className="p-6">
+              <div className="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
+                <AlertTriangle className="mx-auto h-6 w-6 text-destructive" />
+                <p className="mt-2 text-sm font-semibold text-destructive">
+                  Erro ao carregar agendamentos
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">{error}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={handleRetry}
+                >
+                  Tentar novamente
+                </Button>
+              </div>
             </div>
           ) : rows.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
@@ -385,11 +428,11 @@ export default function AgendamentosPage() {
                         {statusConfig[appointment.status].label}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>

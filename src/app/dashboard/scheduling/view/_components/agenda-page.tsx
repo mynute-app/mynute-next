@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Building2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  AlertTriangle,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -25,8 +31,8 @@ import { Appointment } from "../../../../../../types/appointment";
 
 
 const DAYS_OF_WEEK = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
-const SLOT_START = 7;
-const SLOT_END = 18;
+const SLOT_START = 6;
+const SLOT_END = 20;
 const HOURS = Array.from(
   { length: SLOT_END - SLOT_START + 1 },
   (_, i) => i + SLOT_START
@@ -49,7 +55,7 @@ const PageShell = ({ children }: { children: ReactNode }) => (
 
 export function AgendaPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<"day" | "week" | "month">("week");
+  const [view, setView] = useState<"day" | "week">("week");
   const { company, loading: loadingCompany } = useGetCompany();
   const [selectedBranchId, setSelectedBranchId] = useState<string>(
     company?.branches?.[0]?.id?.toString() || ""
@@ -97,6 +103,17 @@ export function AgendaPage() {
     return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }, [currentDate]);
 
+  const dayLabel = useMemo(() => {
+    const label = new Intl.DateTimeFormat("pt-BR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+    }).format(currentDate);
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  }, [currentDate]);
+
+  const headerLabel = view === "day" ? dayLabel : monthLabel;
+
   const weekDays = useMemo(() => {
     const start = new Date(currentDate);
     start.setDate(start.getDate() - start.getDay());
@@ -107,20 +124,30 @@ export function AgendaPage() {
     });
   }, [currentDate]);
 
-  const dateRange = useMemo(() => {
-    const startOfWeek = new Date(currentDate);
-    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
+  const viewDays = useMemo(() => {
+    if (view === "day") {
+      return [currentDate];
+    }
+    return weekDays;
+  }, [currentDate, view, weekDays]);
 
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
+  const dateRange = useMemo(() => {
+    const startOfRange = new Date(currentDate);
+    const endOfRange = new Date(currentDate);
+
+    if (view === "week") {
+      startOfRange.setDate(currentDate.getDate() - currentDate.getDay());
+      endOfRange.setDate(startOfRange.getDate() + 6);
+    }
+
+    startOfRange.setHours(0, 0, 0, 0);
+    endOfRange.setHours(23, 59, 59, 999);
 
     return {
-      startDate: formatRangeDate(startOfWeek),
-      endDate: formatRangeDate(endOfWeek),
+      startDate: formatRangeDate(startOfRange),
+      endDate: formatRangeDate(endOfRange),
     };
-  }, [currentDate]);
+  }, [currentDate, view]);
 
   const {
     appointments: branchAppointments,
@@ -239,13 +266,13 @@ export function AgendaPage() {
 
   const handlePrevious = () => {
     const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() - 7);
+    newDate.setDate(newDate.getDate() - (view === "day" ? 1 : 7));
     setCurrentDate(newDate);
   };
 
   const handleNext = () => {
     const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() + 7);
+    newDate.setDate(newDate.getDate() + (view === "day" ? 1 : 7));
     setCurrentDate(newDate);
   };
 
@@ -290,6 +317,10 @@ export function AgendaPage() {
     }));
   }, [serviceInfo]);
 
+  const branches = company?.branches ?? [];
+  const hasMultipleBranches = branches.length > 1;
+  const branchLabel = branches[0]?.name || "Sem filial";
+
   return (
     <PageShell>
       <div className="space-y-6 pt-12 lg:pt-0">
@@ -300,7 +331,7 @@ export function AgendaPage() {
               Visualize e gerencie seus agendamentos
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          {/* <div className="flex flex-wrap items-center gap-2">
             <CalendarFiltersDrawer
               onFiltersChange={handleFiltersChange}
               employees={
@@ -316,7 +347,7 @@ export function AgendaPage() {
             <span className="text-xs text-muted-foreground">
               Clique em um horario para criar
             </span>
-          </div>
+          </div> */}
         </div>
 
         <div className="bg-card rounded-xl border border-border shadow-sm">
@@ -326,7 +357,7 @@ export function AgendaPage() {
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <h2 className="text-lg font-semibold text-foreground min-w-[180px] text-center">
-                {monthLabel}
+                {headerLabel}
               </h2>
               <Button variant="ghost" size="icon" onClick={handleNext}>
                 <ChevronRight className="w-4 h-4" />
@@ -336,57 +367,105 @@ export function AgendaPage() {
               </Button>
               <div className="flex items-center gap-2 sm:ml-4">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
-                <Select
-                  value={selectedBranchId}
-                  onValueChange={setSelectedBranchId}
-                >
-                  <SelectTrigger className="w-full min-w-[180px]">
-                    <SelectValue placeholder="Selecione uma filial" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {company?.branches?.map((branch: any) => (
-                      <SelectItem key={branch.id} value={branch.id.toString()}>
-                        {branch.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {hasMultipleBranches ? (
+                  <Select
+                    value={selectedBranchId}
+                    onValueChange={setSelectedBranchId}
+                  >
+                    <SelectTrigger className="w-full min-w-[180px]">
+                      <SelectValue placeholder="Selecione uma filial" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches.map((branch: any) => (
+                        <SelectItem key={branch.id} value={branch.id.toString()}>
+                          {branch.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="min-w-[180px] rounded-md border border-border bg-muted/50 px-3 py-2 text-sm font-medium text-foreground">
+                    {branchLabel}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
-              {(["day", "week", "month"] as const).map(value => (
+              {(["day", "week"] as const).map(value => (
                 <Button
                   key={value}
-                  variant={view === value ? "default" : "ghost"}
+                  variant="ghost"
                   size="sm"
                   className={cn(
                     "capitalize",
-                    view === value && "bg-background shadow-sm"
+                    view === value
+                      ? "bg-background text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
-                  onClick={() => setView(value)}
+                  onClick={() => {
+                    if (value === "day") {
+                      setCurrentDate(new Date());
+                    }
+                    setView(value);
+                  }}
                 >
-                  {value === "day" ? "Dia" : value === "week" ? "Semana" : "Mes"}
+                  {value === "day" ? "Dia" : "Semana"}
                 </Button>
               ))}
             </div>
           </div>
 
           {isLoading ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">
-              Carregando agendamentos...
+            <div className="p-6">
+              <div className="rounded-xl border border-border bg-muted/30 p-6">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm font-medium">
+                    Carregando agendamentos...
+                  </span>
+                </div>
+                <div className="mt-6 space-y-3 animate-pulse">
+                  <div className="h-3 w-40 rounded-full bg-muted" />
+                  <div className="h-10 rounded-lg bg-muted/70" />
+                  <div className="h-10 rounded-lg bg-muted/70" />
+                </div>
+              </div>
             </div>
           ) : error ? (
-            <div className="p-6 text-center text-sm text-destructive">
-              {error}
+            <div className="p-6">
+              <div className="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
+                <AlertTriangle className="mx-auto h-6 w-6 text-destructive" />
+                <p className="mt-2 text-sm font-semibold text-destructive">
+                  Erro ao carregar agendamentos
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">{error}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={handleAppointmentUpdated}
+                >
+                  Tentar novamente
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <div className="min-w-[800px]">
-                <div className="grid grid-cols-8 border-b border-border">
+              <div
+                className={cn(
+                  view === "day" ? "min-w-[360px]" : "min-w-[800px]"
+                )}
+              >
+                <div
+                  className={cn(
+                    "border-b border-border grid",
+                    view === "day" ? "grid-cols-2" : "grid-cols-8"
+                  )}
+                >
                   <div className="p-3 text-center text-sm font-medium text-muted-foreground border-r border-border">
                     Hora
                   </div>
-                  {weekDays.map(date => {
+                  {viewDays.map(date => {
                     const dayKey = formatDayKey(date);
                     const isToday = dayKey === todayKey;
                     return (
@@ -417,12 +496,15 @@ export function AgendaPage() {
                   {HOURS.map(hour => (
                     <div
                       key={hour}
-                      className="grid grid-cols-8 border-b border-border last:border-b-0"
+                      className={cn(
+                        "border-b border-border last:border-b-0 grid",
+                        view === "day" ? "grid-cols-2" : "grid-cols-8"
+                      )}
                     >
                       <div className="p-2 text-center text-sm text-muted-foreground border-r border-border h-16 flex items-start justify-center">
                         {hour.toString().padStart(2, "0")}:00
                       </div>
-                      {weekDays.map(date => {
+                      {viewDays.map(date => {
                         const dayKey = formatDayKey(date);
                         const isToday = dayKey === todayKey;
                         const slotEvents =
