@@ -348,3 +348,22 @@ body {
     }
   }
 }
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+}
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  .btn-gradient {
+    @apply bg-gradient-to-r from-gray-900 to-black text-white hover:from-black hover:to-gray-900;
+  }
+
+  .card-hover {
+    @apply transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg;
+  }
+}

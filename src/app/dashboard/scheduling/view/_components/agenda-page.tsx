@@ -29,13 +29,12 @@ import { AppointmentDetailsDialog } from "@/app/dashboard/scheduling/view/_compo
 import { CreateAppointmentDialog } from "@/app/dashboard/scheduling/view/_components/create-appointment-dialog";
 import { Appointment } from "../../../../../../types/appointment";
 
-
 const DAYS_OF_WEEK = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
 const SLOT_START = 6;
 const SLOT_END = 20;
 const HOURS = Array.from(
   { length: SLOT_END - SLOT_START + 1 },
-  (_, i) => i + SLOT_START
+  (_, i) => i + SLOT_START,
 );
 const SLOT_HEIGHT = 64;
 const EVENT_COLORS = [
@@ -58,7 +57,7 @@ export function AgendaPage() {
   const [view, setView] = useState<"day" | "week">("week");
   const { company, loading: loadingCompany } = useGetCompany();
   const [selectedBranchId, setSelectedBranchId] = useState<string>(
-    company?.branches?.[0]?.id?.toString() || ""
+    company?.branches?.[0]?.id?.toString() || "",
   );
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
@@ -213,9 +212,7 @@ export function AgendaPage() {
   const events = useMemo(() => {
     return appointments.map(appointment => {
       const start = new Date(appointment.start_time);
-      const end = appointment.end_time
-        ? new Date(appointment.end_time)
-        : null;
+      const end = appointment.end_time ? new Date(appointment.end_time) : null;
       const service = serviceMap.get(appointment.service_id);
       const client = clientMap.get(appointment.client_id);
       const durationMinutes =
@@ -229,9 +226,7 @@ export function AgendaPage() {
         id: appointment.id,
         appointment,
         title: service?.name || "Servico",
-        clientName: client
-          ? `${client.name} ${client.surname}`
-          : "Cliente",
+        clientName: client ? `${client.name} ${client.surname}` : "Cliente",
         startHour: start.getHours(),
         startMinute: start.getMinutes(),
         durationMinutes,
@@ -246,7 +241,8 @@ export function AgendaPage() {
     const map = new Map<string, Map<number, typeof events>>();
     events.forEach(event => {
       if (event.startHour < SLOT_START || event.startHour > SLOT_END) return;
-      const daySlots = map.get(event.dayKey) ?? new Map<number, typeof events>();
+      const daySlots =
+        map.get(event.dayKey) ?? new Map<number, typeof events>();
       const slotEvents = daySlots.get(event.startHour) ?? [];
       slotEvents.push(event);
       daySlots.set(event.startHour, slotEvents);
@@ -377,7 +373,10 @@ export function AgendaPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {branches.map((branch: any) => (
-                        <SelectItem key={branch.id} value={branch.id.toString()}>
+                        <SelectItem
+                          key={branch.id}
+                          value={branch.id.toString()}
+                        >
                           {branch.name}
                         </SelectItem>
                       ))}
@@ -400,7 +399,7 @@ export function AgendaPage() {
                     "capitalize",
                     view === value
                       ? "bg-background text-foreground shadow-sm border border-border"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                   onClick={() => {
                     if (value === "day") {
@@ -453,13 +452,13 @@ export function AgendaPage() {
             <div className="overflow-x-auto">
               <div
                 className={cn(
-                  view === "day" ? "min-w-[360px]" : "min-w-[800px]"
+                  view === "day" ? "min-w-[360px]" : "min-w-[800px]",
                 )}
               >
                 <div
                   className={cn(
                     "border-b border-border grid",
-                    view === "day" ? "grid-cols-2" : "grid-cols-8"
+                    view === "day" ? "grid-cols-2" : "grid-cols-8",
                   )}
                 >
                   <div className="p-3 text-center text-sm font-medium text-muted-foreground border-r border-border">
@@ -473,7 +472,7 @@ export function AgendaPage() {
                         key={dayKey}
                         className={cn(
                           "p-3 text-center border-r border-border last:border-r-0",
-                          isToday && "bg-primary/5"
+                          isToday && "bg-primary/5",
                         )}
                       >
                         <p className="text-sm font-medium text-muted-foreground">
@@ -482,7 +481,7 @@ export function AgendaPage() {
                         <p
                           className={cn(
                             "text-lg font-semibold",
-                            isToday ? "text-primary" : "text-foreground"
+                            isToday ? "text-primary" : "text-foreground",
                           )}
                         >
                           {date.getDate()}
@@ -498,7 +497,7 @@ export function AgendaPage() {
                       key={hour}
                       className={cn(
                         "border-b border-border last:border-b-0 grid",
-                        view === "day" ? "grid-cols-2" : "grid-cols-8"
+                        view === "day" ? "grid-cols-2" : "grid-cols-8",
                       )}
                     >
                       <div className="p-2 text-center text-sm text-muted-foreground border-r border-border h-16 flex items-start justify-center">
@@ -515,7 +514,7 @@ export function AgendaPage() {
                             key={`${dayKey}-${hour}`}
                             className={cn(
                               "border-r border-border last:border-r-0 h-16 relative",
-                              isToday && "bg-primary/5"
+                              isToday && "bg-primary/5",
                             )}
                             onClick={() => handleSlotClick(date, hour)}
                           >
@@ -531,18 +530,22 @@ export function AgendaPage() {
                                   : "4px";
                               const height = Math.max(
                                 24,
-                                (event.durationMinutes / 60) * SLOT_HEIGHT - 4
+                                (event.durationMinutes / 60) * SLOT_HEIGHT - 4,
                               );
+                              const isCompact = height < 44;
 
                               return (
                                 <div
                                   key={event.id}
                                   className={cn(
-                                    "absolute rounded-lg p-2 text-xs cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md",
+                                    "absolute rounded-lg cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md overflow-hidden",
                                     event.isCancelled
                                       ? "bg-muted text-muted-foreground line-through"
                                       : event.colorClass,
-                                    !event.isCancelled && "text-white"
+                                    !event.isCancelled && "text-white",
+                                    isCompact
+                                      ? "p-1 text-[10px]"
+                                      : "p-2 text-xs",
                                   )}
                                   style={{
                                     height: `${height}px`,
@@ -560,12 +563,14 @@ export function AgendaPage() {
                                     handleAppointmentClick(event.appointment);
                                   }}
                                 >
-                                  <p className="font-medium truncate">
+                                  <p className="font-medium truncate leading-tight">
                                     {event.title}
                                   </p>
-                                  <p className="opacity-80 truncate">
-                                    {event.clientName}
-                                  </p>
+                                  {!isCompact && (
+                                    <p className="opacity-80 truncate leading-tight">
+                                      {event.clientName}
+                                    </p>
+                                  )}
                                 </div>
                               );
                             })}

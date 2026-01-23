@@ -32,7 +32,7 @@ const CtaSection = () => (
         variants={fadeInUp}
         className="flex flex-col sm:flex-row items-center justify-center gap-4"
       >
-        <Link href="/empresa/cadastro">
+        <Link href="/auth/register-company">
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button size="lg" className="text-lg px-8 h-14 btn-gradient">
               <Building2 className="w-5 h-5 mr-2" />
@@ -40,18 +40,7 @@ const CtaSection = () => (
             </Button>
           </motion.div>
         </Link>
-        <Link href="/agendar">
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              size="lg"
-              variant="outline"
-              className="hover:text-black/70 text-lg px-8 h-14"
-            >
-              Testar agendamento
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </motion.div>
-        </Link>
+      
       </motion.div>
     </div>
   </motion.section>

@@ -85,7 +85,7 @@ const PricingSection = () => (
                     </li>
                   ))}
                 </ul>
-                <Link href="/empresa/cadastro">
+                <Link href="/auth/register-company">
                   <Button
                     className={`w-full ${plan.highlighted ? "btn-gradient" : ""}`}
                     variant={plan.highlighted ? "default" : "outline"}

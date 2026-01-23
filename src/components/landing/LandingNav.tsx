@@ -50,12 +50,7 @@ const LandingNav = () => (
           </a>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/empresa/login">
-            <Button variant="outline" size="sm" className="hover:text-black/50">
-              Entrar
-            </Button>
-          </Link>
-          <Link href="/empresa/cadastro">
+          <Link href="/auth/register-company">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button size="sm" className="btn-gradient">
                 Criar conta

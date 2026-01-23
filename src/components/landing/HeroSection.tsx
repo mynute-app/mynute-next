@@ -42,7 +42,9 @@ const HeroSection = () => (
           className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-6"
         >
           Agendamentos Inteligentes para{" "}
-          <span className="text-gradient">Negócios Modernos</span>
+          <span className="bg-[linear-gradient(90deg,hsl(221.2_83.2%_53.3%),hsl(262_83%_58%))] bg-clip-text text-transparent">
+            Negócios Modernos
+          </span>
         </motion.h1>
 
         <motion.p
@@ -58,23 +60,19 @@ const HeroSection = () => (
           variants={fadeInUp}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <Link href="/agendar">
+          {/* <Link href="/agendar">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button size="lg" className="btn-gradient text-lg px-8 h-14">
                 <Calendar className="w-5 h-5 mr-2" />
                 Agendar agora
               </Button>
             </motion.div>
-          </Link>
-          <Link href="/empresa/cadastro">
+          </Link> */}
+          <Link href="/auth/register-company">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-lg px-8 h-14 hover:text-black/50"
-              >
+              <Button size="lg" className="btn-gradient text-lg px-8 h-14">
                 Sou empresa
-                <ArrowRight className="w-5 h-5 ml-2" />
+                {/* <ArrowRight className="w-5 h-5 ml-2" /> */}
               </Button>
             </motion.div>
           </Link>
@@ -85,15 +83,15 @@ const HeroSection = () => (
           className="mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-sm text-muted-foreground"
         >
           <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-success" />
+            <CheckCircle className="w-4 h-4 text-green-600" />
             <span>Setup em 5 minutos</span>
           </div>
           <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-success" />
+            <CheckCircle className="w-4 h-4 text-green-600" />
             <span>Plano grátis disponível</span>
           </div>
           <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-success" />
+            <CheckCircle className="w-4 h-4 text-green-600" />
             <span>Suporte humanizado</span>
           </div>
         </motion.div>
