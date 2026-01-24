@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const host = req.headers.get("host") || "";
+    const rawHost = req.headers.get("host") || "";
+    const host = rawHost.split(":")[0];
     const subdomain = host.split(".")[0];
 
     if (!subdomain) {

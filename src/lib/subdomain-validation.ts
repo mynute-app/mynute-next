@@ -131,7 +131,7 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
     };
   }
 
-  // Buscar empresa pelo subdomínio e, se não encontrar, tentar por nome
+  // Buscar empresa apenas pelo subdomínio
   const apiUrl =
     process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 
@@ -143,58 +143,7 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
       },
     );
 
-    if (subdomainRes.ok) {
-      const company = await subdomainRes.json();
-
-      const hasContent =
-        (Array.isArray(company?.services) && company.services.length > 0) ||
-        (Array.isArray(company?.employees) && company.employees.length > 0) ||
-        (Array.isArray(company?.branches) && company.branches.length > 0);
-
-      if (hasContent) {
-        return {
-          success: true,
-          company,
-          subdomain,
-          isMainDomain: false,
-        };
-      }
-
-      // Se o subdomínio veio "vazio", tenta enriquecer pelo nome
-      const nameRes = await fetch(
-        `${apiUrl}/api/company/name/${encodeURIComponent(subdomain)}`,
-        {
-          cache: "no-store",
-        },
-      );
-
-      if (nameRes.ok) {
-        const enriched = await nameRes.json();
-        return {
-          success: true,
-          company: enriched,
-          subdomain,
-          isMainDomain: false,
-        };
-      }
-
-      // Fallback: mantém o resultado do subdomínio mesmo sem conteúdo
-      return {
-        success: true,
-        company,
-        subdomain,
-        isMainDomain: false,
-      };
-    }
-
-    const nameRes = await fetch(
-      `${apiUrl}/api/company/name/${encodeURIComponent(subdomain)}`,
-      {
-        cache: "no-store",
-      },
-    );
-
-    if (!nameRes.ok) {
+    if (!subdomainRes.ok) {
       return {
         success: false,
         error: "company_not_found",
@@ -203,7 +152,7 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
       };
     }
 
-    const company = await nameRes.json();
+    const company = await subdomainRes.json();
 
     return {
       success: true,

@@ -4,7 +4,7 @@ import { auth } from "./auth";
 
 const LOGIN_ROUTES = new Set(["/auth/employee", "/auth/login"]);
 
-export const middleware = auth((req) => {
+export const middleware = auth(async req => {
   if (req.auth && LOGIN_ROUTES.has(req.nextUrl.pathname)) {
     const url = req.nextUrl.clone();
     url.pathname = "/dashboard";

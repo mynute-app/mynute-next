@@ -19,7 +19,8 @@ export const { handlers, auth, signIn } = NextAuth({
             credentials
           );
 
-          const host = req?.headers?.get("host") || "";
+          const rawHost = req?.headers?.get("host") || "";
+          const host = rawHost.split(":")[0];
           const subdomain = host.split(".")[0];
 
           if (!subdomain) {
@@ -102,7 +103,8 @@ export const { handlers, auth, signIn } = NextAuth({
             throw new Error("Email e código são obrigatórios");
           }
 
-          const host = req?.headers?.get("host") || "";
+          const rawHost = req?.headers?.get("host") || "";
+          const host = rawHost.split(":")[0];
           const subdomain = host.split(".")[0];
 
           if (!subdomain) {
