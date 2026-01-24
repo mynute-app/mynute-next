@@ -2,9 +2,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "./auth";
 
-const LOGIN_ROUTES = new Set(["/auth/employee", "/auth/login"]);
+const LOGIN_ROUTES = new Set(["/auth/employee"]);
 
-export const middleware = auth((req) => {
+export const middleware = auth(req => {
   if (req.auth && LOGIN_ROUTES.has(req.nextUrl.pathname)) {
     const url = req.nextUrl.clone();
     url.pathname = "/dashboard";

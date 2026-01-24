@@ -131,7 +131,6 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
     };
   }
 
-  // Buscar empresa pelo subdomínio e, se não encontrar, tentar por nome
   const apiUrl =
     process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 
@@ -142,7 +141,6 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
         cache: "no-store",
       },
     );
-
     if (subdomainRes.ok) {
       const company = await subdomainRes.json();
 
@@ -160,25 +158,6 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
         };
       }
 
-      // Se o subdomínio veio "vazio", tenta enriquecer pelo nome
-      const nameRes = await fetch(
-        `${apiUrl}/api/company/name/${encodeURIComponent(subdomain)}`,
-        {
-          cache: "no-store",
-        },
-      );
-
-      if (nameRes.ok) {
-        const enriched = await nameRes.json();
-        return {
-          success: true,
-          company: enriched,
-          subdomain,
-          isMainDomain: false,
-        };
-      }
-
-      // Fallback: mantém o resultado do subdomínio mesmo sem conteúdo
       return {
         success: true,
         company,
@@ -186,28 +165,9 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
         isMainDomain: false,
       };
     }
-
-    const nameRes = await fetch(
-      `${apiUrl}/api/company/name/${encodeURIComponent(subdomain)}`,
-      {
-        cache: "no-store",
-      },
-    );
-
-    if (!nameRes.ok) {
-      return {
-        success: false,
-        error: "company_not_found",
-        subdomain,
-        isMainDomain: false,
-      };
-    }
-
-    const company = await nameRes.json();
-
     return {
-      success: true,
-      company,
+      success: false,
+      error: "company_not_found",
       subdomain,
       isMainDomain: false,
     };
