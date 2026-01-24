@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { fetchWithCache } from "@/lib/cache/client-request-cache";
 import type {
   BranchAppointmentsResponse,
   BranchAppointmentsParams,
@@ -43,7 +44,7 @@ export function useBranchAppointments({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = async (force = false) => {
     if (!branchId) {
       setError("Branch ID é obrigatório");
       return;
@@ -65,25 +66,31 @@ export function useBranchAppointments({
       if (cancelled !== undefined)
         queryParams.append("cancelled", cancelled.toString());
 
-      const response = await fetch(
-        `/api/branch/${branchId}/appointments?${queryParams.toString()}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+      const cacheKey = `branch-appointments:${branchId}:${queryParams.toString()}`;
+      const appointmentsData = await fetchWithCache(
+        cacheKey,
+        async () => {
+          const response = await fetch(
+            `/api/branch/${branchId}/appointments?${queryParams.toString()}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(
+              errorData.message || "Erro ao buscar agendamentos da filial"
+            );
+          }
+
+          return (await response.json()) as BranchAppointmentsResponse;
+        },
+        { ttlMs: 10 * 1000, force }
       );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "Erro ao buscar agendamentos da filial"
-        );
-      }
-
-      const appointmentsData: BranchAppointmentsResponse =
-        await response.json();
       setData(appointmentsData);
       return appointmentsData;
     } catch (err) {
@@ -104,7 +111,7 @@ export function useBranchAppointments({
   // Busca automática quando o hook é montado (se enabled === true)
   useEffect(() => {
     if (enabled && branchId) {
-      fetchAppointments();
+      fetchAppointments(false);
     }
   }, [branchId, page, pageSize, startDate, endDate, cancelled, enabled]);
 
@@ -119,6 +126,6 @@ export function useBranchAppointments({
     pageSize: data?.page_size || pageSize,
     isLoading,
     error,
-    refetch: fetchAppointments,
+    refetch: () => fetchAppointments(true),
   };
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { decodeJWTToken } from "@/utils/decode-jwt";
+import { fetchWithCache } from "@/lib/cache/client-request-cache";
 
 export interface ServiceAvailabilityParams {
   serviceId: string;
@@ -91,7 +92,10 @@ export const useServiceAvailability = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAvailability = async (params: ServiceAvailabilityParams) => {
+  const fetchAvailability = async (
+    params: ServiceAvailabilityParams,
+    options?: { force?: boolean }
+  ) => {
     try {
       setLoading(true);
       setError(null);
@@ -120,24 +124,32 @@ export const useServiceAvailability = () => {
       }
 
       const url = `/api/service/${serviceId}/availability?${queryParams.toString()}`;
+      const cacheKey = `service-availability:${serviceId}:${companyId}:${queryParams.toString()}`;
+      const data = await fetchWithCache(
+        cacheKey,
+        async () => {
+          const res = await fetch(url, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Company-ID": companyId,
+            },
+            cache: "no-store",
+          });
 
-      const res = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId,
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => null);
+            const errorMessage =
+              errorData?.message ||
+              errorData?.error ||
+              `Erro HTTP: ${res.status}`;
+            throw new Error(errorMessage);
+          }
+
+          return (await res.json()) as ServiceAvailability;
         },
-        cache: "no-store",
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        const errorMessage =
-          errorData?.message || errorData?.error || `Erro HTTP: ${res.status}`;
-        throw new Error(errorMessage);
-      }
-
-      const data: ServiceAvailability = await res.json();
+        { ttlMs: 15 * 1000, force: options?.force }
+      );
       const normalized: ServiceAvailability = {
         ...data,
         available_dates: Array.isArray(data.available_dates)
@@ -189,7 +201,10 @@ export const useServiceAvailabilityAuto = (
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAvailability = async (fetchParams: ServiceAvailabilityParams) => {
+  const fetchAvailability = async (
+    fetchParams: ServiceAvailabilityParams,
+    options?: { force?: boolean }
+  ) => {
     try {
       setLoading(true);
       setError(null);
@@ -209,24 +224,32 @@ export const useServiceAvailabilityAuto = (
       });
 
       const url = `/api/service/${serviceId}/availability?${queryParams.toString()}`;
+      const cacheKey = `service-availability:${serviceId}:${companyId}:${queryParams.toString()}`;
+      const data = await fetchWithCache(
+        cacheKey,
+        async () => {
+          const res = await fetch(url, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Company-ID": companyId,
+            },
+            cache: "no-store",
+          });
 
-      const res = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId,
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => null);
+            const errorMessage =
+              errorData?.message ||
+              errorData?.error ||
+              `Erro HTTP: ${res.status}`;
+            throw new Error(errorMessage);
+          }
+
+          return (await res.json()) as ServiceAvailability;
         },
-        cache: "no-store",
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        const errorMessage =
-          errorData?.message || errorData?.error || `Erro HTTP: ${res.status}`;
-        throw new Error(errorMessage);
-      }
-
-      const data: ServiceAvailability = await res.json();
+        { ttlMs: 15 * 1000, force: options?.force }
+      );
       const normalized: ServiceAvailability = {
         ...data,
         available_dates: Array.isArray(data.available_dates)
@@ -258,7 +281,7 @@ export const useServiceAvailabilityAuto = (
 
   const refetch = () => {
     if (params) {
-      fetchAvailability(params);
+      fetchAvailability(params, { force: true });
     }
   };
 

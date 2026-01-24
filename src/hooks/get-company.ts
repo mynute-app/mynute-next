@@ -3,11 +3,18 @@ import { Company } from "../../types/company";
 
 let companyCache: Company | null = null;
 let companyPromise: Promise<Company> | null = null;
+let companyCacheTimestamp: number | null = null;
+const COMPANY_CACHE_TTL_MS = 60 * 1000;
 
 const getCacheKey = () => {
   if (typeof window === "undefined") return null;
   const host = window.location.hostname || "default";
   return `company_cache:${host}`;
+};
+
+type StoredCompanyCache = {
+  data: Company;
+  ts: number;
 };
 
 const readCachedCompany = () => {
@@ -16,7 +23,11 @@ const readCachedCompany = () => {
   try {
     const raw = window.sessionStorage.getItem(key);
     if (!raw) return null;
-    return JSON.parse(raw) as Company;
+    const parsed = JSON.parse(raw) as StoredCompanyCache | Company;
+    if (parsed && "data" in parsed && "ts" in parsed) {
+      return parsed;
+    }
+    return { data: parsed as Company, ts: 0 };
   } catch {
     return null;
   }
@@ -26,7 +37,11 @@ const writeCachedCompany = (data: Company) => {
   const key = getCacheKey();
   if (!key) return;
   try {
-    window.sessionStorage.setItem(key, JSON.stringify(data));
+    const payload: StoredCompanyCache = {
+      data,
+      ts: Date.now(),
+    };
+    window.sessionStorage.setItem(key, JSON.stringify(payload));
   } catch {}
 };
 
@@ -34,21 +49,26 @@ const hydrateCompanyCache = () => {
   if (companyCache) return companyCache;
   const cached = readCachedCompany();
   if (cached) {
-    companyCache = cached;
+    companyCache = cached.data;
+    companyCacheTimestamp = cached.ts;
   }
   return companyCache;
+};
+
+const isCompanyCacheFresh = () => {
+  if (!companyCache || !companyCacheTimestamp) return false;
+  return Date.now() - companyCacheTimestamp < COMPANY_CACHE_TTL_MS;
 };
 
 const fetchCompanyOnce = (force = false) => {
   if (!force) {
     const cached = hydrateCompanyCache();
-    if (cached) return Promise.resolve(cached);
+    if (cached && isCompanyCacheFresh()) return Promise.resolve(cached);
     if (companyPromise) return companyPromise;
   }
 
   if (companyPromise) return companyPromise;
 
-  companyCache = null;
   companyPromise = fetch("/api/company", { cache: "no-store" })
     .then(async res => {
       if (!res.ok) {
@@ -56,6 +76,7 @@ const fetchCompanyOnce = (force = false) => {
       }
       const data: Company = await res.json();
       companyCache = data;
+      companyCacheTimestamp = Date.now();
       writeCachedCompany(data);
       return data;
     })
@@ -79,6 +100,13 @@ export const useGetCompany = () => {
       setCompany(cached);
       setLoading(false);
       setError(null);
+    }
+
+    const shouldFetch = !cached || !isCompanyCacheFresh();
+    if (!shouldFetch) {
+      return () => {
+        active = false;
+      };
     }
 
     fetchCompanyOnce(true)

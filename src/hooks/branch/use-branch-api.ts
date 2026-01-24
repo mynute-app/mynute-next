@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
+import { fetchWithCache } from "@/lib/cache/client-request-cache";
 import { Branch } from "../../../types/company";
 
 const parseErrorMessage = async (res: Response, fallback: string) => {
@@ -20,19 +21,26 @@ export function useBranchApi() {
    * Busca uma filial por ID
    */
   const fetchBranchById = useCallback(
-    async (id: number | string): Promise<Branch | null> => {
+    async (id: number | string, force = false): Promise<Branch | null> => {
       try {
-        const res = await fetch(`/api/branch/${id}`);
+        const cacheKey = `branch:${id}`;
+        const branchData = await fetchWithCache(
+          cacheKey,
+          async () => {
+            const res = await fetch(`/api/branch/${id}`);
 
-        if (!res.ok) {
-          const message = await parseErrorMessage(
-            res,
-            "Erro ao buscar filial por ID"
-          );
-          throw new Error(message);
-        }
+            if (!res.ok) {
+              const message = await parseErrorMessage(
+                res,
+                "Erro ao buscar filial por ID"
+              );
+              throw new Error(message);
+            }
 
-        const branchData = await res.json();
+            return res.json();
+          },
+          { ttlMs: 30 * 1000, force }
+        );
 
         return {
           ...branchData,

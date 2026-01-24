@@ -60,7 +60,7 @@ export default function YourTeam() {
   const [searchTerm, setSearchTerm] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [activeDialog, setActiveDialog] = useState<MemberDialogKey | null>(
-    null
+    null,
   );
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
   const [selectedMember, setSelectedMember] = useState<Employee | null>(null);
@@ -72,12 +72,12 @@ export default function YourTeam() {
   const { company, loading, refetch } = useGetCompany();
   const employees = useMemo<Employee[]>(
     () => company?.employees ?? [],
-    [company?.employees]
+    [company?.employees],
   );
 
   const { employee: selectedEmployeeData } = useGetEmployeeById(
     selectedMemberId,
-    memberReloadKey
+    memberReloadKey,
   );
 
   const { deleteEmployee, isDeleting } = useDeleteEmployee({
@@ -135,7 +135,7 @@ export default function YourTeam() {
       const role = (employee.role || "").toLowerCase();
       const matchesServices = Array.isArray(employee.services)
         ? employee.services.some(service =>
-            (service.name || "").toLowerCase().includes(normalizedSearch)
+            (service.name || "").toLowerCase().includes(normalizedSearch),
           )
         : false;
 
@@ -198,7 +198,7 @@ export default function YourTeam() {
     <div className="team-page flex min-h-0 flex-1 flex-col bg-background text-foreground">
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="mx-auto w-full max-w-7xl p-6 lg:p-8">
-          <div className="space-y-6 pt-12 lg:pt-0">
+          <div className="space-y-6 pb-12 lg:pt-0">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="page-header mb-0">
                 <h1 className="page-title">Equipe</h1>
@@ -298,7 +298,7 @@ export default function YourTeam() {
                       key={member.id}
                       className={cn(
                         "bg-card rounded-xl border border-border shadow-sm p-5 card-hover",
-                        !isActive && "opacity-60"
+                        !isActive && "opacity-60",
                       )}
                     >
                       <div className="flex items-start gap-4">
@@ -340,7 +340,7 @@ export default function YourTeam() {
                                   <DropdownMenuItem
                                     onSelect={() =>
                                       handleMenuSelect(() =>
-                                        handleOpenDialog(member, "info")
+                                        handleOpenDialog(member, "info"),
                                       )
                                     }
                                   >
@@ -350,7 +350,7 @@ export default function YourTeam() {
                                   <DropdownMenuItem
                                     onSelect={() =>
                                       handleMenuSelect(() =>
-                                        handleOpenDialog(member, "services")
+                                        handleOpenDialog(member, "services"),
                                       )
                                     }
                                   >
@@ -360,7 +360,7 @@ export default function YourTeam() {
                                   <DropdownMenuItem
                                     onSelect={() =>
                                       handleMenuSelect(() =>
-                                        handleOpenDialog(member, "schedule")
+                                        handleOpenDialog(member, "schedule"),
                                       )
                                     }
                                   >
@@ -372,8 +372,8 @@ export default function YourTeam() {
                                       handleMenuSelect(() =>
                                         handleOpenDialog(
                                           member,
-                                          "services-schedule"
-                                        )
+                                          "services-schedule",
+                                        ),
                                       )
                                     }
                                   >
@@ -384,7 +384,7 @@ export default function YourTeam() {
                                   <DropdownMenuItem
                                     onSelect={() =>
                                       handleMenuSelect(() =>
-                                        handleDeleteClick(member)
+                                        handleDeleteClick(member),
                                       )
                                     }
                                     className="text-destructive focus:text-destructive"

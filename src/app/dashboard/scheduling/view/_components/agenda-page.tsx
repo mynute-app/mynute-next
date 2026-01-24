@@ -319,7 +319,7 @@ export function AgendaPage() {
 
   return (
     <PageShell>
-      <div className="space-y-6 pt-12 lg:pt-0">
+      <div className="space-y-6 pb-12 lg:pt-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="page-header mb-0">
             <h1 className="page-title">Agenda</h1>

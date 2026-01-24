@@ -69,7 +69,7 @@ const formatTime = (value: string, timeZone?: string) => {
 };
 
 const resolveAppointmentStatus = (
-  appointment: Appointment
+  appointment: Appointment,
 ): DashboardAppointment["status"] => {
   if (
     appointment.is_cancelled ||
@@ -104,7 +104,7 @@ const DashboardShell = ({ children }: { children: React.ReactNode }) => (
 
 const DashboardSkeleton = () => (
   <DashboardShell>
-    <div className="space-y-6 pt-12 lg:pt-0">
+    <div className="space-y-6 pb-12 lg:pt-0">
       <div className="space-y-3">
         <Skeleton className="h-7 w-40" />
         <Skeleton className="h-4 w-64" />
@@ -213,7 +213,7 @@ export default function DashboardPage() {
     const serviceMap = buildLookupMap<ServiceInfo>(serviceInfo);
     const employeeMap = buildLookupMap<EmployeeInfo>(employeeInfo);
     const branchNameMap = new Map(
-      branches.map(branch => [branch.id, branch.name])
+      branches.map(branch => [branch.id, branch.name]),
     );
 
     return branchAppointments
@@ -315,7 +315,9 @@ export default function DashboardPage() {
         return;
 
       dateInfo.time_slots.forEach(slot => {
-        const slotCount = Array.isArray(slot.employees) ? slot.employees.length : 0;
+        const slotCount = Array.isArray(slot.employees)
+          ? slot.employees.length
+          : 0;
         slotMap.set(slot.time, (slotMap.get(slot.time) ?? 0) + slotCount);
       });
     });
@@ -352,24 +354,24 @@ export default function DashboardPage() {
   const appointmentsEmptyLabel = appointmentsError
     ? "Nao foi possivel carregar os agendamentos"
     : !branchIdForAppointments
-    ? "Selecione uma filial para ver os agendamentos"
-    : undefined;
+      ? "Selecione uma filial para ver os agendamentos"
+      : undefined;
   const appointmentStatsValue =
     appointmentsError || !branchIdForAppointments
       ? "--"
-      : appointmentStats?.total ?? 0;
+      : (appointmentStats?.total ?? 0);
   const appointmentStatsSubtitle = appointmentsError
     ? "Nao foi possivel carregar os agendamentos"
     : !branchIdForAppointments
-    ? "Selecione uma filial para ver os agendamentos"
-    : appointmentStats && appointmentStats.hasFullData
-    ? `${appointmentStats.confirmed} confirmados, ${appointmentStats.pending} pendentes`
-    : "Agendamentos do dia";
+      ? "Selecione uma filial para ver os agendamentos"
+      : appointmentStats && appointmentStats.hasFullData
+        ? `${appointmentStats.confirmed} confirmados, ${appointmentStats.pending} pendentes`
+        : "Agendamentos do dia";
   const upcomingSlotsEmptyLabel = availabilityError
     ? "Nao foi possivel carregar os horarios"
     : !defaultService
-    ? "Cadastre um servico para ver horarios"
-    : "Nenhum horario disponivel hoje";
+      ? "Cadastre um servico para ver horarios"
+      : "Nenhum horario disponivel hoje";
   const upcomingSlotsContextLabel = defaultService
     ? `Servico base: ${defaultService.name}`
     : undefined;
@@ -377,7 +379,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardShell>
-      <div className="space-y-8 pt-12 lg:pt-0">
+      <div className="space-y-8 pb-12 lg:pt-0">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="page-header mb-0">
             <h1 className="page-title">Dashboard</h1>
@@ -410,7 +412,7 @@ export default function DashboardPage() {
                   onClick={() => setSelectedBranchId("all")}
                   className={cn(
                     "gap-2",
-                    selectedBranchId === "all" && "bg-accent"
+                    selectedBranchId === "all" && "bg-accent",
                   )}
                 >
                   <Building2 className="h-4 w-4" />
@@ -428,7 +430,7 @@ export default function DashboardPage() {
                       onClick={() => setSelectedBranchId(branch.id)}
                       className={cn(
                         "gap-2",
-                        selectedBranchId === branch.id && "bg-accent"
+                        selectedBranchId === branch.id && "bg-accent",
                       )}
                     >
                       <Building2 className="h-4 w-4" />

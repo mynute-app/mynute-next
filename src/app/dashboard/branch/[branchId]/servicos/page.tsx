@@ -69,7 +69,7 @@ export default function BranchServicesPage() {
   const services = useMemo(
     () =>
       Array.isArray(company?.services) ? (company.services as Service[]) : [],
-    [company?.services]
+    [company?.services],
   );
 
   const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
@@ -80,22 +80,22 @@ export default function BranchServicesPage() {
       branchDetails ??
       company?.branches?.find(item => String(item.id) === branchId) ??
       null,
-    [branchDetails, company?.branches, branchId]
+    [branchDetails, company?.branches, branchId],
   );
 
   const [searchTerm, setSearchTerm] = useState("");
   const [enabledServiceIds, setEnabledServiceIds] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [initialServiceIds, setInitialServiceIds] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [isSaving, setIsSaving] = useState(false);
   const [initializedBranchId, setInitializedBranchId] = useState("");
 
   const normalizedServiceIds = useMemo(
     () => normalizeServiceIds(branch?.services),
-    [branch?.services]
+    [branch?.services],
   );
 
   useEffect(() => {
@@ -164,9 +164,9 @@ export default function BranchServicesPage() {
       services.reduce(
         (total, service) =>
           total + (enabledServiceIds.has(String(service.id)) ? 1 : 0),
-        0
+        0,
       ),
-    [services, enabledServiceIds]
+    [services, enabledServiceIds],
   );
 
   const inactiveCount = Math.max(services.length - activeCount, 0);
@@ -206,7 +206,7 @@ export default function BranchServicesPage() {
       .filter(
         service =>
           enabledServiceIds.has(String(service.id)) &&
-          !initialServiceIds.has(String(service.id))
+          !initialServiceIds.has(String(service.id)),
       )
       .map(service => service.id);
 
@@ -214,7 +214,7 @@ export default function BranchServicesPage() {
       .filter(
         service =>
           initialServiceIds.has(String(service.id)) &&
-          !enabledServiceIds.has(String(service.id))
+          !enabledServiceIds.has(String(service.id)),
       )
       .map(service => service.id);
 
@@ -228,7 +228,7 @@ export default function BranchServicesPage() {
     ]);
 
     const failed = results.some(
-      result => result.status === "rejected" || result.value === false
+      result => result.status === "rejected" || result.value === false,
     );
 
     if (failed) {
@@ -239,7 +239,7 @@ export default function BranchServicesPage() {
         variant: "destructive",
       });
     } else {
-      const refreshedBranch = await fetchBranchById(branchId);
+      const refreshedBranch = await fetchBranchById(branchId, true);
       if (refreshedBranch) {
         setBranchDetails(refreshedBranch);
       }
@@ -264,7 +264,7 @@ export default function BranchServicesPage() {
 
   return (
     <PageShell>
-      <div className="space-y-6 pt-12 lg:pt-0">
+      <div className="space-y-6 pb-12 lg:pt-0">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/dashboard/branch">

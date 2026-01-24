@@ -27,8 +27,7 @@ export default function AccountSettings() {
   const [isSending, setIsSending] = useState(false);
   const [successEmail, setSuccessEmail] = useState<string | null>(null);
 
-  const accessToken = (session as { accessToken?: string } | null)
-    ?.accessToken;
+  const accessToken = (session as { accessToken?: string } | null)?.accessToken;
   const decoded = useMemo(
     () => (accessToken ? decodeJWTToken(accessToken) : null),
     [accessToken],
@@ -84,9 +83,7 @@ export default function AccountSettings() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.error || "Erro ao solicitar reset de senha",
-        );
+        throw new Error(errorData.error || "Erro ao solicitar reset de senha");
       }
 
       setSuccessEmail(email);
@@ -101,7 +98,9 @@ export default function AccountSettings() {
       toast({
         title: "Erro ao resetar senha",
         description:
-          error instanceof Error ? error.message : "Tente novamente mais tarde.",
+          error instanceof Error
+            ? error.message
+            : "Tente novamente mais tarde.",
         variant: "destructive",
       });
     } finally {
@@ -113,7 +112,7 @@ export default function AccountSettings() {
     <div className="branding-page flex min-h-0 flex-1 flex-col bg-background text-foreground">
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="mx-auto w-full max-w-5xl p-6 lg:p-8">
-          <div className="space-y-6 pt-12 lg:pt-0">
+          <div className="space-y-6 pb-12 lg:pt-0">
             <div className="page-header">
               <h1 className="page-title">Conta e seguranca</h1>
               <p className="page-description">
