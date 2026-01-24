@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,101 +76,78 @@ export function ForgotPasswordForm() {
 
   if (loading) {
     return (
-      <Card className="max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            <Skeleton className="h-6 w-48" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-10 w-full" />
-          </div>
+      <div className="grid gap-4">
+        <div className="flex items-center gap-2">
+          <Mail className="h-5 w-5" />
+          <Skeleton className="h-6 w-48" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-16" />
           <Skeleton className="h-10 w-full" />
-        </CardContent>
-      </Card>
+        </div>
+        <Skeleton className="h-10 w-full" />
+      </div>
     );
   }
 
   if (success) {
     return (
-      <Card className="max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-green-600">
-            <CheckCircle className="h-5 w-5" />
-            E-mail Enviado!
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-center space-y-4">
-            <p className="text-muted-foreground">
-              Enviamos uma nova senha para <strong>{getValues("email")}</strong>
-              .
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Verifique sua caixa de entrada e use a nova senha para fazer
-              login.
-            </p>
-            <Link href="/auth/employee">
-              <Button className="w-full">Voltar para Login</Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 text-center">
+        <div className="flex items-center justify-center gap-2 text-green-600">
+          <CheckCircle className="h-5 w-5" />
+          <span className="text-base font-semibold">E-mail enviado!</span>
+        </div>
+        <p className="text-muted-foreground">
+          Enviamos uma nova senha para <strong>{getValues("email")}</strong>.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Verifique sua caixa de entrada e use a nova senha para fazer login.
+        </p>
+        <Link href="/auth/employee">
+          <Button className="w-full">Voltar para Login</Button>
+        </Link>
+      </div>
     );
   }
 
   return (
-    <Card className="max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Mail className="h-5 w-5" />
-          Esqueceu sua senha?
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Digite seu e-mail e enviaremos uma nova senha temporária.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu.email@empresa.com"
-              {...register("email")}
-              className={errors.email ? "border-red-500" : ""}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
-          </div>
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Enviando..." : "Enviar Nova Senha"}
-          </Button>
-        </form>
-
-        <div className="mt-4 text-center">
-          <Link
-            href="/auth/employee"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar para Login
-          </Link>
+    <div className="grid gap-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">E-mail</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="seu.email@empresa.com"
+            {...register("email")}
+            className={errors.email ? "border-red-500" : ""}
+          />
+          {errors.email && (
+            <p className="text-sm text-red-500">{errors.email.message}</p>
+          )}
         </div>
 
-        <Alert className="mt-4">
-          <AlertDescription>
-            Você receberá uma senha temporária. Lembre-se de alterá-la após
-            fazer login.
-          </AlertDescription>
-        </Alert>
-      </CardContent>
-    </Card>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Enviando..." : "Enviar Nova Senha"}
+        </Button>
+      </form>
+
+      <div className="text-center">
+        <Link
+          href="/auth/employee"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar para Login
+        </Link>
+      </div>
+
+      <Alert>
+        <AlertDescription>
+          Você receberá uma senha temporária. Lembre-se de alterá-la após fazer
+          login.
+        </AlertDescription>
+      </Alert>
+    </div>
   );
 }
