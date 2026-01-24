@@ -12,7 +12,6 @@ import {
   KeyRound,
 } from "lucide-react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -105,193 +104,172 @@ export function ChangePasswordForm() {
 
   if (loading) {
     return (
-      <Card className="mx-auto max-w-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <KeyRound className="h-5 w-5" />
-            <Skeleton className="h-6 w-44" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-40" />
-            <Skeleton className="h-10 w-full" />
-          </div>
+      <div className="grid gap-4">
+        <div className="flex items-center gap-2">
+          <KeyRound className="h-5 w-5" />
+          <Skeleton className="h-6 w-44" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-16" />
           <Skeleton className="h-10 w-full" />
-        </CardContent>
-      </Card>
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <Skeleton className="h-10 w-full" />
+      </div>
     );
   }
 
   if (success) {
     return (
-      <Card className="mx-auto max-w-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-green-600">
-            <CheckCircle className="h-5 w-5" />
-            Senha atualizada!
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-center">
-          <p className="text-muted-foreground">
-            A nova senha foi salva para <strong>{getValues("email")}</strong>.
-          </p>
-          <Link href="/auth/employee">
-            <Button className="w-full">Voltar para Login</Button>
-          </Link>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 text-center">
+        <div className="flex items-center justify-center gap-2 text-green-600">
+          <CheckCircle className="h-5 w-5" />
+          <span className="text-base font-semibold">Senha atualizada!</span>
+        </div>
+        <p className="text-muted-foreground">
+          A nova senha foi salva para <strong>{getValues("email")}</strong>.
+        </p>
+        <Link href="/auth/employee">
+          <Button className="w-full">Voltar para Login</Button>
+        </Link>
+      </div>
     );
   }
 
   return (
-    <Card className="mx-auto max-w-md">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <KeyRound className="h-5 w-5" />
-          Atualizar senha temporaria
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Use a senha recebida no e-mail para criar uma nova senha.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu.email@empresa.com"
-              {...register("email")}
-              className={errors.email ? "border-red-500" : ""}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="currentPassword">Senha temporaria</Label>
-            <div className="relative">
-              <Input
-                id="currentPassword"
-                type={showCurrent ? "text" : "password"}
-                {...register("currentPassword")}
-                className={
-                  errors.currentPassword ? "border-red-500 pr-10" : "pr-10"
-                }
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
-                onClick={() => setShowCurrent(prev => !prev)}
-              >
-                {showCurrent ? (
-                  <EyeOffIcon className="h-5 w-5" />
-                ) : (
-                  <EyeIcon className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-            {errors.currentPassword && (
-              <p className="text-sm text-red-500">
-                {errors.currentPassword.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="newPassword">Nova senha</Label>
-            <div className="relative">
-              <Input
-                id="newPassword"
-                type={showNew ? "text" : "password"}
-                {...register("newPassword")}
-                className={
-                  errors.newPassword ? "border-red-500 pr-10" : "pr-10"
-                }
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
-                onClick={() => setShowNew(prev => !prev)}
-              >
-                {showNew ? (
-                  <EyeOffIcon className="h-5 w-5" />
-                ) : (
-                  <EyeIcon className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-            {errors.newPassword && (
-              <p className="text-sm text-red-500">{errors.newPassword.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
-            <div className="relative">
-              <Input
-                id="confirmPassword"
-                type={showConfirm ? "text" : "password"}
-                {...register("confirmPassword")}
-                className={
-                  errors.confirmPassword ? "border-red-500 pr-10" : "pr-10"
-                }
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
-                onClick={() => setShowConfirm(prev => !prev)}
-              >
-                {showConfirm ? (
-                  <EyeOffIcon className="h-5 w-5" />
-                ) : (
-                  <EyeIcon className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <p className="text-sm text-red-500">
-                {errors.confirmPassword.message}
-              </p>
-            )}
-          </div>
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Salvando..." : "Atualizar senha"}
-          </Button>
-        </form>
-
-        <div className="mt-4 text-center">
-          <Link
-            href="/auth/employee"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar para Login
-          </Link>
+    <div className="grid gap-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">E-mail</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="seu.email@empresa.com"
+            {...register("email")}
+            className={errors.email ? "border-red-500" : ""}
+          />
+          {errors.email && (
+            <p className="text-sm text-red-500">{errors.email.message}</p>
+          )}
         </div>
 
-        <Alert className="mt-4">
-          <AlertDescription>
-            Depois de atualizar sua senha, use a nova senha para entrar.
-          </AlertDescription>
-        </Alert>
-      </CardContent>
-    </Card>
+        <div className="space-y-2">
+          <Label htmlFor="currentPassword">Senha temporaria</Label>
+          <div className="relative">
+            <Input
+              id="currentPassword"
+              type={showCurrent ? "text" : "password"}
+              {...register("currentPassword")}
+              className={
+                errors.currentPassword ? "border-red-500 pr-10" : "pr-10"
+              }
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
+              onClick={() => setShowCurrent(prev => !prev)}
+            >
+              {showCurrent ? (
+                <EyeOffIcon className="h-5 w-5" />
+              ) : (
+                <EyeIcon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          {errors.currentPassword && (
+            <p className="text-sm text-red-500">
+              {errors.currentPassword.message}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="newPassword">Nova senha</Label>
+          <div className="relative">
+            <Input
+              id="newPassword"
+              type={showNew ? "text" : "password"}
+              {...register("newPassword")}
+              className={errors.newPassword ? "border-red-500 pr-10" : "pr-10"}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
+              onClick={() => setShowNew(prev => !prev)}
+            >
+              {showNew ? (
+                <EyeOffIcon className="h-5 w-5" />
+              ) : (
+                <EyeIcon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          {errors.newPassword && (
+            <p className="text-sm text-red-500">{errors.newPassword.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              type={showConfirm ? "text" : "password"}
+              {...register("confirmPassword")}
+              className={
+                errors.confirmPassword ? "border-red-500 pr-10" : "pr-10"
+              }
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
+              onClick={() => setShowConfirm(prev => !prev)}
+            >
+              {showConfirm ? (
+                <EyeOffIcon className="h-5 w-5" />
+              ) : (
+                <EyeIcon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <p className="text-sm text-red-500">
+              {errors.confirmPassword.message}
+            </p>
+          )}
+        </div>
+
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Salvando..." : "Atualizar senha"}
+        </Button>
+      </form>
+
+      <div className="text-center">
+        <Link
+          href="/auth/employee"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar para Login
+        </Link>
+      </div>
+
+      <Alert>
+        <AlertDescription>
+          Depois de atualizar sua senha, use a nova senha para entrar.
+        </AlertDescription>
+      </Alert>
+    </div>
   );
 }

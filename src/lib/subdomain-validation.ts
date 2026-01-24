@@ -108,8 +108,7 @@ function isMainDomain(host: string): boolean {
  * @returns Objeto com os dados da empresa ou erro
  */
 export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidationResponse> {
-  const headerList = await headers();
-  const host = headerList.get("host") || "";
+  const host = (await headers()).get("host") || "";
 
   // Verifica se é o domínio principal
   if (isMainDomain(host)) {
@@ -132,20 +131,70 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
     };
   }
 
-  // Buscar empresa pelo subdomínio usando a rota /api/company/name
-  // que já faz todas as tentativas de variações de nome
+  // Buscar empresa pelo subdomínio e, se não encontrar, tentar por nome
   const apiUrl =
     process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 
   try {
-    const res = await fetch(
+    const subdomainRes = await fetch(
+      `${apiUrl}/api/company/subdomain/${encodeURIComponent(subdomain)}`,
+      {
+        cache: "no-store",
+      },
+    );
+
+    if (subdomainRes.ok) {
+      const company = await subdomainRes.json();
+
+      const hasContent =
+        (Array.isArray(company?.services) && company.services.length > 0) ||
+        (Array.isArray(company?.employees) && company.employees.length > 0) ||
+        (Array.isArray(company?.branches) && company.branches.length > 0);
+
+      if (hasContent) {
+        return {
+          success: true,
+          company,
+          subdomain,
+          isMainDomain: false,
+        };
+      }
+
+      // Se o subdomínio veio "vazio", tenta enriquecer pelo nome
+      const nameRes = await fetch(
+        `${apiUrl}/api/company/name/${encodeURIComponent(subdomain)}`,
+        {
+          cache: "no-store",
+        },
+      );
+
+      if (nameRes.ok) {
+        const enriched = await nameRes.json();
+        return {
+          success: true,
+          company: enriched,
+          subdomain,
+          isMainDomain: false,
+        };
+      }
+
+      // Fallback: mantém o resultado do subdomínio mesmo sem conteúdo
+      return {
+        success: true,
+        company,
+        subdomain,
+        isMainDomain: false,
+      };
+    }
+
+    const nameRes = await fetch(
       `${apiUrl}/api/company/name/${encodeURIComponent(subdomain)}`,
       {
         cache: "no-store",
-      }
+      },
     );
 
-    if (!res.ok) {
+    if (!nameRes.ok) {
       return {
         success: false,
         error: "company_not_found",
@@ -154,7 +203,7 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
       };
     }
 
-    const company = await res.json();
+    const company = await nameRes.json();
 
     return {
       success: true,
