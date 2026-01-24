@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { PublicCompany } from "../../types/public-company";
+import { fetchWithCache } from "@/lib/cache/client-request-cache";
 
 type Options = {
   // Optional explicit name. If omitted, derives from window.location.hostname
@@ -31,7 +32,7 @@ export function useCompanyByName(opts: Options = {}) {
     return deriveNameFromHost(window.location.hostname);
   }, [providedName]);
 
-  const fetchCompany = useCallback(async () => {
+  const fetchCompany = useCallback(async (force = false) => {
     if (!effectiveName) {
       setError(
         "Nome da empresa ausente. Forneça 'name' ou acesse via subdomínio válido."
@@ -42,19 +43,26 @@ export function useCompanyByName(opts: Options = {}) {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(
-        `/api/company/name/${encodeURIComponent(effectiveName)}`,
-        { cache: "no-store" }
+      const cacheKey = `company-by-name:${effectiveName.toLowerCase()}`;
+      const data = await fetchWithCache(
+        cacheKey,
+        async () => {
+          const res = await fetch(
+            `/api/company/name/${encodeURIComponent(effectiveName)}`,
+            { cache: "no-store" }
+          );
+          if (!res.ok) {
+            let message = `Erro ao buscar empresa: ${res.status}`;
+            try {
+              const errorData = await res.json();
+              message = errorData?.error || message;
+            } catch {}
+            throw new Error(message);
+          }
+          return (await res.json()) as PublicCompany;
+        },
+        { ttlMs: 5 * 60 * 1000, force }
       );
-      if (!res.ok) {
-        let message = `Erro ao buscar empresa: ${res.status}`;
-        try {
-          const data = await res.json();
-          message = data?.error || message;
-        } catch {}
-        throw new Error(message);
-      }
-      const data: PublicCompany = await res.json();
       setCompany(data);
     } catch (e) {
       setCompany(null);
@@ -68,7 +76,7 @@ export function useCompanyByName(opts: Options = {}) {
     if (disabled) return;
     // Avoid running on SSR when name needs host
     if (providedName || typeof window !== "undefined") {
-      void fetchCompany();
+      void fetchCompany(false);
     }
   }, [fetchCompany, providedName, disabled]);
 
@@ -76,7 +84,7 @@ export function useCompanyByName(opts: Options = {}) {
     company,
     loading,
     error,
-    refetch: fetchCompany,
+    refetch: () => fetchCompany(true),
     name: effectiveName,
   } as const;
 }

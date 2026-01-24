@@ -239,7 +239,7 @@ export default function BranchServicesPage() {
         variant: "destructive",
       });
     } else {
-      const refreshedBranch = await fetchBranchById(branchId);
+      const refreshedBranch = await fetchBranchById(branchId, true);
       if (refreshedBranch) {
         setBranchDetails(refreshedBranch);
       }

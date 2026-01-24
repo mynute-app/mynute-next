@@ -222,7 +222,7 @@ export default function BranchEquipePage() {
         variant: "destructive",
       });
     } else {
-      const refreshedBranch = await fetchBranchById(branchId);
+      const refreshedBranch = await fetchBranchById(branchId, true);
       if (refreshedBranch) {
         setBranchDetails(refreshedBranch);
       }
