@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { autoLinkService } from "@/lib/services/auto-link-service";
+import { ServiceDescription } from "@/components/services/service-description";
 import {
   Briefcase,
   Clock,
@@ -313,15 +314,21 @@ export const ServicesPage = () => {
                           </div>
                         </div>
 
-                        <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
+                        <div className="mb-4">
                           {service.description ? (
-                            service.description
+                            <ServiceDescription
+                              description={service.description}
+                              maxItemsCollapsed={2}
+                              introClassName="text-sm text-muted-foreground"
+                              listClassName="text-sm text-muted-foreground"
+                              toggleClassName="text-xs text-muted-foreground"
+                            />
                           ) : (
-                            <span className="italic">
+                            <span className="italic text-sm text-muted-foreground">
                               Nenhuma descrição cadastrada.
                             </span>
                           )}
-                        </p>
+                        </div>
 
                         <div className="mb-4 flex items-center gap-4">
                           <div className="flex items-center gap-1 text-sm">

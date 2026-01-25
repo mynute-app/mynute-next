@@ -22,6 +22,7 @@ import type { Service } from "../../../../types/company";
 import { ClientVerifyCodeDialog } from "./client-verify-code-dialog";
 import { decodeJWTToken } from "@/utils/decode-jwt";
 import { formatPhone } from "@/utils/format-cnpj";
+import { ServiceDescription } from "@/components/services/service-description";
 
 interface ClientDetailsFormProps {
   service: Service;
@@ -335,7 +336,7 @@ export function ClientDetailsForm({
   };
 
   const formatTime = (timeStr: string) => {
-    return timeStr.slice(0, 5); 
+    return timeStr.slice(0, 5);
   };
 
   return (
@@ -621,12 +622,12 @@ export function ClientDetailsForm({
           </Card>
         </div>
 
-        {/* Resumo do agendamento - Apenas Desktop */}
+        {/* Resumo do servico - Apenas Desktop */}
         <div className="hidden lg:block space-y-4">{renderSummaryCard()}</div>
       </div>
 
       {/* Botão fixo no mobile */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-lg z-50">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-lg z-50 flex justify-end">
         {renderActionButton()}
       </div>
 
@@ -646,18 +647,21 @@ export function ClientDetailsForm({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Resumo do agendamento</CardTitle>
+          <CardTitle>Resumo do servico</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Serviço */}
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Serviço</p>
             <p className="font-medium">{service.name}</p>
-            {service.description && (
-              <p className="text-sm text-muted-foreground">
-                {service.description}
-              </p>
-            )}
+            <ServiceDescription
+              description={service.description}
+              maxItemsCollapsed={2}
+              className="mt-1"
+              introClassName="text-sm text-muted-foreground"
+              listClassName="text-sm text-muted-foreground"
+              toggleClassName="text-xs text-muted-foreground"
+            />
           </div>
 
           {/* Data e horário */}
@@ -705,7 +709,7 @@ export function ClientDetailsForm({
           )}
 
           {/* Botão no desktop */}
-          <div className="pt-4">{renderActionButton()}</div>
+          <div className="pt-4 ">{renderActionButton()}</div>
         </CardContent>
       </Card>
     );

@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Clock } from "lucide-react";
+import { Clock, Eye } from "lucide-react";
 import type { Service } from "../../../../types/company";
 import Image from "next/image";
+import { ServiceDescription } from "@/components/services/service-description";
 
 function formatPrice(value: unknown) {
   const num = typeof value === "number" ? value : Number(value ?? 0);
@@ -25,19 +25,19 @@ function formatDuration(value?: string | number) {
 type Props = {
   service: Service;
   onSelect?: (service: Service) => void;
+  onViewDetails?: (service: Service) => void;
   brandColor?: string;
 };
 
-export function ServiceCard({ service, onSelect, brandColor }: Props) {
+export function ServiceCard({
+  service,
+  onSelect,
+  onViewDetails,
+  brandColor,
+}: Props) {
   const imageUrl = (service as any)?.design?.images?.profile?.url as
     | string
     | undefined;
-  const [expanded, setExpanded] = useState(false);
-  const hasLongDescription = useMemo(
-    () => (service.description ? service.description.length > 140 : false),
-    [service.description]
-  );
-
   return (
     <Card
       className="group h-full overflow-hidden border-2 md:border hover:border-primary/50 md:hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-[0.97] md:hover:scale-[1.01]"
@@ -74,11 +74,26 @@ export function ServiceCard({ service, onSelect, brandColor }: Props) {
           {/* Badge categoria */}
           {service.category && (
             <Badge
-              className="absolute top-2 right-2 text-xs"
+              className="absolute top-2 left-2 text-xs"
               variant="secondary"
             >
               {service.category}
             </Badge>
+          )}
+          {onViewDetails && (
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              className="absolute top-2 right-2 h-8 w-10 rounded-md bg-black/35 text-white hover:bg-black/60 shadow-md"
+              aria-label="Ver mais detalhes"
+              onClick={event => {
+                event.stopPropagation();
+                onViewDetails(service);
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
           )}
         </div>
 
@@ -108,12 +123,36 @@ export function ServiceCard({ service, onSelect, brandColor }: Props) {
             )}
           </div>
 
-          {/* Descrição - Apenas 2 linhas no mobile */}
-          {service.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-              {service.description}
-            </p>
-          )}
+          <ServiceDescription
+            description={service.description}
+            maxItemsCollapsed={2}
+            className="text-xs text-muted-foreground"
+            introClassName="text-xs text-muted-foreground leading-relaxed"
+            listClassName="text-xs text-muted-foreground"
+            toggleClassName="text-xs text-gray-600"
+            showToggle={false}
+          />
+
+          <Button
+            type="button"
+            size="sm"
+            className="w-full font-semibold md:hidden"
+            style={
+              brandColor
+                ? {
+                    backgroundColor: brandColor,
+                    color: "#fff",
+                    borderColor: brandColor,
+                  }
+                : undefined
+            }
+            onClick={event => {
+              event.stopPropagation();
+              onSelect?.(service);
+            }}
+          >
+            Agendar horário
+          </Button>
         </div>
       </div>
 
@@ -174,29 +213,14 @@ export function ServiceCard({ service, onSelect, brandColor }: Props) {
             )}
           </div>
 
-          {service.description && (
-            <>
-              <p
-                className={`${
-                  expanded ? "line-clamp-none" : "line-clamp-3"
-                } mb-1`}
-              >
-                {service.description}
-              </p>
-              {hasLongDescription && (
-                <button
-                  type="button"
-                  onClick={e => {
-                    e.stopPropagation();
-                    setExpanded(v => !v);
-                  }}
-                  className="text-xs text-gray-600 hover:underline cursor-pointer"
-                >
-                  {expanded ? "Ver menos" : "Ver mais"}
-                </button>
-              )}
-            </>
-          )}
+          <ServiceDescription
+            description={service.description}
+            maxItemsCollapsed={3}
+            className="mb-1"
+            introClassName="text-sm text-muted-foreground"
+            listClassName="text-sm text-muted-foreground"
+            toggleClassName="text-xs text-gray-600"
+          />
           <Separator className="my-3" />
           <Button
             size="sm"

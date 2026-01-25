@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock } from "lucide-react";
 import type { Service } from "../../../../types/company";
 import Image from "next/image";
+import { ServiceDescription } from "@/components/services/service-description";
 
 interface ServiceHeaderProps {
   service: Service;
@@ -77,11 +78,14 @@ export function ServiceHeader({ service, onBack }: ServiceHeaderProps) {
                 </span>
               )}
             </div>
-            {service.description && (
-              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                {service.description}
-              </p>
-            )}
+            <ServiceDescription
+              description={service.description}
+              maxItemsCollapsed={2}
+              className="mt-2"
+              introClassName="text-sm text-muted-foreground"
+              listClassName="text-sm text-muted-foreground"
+              toggleClassName="text-xs text-muted-foreground"
+            />
           </div>
         </div>
       </div>

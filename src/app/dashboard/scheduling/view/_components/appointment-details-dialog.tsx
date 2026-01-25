@@ -56,6 +56,7 @@ import { TimeSlotPicker } from "@/app/(home)/_components/time-slot-picker";
 import { useAppointmentAvailabilitySpecificDate } from "@/hooks/use-appointment-availability-specific-date";
 import { useDeleteAppointment } from "@/hooks/appointment/useDeleteAppointment";
 import type { Employee, Service } from "../../../../../../types/company";
+import { ServiceDescription } from "@/components/services/service-description";
 
 interface AppointmentDetailsDialogProps {
   appointment: Appointment | null;
@@ -335,11 +336,14 @@ export function AppointmentDetailsDialog({
                   <p className="text-base font-medium">
                     {service?.name || "Serviço não encontrado"}
                   </p>
-                  {service?.description && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {service.description}
-                    </p>
-                  )}
+                  <ServiceDescription
+                    description={service?.description}
+                    maxItemsCollapsed={3}
+                    className="mt-1"
+                    introClassName="text-sm text-muted-foreground"
+                    listClassName="text-sm text-muted-foreground"
+                    toggleClassName="text-xs text-muted-foreground"
+                  />
                   {service && (
                     <div className="flex gap-4 mt-2 text-sm">
                       <span className="text-muted-foreground">

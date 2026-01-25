@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ServiceCard } from "@/app/(home)/_components/service-card";
@@ -10,6 +10,8 @@ import { BookingProvider } from "@/app/(home)/_components/booking";
 import { BookingOrchestrator } from "@/app/(home)/_components/booking-orchestrator";
 import { useServiceAvailability } from "@/hooks/service/useServiceAvailability";
 import type { Service as CompanyService } from "../../../../types/company";
+import { ServiceDetailsSheet } from "@/app/(home)/_components/service-details-sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export type Service = CompanyService;
 
@@ -35,9 +37,11 @@ export function ServiceList({
   const [query, setQuery] = useState("");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [availabilityData, setAvailabilityData] = useState<any>(null);
+  const [detailsService, setDetailsService] = useState<Service | null>(null);
 
   const { fetchAvailability, loading: availabilityLoading } =
     useServiceAvailability();
+  const isMobile = useIsMobile();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -48,12 +52,11 @@ export function ServiceList({
         .some(v => String(v).toLowerCase().includes(q))
     );
   }, [services, query]);
-
   const handleServiceSelect = async (service: Service) => {
     if (!companyId) {
       return;
     }
-
+   
     try {
       const availabilityData = await fetchAvailability({
         serviceId: service.id,
@@ -76,6 +79,32 @@ export function ServiceList({
     }
 
     setSelectedService(service);
+  };
+
+  useEffect(() => {
+    if (!detailsService) {
+      return;
+    }
+    if (
+      !isMobile &&
+      typeof window !== "undefined" &&
+      window.innerWidth >= 768
+    ) {
+      setDetailsService(null);
+    }
+  }, [detailsService, isMobile]);
+
+  const handleViewDetails = (service: Service) => {
+    setDetailsService(service);
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsService(null);
+  };
+
+  const handleContinueFromDetails = async (service: Service) => {
+    setDetailsService(null);
+    await handleServiceSelect(service);
   };
 
   const handleBackToServices = () => {
@@ -101,9 +130,10 @@ export function ServiceList({
       </BookingProvider>
     );
   }
-
+  
   return (
-    <div className="flex flex-col h-full md:block md:space-y-4">
+    <>
+      <div className="flex flex-col h-full md:block md:space-y-4">
       {/* Header - Fixo no mobile */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-3 md:pb-0 md:static">
         <header className="mb-3 md:mb-6">
@@ -147,11 +177,23 @@ export function ServiceList({
                 service={s}
                 brandColor={brandColor}
                 onSelect={handleServiceSelect}
+                onViewDetails={handleViewDetails}
               />
             </li>
           ))}
         </ul>
       )}
-    </div>
+      </div>
+
+      {isMobile && (
+        <ServiceDetailsSheet
+          service={detailsService}
+          open={!!detailsService}
+          onClose={handleCloseDetails}
+          onContinue={handleContinueFromDetails}
+          brandColor={brandColor}
+        />
+      )}
+    </>
   );
 }

@@ -11,7 +11,7 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
   if (!session || !session.user) {
-    redirect("/auth/login");
+    redirect("/auth/employee");
   }
   return (
     <DashboardTheme>

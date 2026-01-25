@@ -15,7 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -45,6 +44,7 @@ import {
   formatTimeMask,
   formatCurrencyMask,
 } from "@/utils/format-masks";
+import { ServiceDescriptionEditor } from "@/components/services/service-description-editor";
 
 const editServiceSchema = z.object({
   name: z.string().min(1, "O nome é obrigatório."),
@@ -113,10 +113,11 @@ export const EditServiceDialog = ({
     enabled: !!service?.id,
   });
 
-  const { register, handleSubmit, formState, reset, setValue } =
+  const { register, handleSubmit, formState, reset, setValue, watch } =
     useForm<EditServiceFormValues>({
       resolver: zodResolver(editServiceSchema),
     });
+  const descriptionValue = watch("description") || "";
 
   // Reset form quando o serviço muda
   useEffect(() => {
@@ -277,18 +278,17 @@ export const EditServiceDialog = ({
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                placeholder="Descreva o serviço..."
-                rows={3}
-                {...register("description")}
+              <ServiceDescriptionEditor
+                value={descriptionValue}
+                onChange={value =>
+                  setValue("description", value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+                error={formState.errors.description?.message}
               />
-              {formState.errors.description && (
-                <p className="text-sm text-red-500">
-                  {formState.errors.description.message}
-                </p>
-              )}
+              <input type="hidden" {...register("description")} />
             </div>
 
             {/* <div className="space-y-2">
