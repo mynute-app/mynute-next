@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { Service } from "../../../../types/company";
 import type { ClientData } from "./client-details-form";
+import { ServiceDescription } from "@/components/services/service-description";
 
 interface AppointmentConfirmationProps {
   service: Service;
@@ -145,12 +146,12 @@ export function AppointmentConfirmation({
           </CardContent>
         </Card>
 
-        {/* Detalhes do agendamento */}
+        {/* Resumo do agendamento */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Detalhes do agendamento
+              Resumo do agendamento
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -161,11 +162,14 @@ export function AppointmentConfirmation({
                   Serviço
                 </p>
                 <p className="font-medium">{service.name}</p>
-                {service.description && (
-                  <p className="text-sm text-muted-foreground">
-                    {service.description}
-                  </p>
-                )}
+                <ServiceDescription
+                  description={service.description}
+                  maxItemsCollapsed={2}
+                  className="mt-1"
+                  introClassName="text-sm text-muted-foreground"
+                  listClassName="text-sm text-muted-foreground"
+                  toggleClassName="text-xs text-muted-foreground"
+                />
               </div>
 
               <Separator />

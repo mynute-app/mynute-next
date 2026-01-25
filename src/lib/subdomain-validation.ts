@@ -143,19 +143,35 @@ export async function validateSubdomainAndGetCompany(): Promise<SubdomainValidat
     );
     if (subdomainRes.ok) {
       const company = await subdomainRes.json();
-
       const hasContent =
         (Array.isArray(company?.services) && company.services.length > 0) ||
         (Array.isArray(company?.employees) && company.employees.length > 0) ||
         (Array.isArray(company?.branches) && company.branches.length > 0);
 
-      if (hasContent) {
-        return {
-          success: true,
-          company,
-          subdomain,
-          isMainDomain: false,
-        };
+      if (!hasContent) {
+        const nameCandidate =
+          company?.legal_name || company?.trading_name || subdomain;
+        if (nameCandidate) {
+          try {
+            const nameRes = await fetch(
+              `${apiUrl}/api/company/name/${encodeURIComponent(nameCandidate)}`,
+              {
+                cache: "no-store",
+              },
+            );
+            if (nameRes.ok) {
+              const fullCompany = await nameRes.json();
+              return {
+                success: true,
+                company: fullCompany,
+                subdomain,
+                isMainDomain: false,
+              };
+            }
+          } catch (error) {
+            console.error("Erro ao buscar empresa por nome:", error);
+          }
+        }
       }
 
       return {

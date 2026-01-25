@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useAddServiceForm } from "../../../hooks/service/useAddServiceForm";
 import type { Service } from "../../../../types/company";
+import { ServiceDescriptionEditor } from "@/components/services/service-description-editor";
 
 type AddServiceDialogProps = {
   isOpen?: boolean;
@@ -50,6 +50,7 @@ export const AddServiceDialog = ({
   const isOpen = isControlled ? controlledOpen : internalOpen;
   const setIsOpen = onOpenChange || setInternalOpen;
 
+  const descriptionValue = watch("description") || "";
   const durationValue = watch("duration");
   const priceValue = watch("price");
 
@@ -104,18 +105,17 @@ export const AddServiceDialog = ({
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                placeholder="Descreva o serviço..."
-                rows={3}
-                {...register("description")}
+              <ServiceDescriptionEditor
+                value={descriptionValue}
+                onChange={value =>
+                  setValue("description", value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+                error={errors.description?.message}
               />
-              {errors.description && (
-                <p className="text-sm text-red-500">
-                  {errors.description.message}
-                </p>
-              )}
+              <input type="hidden" {...register("description")} />
             </div>
 
             {/* TODO: Categoria (quando tiver suporte no backend). */}
