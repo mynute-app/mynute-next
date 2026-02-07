@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { CalendarCheck, Plus, Tag, User, X } from "lucide-react";
+import { useEffect } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -12,148 +13,101 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
-
-export interface AppointmentHistory {
-  id: string;
-  date: string;
-  service: string;
-  professional?: string;
-  status?: string;
-}
-
-export interface Client {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  address?: string;
-  company?: string;
-  document?: string;
-  notes?: string;
-  appointments: AppointmentHistory[];
-  tags: string[];
-}
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useCreateCompanyClient } from "@/hooks/use-create-company-client";
+import type { CompanyClient } from "@/types/company-client";
+import {
+  companyClientFormSchema,
+  type CompanyClientFormData,
+} from "./company-client-form-schema";
 
 interface ClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  client?: Client;
-  onSave: (data: Partial<Client>) => void;
+  client?: CompanyClient;
+  onCreated: (client: CompanyClient) => void;
+  onUpdated: (client: CompanyClient) => void;
 }
 
-const availableTags = ["VIP", "Recorrente", "Novo", "Premium", "Empresa"];
+const defaultValues: CompanyClientFormData = {
+  name: "",
+  surname: "",
+  email: "",
+  phone: "",
+  street: "",
+  number: "",
+  neighborhood: "",
+  city: "",
+  state: "",
+  country: "Brasil",
+  zip_code: "",
+};
 
 export function ClientDialog({
   open,
   onOpenChange,
   client,
-  onSave,
+  onCreated,
+  onUpdated,
 }: ClientDialogProps) {
-  const isEditing = !!client;
-
-  const [formData, setFormData] = useState<Partial<Client>>({
-    name: "",
-    phone: "",
-    email: "",
-    address: "",
-    company: "",
-    document: "",
-    notes: "",
-    appointments: [],
-    tags: [],
+  const isEditing = Boolean(client);
+  const form = useForm<CompanyClientFormData>({
+    resolver: zodResolver(companyClientFormSchema),
+    defaultValues,
   });
 
-  const [newAppointment, setNewAppointment] = useState({
-    date: "",
-    service: "",
-    professional: "",
-    status: "Agendado",
-  });
+  const { createCompanyClient, loading, error, reset } =
+    useCreateCompanyClient();
 
   useEffect(() => {
+    if (!open) {
+      reset();
+      return;
+    }
+
     if (client) {
-      setFormData({
+      form.reset({
         name: client.name || "",
-        phone: client.phone || "",
+        surname: client.surname || "",
         email: client.email || "",
-        address: client.address || "",
-        company: client.company || "",
-        document: client.document || "",
-        notes: client.notes || "",
-        appointments: client.appointments || [],
-        tags: client.tags || [],
+        phone: client.phone || "",
+        street: client.street || "",
+        number: client.number || "",
+        neighborhood: client.neighborhood || "",
+        city: client.city || "",
+        state: client.state || "",
+        country: client.country || "Brasil",
+        zip_code: client.zip_code || "",
       });
     } else {
-      setFormData({
-        name: "",
-        phone: "",
-        email: "",
-        address: "",
-        company: "",
-        document: "",
-        notes: "",
-        appointments: [],
-        tags: [],
-      });
+      form.reset(defaultValues);
     }
-    setNewAppointment({
-      date: "",
-      service: "",
-      professional: "",
-      status: "Agendado",
-    });
-  }, [client, open]);
+  }, [client, open, form, reset]);
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const handleSubmit = async (values: CompanyClientFormData) => {
+    if (isEditing && client) {
+      onUpdated({
+        ...client,
+        ...values,
+      });
+      onOpenChange(false);
+      return;
+    }
 
-  const handleAddAppointment = () => {
-    if (!newAppointment.date || !newAppointment.service) return;
-    const appointment: AppointmentHistory = {
-      id: Date.now().toString(),
-      date: newAppointment.date,
-      service: newAppointment.service,
-      professional: newAppointment.professional,
-      status: newAppointment.status,
-    };
-    setFormData(prev => ({
-      ...prev,
-      appointments: [...(prev.appointments || []), appointment],
-    }));
-    setNewAppointment({
-      date: "",
-      service: "",
-      professional: "",
-      status: "Agendado",
-    });
-  };
-
-  const handleRemoveAppointment = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      appointments: (prev.appointments || []).filter(item => item.id !== id),
-    }));
-  };
-
-  const handleToggleTag = (tag: string) => {
-    setFormData(prev => {
-      const currentTags = prev.tags || [];
-      if (currentTags.includes(tag)) {
-        return { ...prev, tags: currentTags.filter(item => item !== tag) };
-      }
-      return { ...prev, tags: [...currentTags, tag] };
-    });
-  };
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    onSave(formData);
-    onOpenChange(false);
+    const created = await createCompanyClient(values);
+    if (created) {
+      onCreated(created);
+      onOpenChange(false);
+      form.reset(defaultValues);
+    }
   };
 
   return (
@@ -170,223 +124,199 @@ export function ClientDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <ScrollArea className="flex-1 min-h-0 h-full px-6">
-            <div className="space-y-6 py-4">
-              <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                  <User className="h-4 w-4" />
-                  Dados Principais
-                </h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Nome *</Label>
-                    <Input
-                      value={formData.name || ""}
-                      onChange={event =>
-                        handleChange("name", event.target.value)
-                      }
-                      placeholder="Nome do cliente"
-                      required
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <ScrollArea className="flex-1 min-h-0 h-full px-6">
+              <div className="space-y-6 py-4">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground">
+                    Dados Principais
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nome do cliente" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Telefone *</Label>
-                    <Input
-                      value={formData.phone || ""}
-                      onChange={event =>
-                        handleChange("phone", event.target.value)
-                      }
-                      placeholder="(11) 99999-9999"
-                      required
+                    <FormField
+                      control={form.control}
+                      name="surname"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sobrenome *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Sobrenome" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>E-mail</Label>
-                    <Input
-                      type="email"
-                      value={formData.email || ""}
-                      onChange={event =>
-                        handleChange("email", event.target.value)
-                      }
-                      placeholder="cliente@email.com"
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>E-mail *</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="cliente@email.com"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Empresa</Label>
-                    <Input
-                      value={formData.company || ""}
-                      onChange={event =>
-                        handleChange("company", event.target.value)
-                      }
-                      placeholder="Nome da empresa (opcional)"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Documento</Label>
-                    <Input
-                      value={formData.document || ""}
-                      onChange={event =>
-                        handleChange("document", event.target.value)
-                      }
-                      placeholder="CPF/CNPJ (opcional)"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Endereço</Label>
-                    <Input
-                      value={formData.address || ""}
-                      onChange={event =>
-                        handleChange("address", event.target.value)
-                      }
-                      placeholder="Endereço completo"
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label>Observações</Label>
-                    <Textarea
-                      value={formData.notes || ""}
-                      onChange={event =>
-                        handleChange("notes", event.target.value)
-                      }
-                      placeholder="Preferências, alergias, detalhes importantes..."
-                      rows={3}
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefone *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="(11) 99999-9999" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                  <Tag className="h-4 w-4" />
-                  Tags
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {availableTags.map(tag => (
-                    <Badge
-                      key={tag}
-                      variant={
-                        (formData.tags || []).includes(tag)
-                          ? "default"
-                          : "outline"
-                      }
-                      className="cursor-pointer"
-                      onClick={() => handleToggleTag(tag)}
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                  <CalendarCheck className="h-4 w-4" />
-                  Histórico de Agendamentos
-                </h3>
-
-                {(formData.appointments || []).length > 0 && (
-                  <div className="space-y-2">
-                    {(formData.appointments || []).map(appointment => (
-                      <div
-                        key={appointment.id}
-                        className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
-                      >
-                        <div>
-                          <p className="font-medium">{appointment.service}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {appointment.date}
-                            {appointment.professional
-                              ? ` • ${appointment.professional}`
-                              : ""}
-                            {appointment.status
-                              ? ` • ${appointment.status}`
-                              : ""}
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            handleRemoveAppointment(appointment.id)
-                          }
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground">
+                    Endereço
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="street"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>Rua</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Rua" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Número</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Número" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="neighborhood"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bairro</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Bairro" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cidade</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Cidade" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="state"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Estado</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Estado" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="country"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>País</FormLabel>
+                          <FormControl>
+                            <Input placeholder="País" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="zip_code"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CEP</FormLabel>
+                          <FormControl>
+                            <Input placeholder="00000-000" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
+                </div>
+
+                {error && (
+                  <p className="text-sm font-medium text-destructive">
+                    {error}
+                  </p>
                 )}
-
-                <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
-                  <Input
-                    type="date"
-                    placeholder="Data"
-                    value={newAppointment.date}
-                    onChange={event =>
-                      setNewAppointment({
-                        ...newAppointment,
-                        date: event.target.value,
-                      })
-                    }
-                  />
-                  <Input
-                    placeholder="Serviço"
-                    value={newAppointment.service}
-                    onChange={event =>
-                      setNewAppointment({
-                        ...newAppointment,
-                        service: event.target.value,
-                      })
-                    }
-                  />
-                  <Input
-                    placeholder="Profissional"
-                    value={newAppointment.professional}
-                    onChange={event =>
-                      setNewAppointment({
-                        ...newAppointment,
-                        professional: event.target.value,
-                      })
-                    }
-                  />
-                  <Input
-                    placeholder="Status"
-                    value={newAppointment.status}
-                    onChange={event =>
-                      setNewAppointment({
-                        ...newAppointment,
-                        status: event.target.value,
-                      })
-                    }
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleAddAppointment}
-                  >
-                    <Plus className="mr-1 h-4 w-4" />
-                    Adicionar
-                  </Button>
-                </div>
               </div>
-            </div>
-          </ScrollArea>
+            </ScrollArea>
 
-          <DialogFooter className="border-t px-6 py-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" className="btn-gradient">
-              {isEditing ? "Salvar Alterações" : "Criar Cliente"}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter className="border-t px-6 py-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" className="btn-gradient" disabled={loading}>
+                {isEditing ? "Salvar Alterações" : "Criar Cliente"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -10,9 +10,36 @@ export const useCreateCompany = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const router = useRouter();
 
+  const resolveTenantBaseDomain = () => {
+    if (typeof window === "undefined") return "";
+
+    const envBase = process.env.NEXT_PUBLIC_TENANT_BASE_DOMAIN?.trim();
+    if (envBase) {
+      return envBase.replace(/^https?:\/\//, "");
+    }
+
+    const host = window.location.host;
+    const hostWithoutPort = host.split(":")[0];
+    const port = host.includes(":") ? host.split(":")[1] : "";
+
+    if (hostWithoutPort.endsWith("nip.io")) {
+      const parts = hostWithoutPort.split(".");
+      const baseParts = parts.slice(-5);
+      const base = baseParts.join(".");
+      return port ? `${base}:${port}` : base;
+    }
+
+    if (hostWithoutPort.endsWith("mynute.app")) {
+      const base = "mynute.app";
+      return port ? `${base}:${port}` : base;
+    }
+
+    return host;
+  };
+
   const submit = async (
     data: CompanyRegisterSchema,
-    setFormError: UseFormSetError<CompanyRegisterSchema>
+    setFormError: UseFormSetError<CompanyRegisterSchema>,
   ) => {
     setLoading(true);
     setSubmitError(null);
@@ -25,11 +52,6 @@ export const useCreateCompany = () => {
       };
 
       const url = "/api/company";
-      console.log("🌐 [HOOK] URL Base:", url);
-      console.log(
-        "📤 [HOOK] Request Body:",
-        JSON.stringify(cleanData, null, 2)
-      );
 
       const response = await fetch(url, {
         method: "POST",
@@ -37,40 +59,41 @@ export const useCreateCompany = () => {
         body: JSON.stringify(cleanData),
       });
 
-      console.log("📊 [HOOK] Status Code:", response.status);
-      console.log("✅ [HOOK] Response OK:", response.ok);
-
       const text = await response.text();
-      console.log("📥 [HOOK] Response Body:", text);
 
       let errorMessage = text;
 
       try {
         const json = JSON.parse(text);
-        console.log("📦 [HOOK] Response JSON:", JSON.stringify(json, null, 2));
         errorMessage = json?.backendResponse || json?.message || text;
       } catch {}
 
       if (!response.ok) {
-        console.error(
-          "❌ [HOOK] Response não OK - Status:",
-          response.status,
-          "Message:",
-          errorMessage
-        );
         throw new Error(errorMessage);
       }
 
       const result = JSON.parse(text);
-      console.log(
-        "✅ [HOOK] Sucesso! Result:",
-        JSON.stringify(result, null, 2)
-      );
+      const subdomain = cleanData.start_subdomain?.trim();
 
-      toast({
-        title: "Empresa cadastrada com sucesso!",
-        description: "Sua empresa foi criada com sucesso.",
-      });
+      if (subdomain) {
+        const baseDomain = resolveTenantBaseDomain();
+        const protocol = window.location.protocol;
+        const redirectUrl = `${protocol}//${subdomain}.${baseDomain}/auth/employee`;
+
+        toast({
+          title: "Empresa cadastrada com sucesso!",
+          description: "Redirecionando para o login...",
+        });
+
+        setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 1500);
+      } else {
+        toast({
+          title: "Empresa cadastrada com sucesso!",
+          description: "Sua empresa foi criada com sucesso.",
+        });
+      }
 
       return result;
     } catch (err: any) {
@@ -127,9 +150,6 @@ export const useCreateCompany = () => {
           variant: "destructive",
         });
       }
-
-      // Log do erro original para debug
-      console.error("❌ Erro ao cadastrar empresa:", errorMessage);
 
       setSubmitError(translatedMessage);
       throw err;

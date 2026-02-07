@@ -130,12 +130,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               Cadastros
             </p>
             <div className="space-y-1">
-              {/* <NavItem
+              <NavItem
                 href="/dashboard/clientes"
                 icon={<Users className="h-5 w-5" />}
                 label="Clientes / Familias"
                 isActive={isActive("/dashboard/clientes")}
-              /> */}
+              />
               <NavItem
                 href="/dashboard/services"
                 icon={<Sparkles className="h-5 w-5" />}

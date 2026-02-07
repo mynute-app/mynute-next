@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  CalendarCheck,
   Edit,
   Mail,
   MapPin,
@@ -15,7 +14,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,105 +31,68 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ClientDialog, type Client } from "@/components/clients/ClientDialog";
-import { cn } from "@/lib/utils";
+import { ClientDialog } from "@/components/clients/ClientDialog";
+import { ClientsLoadingSkeleton } from "@/components/clients/clients-loading-skeleton";
+import { ErrorState } from "@/components/ui/error-state";
+import { useCompanyClients } from "@/hooks/use-company-clients";
+import type { CompanyClient } from "@/types/company-client";
 
-const initialClients: Client[] = [
-  {
-    id: "1",
-    name: "Família Silva",
-    phone: "(11) 99999-1234",
-    email: "silva@email.com",
-    address: "Av. Paulista, 1000",
-    company: "Silva & Filhos",
-    document: "123.456.789-00",
-    notes: "Prefere atendimento no período da manhã.",
-    appointments: [
-      {
-        id: "a1",
-        date: "2024-10-12",
-        service: "Consultoria Inicial",
-        professional: "Ana",
-        status: "Concluído",
-      },
-      {
-        id: "a2",
-        date: "2024-11-03",
-        service: "Retorno",
-        professional: "Ana",
-        status: "Agendado",
-      },
-    ],
-    tags: ["VIP", "Recorrente"],
-  },
-  {
-    id: "2",
-    name: "Família Santos",
-    phone: "(11) 98888-5678",
-    email: "santos@email.com",
-    company: "Santos LTDA",
-    document: "987.654.321-00",
-    notes: "Cliente novo, primeira visita.",
-    appointments: [
-      {
-        id: "a3",
-        date: "2024-09-15",
-        service: "Onboarding",
-        professional: "Lucas",
-        status: "Concluído",
-      },
-    ],
-    tags: ["Novo"],
-  },
-  {
-    id: "3",
-    name: "Família Oliveira",
-    phone: "(11) 97777-9012",
-    email: "oliveira@email.com",
-    address: "Rua Oscar Freire, 500",
-    company: "Oliveira Tech",
-    document: "111.222.333-44",
-    notes: "Gosta de atendimento rápido.",
-    appointments: [],
-    tags: ["VIP", "Empresa"],
-  },
-];
-
-const tagColors: Record<string, string> = {
-  VIP: "bg-accent/10 text-accent border-accent/20",
-  Recorrente: "bg-primary/10 text-primary border-primary/20",
-  Novo: "bg-success/10 text-success border-success/20",
-  Empresa: "bg-warning/10 text-warning border-warning/20",
-  Premium: "bg-accent/10 text-accent border-accent/20",
+const formatAddress = (client: CompanyClient) => {
+  const line1 = [client.street, client.number].filter(Boolean).join(", ");
+  const cityState = [client.city, client.state].filter(Boolean).join(" - ");
+  const line2 = [client.neighborhood, cityState].filter(Boolean).join(" • ");
+  const line3 = [client.country, client.zip_code].filter(Boolean).join(" • ");
+  return [line1, line2, line3].filter(Boolean).join(" • ");
 };
 
 export const ClientesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [clients, setClients] = useState<Client[]>(initialClients);
+  const [clients, setClients] = useState<CompanyClient[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<Client | undefined>();
+  const [selectedClient, setSelectedClient] = useState<
+    CompanyClient | undefined
+  >();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  const [clientToDelete, setClientToDelete] =
+    useState<CompanyClient | null>(null);
+  const { data, isLoading, error, refetch } = useCompanyClients({
+    page: 1,
+    pageSize: 50,
+  });
 
-  const filteredClients = clients.filter(
-    client =>
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.phone.includes(searchTerm) ||
-      (client.company || "").toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  useEffect(() => {
+    if (data?.company_clients) {
+      setClients(data.company_clients);
+    }
+  }, [data]);
+
+  const filteredClients = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return clients;
+
+    return clients.filter(client => {
+      const fullName = `${client.name} ${client.surname}`.toLowerCase();
+      const address = formatAddress(client).toLowerCase();
+      return (
+        fullName.includes(term) ||
+        client.email.toLowerCase().includes(term) ||
+        client.phone.toLowerCase().includes(term) ||
+        address.includes(term)
+      );
+    });
+  }, [clients, searchTerm]);
 
   const handleCreateClient = () => {
     setSelectedClient(undefined);
     setDialogOpen(true);
   };
 
-  const handleEditClient = (client: Client) => {
+  const handleEditClient = (client: CompanyClient) => {
     setSelectedClient(client);
     setDialogOpen(true);
   };
 
-  const handleDeleteClick = (client: Client) => {
+  const handleDeleteClick = (client: CompanyClient) => {
     setClientToDelete(client);
     setDeleteDialogOpen(true);
   };
@@ -144,26 +105,14 @@ export const ClientesPage = () => {
     }
   };
 
-  const handleSaveClient = (data: Partial<Client>) => {
-    if (selectedClient) {
-      setClients(
-        clients.map(c => (c.id === selectedClient.id ? { ...c, ...data } : c)),
-      );
-    } else {
-      const newClient: Client = {
-        id: Date.now().toString(),
-        name: data.name || "",
-        phone: data.phone || "",
-        email: data.email || "",
-        address: data.address,
-        company: data.company,
-        document: data.document,
-        notes: data.notes,
-        appointments: data.appointments || [],
-        tags: data.tags || [],
-      };
-      setClients([...clients, newClient]);
-    }
+  const handleCreatedClient = (client: CompanyClient) => {
+    setClients(prev => [client, ...prev]);
+    setDialogOpen(false);
+    refetch();
+  };
+
+  const handleUpdatedClient = (client: CompanyClient) => {
+    setClients(prev => prev.map(c => (c.id === client.id ? client : c)));
     setDialogOpen(false);
   };
 
@@ -189,116 +138,26 @@ export const ClientesPage = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por nome, email ou telefone..."
+                  placeholder="Buscar por nome, email, telefone ou endereço..."
                   className="pl-9 input-focus"
                   value={searchTerm}
                   onChange={event => setSearchTerm(event.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 stagger-children">
-              {filteredClients.map(client => (
-                <div
-                  key={client.id}
-                  className="rounded-xl border border-border bg-card p-5 shadow-sm card-hover"
-                >
-                  <div className="mb-4 flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                        <Users className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">
-                          {client.name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {client.company ? client.company : "Cliente"} •{" "}
-                          {client.appointments.length} agendamento
-                          {client.appointments.length !== 1 && "s"}
-                        </p>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem
-                          onClick={() => handleEditClient(client)}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar Cliente
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteClick(client)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  <div className="mb-4 space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Phone className="h-4 w-4" />
-                      <span>{client.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Mail className="h-4 w-4" />
-                      <span>{client.email}</span>
-                    </div>
-                    {client.address && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span className="truncate">{client.address}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CalendarCheck className="h-4 w-4" />
-                      <span>
-                        {client.appointments.length > 0
-                          ? `Último: ${client.appointments[client.appointments.length - 1].date}`
-                          : "Sem agendamentos"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mb-4 flex flex-wrap gap-1">
-                    {client.tags.map(tag => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        className={cn(
-                          "text-xs",
-                          tagColors[tag] || "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  <div className="border-t border-border pt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => handleEditClient(client)}
-                    >
-                      Ver Detalhes
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {filteredClients.length === 0 && (
+            {isLoading ? (
+              <ClientsLoadingSkeleton />
+            ) : error ? (
+              <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                <ErrorState
+                  title="Erro ao carregar clientes"
+                  description={error}
+                  onRetry={refetch}
+                />
+              </div>
+            ) : filteredClients.length === 0 ? (
               <div className="py-12 text-center">
                 <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
                 <h3 className="mb-2 text-lg font-medium">
@@ -316,6 +175,86 @@ export const ClientesPage = () => {
                   </Button>
                 )}
               </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 stagger-children">
+                {filteredClients.map(client => (
+                  <div
+                    key={client.id}
+                    className="rounded-xl border border-border bg-card p-5 shadow-sm card-hover"
+                  >
+                    <div className="mb-4 flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                          <Users className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">
+                            {client.name} {client.surname}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Cliente
+                          </p>
+                        </div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem
+                            onClick={() => handleEditClient(client)}
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar Cliente
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteClick(client)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    <div className="mb-4 space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Phone className="h-4 w-4" />
+                        <span>{client.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Mail className="h-4 w-4" />
+                        <span>{client.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="h-4 w-4" />
+                        <span className="truncate">
+                          {formatAddress(client) || "Endereço não informado"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => handleEditClient(client)}
+                      >
+                        Ver Detalhes
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -325,7 +264,8 @@ export const ClientesPage = () => {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         client={selectedClient}
-        onSave={handleSaveClient}
+        onCreated={handleCreatedClient}
+        onUpdated={handleUpdatedClient}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
