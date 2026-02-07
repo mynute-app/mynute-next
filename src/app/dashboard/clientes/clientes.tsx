@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -279,14 +280,16 @@ export const ClientesPage = () => {
                     </div>
 
                     <div className="border-t border-border pt-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => handleEditClient(client)}
-                      >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      asChild
+                    >
+                      <Link href={`/dashboard/clientes/${client.id}`}>
                         Ver Detalhes
-                      </Button>
+                      </Link>
+                    </Button>
                     </div>
                   </div>
                 ))}
