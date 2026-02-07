@@ -34,7 +34,7 @@ const normalizeClientPayload = (data: CreateCompanyClientInput) => ({
   city: data.city?.trim() || "",
   state: data.state?.trim() || "",
   country: data.country?.trim() || "",
-  zip_code: data.zip_code?.trim() || "",
+  zip_code: data.zip_code ? data.zip_code.replace(/\D/g, "") : "",
 });
 
 export function useCreateCompanyClient(): UseCreateCompanyClientReturn {

@@ -18,6 +18,7 @@ export function useCompanyClients({
 }: UseCompanyClientsProps) {
   const [data, setData] = useState<CompanyClientListResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { data: session, status } = useSession();
@@ -27,6 +28,7 @@ export function useCompanyClients({
       return null;
     }
     setIsLoading(true);
+    setHasFetched(false);
     setError(null);
 
     try {
@@ -69,6 +71,7 @@ export function useCompanyClients({
       return null;
     } finally {
       setIsLoading(false);
+      setHasFetched(true);
     }
   }, [page, pageSize, toast, session?.accessToken]);
 
@@ -84,6 +87,7 @@ export function useCompanyClients({
 
     if (status === "unauthenticated") {
       setIsLoading(false);
+      setHasFetched(true);
       return;
     }
 
@@ -97,6 +101,7 @@ export function useCompanyClients({
     currentPage: data?.page || page,
     pageSize: data?.page_size || pageSize,
     isLoading: isLoading || status === "loading",
+    hasFetched,
     error,
     refetch: fetchClients,
   };

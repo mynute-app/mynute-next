@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Loader2, MapPin } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +53,28 @@ const defaultValues: CompanyClientFormData = {
   zip_code: "",
 };
 
+const onlyDigits = (value: string) => value.replace(/\D/g, "");
+
+const formatPhone = (value: string) => {
+  const digits = onlyDigits(value);
+  const normalized =
+    digits.length > 11 && digits.startsWith("55") ? digits.slice(2) : digits;
+  const sliced = normalized.slice(0, 11);
+
+  if (sliced.length <= 2) return sliced;
+  if (sliced.length <= 6) return `(${sliced.slice(0, 2)}) ${sliced.slice(2)}`;
+  if (sliced.length <= 10) {
+    return `(${sliced.slice(0, 2)}) ${sliced.slice(2, 6)}-${sliced.slice(6)}`;
+  }
+  return `(${sliced.slice(0, 2)}) ${sliced.slice(2, 7)}-${sliced.slice(7)}`;
+};
+
+const formatCep = (value: string) => {
+  const digits = onlyDigits(value).slice(0, 8);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+};
+
 export function ClientDialog({
   open,
   onOpenChange,
@@ -66,10 +90,24 @@ export function ClientDialog({
 
   const { createCompanyClient, loading, error, reset } =
     useCreateCompanyClient();
+  const [formError, setFormError] = useState<string | null>(null);
+  const [cepStatus, setCepStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [cepError, setCepError] = useState<string | null>(null);
+  const [lastCep, setLastCep] = useState<string | null>(null);
+
+  const zipCodeValue = useWatch({ control: form.control, name: "zip_code" });
+  const cepDigits = useMemo(() => onlyDigits(zipCodeValue || ""), [zipCodeValue]);
+  const shouldShowAddress = isEditing || cepDigits.length >= 8;
 
   useEffect(() => {
     if (!open) {
       reset();
+      setFormError(null);
+      setCepStatus("idle");
+      setCepError(null);
+      setLastCep(null);
       return;
     }
 
@@ -78,19 +116,108 @@ export function ClientDialog({
         name: client.name || "",
         surname: client.surname || "",
         email: client.email || "",
-        phone: client.phone || "",
+        phone: client.phone ? formatPhone(client.phone) : "",
         street: client.street || "",
         number: client.number || "",
         neighborhood: client.neighborhood || "",
         city: client.city || "",
         state: client.state || "",
         country: client.country || "Brasil",
-        zip_code: client.zip_code || "",
+        zip_code: client.zip_code ? formatCep(client.zip_code) : "",
       });
+      setLastCep(client.zip_code ? onlyDigits(client.zip_code) : null);
     } else {
       form.reset(defaultValues);
+      setLastCep(null);
     }
   }, [client, open, form, reset]);
+
+  useEffect(() => {
+    if (!error) {
+      setFormError(null);
+      return;
+    }
+
+    const normalized = error.toLowerCase();
+
+    if (
+      normalized.includes("idx_company_clients_phone") ||
+      (normalized.includes("duplicate") && normalized.includes("phone"))
+    ) {
+      form.setError("phone", {
+        type: "manual",
+        message: "Telefone já cadastrado.",
+      });
+      setFormError(null);
+      return;
+    }
+
+    if (
+      normalized.includes("idx_company_clients_email") ||
+      (normalized.includes("duplicate") && normalized.includes("email"))
+    ) {
+      form.setError("email", {
+        type: "manual",
+        message: "E-mail já cadastrado.",
+      });
+      setFormError(null);
+      return;
+    }
+
+    setFormError(error);
+  }, [error, form]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (cepDigits.length !== 8) {
+      setCepStatus("idle");
+      setCepError(null);
+      return;
+    }
+    if (lastCep === cepDigits) {
+      return;
+    }
+
+    const fetchCep = async () => {
+      setCepStatus("loading");
+      setCepError(null);
+      setLastCep(cepDigits);
+
+      try {
+        const response = await fetch(
+          `https://viacep.com.br/ws/${cepDigits}/json/`
+        );
+        const data = await response.json();
+
+        if (data?.erro) {
+          setCepStatus("error");
+          setCepError("CEP não encontrado.");
+          return;
+        }
+
+        form.setValue("street", data.logradouro || "", {
+          shouldDirty: true,
+        });
+        form.setValue("neighborhood", data.bairro || "", {
+          shouldDirty: true,
+        });
+        form.setValue("city", data.localidade || "", {
+          shouldDirty: true,
+        });
+        form.setValue("state", data.uf || "", {
+          shouldDirty: true,
+        });
+        form.setValue("country", "Brasil", { shouldDirty: true });
+
+        setCepStatus("success");
+      } catch (fetchError) {
+        setCepStatus("error");
+        setCepError("Não foi possível buscar o CEP.");
+      }
+    };
+
+    fetchCep();
+  }, [cepDigits, form, lastCep, open]);
 
   const handleSubmit = async (values: CompanyClientFormData) => {
     if (isEditing && client) {
@@ -102,6 +229,7 @@ export function ClientDialog({
       return;
     }
 
+    setFormError(null);
     const created = await createCompanyClient(values);
     if (created) {
       onCreated(created);
@@ -131,10 +259,15 @@ export function ClientDialog({
           >
             <ScrollArea className="flex-1 min-h-0 h-full px-6">
               <div className="space-y-6 py-4">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-muted-foreground">
-                    Dados Principais
-                  </h3>
+                <div className="rounded-xl border border-border bg-muted/20 p-4">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-foreground">
+                      Dados principais
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Informações básicas de contato do cliente.
+                    </p>
+                  </div>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <FormField
                       control={form.control}
@@ -186,7 +319,13 @@ export function ClientDialog({
                         <FormItem>
                           <FormLabel>Telefone *</FormLabel>
                           <FormControl>
-                            <Input placeholder="(11) 99999-9999" {...field} />
+                            <Input
+                              placeholder="(11) 99999-9999"
+                              value={field.value || ""}
+                              onChange={event =>
+                                field.onChange(formatPhone(event.target.value))
+                              }
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -195,89 +334,19 @@ export function ClientDialog({
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-muted-foreground">
-                    Endereço
-                  </h3>
+                <div className="rounded-xl border border-border bg-muted/20 p-4">
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">
+                        Endereço
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Informe o CEP para preencher automaticamente.
+                      </p>
+                    </div>
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                  </div>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="street"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Rua</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Rua" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="number"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Número</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Número" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="neighborhood"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bairro</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Bairro" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cidade</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Cidade" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Estado</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Estado" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="country"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>País</FormLabel>
-                          <FormControl>
-                            <Input placeholder="País" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                     <FormField
                       control={form.control}
                       name="zip_code"
@@ -285,18 +354,130 @@ export function ClientDialog({
                         <FormItem>
                           <FormLabel>CEP</FormLabel>
                           <FormControl>
-                            <Input placeholder="00000-000" {...field} />
+                            <Input
+                              placeholder="00000-000"
+                              value={field.value || ""}
+                              onChange={event =>
+                                field.onChange(formatCep(event.target.value))
+                              }
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground md:col-span-1">
+                      {cepStatus === "loading" && (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Buscando CEP...
+                        </>
+                      )}
+                      {cepStatus === "success" && (
+                        <span>Endereço preenchido automaticamente.</span>
+                      )}
+                      {cepStatus === "error" && (
+                        <span className="text-destructive">{cepError}</span>
+                      )}
+                    </div>
                   </div>
+
+                  <AnimatePresence>
+                    {shouldShowAddress && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 overflow-hidden"
+                      >
+                        <FormField
+                          control={form.control}
+                          name="street"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Rua</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Rua" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="number"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Número</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Número" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="neighborhood"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Bairro</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Bairro" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cidade</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Cidade" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="state"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Estado</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Estado" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="country"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>País</FormLabel>
+                              <FormControl>
+                                <Input placeholder="País" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
-                {error && (
+                {formError && (
                   <p className="text-sm font-medium text-destructive">
-                    {error}
+                    {formError}
                   </p>
                 )}
               </div>

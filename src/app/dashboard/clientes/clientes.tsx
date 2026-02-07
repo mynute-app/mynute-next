@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState, useEffect } from "react";
 import {
   Edit,
   Mail,
@@ -22,6 +22,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -34,6 +41,7 @@ import {
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { ClientsLoadingSkeleton } from "@/components/clients/clients-loading-skeleton";
 import { ErrorState } from "@/components/ui/error-state";
+import { DataPagination } from "@/components/ui/data-pagination";
 import { useCompanyClients } from "@/hooks/use-company-clients";
 import type { CompanyClient } from "@/types/company-client";
 
@@ -48,23 +56,39 @@ const formatAddress = (client: CompanyClient) => {
 export const ClientesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [clients, setClients] = useState<CompanyClient[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<
     CompanyClient | undefined
   >();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [clientToDelete, setClientToDelete] =
-    useState<CompanyClient | null>(null);
-  const { data, isLoading, error, refetch } = useCompanyClients({
-    page: 1,
-    pageSize: 50,
-  });
+  const [clientToDelete, setClientToDelete] = useState<CompanyClient | null>(
+    null,
+  );
+  const { data, isLoading, error, refetch, hasFetched, total } =
+    useCompanyClients({
+      page,
+      pageSize,
+    });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (data?.company_clients) {
       setClients(data.company_clients);
     }
   }, [data]);
+
+  const totalPages = useMemo(() => {
+    if (!total) return 1;
+    return Math.max(1, Math.ceil(total / pageSize));
+  }, [total, pageSize]);
+
+  useEffect(() => {
+    if (!hasFetched) return;
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages, hasFetched]);
 
   const filteredClients = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -106,6 +130,9 @@ export const ClientesPage = () => {
   };
 
   const handleCreatedClient = (client: CompanyClient) => {
+    if (page !== 1) {
+      setPage(1);
+    }
     setClients(prev => [client, ...prev]);
     setDialogOpen(false);
     refetch();
@@ -147,13 +174,12 @@ export const ClientesPage = () => {
               </div>
             </div>
 
-            {isLoading ? (
+            {isLoading || !hasFetched ? (
               <ClientsLoadingSkeleton />
             ) : error ? (
               <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                 <ErrorState
                   title="Erro ao carregar clientes"
-                  description={error}
                   onRetry={refetch}
                 />
               </div>
@@ -255,6 +281,19 @@ export const ClientesPage = () => {
                   </div>
                 ))}
               </div>
+            )}
+
+            {!isLoading && hasFetched && !error && total > 0 && (
+              <DataPagination
+                page={page}
+                pageSize={pageSize}
+                total={total}
+                onPageChange={setPage}
+                onPageSizeChange={value => {
+                  setPageSize(value);
+                  setPage(1);
+                }}
+              />
             )}
           </div>
         </div>
