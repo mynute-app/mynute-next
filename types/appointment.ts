@@ -7,6 +7,7 @@ export interface Appointment {
   service_id: string;
   employee_id: string;
   client_id: string;
+  company_client_id?: string;
   branch_id: string;
   company_id: string;
   payment_id: string;

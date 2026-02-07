@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -20,7 +20,12 @@ import { DataPagination } from "@/components/ui/data-pagination";
 import { ErrorState } from "@/components/ui/error-state";
 import { cn } from "@/lib/utils";
 import { useCompanyClientAppointments } from "@/hooks/company-client/use-company-client-appointments";
-import type { Appointment } from "../../../../../types/appointment";
+import { useCompanyClientDetails } from "@/hooks/company-client/use-company-client-details";
+import type {
+  Appointment,
+  EmployeeInfo,
+  ServiceInfo,
+} from "../../../../../types/appointment";
 
 const statusConfig = {
   confirmed: {
@@ -97,6 +102,12 @@ export default function ClienteDetalhesPage() {
   const [cancelledFilter, setCancelledFilter] = useState<
     "all" | "true" | "false"
   >("all");
+  const [extraServiceInfo, setExtraServiceInfo] = useState<ServiceInfo[]>([]);
+  const [extraEmployeeInfo, setExtraEmployeeInfo] = useState<EmployeeInfo[]>(
+    []
+  );
+  const [serviceLookupLoading, setServiceLookupLoading] = useState(false);
+  const [employeeLookupLoading, setEmployeeLookupLoading] = useState(false);
 
   const dateRange = useMemo(() => {
     if (filter === "all") return { startDate: undefined, endDate: undefined };
@@ -142,33 +153,233 @@ export default function ClienteDetalhesPage() {
     enabled: !!clientId,
   });
 
+  const { client: clientDetails, isLoading: isLoadingClient } =
+    useCompanyClientDetails({
+      clientId,
+      enabled: !!clientId,
+    });
+
+  useEffect(() => {
+    setExtraServiceInfo([]);
+    setExtraEmployeeInfo([]);
+  }, [clientId]);
+
   const clientMap = useMemo(
     () => new Map(clientInfo.map(client => [client.id, client])),
     [clientInfo]
   );
+  const mergedServiceInfo = useMemo(() => {
+    const map = new Map<string, ServiceInfo>();
+    serviceInfo.forEach(item => map.set(String(item.id), item));
+    extraServiceInfo.forEach(item => map.set(String(item.id), item));
+    return Array.from(map.values());
+  }, [serviceInfo, extraServiceInfo]);
+  const mergedEmployeeInfo = useMemo(() => {
+    const map = new Map<string, EmployeeInfo>();
+    employeeInfo.forEach(item => map.set(String(item.id), item));
+    extraEmployeeInfo.forEach(item => map.set(String(item.id), item));
+    return Array.from(map.values());
+  }, [employeeInfo, extraEmployeeInfo]);
   const serviceMap = useMemo(
-    () => new Map(serviceInfo.map(service => [service.id, service])),
-    [serviceInfo]
+    () =>
+      new Map(mergedServiceInfo.map(service => [String(service.id), service])),
+    [mergedServiceInfo]
   );
   const employeeMap = useMemo(
-    () => new Map(employeeInfo.map(employee => [employee.id, employee])),
-    [employeeInfo]
+    () =>
+      new Map(
+        mergedEmployeeInfo.map(employee => [String(employee.id), employee])
+      ),
+    [mergedEmployeeInfo]
   );
 
-  const client = clientMap.get(clientId) || clientInfo[0];
+  const client = useMemo(() => {
+    if (clientDetails) return clientDetails;
+    if (clientInfo.length === 0) return undefined;
+    const byId = clientMap.get(clientId);
+    if (byId) return byId;
+    const appointmentMatch = appointments.find(
+      appointment => appointment.company_client_id === clientId,
+    );
+    if (appointmentMatch) {
+      return clientMap.get(appointmentMatch.client_id) || clientInfo[0];
+    }
+    return clientInfo[0];
+  }, [clientDetails, clientInfo, clientId, appointments, clientMap]);
+
+  useEffect(() => {
+    if (!appointments.length) {
+      return;
+    }
+
+    const existingIds = new Set(
+      mergedServiceInfo.map(service => String(service.id))
+    );
+    const missingIds = Array.from(
+      new Set(
+        appointments
+          .map(appointment => String(appointment.service_id))
+          .filter(Boolean)
+      )
+    ).filter(id => !existingIds.has(id));
+
+    if (missingIds.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+    setServiceLookupLoading(true);
+
+    const fetchServices = async () => {
+      try {
+        const results = await Promise.allSettled(
+          missingIds.map(async id => {
+            const response = await fetch(`/api/service/${id}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            if (!response.ok) {
+              throw new Error(`Erro ao buscar serviço ${id}`);
+            }
+            const data = await response.json();
+            return {
+              id: String(data.id ?? id),
+              name: data.name || "Serviço não informado",
+              description: data.description || "",
+              price: data.price ?? 0,
+              duration: data.duration ?? 0,
+            } as ServiceInfo;
+          })
+        );
+        const responses = results.flatMap(result =>
+          result.status === "fulfilled" ? [result.value] : []
+        );
+
+        if (!cancelled) {
+          setExtraServiceInfo(current => {
+            const map = new Map<string, ServiceInfo>();
+            current.forEach(item => map.set(String(item.id), item));
+            responses.forEach(item => map.set(String(item.id), item));
+            return Array.from(map.values());
+          });
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Erro ao buscar serviços:", error);
+        }
+      } finally {
+        if (!cancelled) {
+          setServiceLookupLoading(false);
+        }
+      }
+    };
+
+    fetchServices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appointments, mergedServiceInfo]);
+
+  useEffect(() => {
+    if (!appointments.length) {
+      return;
+    }
+
+    const existingIds = new Set(
+      mergedEmployeeInfo.map(employee => String(employee.id))
+    );
+    const missingIds = Array.from(
+      new Set(
+        appointments
+          .map(appointment => String(appointment.employee_id))
+          .filter(Boolean)
+      )
+    ).filter(id => !existingIds.has(id));
+
+    if (missingIds.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+    setEmployeeLookupLoading(true);
+
+    const fetchEmployees = async () => {
+      try {
+        const results = await Promise.allSettled(
+          missingIds.map(async id => {
+            const response = await fetch(`/api/employee/other/${id}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            if (!response.ok) {
+              throw new Error(`Erro ao buscar profissional ${id}`);
+            }
+            const data = await response.json();
+            return {
+              id: String(data.id ?? id),
+              name: data.name || "Profissional",
+              surname: data.surname || "",
+              email: data.email || "",
+            } as EmployeeInfo;
+          })
+        );
+        const responses = results.flatMap(result =>
+          result.status === "fulfilled" ? [result.value] : []
+        );
+
+        if (!cancelled) {
+          setExtraEmployeeInfo(current => {
+            const map = new Map<string, EmployeeInfo>();
+            current.forEach(item => map.set(String(item.id), item));
+            responses.forEach(item => map.set(String(item.id), item));
+            return Array.from(map.values());
+          });
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Erro ao buscar profissionais:", error);
+        }
+      } finally {
+        if (!cancelled) {
+          setEmployeeLookupLoading(false);
+        }
+      }
+    };
+
+    fetchEmployees();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appointments, mergedEmployeeInfo]);
 
   const rows = useMemo(() => {
     return appointments.map(appointment => {
-      const service = serviceMap.get(appointment.service_id);
-      const employee = employeeMap.get(appointment.employee_id);
+      const service = serviceMap.get(String(appointment.service_id));
+      const employee = employeeMap.get(String(appointment.employee_id));
       const status = resolveStatus(appointment);
+
+      const serviceName =
+        service?.name ||
+        (serviceLookupLoading
+          ? "Carregando serviço..."
+          : "Serviço não informado");
+
+      const employeeName = employee
+        ? `${employee.name} ${employee.surname}`.trim()
+        : employeeLookupLoading
+          ? "Carregando profissional..."
+          : "Profissional não informado";
 
       return {
         id: appointment.id,
-        serviceName: service?.name || "Serviço não informado",
-        employeeName: employee
-          ? `${employee.name} ${employee.surname}`.trim()
-          : "Profissional não informado",
+        serviceName,
+        employeeName,
         status,
         dateLabel: formatDate(appointment.start_time),
         timeLabel: formatTime(appointment.start_time),
@@ -176,7 +387,13 @@ export default function ClienteDetalhesPage() {
         price: service?.price,
       };
     });
-  }, [appointments, serviceMap, employeeMap]);
+  }, [
+    appointments,
+    serviceMap,
+    employeeMap,
+    serviceLookupLoading,
+    employeeLookupLoading,
+  ]);
 
   return (
     <PageShell>
@@ -210,18 +427,30 @@ export default function ClienteDetalhesPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Cliente</p>
                 <p className="text-lg font-semibold text-foreground">
-                  {client ? `${client.name} ${client.surname}` : "—"}
+                  {client
+                    ? `${client.name} ${client.surname}`
+                    : isLoadingClient
+                      ? "Carregando..."
+                      : "—"}
                 </p>
               </div>
             </div>
             <div className="mt-4 space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <span>{client?.email || "E-mail não informado"}</span>
+                <span>
+                  {client?.email ||
+                    (isLoadingClient ? "Carregando..." : "E-mail não informado")}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                <span>{client?.phone || "Telefone não informado"}</span>
+                <span>
+                  {client?.phone ||
+                    (isLoadingClient
+                      ? "Carregando..."
+                      : "Telefone não informado")}
+                </span>
               </div>
             </div>
           </div>

@@ -69,6 +69,12 @@ export function useCompanyClientAppointments({
       }
 
       const responseData: BranchAppointmentsResponse = await response.json();
+      if (process.env.NODE_ENV !== "production") {
+        console.log(
+          "[company-client-appointments] Response:",
+          JSON.stringify(responseData, null, 2)
+        );
+      }
       setData(responseData);
       return responseData;
     } catch (err) {
