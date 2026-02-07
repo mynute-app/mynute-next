@@ -22,13 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -43,6 +36,7 @@ import { ClientsLoadingSkeleton } from "@/components/clients/clients-loading-ske
 import { ErrorState } from "@/components/ui/error-state";
 import { DataPagination } from "@/components/ui/data-pagination";
 import { useCompanyClients } from "@/hooks/use-company-clients";
+import { useDeleteCompanyClient } from "@/hooks/use-delete-company-client";
 import type { CompanyClient } from "@/types/company-client";
 
 const formatAddress = (client: CompanyClient) => {
@@ -71,6 +65,7 @@ export const ClientesPage = () => {
       page,
       pageSize,
     });
+  const { deleteCompanyClient, isDeleting } = useDeleteCompanyClient();
 
   useLayoutEffect(() => {
     if (data?.company_clients) {
@@ -106,6 +101,13 @@ export const ClientesPage = () => {
     });
   }, [clients, searchTerm]);
 
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setSelectedClient(undefined);
+    }
+  };
+
   const handleCreateClient = () => {
     setSelectedClient(undefined);
     setDialogOpen(true);
@@ -113,19 +115,27 @@ export const ClientesPage = () => {
 
   const handleEditClient = (client: CompanyClient) => {
     setSelectedClient(client);
-    setDialogOpen(true);
+    setTimeout(() => {
+      setDialogOpen(true);
+    }, 0);
   };
 
   const handleDeleteClick = (client: CompanyClient) => {
     setClientToDelete(client);
-    setDeleteDialogOpen(true);
+    setTimeout(() => {
+      setDeleteDialogOpen(true);
+    }, 0);
   };
 
-  const handleConfirmDelete = () => {
-    if (clientToDelete) {
+  const handleConfirmDelete = async () => {
+    if (!clientToDelete) return;
+
+    const success = await deleteCompanyClient(clientToDelete.id);
+    if (success) {
       setClients(clients.filter(c => c.id !== clientToDelete.id));
       setDeleteDialogOpen(false);
       setClientToDelete(null);
+      refetch();
     }
   };
 
@@ -301,7 +311,7 @@ export const ClientesPage = () => {
 
       <ClientDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={handleDialogOpenChange}
         client={selectedClient}
         onCreated={handleCreatedClient}
         onUpdated={handleUpdatedClient}
@@ -317,12 +327,15 @@ export const ClientesPage = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-destructive hover:bg-destructive/90"
+              disabled={isDeleting}
             >
-              Excluir
+              {isDeleting ? "Excluindo..." : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
