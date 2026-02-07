@@ -10,6 +10,7 @@ interface UseCreateCompanyClientReturn {
   createdClient: CompanyClient | null;
   loading: boolean;
   error: string | null;
+  errorCode: "PHONE_DUPLICATE" | "EMAIL_DUPLICATE" | "GENERIC" | null;
   createCompanyClient: (
     data: CreateCompanyClientInput
   ) => Promise<CompanyClient | null>;
@@ -43,11 +44,15 @@ export function useCreateCompanyClient(): UseCreateCompanyClientReturn {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<
+    "PHONE_DUPLICATE" | "EMAIL_DUPLICATE" | "GENERIC" | null
+  >(null);
 
   const createCompanyClient = useCallback(
     async (data: CreateCompanyClientInput): Promise<CompanyClient | null> => {
       setLoading(true);
       setError(null);
+      setErrorCode(null);
       setCreatedClient(null);
 
       try {
@@ -61,8 +66,8 @@ export function useCreateCompanyClient(): UseCreateCompanyClientReturn {
           body: JSON.stringify(payload),
         });
 
-        const responseText = await response.text();
-        let responseData: any = null;
+      const responseText = await response.text();
+      let responseData: any = null;
 
         try {
           responseData = responseText ? JSON.parse(responseText) : null;
@@ -70,23 +75,46 @@ export function useCreateCompanyClient(): UseCreateCompanyClientReturn {
           responseData = responseText;
         }
 
-        if (!response.ok) {
-          const errorMessage =
-            responseData?.message ||
-            responseData?.error ||
-            responseText ||
-            "Erro ao criar cliente";
-          setError(errorMessage);
-          return null;
+      if (!response.ok) {
+        const errorMessage =
+          responseData?.message ||
+          responseData?.error ||
+          responseText ||
+          "Erro ao criar cliente";
+
+        if (responseData?.code === "PHONE_DUPLICATE") {
+          setErrorCode("PHONE_DUPLICATE");
+        } else if (responseData?.code === "EMAIL_DUPLICATE") {
+          setErrorCode("EMAIL_DUPLICATE");
+        } else {
+          const normalized = String(errorMessage).toLowerCase();
+          if (
+            normalized.includes("idx_company_clients_phone") ||
+            (normalized.includes("duplicate") && normalized.includes("phone"))
+          ) {
+            setErrorCode("PHONE_DUPLICATE");
+          } else if (
+            normalized.includes("idx_company_clients_email") ||
+            (normalized.includes("duplicate") && normalized.includes("email"))
+          ) {
+            setErrorCode("EMAIL_DUPLICATE");
+          } else {
+            setErrorCode("GENERIC");
+          }
         }
+
+        setError(errorMessage);
+        return null;
+      }
 
         setCreatedClient(responseData);
         return responseData as CompanyClient;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Erro ao conectar com o servidor";
-        setError(errorMessage);
-        return null;
+      const errorMessage =
+        err instanceof Error ? err.message : "Erro ao conectar com o servidor";
+      setErrorCode("GENERIC");
+      setError(errorMessage);
+      return null;
       } finally {
         setLoading(false);
       }
@@ -97,6 +125,7 @@ export function useCreateCompanyClient(): UseCreateCompanyClientReturn {
   const reset = useCallback(() => {
     setCreatedClient(null);
     setError(null);
+    setErrorCode(null);
     setLoading(false);
   }, []);
 
@@ -104,6 +133,7 @@ export function useCreateCompanyClient(): UseCreateCompanyClientReturn {
     createdClient,
     loading,
     error,
+    errorCode,
     createCompanyClient,
     reset,
   };

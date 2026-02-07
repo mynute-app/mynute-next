@@ -88,7 +88,7 @@ export function ClientDialog({
     defaultValues,
   });
 
-  const { createCompanyClient, loading, error, reset } =
+  const { createCompanyClient, loading, error, errorCode, reset } =
     useCreateCompanyClient();
   const [formError, setFormError] = useState<string | null>(null);
   const [cepStatus, setCepStatus] = useState<
@@ -133,17 +133,14 @@ export function ClientDialog({
   }, [client, open, form, reset]);
 
   useEffect(() => {
+    form.clearErrors(["phone", "email"]);
+
     if (!error) {
       setFormError(null);
       return;
     }
 
-    const normalized = error.toLowerCase();
-
-    if (
-      normalized.includes("idx_company_clients_phone") ||
-      (normalized.includes("duplicate") && normalized.includes("phone"))
-    ) {
+    if (errorCode === "PHONE_DUPLICATE") {
       form.setError("phone", {
         type: "manual",
         message: "Telefone já cadastrado.",
@@ -152,10 +149,7 @@ export function ClientDialog({
       return;
     }
 
-    if (
-      normalized.includes("idx_company_clients_email") ||
-      (normalized.includes("duplicate") && normalized.includes("email"))
-    ) {
+    if (errorCode === "EMAIL_DUPLICATE") {
       form.setError("email", {
         type: "manual",
         message: "E-mail já cadastrado.",
@@ -165,7 +159,7 @@ export function ClientDialog({
     }
 
     setFormError(error);
-  }, [error, form]);
+  }, [error, errorCode, form]);
 
   useEffect(() => {
     if (!open) return;

@@ -49,11 +49,42 @@ export const POST = auth(async function POST(req) {
 
     return NextResponse.json(createdClient, { status: 201 });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const normalized = errorMessage.toLowerCase();
+
+    if (
+      normalized.includes("idx_company_clients_phone") ||
+      (normalized.includes("duplicate") && normalized.includes("phone"))
+    ) {
+      return NextResponse.json(
+        {
+          code: "PHONE_DUPLICATE",
+          message: "Telefone já cadastrado.",
+          error: errorMessage,
+        },
+        { status: 409 }
+      );
+    }
+
+    if (
+      normalized.includes("idx_company_clients_email") ||
+      (normalized.includes("duplicate") && normalized.includes("email"))
+    ) {
+      return NextResponse.json(
+        {
+          code: "EMAIL_DUPLICATE",
+          message: "E-mail já cadastrado.",
+          error: errorMessage,
+        },
+        { status: 409 }
+      );
+    }
+
     console.error("❌ Erro ao criar cliente da empresa:", error);
     return NextResponse.json(
       {
         message: "Erro interno ao criar cliente.",
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
       },
       { status: 500 }
     );
