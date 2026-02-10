@@ -34,9 +34,7 @@ import {
 interface ClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  client?: CompanyClient;
   onCreated: (client: CompanyClient) => void;
-  onUpdated: (client: CompanyClient) => void;
 }
 
 const defaultValues: CompanyClientFormData = {
@@ -78,11 +76,8 @@ const formatCep = (value: string) => {
 export function ClientDialog({
   open,
   onOpenChange,
-  client,
   onCreated,
-  onUpdated,
 }: ClientDialogProps) {
-  const isEditing = Boolean(client);
   const form = useForm<CompanyClientFormData>({
     resolver: zodResolver(companyClientFormSchema),
     defaultValues,
@@ -99,7 +94,7 @@ export function ClientDialog({
 
   const zipCodeValue = useWatch({ control: form.control, name: "zip_code" });
   const cepDigits = useMemo(() => onlyDigits(zipCodeValue || ""), [zipCodeValue]);
-  const shouldShowAddress = isEditing || cepDigits.length >= 8;
+  const shouldShowAddress = cepDigits.length >= 8;
 
   useEffect(() => {
     if (!open) {
@@ -111,26 +106,9 @@ export function ClientDialog({
       return;
     }
 
-    if (client) {
-      form.reset({
-        name: client.name || "",
-        surname: client.surname || "",
-        email: client.email || "",
-        phone: client.phone ? formatPhone(client.phone) : "",
-        street: client.street || "",
-        number: client.number || "",
-        neighborhood: client.neighborhood || "",
-        city: client.city || "",
-        state: client.state || "",
-        country: client.country || "Brasil",
-        zip_code: client.zip_code ? formatCep(client.zip_code) : "",
-      });
-      setLastCep(client.zip_code ? onlyDigits(client.zip_code) : null);
-    } else {
-      form.reset(defaultValues);
-      setLastCep(null);
-    }
-  }, [client, open, form, reset]);
+    form.reset(defaultValues);
+    setLastCep(null);
+  }, [open, form, reset]);
 
   useEffect(() => {
     form.clearErrors(["phone", "email"]);
@@ -214,15 +192,6 @@ export function ClientDialog({
   }, [cepDigits, form, lastCep, open]);
 
   const handleSubmit = async (values: CompanyClientFormData) => {
-    if (isEditing && client) {
-      onUpdated({
-        ...client,
-        ...values,
-      });
-      onOpenChange(false);
-      return;
-    }
-
     setFormError(null);
     const created = await createCompanyClient(values);
     if (created) {
@@ -236,13 +205,9 @@ export function ClientDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[90vh] max-h-[90vh] min-h-0 max-w-2xl flex-col overflow-hidden p-0">
         <DialogHeader className="border-b px-6 pb-4 pt-6">
-          <DialogTitle>
-            {isEditing ? "Editar Cliente" : "Novo Cliente"}
-          </DialogTitle>
+          <DialogTitle>Novo Cliente</DialogTitle>
           <DialogDescription>
-            {isEditing
-              ? "Atualize as informações do cliente"
-              : "Preencha os dados para cadastrar um novo cliente"}
+            Preencha os dados para cadastrar um novo cliente
           </DialogDescription>
         </DialogHeader>
 
@@ -487,7 +452,7 @@ export function ClientDialog({
                 Cancelar
               </Button>
               <Button type="submit" className="btn-gradient" disabled={loading}>
-                {isEditing ? "Salvar Alterações" : "Criar Cliente"}
+                Criar Cliente
               </Button>
             </DialogFooter>
           </form>

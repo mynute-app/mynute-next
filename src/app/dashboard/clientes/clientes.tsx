@@ -2,7 +2,6 @@
 
 import { useLayoutEffect, useMemo, useState, useEffect } from "react";
 import {
-  Edit,
   Mail,
   MapPin,
   MoreHorizontal,
@@ -19,7 +18,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -54,9 +52,6 @@ export const ClientesPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<
-    CompanyClient | undefined
-  >();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<CompanyClient | null>(
     null,
@@ -104,21 +99,10 @@ export const ClientesPage = () => {
 
   const handleDialogOpenChange = (open: boolean) => {
     setDialogOpen(open);
-    if (!open) {
-      setSelectedClient(undefined);
-    }
   };
 
   const handleCreateClient = () => {
-    setSelectedClient(undefined);
     setDialogOpen(true);
-  };
-
-  const handleEditClient = (client: CompanyClient) => {
-    setSelectedClient(client);
-    setTimeout(() => {
-      setDialogOpen(true);
-    }, 0);
   };
 
   const handleDeleteClick = (client: CompanyClient) => {
@@ -147,11 +131,6 @@ export const ClientesPage = () => {
     setClients(prev => [client, ...prev]);
     setDialogOpen(false);
     refetch();
-  };
-
-  const handleUpdatedClient = (client: CompanyClient) => {
-    setClients(prev => prev.map(c => (c.id === client.id ? client : c)));
-    setDialogOpen(false);
   };
 
   return (
@@ -245,13 +224,6 @@ export const ClientesPage = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem
-                            onClick={() => handleEditClient(client)}
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar Cliente
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
                             onClick={() => handleDeleteClick(client)}
                             className="text-destructive focus:text-destructive"
                           >
@@ -315,9 +287,7 @@ export const ClientesPage = () => {
       <ClientDialog
         open={dialogOpen}
         onOpenChange={handleDialogOpenChange}
-        client={selectedClient}
         onCreated={handleCreatedClient}
-        onUpdated={handleUpdatedClient}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
