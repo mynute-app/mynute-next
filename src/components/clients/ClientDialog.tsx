@@ -150,16 +150,21 @@ export function ClientDialog({
       return;
     }
 
+    const controller = new AbortController();
+    let isActive = true;
+
     const fetchCep = async () => {
       setCepStatus("loading");
       setCepError(null);
-      setLastCep(cepDigits);
 
       try {
         const response = await fetch(
-          `https://viacep.com.br/ws/${cepDigits}/json/`
+          `https://viacep.com.br/ws/${cepDigits}/json/`,
+          { signal: controller.signal }
         );
         const data = await response.json();
+
+        if (!isActive || controller.signal.aborted) return;
 
         if (data?.erro) {
           setCepStatus("error");
@@ -181,14 +186,21 @@ export function ClientDialog({
         });
         form.setValue("country", "Brasil", { shouldDirty: true });
 
+        setLastCep(cepDigits);
         setCepStatus("success");
       } catch (fetchError) {
+        if (!isActive || controller.signal.aborted) return;
         setCepStatus("error");
         setCepError("Não foi possível buscar o CEP.");
       }
     };
 
     fetchCep();
+
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
   }, [cepDigits, form, lastCep, open]);
 
   const handleSubmit = async (values: CompanyClientFormData) => {
