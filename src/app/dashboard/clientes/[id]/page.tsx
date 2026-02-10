@@ -39,7 +39,7 @@ const statusConfig = {
       "border-[hsl(var(--warning)/0.2)] bg-[hsl(var(--warning)/0.12)] text-[hsl(var(--warning))]",
   },
   completed: {
-    label: "Concluido",
+    label: "Concluído",
     className: "border-border bg-muted text-muted-foreground",
   },
   cancelled: {
