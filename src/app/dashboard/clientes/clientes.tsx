@@ -170,6 +170,7 @@ export const ClientesPage = () => {
               <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                 <ErrorState
                   title="Erro ao carregar clientes"
+                  description={error}
                   onRetry={refetch}
                 />
               </div>

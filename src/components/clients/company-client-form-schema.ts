@@ -10,7 +10,10 @@ export const companyClientFormSchema = z.object({
   phone: z
     .string()
     .min(1, "Telefone é obrigatório")
-    .regex(/^[\d\s\-\(\)\+]+$/, "Telefone deve conter apenas números"),
+    .regex(
+      /^[\d\s\-\(\)\+]+$/,
+      "Telefone deve conter apenas números e caracteres de formatação (espaços, parênteses, hífens e +)"
+    ),
   street: z.string().optional(),
   number: z.string().optional(),
   neighborhood: z.string().optional(),

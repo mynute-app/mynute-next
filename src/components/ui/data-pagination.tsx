@@ -50,6 +50,7 @@ export function DataPagination({
   onPageSizeChange,
   pageSizeOptions = [10, 20, 50],
 }: DataPaginationProps) {
+  const shouldShowPageSize = Boolean(onPageSizeChange);
   const totalPages = useMemo(() => {
     if (!total) return 1;
     return Math.max(1, Math.ceil(total / pageSize));
@@ -67,6 +68,26 @@ export function DataPagination({
         Página {page} de {totalPages} • {total} registros
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        {shouldShowPageSize && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Itens por pagina</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={value => onPageSizeChange?.(Number(value))}
+            >
+              <SelectTrigger className="h-9 w-[110px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {pageSizeOptions.map(option => (
+                  <SelectItem key={option} value={String(option)}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <Pagination>
           <PaginationContent>
             <PaginationItem>
