@@ -20,7 +20,12 @@ interface UseCreateCompanyClientReturn {
 const formatPhoneToE164 = (phone: string): string => {
   const cleaned = phone.replace(/\D/g, "");
   if (!cleaned) return "";
-  if (cleaned.length >= 11) return `+${cleaned}`;
+  if (cleaned.startsWith("55") && cleaned.length >= 12) {
+    return `+${cleaned}`;
+  }
+  if (cleaned.length > 11) {
+    return `+${cleaned}`;
+  }
   return `+55${cleaned}`;
 };
 

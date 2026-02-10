@@ -58,24 +58,18 @@ export function useCompanyClientAppointments({
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.message || "Erro ao buscar agendamentos do cliente"
+          errorData.message || "Erro ao buscar agendamentos do cliente",
         );
       }
 
       const responseData: BranchAppointmentsResponse = await response.json();
-      if (process.env.NODE_ENV !== "production") {
-        console.log(
-          "[company-client-appointments] Response:",
-          JSON.stringify(responseData, null, 2)
-        );
-      }
-      setData(responseData);
+      if (process.env.NODE_ENV !== "production") setData(responseData);
       return responseData;
     } catch (err) {
       const errorMessage =
@@ -96,7 +90,16 @@ export function useCompanyClientAppointments({
     if (enabled && clientId) {
       fetchAppointments();
     }
-  }, [clientId, page, pageSize, startDate, endDate, cancelled, timezone, enabled]);
+  }, [
+    clientId,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    cancelled,
+    timezone,
+    enabled,
+  ]);
 
   return {
     data,

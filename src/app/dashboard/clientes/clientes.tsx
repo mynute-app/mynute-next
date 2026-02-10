@@ -117,7 +117,7 @@ export const ClientesPage = () => {
 
     const success = await deleteCompanyClient(clientToDelete.id);
     if (success) {
-      setClients(clients.filter(c => c.id !== clientToDelete.id));
+      setClients(prev => prev.filter(c => c.id !== clientToDelete.id));
       setDeleteDialogOpen(false);
       setClientToDelete(null);
       refetch();
