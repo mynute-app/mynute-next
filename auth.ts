@@ -2,6 +2,18 @@ import NextAuth from "next-auth";
 import { ZodError } from "zod";
 import Credentials from "next-auth/providers/credentials";
 import { signInSchema } from "@/lib/zod";
+import { resolveTenantSlugFromRequest } from "@/lib/tenant";
+import { getCompanyByTenantSlug } from "@/lib/tenant-company";
+
+function getTenantFromAuthRequest(
+  req: Request,
+  credentials?: Partial<Record<string, unknown>>,
+) {
+  const credentialTenant =
+    typeof credentials?.tenant === "string" ? credentials.tenant : null;
+
+  return resolveTenantSlugFromRequest(req, credentialTenant);
+}
 
 export const { handlers, auth, signIn } = NextAuth({
   trustHost: true,
@@ -15,54 +27,37 @@ export const { handlers, auth, signIn } = NextAuth({
       },
       authorize: async (credentials, req) => {
         try {
-          const { email, password } = await signInSchema.parseAsync(
-            credentials
-          );
+          const { email, password } = await signInSchema.parseAsync(credentials);
+          const tenant = getTenantFromAuthRequest(req, credentials);
 
-          const host = req?.headers?.get("host") || "";
-          const subdomain = host.split(".")[0];
-
-          if (!subdomain) {
-            throw new Error("Subdomínio não identificado na requisição.");
+          if (!tenant) {
+            throw new Error("Tenant nao identificado na requisicao.");
           }
 
-          const companyRes = await fetch(
-            `${process.env.NEXTAUTH_URL}/api/company/subdomain/${subdomain}`,
-            { cache: "no-store" }
-          );
+          const companyLookup = await getCompanyByTenantSlug(tenant);
 
-          if (!companyRes.ok) {
-            throw new Error("Empresa não encontrada para o subdomínio.");
+          if (!companyLookup.success) {
+            throw new Error("Empresa nao encontrada para o tenant informado.");
           }
 
-          const company = await companyRes.json();
-          const response = await fetch(
-            `${process.env.BACKEND_URL}/employee/login`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Company-ID": company.id,
-              },
-              body: JSON.stringify({ email, password }),
-            }
-          );
-
-          response.headers.forEach((value, key) => {
-            console.log(`${key}: ${value}`);
+          const company = companyLookup.company;
+          const response = await fetch(`${process.env.BACKEND_URL}/employee/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Company-ID": company.id,
+            },
+            body: JSON.stringify({ email, password }),
           });
 
           if (!response.ok) {
-            throw new Error(`Falha ao autenticar. Código: ${response.status}`);
+            throw new Error(`Falha ao autenticar. Codigo: ${response.status}`);
           }
 
           const token = response.headers.get("X-Auth-Token");
 
           if (!token) {
-            console.error(
-              "Token X-Auth-Token não encontrado nos headers da resposta"
-            );
-            throw new Error("Token não encontrado na resposta.");
+            throw new Error("Token nao encontrado na resposta.");
           }
 
           const fallbackName = email?.split("@")[0] || "Funcionario";
@@ -72,14 +67,15 @@ export const { handlers, auth, signIn } = NextAuth({
             name: fallbackName,
             token,
             companyId: company.id,
-            subdomain,
+            subdomain: tenant,
+            tenant,
           };
         } catch (error) {
           if (error instanceof ZodError) {
-            console.error("Erro de validação:", error.errors);
+            console.error("Erro de validacao:", error.errors);
             return null;
           }
-          console.error("Erro durante a autenticação:", error);
+          console.error("Erro durante a autenticacao:", error);
           return null;
         }
       },
@@ -99,26 +95,22 @@ export const { handlers, auth, signIn } = NextAuth({
           };
 
           if (!email || !code) {
-            throw new Error("Email e código são obrigatórios");
+            throw new Error("Email e codigo sao obrigatorios");
           }
 
-          const host = req?.headers?.get("host") || "";
-          const subdomain = host.split(".")[0];
+          const tenant = getTenantFromAuthRequest(req, credentials);
 
-          if (!subdomain) {
-            throw new Error("Subdomínio não identificado na requisição.");
+          if (!tenant) {
+            throw new Error("Tenant nao identificado na requisicao.");
           }
 
-          const companyRes = await fetch(
-            `${process.env.NEXTAUTH_URL}/api/company/subdomain/${subdomain}`,
-            { cache: "no-store" }
-          );
+          const companyLookup = await getCompanyByTenantSlug(tenant);
 
-          if (!companyRes.ok) {
-            throw new Error("Empresa não encontrada para o subdomínio.");
+          if (!companyLookup.success) {
+            throw new Error("Empresa nao encontrada para o tenant informado.");
           }
 
-          const company = await companyRes.json();
+          const company = companyLookup.company;
 
           const response = await fetch(
             `${process.env.BACKEND_URL}/employee/login-with-code`,
@@ -129,20 +121,17 @@ export const { handlers, auth, signIn } = NextAuth({
                 "X-Company-ID": company.id,
               },
               body: JSON.stringify({ email, code }),
-            }
+            },
           );
 
           if (!response.ok) {
-            throw new Error(`Código inválido ou expirado`);
+            throw new Error("Codigo invalido ou expirado");
           }
 
           const token = response.headers.get("X-Auth-Token");
 
           if (!token) {
-            console.error(
-              "Token X-Auth-Token não encontrado nos headers da resposta"
-            );
-            throw new Error("Token não encontrado na resposta.");
+            throw new Error("Token nao encontrado na resposta.");
           }
 
           const fallbackName = email?.split("@")[0] || "Funcionario";
@@ -152,10 +141,11 @@ export const { handlers, auth, signIn } = NextAuth({
             name: fallbackName,
             token,
             companyId: company.id,
-            subdomain,
+            subdomain: tenant,
+            tenant,
           };
         } catch (error) {
-          console.error("Erro durante a autenticação com código:", error);
+          console.error("Erro durante a autenticacao com codigo:", error);
           return null;
         }
       },
@@ -168,6 +158,7 @@ export const { handlers, auth, signIn } = NextAuth({
         token.accessToken = u.token;
         token.companyId = u.companyId;
         token.subdomain = u.subdomain;
+        token.tenant = u.tenant ?? u.subdomain;
         token.email = u.email ?? token.email;
         token.name = u.name ?? token.name ?? u.email ?? token.email;
       }
@@ -175,6 +166,7 @@ export const { handlers, auth, signIn } = NextAuth({
     },
     async session({ session, token }) {
       (session as any).accessToken = (token as any).accessToken;
+      (session as any).tenant = (token as any).tenant ?? (token as any).subdomain;
 
       session.user = {
         ...session.user,

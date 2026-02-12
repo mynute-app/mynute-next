@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { useVerifyLoginCode } from "@/hooks/use-verify-login-code";
 import { useSendLoginCode } from "@/hooks/use-send-login-code";
 import Link from "next/link";
+import { useTenantSlug } from "@/hooks/use-tenant-slug";
+import { buildTenantPath } from "@/lib/tenant";
 
 const verifyCodeSchema = z.object({
   code: z
@@ -44,6 +46,7 @@ export function VerifyCodeForm({
 
   const { verifyCode, loading: verifying } = useVerifyLoginCode();
   const { sendCode, loading: resending } = useSendLoginCode();
+  const tenant = useTenantSlug();
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(60);
 
@@ -60,13 +63,13 @@ export function VerifyCodeForm({
     if (!emailFromParams) {
       return;
     }
-    await verifyCode(emailFromParams, data.code);
+    await verifyCode(emailFromParams, data.code, tenant);
   };
 
   const handleResendCode = async () => {
     if (!emailFromParams || !canResend) return;
 
-    const success = await sendCode(emailFromParams);
+    const success = await sendCode(emailFromParams, tenant);
     if (success) {
       setCanResend(false);
       setCountdown(60);
@@ -149,7 +152,7 @@ export function VerifyCodeForm({
 
       <div className="text-center text-sm">
         <Link
-          href="/auth/employee"
+          href={buildTenantPath(tenant, "/login", "/auth/employee")}
           className="text-muted-foreground hover:underline underline-offset-4"
         >
           Voltar para o login

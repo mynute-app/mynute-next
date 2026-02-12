@@ -1,48 +1,35 @@
+import { resolveTenantSlugFromRequest } from "@/lib/tenant";
+import { getCompanyByTenantSlug } from "@/lib/tenant-company";
+
 export async function POST(req: Request) {
   try {
-    const { email, subdomain } = await req.json();
+    const body = await req.json();
+    const email = typeof body?.email === "string" ? body.email : "";
+    const tenantFromBody =
+      typeof body?.tenant === "string"
+        ? body.tenant
+        : typeof body?.subdomain === "string"
+          ? body.subdomain
+          : null;
 
-    console.log("📥 Solicitação de reset de senha:", {
-      email,
-      subdomain,
-    });
+    const tenant = resolveTenantSlugFromRequest(req, tenantFromBody);
 
-    if (!email || !subdomain) {
-      console.error("❌ Dados inválidos para reset de senha!", {
-        email,
-        subdomain,
-      });
+    if (!email || !tenant) {
       return Response.json(
         {
-          error: "E-mail e subdomínio são obrigatórios.",
+          error: "E-mail e tenant sao obrigatorios.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const companyResponse = await fetch(
-      `${process.env.BACKEND_URL}/company/subdomain/${subdomain}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
+    const companyLookup = await getCompanyByTenantSlug(tenant);
 
-    if (!companyResponse.ok) {
-      console.error("❌ Erro ao buscar empresa:", companyResponse.statusText);
-      return Response.json(
-        { error: "Empresa não encontrada" },
-        { status: 404 }
-      );
+    if (!companyLookup.success) {
+      return Response.json({ error: "Empresa nao encontrada" }, { status: 404 });
     }
 
-    const company = await companyResponse.json();
-    console.log(
-      "✅ Empresa encontrada:",
-      company.trading_name || company.legal_name
-    );
+    const company = companyLookup.company;
 
     const resetResponse = await fetch(
       `${process.env.BACKEND_URL}/employee/reset-password/${email}`,
@@ -57,19 +44,16 @@ export async function POST(req: Request) {
 
     if (!resetResponse.ok) {
       const errorData = await resetResponse.text();
-      console.error("❌ Erro ao resetar senha no backend:", errorData);
+      console.error("Erro ao resetar senha no backend:", errorData);
 
       if (resetResponse.status === 404) {
         return Response.json(
-          { error: "Funcionário não encontrado com este e-mail" },
-          { status: 404 }
+          { error: "Funcionario nao encontrado com este e-mail" },
+          { status: 404 },
         );
       }
 
-      return Response.json(
-        { error: "Erro interno do servidor" },
-        { status: 500 }
-      );
+      return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
     }
 
     const rawBody = await resetResponse.text();
@@ -77,11 +61,10 @@ export async function POST(req: Request) {
     if (rawBody) {
       try {
         resetData = JSON.parse(rawBody) as { password?: string };
-      } catch (error) {
-        console.warn("⚠️ Resposta nao JSON ao resetar senha:", rawBody);
+      } catch {
+        console.warn("Resposta nao JSON ao resetar senha:", rawBody);
       }
     }
-    console.log("✅ Senha resetada com sucesso");
 
     return Response.json({
       success: true,
@@ -89,10 +72,7 @@ export async function POST(req: Request) {
       password: resetData?.password,
     });
   } catch (error) {
-    console.error("❌ Erro inesperado ao processar reset de senha:", error);
-    return Response.json(
-      { error: "Erro interno do servidor" },
-      { status: 500 }
-    );
+    console.error("Erro inesperado ao processar reset de senha:", error);
+    return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

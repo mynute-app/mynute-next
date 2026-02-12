@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "./use-toast";
 
 interface UseSendLoginCodeResult {
-  sendCode: (email: string) => Promise<boolean>;
+  sendCode: (email: string, tenant?: string | null) => Promise<boolean>;
   loading: boolean;
   error: string | null;
 }
@@ -11,7 +11,10 @@ export const useSendLoginCode = (): UseSendLoginCodeResult => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendCode = async (email: string): Promise<boolean> => {
+  const sendCode = async (
+    email: string,
+    tenant?: string | null,
+  ): Promise<boolean> => {
     setLoading(true);
     setError(null);
 
@@ -22,14 +25,15 @@ export const useSendLoginCode = (): UseSendLoginCodeResult => {
 
       const encodedEmail = encodeURIComponent(email);
 
+      const tenantQuery = tenant ? `?tenant=${encodeURIComponent(tenant)}` : "";
       const response = await fetch(
-        `/api/employee/send-login-code/email/${encodedEmail}`,
+        `/api/employee/send-login-code/email/${encodedEmail}${tenantQuery}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       const data = await response.json();

@@ -36,6 +36,8 @@ import { ErrorState } from "@/components/ui/error-state";
 import { DataPagination } from "@/components/ui/data-pagination";
 import { useCompanyClients } from "@/hooks/use-company-clients";
 import { useDeleteCompanyClient } from "@/hooks/use-delete-company-client";
+import { useTenantSlug } from "@/hooks/use-tenant-slug";
+import { buildTenantPath } from "@/lib/tenant";
 import type { CompanyClient } from "@/types/company-client";
 
 const formatAddress = (client: CompanyClient) => {
@@ -47,6 +49,7 @@ const formatAddress = (client: CompanyClient) => {
 };
 
 export const ClientesPage = () => {
+  const tenant = useTenantSlug();
   const [searchTerm, setSearchTerm] = useState("");
   const [clients, setClients] = useState<CompanyClient[]>([]);
   const [page, setPage] = useState(1);
@@ -262,7 +265,13 @@ export const ClientesPage = () => {
                       className="w-full"
                       asChild
                     >
-                      <Link href={`/dashboard/clientes/${client.id}`}>
+                      <Link
+                        href={buildTenantPath(
+                          tenant,
+                          `/dashboard/clientes/${client.id}`,
+                          `/dashboard/clientes/${client.id}`
+                        )}
+                      >
                         Ver Detalhes
                       </Link>
                     </Button>

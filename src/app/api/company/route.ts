@@ -2,16 +2,10 @@ import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { getAuthDataFromToken } from "../../../utils/decode-jwt";
 import { fetchFromBackend } from "../../../lib/api/fetch-from-backend";
+import { resolveTenantSlugFromRequest } from "@/lib/tenant";
 
-const resolveSchemaFromHost = (req: Request) => {
-  const hostHeader = req.headers.get("host") || "";
-  const host = hostHeader.split(":")[0];
-  const subdomain = host.split(".")[0];
-  const isIpHost = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
-  if (!subdomain || subdomain === "localhost" || isIpHost) {
-    return null;
-  }
-  return subdomain;
+const resolveSchemaFromRequest = (req: Request) => {
+  return resolveTenantSlugFromRequest(req);
 };
 
 export const GET = auth(async function GET(req) {
@@ -39,7 +33,7 @@ export const GET = auth(async function GET(req) {
       );
       return NextResponse.json(companyData);
     } catch (fetchError) {
-      const schemaName = resolveSchemaFromHost(req);
+      const schemaName = resolveSchemaFromRequest(req);
       try {
         const companyData = await fetchFromBackend(
           req,

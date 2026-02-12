@@ -35,6 +35,8 @@ import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/ui/error-state";
 import { useBranchAppointments } from "@/hooks/branch/use-branch-appointments";
 import { useGetCompany } from "@/hooks/get-company";
+import { useTenantSlug } from "@/hooks/use-tenant-slug";
+import { buildTenantPath } from "@/lib/tenant";
 import type { Appointment } from "../../../../types/appointment";
 
 const statusConfig = {
@@ -112,6 +114,7 @@ const resolveStatus = (appointment: Appointment): StatusKey => {
 };
 
 export default function AgendamentosPage() {
+  const tenant = useTenantSlug();
   const { company, loading: isCompanyLoading } = useGetCompany();
   const [selectedBranchId, setSelectedBranchId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -253,7 +256,13 @@ export default function AgendamentosPage() {
             <p className="page-description">Gerencie todos os agendamentos</p>
           </div>
           <Button className="btn-gradient" asChild>
-            <Link href="/dashboard/scheduling/view">
+            <Link
+              href={buildTenantPath(
+                tenant,
+                "/dashboard/scheduling/view",
+                "/dashboard/scheduling/view"
+              )}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Novo Agendamento
             </Link>
