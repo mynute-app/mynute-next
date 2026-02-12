@@ -70,7 +70,7 @@ export function DataPagination({
       <div className="flex flex-wrap items-center gap-2">
         {shouldShowPageSize && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Itens por pagina</span>
+            <span>Itens por página</span>
             <Select
               value={String(pageSize)}
               onValueChange={value => onPageSizeChange?.(Number(value))}
@@ -101,17 +101,21 @@ export function DataPagination({
               const prevPage = pages[index - 1];
               const shouldEllipsis = prevPage && pageNumber - prevPage > 1;
 
-              return (
+              return [
+                shouldEllipsis ? (
+                  <PaginationItem key={`ellipsis-${pageNumber}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ) : null,
                 <PaginationItem key={pageNumber}>
-                  {shouldEllipsis && <PaginationEllipsis />}
                   <PaginationLink
                     isActive={pageNumber === page}
                     onClick={() => onPageChange(pageNumber)}
                   >
                     {pageNumber}
                   </PaginationLink>
-                </PaginationItem>
-              );
+                </PaginationItem>,
+              ];
             })}
 
             <PaginationItem>

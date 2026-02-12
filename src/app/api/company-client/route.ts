@@ -22,12 +22,43 @@ export const POST = auth(async function POST(req) {
     }
 
     const body = await req.json();
+    const name =
+      typeof body.name === "string" ? body.name.trim() : "";
+    const surname =
+      typeof body.surname === "string" ? body.surname.trim() : "";
+    const email =
+      typeof body.email === "string" ? body.email.trim() : "";
+    const phone =
+      typeof body.phone === "string" ? body.phone.trim() : "";
+
+    if (!name || !surname || !email || !phone) {
+      return NextResponse.json(
+        { message: "Campos obrigatÃ³rios invÃ¡lidos: name, surname, email, phone." },
+        { status: 400 }
+      );
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { message: "E-mail invÃ¡lido." },
+        { status: 400 }
+      );
+    }
+
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+      return NextResponse.json(
+        { message: "Telefone invÃ¡lido." },
+        { status: 400 }
+      );
+    }
 
     const requestBody = {
-      name: body.name,
-      surname: body.surname,
-      email: body.email,
-      phone: body.phone,
+      name,
+      surname,
+      email,
+      phone,
       street: body.street || "",
       number: body.number || "",
       neighborhood: body.neighborhood || "",

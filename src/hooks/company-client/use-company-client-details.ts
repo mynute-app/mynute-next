@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { CompanyClient } from "@/types/company-client";
 
@@ -18,7 +18,7 @@ export function useCompanyClientDetails({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchClient = async () => {
+  const fetchClient = useCallback(async () => {
     if (!clientId) return;
     setIsLoading(true);
     setError(null);
@@ -52,13 +52,13 @@ export function useCompanyClientDetails({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [clientId, toast]);
 
   useEffect(() => {
     if (enabled && clientId) {
       fetchClient();
     }
-  }, [clientId, enabled]);
+  }, [fetchClient, clientId, enabled]);
 
   return {
     client,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Mail,
   MapPin,
@@ -63,7 +63,7 @@ export const ClientesPage = () => {
     });
   const { deleteCompanyClient, isDeleting } = useDeleteCompanyClient();
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (data?.company_clients) {
       setClients(data.company_clients);
     }
@@ -125,12 +125,15 @@ export const ClientesPage = () => {
   };
 
   const handleCreatedClient = (client: CompanyClient) => {
+    const shouldRefetchImmediately = page === 1;
     if (page !== 1) {
       setPage(1);
     }
     setClients(prev => [client, ...prev]);
     setDialogOpen(false);
-    refetch();
+    if (shouldRefetchImmediately) {
+      refetch();
+    }
   };
 
   return (

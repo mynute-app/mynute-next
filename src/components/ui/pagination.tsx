@@ -42,9 +42,11 @@ type PaginationLinkProps = {
 const PaginationLink = ({
   className,
   isActive,
+  type,
   ...props
 }: PaginationLinkProps) => (
   <button
+    type={type ?? "button"}
     aria-current={isActive ? "page" : undefined}
     className={cn(
       buttonVariants({
@@ -60,9 +62,11 @@ PaginationLink.displayName = "PaginationLink";
 
 const PaginationPrevious = ({
   className,
+  type,
   ...props
 }: React.ComponentProps<"button">) => (
   <Button
+    type={type ?? "button"}
     variant="ghost"
     size="sm"
     className={cn("gap-1 pl-2.5", className)}
@@ -76,9 +80,11 @@ PaginationPrevious.displayName = "PaginationPrevious";
 
 const PaginationNext = ({
   className,
+  type,
   ...props
 }: React.ComponentProps<"button">) => (
   <Button
+    type={type ?? "button"}
     variant="ghost"
     size="sm"
     className={cn("gap-1 pr-2.5", className)}

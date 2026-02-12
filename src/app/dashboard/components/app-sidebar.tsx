@@ -133,7 +133,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <NavItem
                 href="/dashboard/clientes"
                 icon={<Users className="h-5 w-5" />}
-                label="Clientes / Familias"
+                label="Clientes / Famílias"
                 isActive={isActive("/dashboard/clientes")}
               />
               <NavItem

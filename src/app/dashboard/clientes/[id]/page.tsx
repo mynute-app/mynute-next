@@ -502,18 +502,12 @@ export default function ClienteDetalhesPage() {
                 className="w-[150px]"
                 placeholder="DD/MM/AAAA"
                 value={dateRange.startDate || ""}
-                onChange={event => {
-                  setFilter("all");
-                }}
                 disabled
               />
               <Input
                 className="w-[150px]"
                 placeholder="DD/MM/AAAA"
                 value={dateRange.endDate || ""}
-                onChange={event => {
-                  setFilter("all");
-                }}
                 disabled
               />
               <Button
@@ -582,7 +576,7 @@ export default function ClienteDetalhesPage() {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {rows.map((row, index) => (
+              {rows.map(row => (
                 <div
                   key={row.id}
                   className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between"

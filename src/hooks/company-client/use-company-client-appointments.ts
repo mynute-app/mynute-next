@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { BranchAppointmentsResponse } from "../../../types/appointment";
 
@@ -30,7 +30,7 @@ export function useCompanyClientAppointments({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     if (!clientId) {
       setError("Client ID é obrigatório");
       return;
@@ -69,7 +69,7 @@ export function useCompanyClientAppointments({
       }
 
       const responseData: BranchAppointmentsResponse = await response.json();
-      if (process.env.NODE_ENV !== "production") setData(responseData);
+      setData(responseData);
       return responseData;
     } catch (err) {
       const errorMessage =
@@ -84,13 +84,14 @@ export function useCompanyClientAppointments({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [clientId, page, pageSize, startDate, endDate, cancelled, timezone, toast]);
 
   useEffect(() => {
     if (enabled && clientId) {
       fetchAppointments();
     }
   }, [
+    fetchAppointments,
     clientId,
     page,
     pageSize,

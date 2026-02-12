@@ -162,6 +162,9 @@ export function ClientDialog({
           `https://viacep.com.br/ws/${cepDigits}/json/`,
           { signal: controller.signal }
         );
+        if (!response.ok) {
+          throw new Error("Falha ao obter dados CEP");
+        }
         const data = await response.json();
 
         if (!isActive || controller.signal.aborted) return;
