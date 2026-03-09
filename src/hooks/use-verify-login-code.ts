@@ -2,9 +2,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "./use-toast";
+import { buildTenantPath } from "@/lib/tenant";
 
 interface UseVerifyLoginCodeResult {
-  verifyCode: (email: string, code: string) => Promise<boolean>;
+  verifyCode: (
+    email: string,
+    code: string,
+    tenant?: string | null,
+  ) => Promise<boolean>;
   loading: boolean;
   error: string | null;
 }
@@ -14,7 +19,11 @@ export const useVerifyLoginCode = (): UseVerifyLoginCodeResult => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const verifyCode = async (email: string, code: string): Promise<boolean> => {
+  const verifyCode = async (
+    email: string,
+    code: string,
+    tenant?: string | null,
+  ): Promise<boolean> => {
     setLoading(true);
     setError(null);
 
@@ -26,6 +35,7 @@ export const useVerifyLoginCode = (): UseVerifyLoginCodeResult => {
       const result = await signIn("code-login", {
         email,
         code,
+        tenant,
         redirect: false,
       });
 
@@ -38,7 +48,7 @@ export const useVerifyLoginCode = (): UseVerifyLoginCodeResult => {
         description: "Redirecionando para o dashboard...",
       });
 
-      router.push("/dashboard");
+      router.push(buildTenantPath(tenant, "/dashboard", "/dashboard"));
 
       return true;
     } catch (err: any) {

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Company } from "../../types/company";
+import { extractTenantSlugFromPathname } from "@/lib/tenant";
 
 let companyCache: Company | null = null;
 let companyPromise: Promise<Company> | null = null;
@@ -9,7 +10,8 @@ const COMPANY_CACHE_TTL_MS = 60 * 1000;
 const getCacheKey = () => {
   if (typeof window === "undefined") return null;
   const host = window.location.hostname || "default";
-  return `company_cache:${host}`;
+  const tenant = extractTenantSlugFromPathname(window.location.pathname);
+  return tenant ? `company_cache:${host}:${tenant}` : `company_cache:${host}`;
 };
 
 type StoredCompanyCache = {

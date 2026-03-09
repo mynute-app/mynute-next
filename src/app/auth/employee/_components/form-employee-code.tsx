@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSendLoginCode } from "@/hooks/use-send-login-code";
+import { buildTenantPath } from "@/lib/tenant";
+import { useTenantSlug } from "@/hooks/use-tenant-slug";
 
 const codeLoginSchema = z.object({
   email: z.string().email("Digite um e-mail válido"),
@@ -39,11 +41,18 @@ export function LoginFormCode({
 
   const { sendCode, loading, error } = useSendLoginCode();
   const router = useRouter();
+  const tenant = useTenantSlug();
 
   const onSubmit = async (data: CodeLoginData) => {
-    const success = await sendCode(data.email);
+    const success = await sendCode(data.email, tenant);
     if (success) {
-      router.push(`/auth/verify-code?email=${encodeURIComponent(data.email)}`);
+      router.push(
+        buildTenantPath(
+          tenant,
+          `/verify-code?email=${encodeURIComponent(data.email)}`,
+          `/auth/verify-code?email=${encodeURIComponent(data.email)}`
+        )
+      );
     }
   };
 

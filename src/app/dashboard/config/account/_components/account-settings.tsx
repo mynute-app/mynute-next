@@ -15,13 +15,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useSubdomain } from "@/hooks/use-subdomain";
+import { useTenantSlug } from "@/hooks/use-tenant-slug";
 import { decodeJWTToken } from "@/utils/decode-jwt";
+import { buildTenantPath } from "@/lib/tenant";
 
 export default function AccountSettings() {
   const { toast } = useToast();
   const { data: session } = useSession();
-  const { companyId } = useSubdomain();
+  const tenant = useTenantSlug();
   const [email, setEmail] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -41,31 +42,12 @@ export default function AccountSettings() {
     }
   }, [decoded?.email, emailTouched, session?.user?.email]);
 
-  const resolveSubdomain = () => {
-    if (companyId) return companyId;
-    if (typeof window === "undefined") return null;
-
-    const hostname = window.location.hostname;
-    if (hostname === "localhost") {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("companyId");
-    }
-
-    const parts = hostname.split(".");
-    if (parts.length > 2) {
-      return parts[0];
-    }
-
-    return null;
-  };
-
   const handleResetPassword = async () => {
-    const subdomain = resolveSubdomain();
-    if (!email || !subdomain) {
+    if (!email || !tenant) {
       toast({
         title: "Dados incompletos",
         description:
-          "Informe o e-mail e confirme o subdominio antes de continuar.",
+          "Informe o e-mail e confirme o tenant antes de continuar.",
         variant: "destructive",
       });
       return;
@@ -78,7 +60,7 @@ export default function AccountSettings() {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, subdomain }),
+        body: JSON.stringify({ email, tenant, subdomain: tenant }),
       });
 
       if (!response.ok) {
@@ -92,7 +74,13 @@ export default function AccountSettings() {
         description: "Verifique sua caixa de entrada para continuar.",
       });
       setTimeout(() => {
-        void signOut({ callbackUrl: "/auth/employee/change-password" });
+        void signOut({
+          callbackUrl: buildTenantPath(
+            tenant,
+            "/change-password",
+            "/auth/employee/change-password"
+          ),
+        });
       }, 800);
     } catch (error) {
       toast({
@@ -171,7 +159,7 @@ export default function AccountSettings() {
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xs text-muted-foreground">
-                    Subdominio: {resolveSubdomain() || "nao identificado"}
+                    Tenant: {tenant || "nao identificado"}
                   </p>
                   <Button
                     type="button"

@@ -25,6 +25,8 @@ import {
 import { Sidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { NavUser } from "./nav-user";
+import { buildTenantPath, stripTenantScopedPathname } from "@/lib/tenant";
+import { useTenantSlug } from "@/hooks/use-tenant-slug";
 
 type NavItemProps = {
   href: string;
@@ -72,11 +74,17 @@ const SubNavItem = ({
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const tenant = useTenantSlug();
   const [isConfigOpen, setIsConfigOpen] = React.useState(true);
+  const normalizedPathname = stripTenantScopedPathname(pathname);
+  const toTenantDashboardPath = (path: string) =>
+    buildTenantPath(tenant, path, path);
 
-  const isConfigActive = pathname.startsWith("/dashboard/config");
+  const isConfigActive = normalizedPathname.startsWith("/dashboard/config");
   const isActive = (href: string, end = false) =>
-    end ? pathname === href : pathname.startsWith(href);
+    end
+      ? normalizedPathname === href
+      : normalizedPathname.startsWith(href);
 
   return (
     <Sidebar
@@ -105,19 +113,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </p>
             <div className="space-y-1">
               <NavItem
-                href="/dashboard"
+                href={toTenantDashboardPath("/dashboard")}
                 icon={<LayoutDashboard className="h-5 w-5" />}
                 label="Dashboard"
                 isActive={isActive("/dashboard", true)}
               />
               <NavItem
-                href="/dashboard/scheduling/view"
+                href={toTenantDashboardPath("/dashboard/scheduling/view")}
                 icon={<Calendar className="h-5 w-5" />}
                 label="Agenda"
                 isActive={isActive("/dashboard/scheduling/view")}
               />
               <NavItem
-                href="/dashboard/agendamentos"
+                href={toTenantDashboardPath("/dashboard/agendamentos")}
                 icon={<CalendarCheck className="h-5 w-5" />}
                 label="Agendamentos"
                 isActive={isActive("/dashboard/agendamentos")}
@@ -130,26 +138,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               Cadastros
             </p>
             <div className="space-y-1">
-              {/* <NavItem
-                href="/dashboard/clientes"
+              <NavItem
+                href={toTenantDashboardPath("/dashboard/clientes")}
                 icon={<Users className="h-5 w-5" />}
                 label="Clientes / Familias"
                 isActive={isActive("/dashboard/clientes")}
-              /> */}
+              />
               <NavItem
-                href="/dashboard/services"
+                href={toTenantDashboardPath("/dashboard/services")}
                 icon={<Sparkles className="h-5 w-5" />}
                 label="Servicos"
                 isActive={isActive("/dashboard/services")}
               />
               <NavItem
-                href="/dashboard/your-team"
+                href={toTenantDashboardPath("/dashboard/your-team")}
                 icon={<UserCog className="h-5 w-5" />}
                 label="Equipe"
                 isActive={isActive("/dashboard/your-team")}
               />
               <NavItem
-                href="/dashboard/branch"
+                href={toTenantDashboardPath("/dashboard/branch")}
                 icon={<Building2 className="h-5 w-5" />}
                 label="Filiais"
                 isActive={isActive("/dashboard/branch")}
@@ -189,13 +197,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <div className="space-y-1 py-1">
                   <SubNavItem
-                    href="/dashboard/config/your-brand"
+                    href={toTenantDashboardPath("/dashboard/config/your-brand")}
                     icon={<Palette className="h-4 w-4" />}
                     label="Branding e Midias"
                     isActive={isActive("/dashboard/config/your-brand", true)}
                   />
                   <SubNavItem
-                    href="/dashboard/config/account"
+                    href={toTenantDashboardPath("/dashboard/config/account")}
                     icon={<UserCircle className="h-4 w-4" />}
                     label="Conta e Seguranca"
                     isActive={isActive("/dashboard/config/account", true)}

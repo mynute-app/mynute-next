@@ -12,7 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useSubdomain } from "@/hooks/use-subdomain";
+import { useTenantSlug } from "@/hooks/use-tenant-slug";
+import { buildTenantPath } from "@/lib/tenant";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Digite um e-mail válido"),
@@ -24,7 +25,7 @@ export function ForgotPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const { toast } = useToast();
-  const subdomain = useSubdomain();
+  const tenant = useTenantSlug();
 
   const {
     register,
@@ -46,7 +47,8 @@ export function ForgotPasswordForm() {
         },
         body: JSON.stringify({
           email: data.email,
-          subdomain: subdomain,
+          tenant,
+          subdomain: tenant,
         }),
       });
 
@@ -103,7 +105,7 @@ export function ForgotPasswordForm() {
         <p className="text-sm text-muted-foreground">
           Verifique sua caixa de entrada e use a nova senha para fazer login.
         </p>
-        <Link href="/auth/employee">
+        <Link href={buildTenantPath(tenant, "/login", "/auth/employee")}>
           <Button className="w-full">Voltar para Login</Button>
         </Link>
       </div>
@@ -134,7 +136,7 @@ export function ForgotPasswordForm() {
 
       <div className="text-center">
         <Link
-          href="/auth/employee"
+          href={buildTenantPath(tenant, "/login", "/auth/employee")}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />

@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  AlertTriangle,
   Calendar,
   Clock,
   Filter,
@@ -33,8 +32,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { ErrorState } from "@/components/ui/error-state";
 import { useBranchAppointments } from "@/hooks/branch/use-branch-appointments";
 import { useGetCompany } from "@/hooks/get-company";
+import { useTenantSlug } from "@/hooks/use-tenant-slug";
+import { buildTenantPath } from "@/lib/tenant";
 import type { Appointment } from "../../../../types/appointment";
 
 const statusConfig = {
@@ -112,6 +114,7 @@ const resolveStatus = (appointment: Appointment): StatusKey => {
 };
 
 export default function AgendamentosPage() {
+  const tenant = useTenantSlug();
   const { company, loading: isCompanyLoading } = useGetCompany();
   const [selectedBranchId, setSelectedBranchId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -253,7 +256,13 @@ export default function AgendamentosPage() {
             <p className="page-description">Gerencie todos os agendamentos</p>
           </div>
           <Button className="btn-gradient" asChild>
-            <Link href="/dashboard/scheduling/view">
+            <Link
+              href={buildTenantPath(
+                tenant,
+                "/dashboard/scheduling/view",
+                "/dashboard/scheduling/view"
+              )}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Novo Agendamento
             </Link>
@@ -350,21 +359,10 @@ export default function AgendamentosPage() {
             </div>
           ) : error ? (
             <div className="p-6">
-              <div className="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
-                <AlertTriangle className="mx-auto h-6 w-6 text-destructive" />
-                <p className="mt-2 text-sm font-semibold text-destructive">
-                  Erro ao carregar agendamentos
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">{error}</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4"
-                  onClick={handleRetry}
-                >
-                  Tentar novamente
-                </Button>
-              </div>
+              <ErrorState
+                title="Erro ao carregar agendamentos"
+                onRetry={handleRetry}
+              />
             </div>
           ) : rows.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">

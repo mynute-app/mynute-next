@@ -1,47 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
+import { resolveTenantSlugFromRequest } from "@/lib/tenant";
+import { getCompanyByTenantSlug } from "@/lib/tenant-company";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ email: string }> }
+  { params }: { params: Promise<{ email: string }> },
 ) {
   try {
     const { email } = await params;
 
     if (!email) {
-      return NextResponse.json(
-        { error: "Email é obrigatório" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email e obrigatorio" }, { status: 400 });
     }
 
     const decodedEmail = decodeURIComponent(email);
+    const tenantFromQuery = req.nextUrl.searchParams.get("tenant");
+    const tenant = resolveTenantSlugFromRequest(req, tenantFromQuery);
 
-    const host = req.headers.get("host") || "";
-    const subdomain = host.split(".")[0];
+    if (!tenant) {
+      return NextResponse.json({ error: "Tenant nao identificado" }, { status: 400 });
+    }
 
-    if (!subdomain) {
+    const companyLookup = await getCompanyByTenantSlug(tenant);
+
+    if (!companyLookup.success) {
       return NextResponse.json(
-        { error: "Subdomínio não identificado" },
-        { status: 400 }
+        { error: "Empresa nao encontrada para o tenant informado" },
+        { status: 404 },
       );
     }
 
-    // Busca a empresa pelo subdomínio
-    const companyRes = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/company/subdomain/${subdomain}`,
-      { cache: "no-store" }
-    );
+    const company = companyLookup.company;
 
-    if (!companyRes.ok) {
-      return NextResponse.json(
-        { error: "Empresa não encontrada para o subdomínio" },
-        { status: 404 }
-      );
-    }
-
-    const company = await companyRes.json();
-
-    // Chama a API backend para enviar o código com X-Company-ID
     const response = await fetch(
       `${process.env.BACKEND_URL}/employee/send-login-code/email/${decodedEmail}?language=pt`,
       {
@@ -50,19 +40,19 @@ export async function POST(
           "Content-Type": "application/json",
           "X-Company-ID": company.id,
         },
-      }
+      },
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Erro ao enviar código:", errorText);
+      console.error("Erro ao enviar codigo:", errorText);
 
       return NextResponse.json(
         {
-          error: "Erro ao enviar código de verificação",
+          error: "Erro ao enviar codigo de verificacao",
           details: errorText,
         },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -74,10 +64,8 @@ export async function POST(
       if (text) {
         try {
           data = JSON.parse(text);
-        } catch (e) {
-          console.log(
-            "Resposta não é JSON válido, mas código enviado com sucesso"
-          );
+        } catch {
+          console.log("Resposta nao JSON valida, mas codigo enviado com sucesso");
         }
       }
     }
@@ -85,20 +73,20 @@ export async function POST(
     return NextResponse.json(
       {
         success: true,
-        message: "Código de verificação enviado com sucesso",
+        message: "Codigo de verificacao enviado com sucesso",
         data,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    console.error("Erro ao processar envio de código:", error);
+    console.error("Erro ao processar envio de codigo:", error);
 
     return NextResponse.json(
       {
-        error: "Erro interno ao enviar código de verificação",
+        error: "Erro interno ao enviar codigo de verificacao",
         details: error instanceof Error ? error.message : "Erro desconhecido",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

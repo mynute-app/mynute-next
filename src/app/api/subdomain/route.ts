@@ -1,16 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getCompanyIdFromSubdomain } from "@/utils/subdomain";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
-  const host = request.headers.get("host");
-  const companyId = await getCompanyIdFromSubdomain(host || "");
-
-  if (!companyId) {
-    return NextResponse.json(
-      { error: "No company ID found in subdomain" },
-      { status: 404 }
-    );
-  }
-
-  return NextResponse.json({ companyId });
+export async function GET() {
+  return NextResponse.json(
+    {
+      error: "Deprecated endpoint. Use tenant slug in path: /{tenant}/...",
+    },
+    { status: 410 },
+  );
 }

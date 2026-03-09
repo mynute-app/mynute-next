@@ -18,6 +18,8 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useTenantSlug } from "@/hooks/use-tenant-slug";
+import { buildTenantPath } from "@/lib/tenant";
 
 const changePasswordSchema = z
   .object({
@@ -33,19 +35,9 @@ const changePasswordSchema = z
 
 type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
-const getSubdomain = () => {
-  if (typeof window === "undefined") return null;
-  const hostname = window.location.hostname;
-  if (hostname === "localhost") {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("companyId");
-  }
-  const parts = hostname.split(".");
-  return parts.length > 2 ? parts[0] : null;
-};
-
 export function ChangePasswordForm() {
   const { toast } = useToast();
+  const tenant = useTenantSlug();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
@@ -64,7 +56,6 @@ export function ChangePasswordForm() {
   const onSubmit = async (data: ChangePasswordFormData) => {
     try {
       setLoading(true);
-      const subdomain = getSubdomain();
 
       const response = await fetch("/api/auth/change-password", {
         method: "POST",
@@ -74,7 +65,8 @@ export function ChangePasswordForm() {
           currentPassword: data.currentPassword,
           newPassword: data.newPassword,
           confirmPassword: data.confirmPassword,
-          subdomain,
+          tenant,
+          subdomain: tenant,
         }),
       });
 
@@ -140,7 +132,7 @@ export function ChangePasswordForm() {
         <p className="text-muted-foreground">
           A nova senha foi salva para <strong>{getValues("email")}</strong>.
         </p>
-        <Link href="/auth/employee">
+        <Link href={buildTenantPath(tenant, "/login", "/auth/employee")}>
           <Button className="w-full">Voltar para Login</Button>
         </Link>
       </div>
@@ -257,7 +249,7 @@ export function ChangePasswordForm() {
 
       <div className="text-center">
         <Link
-          href="/auth/employee"
+          href={buildTenantPath(tenant, "/login", "/auth/employee")}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />

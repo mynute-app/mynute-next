@@ -14,10 +14,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSidebar } from "@/components/ui/sidebar";
 import { decodeJWTToken } from "@/utils/decode-jwt";
+import { useTenantSlug } from "@/hooks/use-tenant-slug";
+import { buildTenantPath } from "@/lib/tenant";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { data: session } = useSession();
+  const tenant = useTenantSlug();
 
   const accessToken = (session as any)?.accessToken as string | undefined;
   const decoded = useMemo(
@@ -83,14 +86,24 @@ export function NavUser() {
           asChild
           className="cursor-pointer"
         >
-          <Link href="/dashboard/config/account">
+          <Link
+            href={buildTenantPath(
+              tenant,
+              "/dashboard/config/account",
+              "/dashboard/config/account"
+            )}
+          >
             <KeyRound className="mr-2 h-4 w-4" />
             Configuracoes da conta
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={() =>
+            signOut({
+              callbackUrl: buildTenantPath(tenant, "/login", "/auth/employee"),
+            })
+          }
         >
           <LogOut className="mr-2 h-4 w-4" />
           Sair

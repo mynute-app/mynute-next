@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { resolveTenantSlugFromRequest } from "@/lib/tenant";
+import { getCompanyByTenantSlug } from "@/lib/tenant-company";
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,68 +9,57 @@ export async function POST(req: NextRequest) {
 
     if (!email || !code) {
       return NextResponse.json(
-        { error: "Email e código são obrigatórios" },
-        { status: 400 }
+        { error: "Email e codigo sao obrigatorios" },
+        { status: 400 },
       );
     }
 
-    const host = req.headers.get("host") || "";
-    const subdomain = host.split(".")[0];
+    const tenantFromBody = typeof body?.tenant === "string" ? body.tenant : null;
+    const tenant = resolveTenantSlugFromRequest(req, tenantFromBody);
 
-    if (!subdomain) {
+    if (!tenant) {
+      return NextResponse.json({ error: "Tenant nao identificado" }, { status: 400 });
+    }
+
+    const companyLookup = await getCompanyByTenantSlug(tenant);
+
+    if (!companyLookup.success) {
       return NextResponse.json(
-        { error: "Subdomínio não identificado" },
-        { status: 400 }
+        { error: "Empresa nao encontrada para o tenant informado" },
+        { status: 404 },
       );
     }
 
-    const companyRes = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/company/subdomain/${subdomain}`,
-      { cache: "no-store" }
-    );
+    const company = companyLookup.company;
 
-    if (!companyRes.ok) {
-      return NextResponse.json(
-        { error: "Empresa não encontrada para o subdomínio" },
-        { status: 404 }
-      );
-    }
-
-    const company = await companyRes.json();
-
-    const response = await fetch(
-      `${process.env.BACKEND_URL}/employee/login-with-code`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": company.id,
-        },
-        body: JSON.stringify({ email, code }),
-      }
-    );
+    const response = await fetch(`${process.env.BACKEND_URL}/employee/login-with-code`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Company-ID": company.id,
+      },
+      body: JSON.stringify({ email, code }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Erro ao fazer login com código:", errorText);
+      console.error("Erro ao fazer login com codigo:", errorText);
 
       return NextResponse.json(
         {
-          error: "Código inválido ou expirado",
+          error: "Codigo invalido ou expirado",
           details: errorText,
         },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
-    // Captura o token do header
     const token = response.headers.get("X-Auth-Token");
 
     if (!token) {
-      console.error("Token X-Auth-Token não encontrado nos headers");
       return NextResponse.json(
-        { error: "Token não encontrado na resposta" },
-        { status: 500 }
+        { error: "Token nao encontrado na resposta" },
+        { status: 500 },
       );
     }
 
@@ -79,21 +70,22 @@ export async function POST(req: NextRequest) {
         success: true,
         token,
         companyId: company.id,
-        subdomain,
+        tenant,
+        subdomain: tenant,
         email,
         data,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    console.error("Erro ao processar login com código:", error);
+    console.error("Erro ao processar login com codigo:", error);
 
     return NextResponse.json(
       {
         error: "Erro interno ao processar login",
         details: error instanceof Error ? error.message : "Erro desconhecido",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

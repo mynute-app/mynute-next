@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
-  AlertTriangle,
   Building2,
   ChevronLeft,
   ChevronRight,
@@ -18,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ErrorState } from "@/components/ui/error-state";
 import { useGetCompany } from "@/hooks/get-company";
 import { useBranchAppointments } from "@/hooks/branch/use-branch-appointments";
 import { useEmployeeAppointments } from "@/hooks/employee/use-employee-appointments";
@@ -432,21 +432,11 @@ export function AgendaPage() {
             </div>
           ) : error ? (
             <div className="p-6">
-              <div className="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
-                <AlertTriangle className="mx-auto h-6 w-6 text-destructive" />
-                <p className="mt-2 text-sm font-semibold text-destructive">
-                  Erro ao carregar agendamentos
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">{error}</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4"
-                  onClick={handleAppointmentUpdated}
-                >
-                  Tentar novamente
-                </Button>
-              </div>
+              <ErrorState
+                title="Erro ao carregar agendamentos"
+                description={error}
+                onRetry={handleAppointmentUpdated}
+              />
             </div>
           ) : (
             <div className="overflow-x-auto">

@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { buildTenantPath } from "@/lib/tenant";
+import { useTenantSlug } from "@/hooks/use-tenant-slug";
 
 type LoginFormProps = React.ComponentPropsWithoutRef<"form"> & {
   provider: "user-login" | "employee-login";
@@ -45,6 +47,7 @@ export function LoginFormEmployee({
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const tenant = useTenantSlug();
 
   const onSubmit = async (data: LoginData) => {
     setLoading(true);
@@ -53,13 +56,14 @@ export function LoginFormEmployee({
     const result = await signIn(provider, {
       email: data.email,
       password: data.password,
+      tenant,
       redirect: false,
     });
 
     if (result?.error) {
       setError("Usuário não verificado ou senha incorreta.");
     } else {
-      router.push("/dashboard");
+      router.push(buildTenantPath(tenant, "/dashboard", "/dashboard"));
     }
 
     setLoading(false);
@@ -89,7 +93,11 @@ export function LoginFormEmployee({
           <div className="flex items-center">
             <Label htmlFor="password">Senha</Label>
             <Link
-              href="/auth/forgot-password"
+              href={buildTenantPath(
+                tenant,
+                "/forgot-password",
+                "/auth/forgot-password"
+              )}
               className="ml-auto text-sm underline-offset-4 hover:underline"
             >
               Esqueceu sua senha?
@@ -118,7 +126,11 @@ export function LoginFormEmployee({
             <p className="text-sm text-red-500">{errors.password.message}</p>
           )}
           <Link
-            href="/auth/employee/change-password"
+            href={buildTenantPath(
+              tenant,
+              "/change-password",
+              "/auth/employee/change-password"
+            )}
             className="text-xs text-muted-foreground underline-offset-4 hover:underline"
           >
             Recebeu senha temporaria? Atualize aqui.
