@@ -8,7 +8,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Employee, Service } from "../../../../../types/company";
 import { WorkRangeServicesSection } from "../work-range-services-section";
 
@@ -33,7 +32,7 @@ export function TeamMemberServicesScheduleDialog({
 }: TeamMemberServicesScheduleDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] min-h-0 flex flex-col p-0">
+      <DialogContent className="max-w-5xl max-h-[90vh] min-h-0 flex flex-col overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>
             {member ? "Servicos por horario" : "Carregando profissional..."}
@@ -45,13 +44,13 @@ export function TeamMemberServicesScheduleDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0 px-6">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {!member ? (
-            <div className="py-6 text-sm text-muted-foreground">
+            <div className="px-6 py-6 text-sm text-muted-foreground">
               Buscando dados do profissional...
             </div>
           ) : (
-            <div className="mt-4 pb-6">
+            <div className="px-6 pt-4 pb-6">
               <WorkRangeServicesSection
                 selectedMember={member}
                 setSelectedMember={setMember}
@@ -61,7 +60,7 @@ export function TeamMemberServicesScheduleDialog({
               />
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t bg-muted/30">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

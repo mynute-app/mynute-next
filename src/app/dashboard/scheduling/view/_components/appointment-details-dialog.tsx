@@ -44,6 +44,7 @@ import {
   Mail,
   Phone,
   Loader2,
+  CheckCircle,
 } from "lucide-react";
 import type {
   Appointment,
@@ -55,6 +56,7 @@ import { Calendar } from "@/app/(home)/_components/calendar";
 import { TimeSlotPicker } from "@/app/(home)/_components/time-slot-picker";
 import { useAppointmentAvailabilitySpecificDate } from "@/hooks/use-appointment-availability-specific-date";
 import { useDeleteAppointment } from "@/hooks/appointment/useDeleteAppointment";
+import { useApproveAppointment } from "@/hooks/appointment/useApproveAppointment";
 import type { Employee, Service } from "../../../../../../types/company";
 import { ServiceDescription } from "@/components/services/service-description";
 
@@ -67,6 +69,7 @@ interface AppointmentDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAppointmentDeleted?: () => void;
+  onAppointmentApproved?: () => void;
 }
 
 export function AppointmentDetailsDialog({
@@ -78,6 +81,7 @@ export function AppointmentDetailsDialog({
   open,
   onOpenChange,
   onAppointmentDeleted,
+  onAppointmentApproved,
 }: AppointmentDetailsDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEmployeeId, setEditedEmployeeId] = useState<string>("");
@@ -88,6 +92,8 @@ export function AppointmentDetailsDialog({
   const { toast } = useToast();
   const { deleteAppointment, loading: deletingAppointment } =
     useDeleteAppointment();
+  const { approveAppointment, loading: approvingAppointment } =
+    useApproveAppointment();
 
   // Buscar informações do cliente, serviço e funcionário
   const client = clientInfo.find(c => c.id === appointment?.client_id);
@@ -104,22 +110,22 @@ export function AppointmentDetailsDialog({
       emp.branches?.some(
         branch =>
           branch.id.toString() === appointment.branch_id ||
-          branch.id === Number(appointment.branch_id)
-      )
+          branch.id === Number(appointment.branch_id),
+      ),
     );
 
     // Se não encontrou nenhum funcionário na branch, retorna todos
     // (pode ser que a estrutura de dados não tenha branches preenchidas)
     if (filtered.length === 0) {
       console.log(
-        "⚠️ Nenhum funcionário encontrado para branch, mostrando todos"
+        "⚠️ Nenhum funcionário encontrado para branch, mostrando todos",
       );
       return companyEmployees;
     }
 
     // Se o funcionário atual não estiver na lista, adicionar ele
     const currentEmployeeInList = filtered.find(
-      emp => emp.id.toString() === appointment.employee_id
+      emp => emp.id.toString() === appointment.employee_id,
     );
 
     if (!currentEmployeeInList && employee) {
@@ -183,6 +189,33 @@ export function AppointmentDetailsDialog({
       setEditedTime(formatTime(appointment.start_time));
     }
   }, [appointment]);
+
+  const handleApproveAppointment = async () => {
+    if (!appointment?.id) return;
+
+    try {
+      await approveAppointment(appointment.id);
+
+      toast({
+        title: "Agendamento aprovado",
+        description:
+          "O agendamento foi aprovado com sucesso. O cliente será notificado por e-mail.",
+      });
+
+      onOpenChange(false);
+
+      if (onAppointmentApproved) {
+        onAppointmentApproved();
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao aprovar agendamento",
+        description:
+          error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleCancelAppointment = async () => {
     if (!appointment?.id) return;
@@ -298,7 +331,7 @@ export function AppointmentDetailsDialog({
         <ScrollArea className="max-h-[calc(90vh-200px)] sm:max-h-[calc(85vh-200px)]">
           <div className="grid gap-4 sm:gap-6 py-3 sm:py-4 pr-2 sm:pr-4">
             {/* Status */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {appointment.cancelled ? (
                 <Badge variant="destructive" className="text-sm">
                   Cancelado
@@ -316,6 +349,23 @@ export function AppointmentDetailsDialog({
                   Pendente
                 </Badge>
               )}
+              {!appointment.cancelled &&
+                (appointment.is_approved_by_employee ? (
+                  <Badge
+                    variant="outline"
+                    className="text-sm border-[hsl(var(--success)/0.4)] bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))]"
+                  >
+                    <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                    Aprovado pelo funcionário
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="text-sm border-[hsl(var(--warning)/0.4)] bg-[hsl(var(--warning)/0.1)] text-[hsl(var(--warning))]"
+                  >
+                    Aguardando aprovação
+                  </Badge>
+                ))}
               {appointment.rescheduled && (
                 <Badge variant="outline" className="text-sm">
                   Reagendado
@@ -590,6 +640,26 @@ export function AppointmentDetailsDialog({
               </Button>
               {!appointment.cancelled && (
                 <>
+                  {!appointment.is_approved_by_employee && (
+                    <Button
+                      variant="default"
+                      onClick={handleApproveAppointment}
+                      disabled={approvingAppointment}
+                      className="bg-[hsl(var(--success))] hover:bg-[hsl(var(--success)/0.9)] text-white"
+                    >
+                      {approvingAppointment ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Aprovando...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Aprovar
+                        </>
+                      )}
+                    </Button>
+                  )}
                   <Button variant="outline" onClick={() => setIsEditing(true)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Editar

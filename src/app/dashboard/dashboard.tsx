@@ -88,7 +88,11 @@ const resolveAppointmentStatus = (
     return "confirmed";
   }
 
-  return "pending";
+  if (!appointment.is_approved_by_employee) {
+    return "pending";
+  }
+
+  return "confirmed";
 };
 
 const buildLookupMap = <T extends { id: string }>(items: T[]) =>

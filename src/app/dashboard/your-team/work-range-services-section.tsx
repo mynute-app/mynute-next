@@ -233,7 +233,7 @@ export function WorkRangeServicesSection({
       const response = await fetch(
         `/api/employee/${selectedMember.id}/work_range/${selectedWorkRangeId}/services`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
@@ -289,11 +289,7 @@ export function WorkRangeServicesSection({
       const response = await fetch(
         `/api/employee/${selectedMember.id}/work_range/${selectedWorkRangeId}/services`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ services: [] }),
+          method: "DELETE",
         }
       );
 
@@ -535,77 +531,79 @@ export function WorkRangeServicesSection({
               {selectedServiceIds.length} servico(s) selecionado(s)
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {!employeeServices.length ? (
-                <div className="col-span-full text-center py-8 text-muted-foreground">
-                  <p>
-                    Este profissional nao possui servicos vinculados. Vincule
-                    servicos na aba "Servicos" ou use "Gerenciar servicos"
-                    acima.
-                  </p>
-                </div>
-              ) : (
-                employeeServices.map(service => {
-                  const isSelected = selectedServiceIds.includes(
-                    service.id.toString()
-                  );
-                  const price =
-                    service.price && Number(service.price) > 0
-                      ? `R$ ${Number(service.price).toFixed(2)}`
-                      : "Gratuito";
-                  const durationLabel = service.duration
-                    ? `${service.duration} min`
-                    : "--";
+            <div className="h-[220px] sm:h-[240px] lg:h-[260px] overflow-y-auto overscroll-contain pr-2 custom-scrollbar">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pb-1">
+                {!employeeServices.length ? (
+                  <div className="col-span-full text-center py-8 text-muted-foreground">
+                    <p>
+                      Este profissional nao possui servicos vinculados. Vincule
+                      servicos na aba "Servicos" ou use "Gerenciar servicos"
+                      acima.
+                    </p>
+                  </div>
+                ) : (
+                  employeeServices.map(service => {
+                    const isSelected = selectedServiceIds.includes(
+                      service.id.toString()
+                    );
+                    const price =
+                      service.price && Number(service.price) > 0
+                        ? `R$ ${Number(service.price).toFixed(2)}`
+                        : "Gratuito";
+                    const durationLabel = service.duration
+                      ? `${service.duration} min`
+                      : "--";
 
-                  return (
-                    <div
-                      key={service.id}
-                      role="button"
-                      tabIndex={0}
-                      aria-pressed={isSelected}
-                      onClick={() =>
-                        handleServiceToggle(service.id.toString())
-                      }
-                      onKeyDown={event => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          handleServiceToggle(service.id.toString());
+                    return (
+                      <div
+                        key={service.id}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={isSelected}
+                        onClick={() =>
+                          handleServiceToggle(service.id.toString())
                         }
-                      }}
-                      className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
-                        isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50 opacity-60"
-                      }`}
-                    >
-                      <Checkbox
-                        checked={isSelected}
-                        className="mt-0.5 pointer-events-none"
-                        tabIndex={-1}
-                        aria-hidden="true"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1">
-                          {isSelected && (
-                            <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                          )}
-                          <span
-                            className={`text-sm font-medium truncate ${
-                              isSelected ? "text-primary" : ""
-                            }`}
-                          >
-                            {service.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                          <span>{durationLabel}</span>
-                          <span>{price}</span>
+                        onKeyDown={event => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            handleServiceToggle(service.id.toString());
+                          }
+                        }}
+                        className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+                          isSelected
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50 opacity-60"
+                        }`}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          className="mt-0.5 pointer-events-none"
+                          tabIndex={-1}
+                          aria-hidden="true"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            {isSelected && (
+                              <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                            )}
+                            <span
+                              className={`text-sm font-medium truncate ${
+                                isSelected ? "text-primary" : ""
+                              }`}
+                            >
+                              {service.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            <span>{durationLabel}</span>
+                            <span>{price}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
         ) : (
