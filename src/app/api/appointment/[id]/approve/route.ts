@@ -33,7 +33,7 @@ export const PATCH = auth(async function PATCH(req, ctx) {
       req,
       `/appointment/${id}/approve`,
       authData.token!,
-      { method: "PATCH" },
+      { method: "PATCH", queryParams: { email_language: "pt" } },
     );
 
     return NextResponse.json(result, { status: 200 });
