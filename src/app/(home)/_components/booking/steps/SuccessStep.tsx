@@ -14,6 +14,7 @@ import {
   MapPin,
   User,
   Briefcase,
+  Info,
 } from "lucide-react";
 import type { Service } from "../../../../../../types/company";
 import type { BranchInfo, EmployeeInfo, ClientData } from "../types";
@@ -58,7 +59,7 @@ export function SuccessStep({
 
   // Texto do comprovante
   const appointmentText = `
-🎉 AGENDAMENTO CONFIRMADO
+📋 SOLICITAÇÃO DE AGENDAMENTO RECEBIDA
 
 📅 Data: ${formattedDate}
 ⏰ Horário: ${selectedSlot.time}
@@ -78,6 +79,8 @@ ${branch?.street}, ${branch?.number}${
     branch?.complement ? ` - ${branch?.complement}` : ""
   }
 ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
+
+ℹ️ Sua solicitação será analisada e você receberá uma confirmação por e-mail.
   `.trim();
 
   const handleCopy = async () => {
@@ -108,7 +111,7 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
 
   return (
     <div className="flex items-center justify-center py-8">
-      <Card className="max-w-2xl w-full border-2 border-green-500/20">
+      <Card className="max-w-2xl w-full border-2 border-blue-500/20">
         <CardContent className="p-8 space-y-6">
           {/* Ícone animado */}
           <div className="flex justify-center">
@@ -116,7 +119,7 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
               <div
                 className="absolute inset-0 rounded-full animate-ping opacity-20"
                 style={{
-                  backgroundColor: brandColor || "rgb(34, 197, 94)",
+                  backgroundColor: brandColor || "rgb(59, 130, 246)",
                 }}
               />
               <div
@@ -124,12 +127,12 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
                 style={{
                   backgroundColor: brandColor
                     ? `${brandColor}15`
-                    : "rgb(34, 197, 94, 0.1)",
+                    : "rgba(59, 130, 246, 0.1)",
                 }}
               >
                 <CheckCircle2
                   className="w-16 h-16"
-                  style={{ color: brandColor || "rgb(34, 197, 94)" }}
+                  style={{ color: brandColor || "rgb(59, 130, 246)" }}
                 />
               </div>
             </div>
@@ -137,11 +140,20 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
 
           {/* Título */}
           <div className="text-center space-y-2 animate-fade-in-up">
-            <h2 className="text-2xl font-bold text-green-600">
-              Agendamento Confirmado!
+            <h2 className="text-2xl font-bold text-blue-600">
+              Solicitação Recebida!
             </h2>
             <p className="text-muted-foreground">
-              Enviamos uma confirmação para o seu e-mail.
+              Sua solicitação foi enviada e aguarda confirmação do profissional.
+            </p>
+          </div>
+
+          {/* Aviso de aprovação pendente */}
+          <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900 p-4">
+            <Info className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              Você receberá um <strong>e-mail de confirmação</strong> assim que
+              o profissional aprovar o agendamento.
             </p>
           </div>
 
@@ -231,7 +243,7 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
             className="w-full"
             size="lg"
             style={{
-              backgroundColor: brandColor || "rgb(34, 197, 94)",
+              backgroundColor: brandColor || "rgb(59, 130, 246)",
             }}
           >
             Fazer novo agendamento
