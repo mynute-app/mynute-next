@@ -14,6 +14,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBranchAppointments } from "@/hooks/branch/use-branch-appointments";
 import { useGetCompany } from "@/hooks/get-company";
+import { useApproveAppointment } from "@/hooks/appointment/useApproveAppointment";
+import { useToast } from "@/hooks/use-toast";
 import { useServiceAvailabilityAuto } from "@/hooks/service/useServiceAvailability";
 import { cn } from "@/lib/utils";
 import { QuickActions } from "./_components/quick-actions";
@@ -88,7 +90,11 @@ const resolveAppointmentStatus = (
     return "confirmed";
   }
 
-  return "pending";
+  if (!appointment.is_approved_by_employee) {
+    return "pending";
+  }
+
+  return "confirmed";
 };
 
 const buildLookupMap = <T extends { id: string }>(items: T[]) =>
@@ -147,6 +153,9 @@ const StatCardSkeleton = () => (
 export default function DashboardPage() {
   const { company, loading, error } = useGetCompany();
   const [selectedBranchId, setSelectedBranchId] = useState("all");
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const { approveAppointment } = useApproveAppointment();
+  const { toast } = useToast();
 
   const branches = useMemo(() => {
     const companyBranches = company?.branches?.map(branch => ({
@@ -197,6 +206,7 @@ export default function DashboardPage() {
     totalCount,
     isLoading: isLoadingAppointments,
     error: appointmentsError,
+    refetch: refetchAppointments,
   } = useBranchAppointments({
     branchId: branchIdForAppointments,
     page: 1,
@@ -231,6 +241,7 @@ export default function DashboardPage() {
           service: service?.name || "Servico nao informado",
           time: formatTime(appointment.start_time, appointment.time_zone),
           status: resolveAppointmentStatus(appointment),
+          isApprovedByEmployee: appointment.is_approved_by_employee ?? false,
           professional: employee
             ? `${employee.name} ${employee.surname}`.trim()
             : undefined,
@@ -490,6 +501,27 @@ export default function DashboardPage() {
               isLoading={isLoadingAppointments}
               emptyStateLabel={appointmentsEmptyLabel}
               emptyStateDescription={appointmentsError || undefined}
+              approvingId={approvingId}
+              onApprove={async id => {
+                setApprovingId(id);
+                try {
+                  await approveAppointment(id);
+                  toast({
+                    title: "Agendamento aprovado",
+                    description: "Cliente será notificado por e-mail.",
+                  });
+                  refetchAppointments();
+                } catch (err) {
+                  toast({
+                    title: "Erro ao aprovar",
+                    description:
+                      err instanceof Error ? err.message : "Erro desconhecido",
+                    variant: "destructive",
+                  });
+                } finally {
+                  setApprovingId(null);
+                }
+              }}
             />
           </div>
           {/* <UpcomingSlots

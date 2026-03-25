@@ -1,9 +1,9 @@
 import {
   Building2,
   Car,
+  CheckCircle,
   Clock,
-  MoreHorizontal,
-  Plus,
+  Loader2,
   User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ export type DashboardAppointment = {
   vehicle?: string;
   time: string;
   status: "confirmed" | "pending" | "completed" | "cancelled";
+  isApprovedByEmployee: boolean;
   professional?: string;
   branchId: string;
   branchName: string;
@@ -84,6 +85,8 @@ type RecentAppointmentsProps = {
   isLoading?: boolean;
   emptyStateLabel?: string;
   emptyStateDescription?: string;
+  onApprove?: (id: string) => void;
+  approvingId?: string | null;
 };
 
 export function RecentAppointments({
@@ -92,6 +95,8 @@ export function RecentAppointments({
   isLoading = false,
   emptyStateLabel,
   emptyStateDescription,
+  onApprove,
+  approvingId,
 }: RecentAppointmentsProps) {
   const filteredAppointments =
     selectedBranchId === "all"
@@ -200,14 +205,25 @@ export function RecentAppointments({
                       >
                         {statusConfig[appointment.status].label}
                       </Badge>
-                      {/* <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        type="button"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button> */}
+                      {onApprove &&
+                        !appointment.isApprovedByEmployee &&
+                        appointment.status !== "cancelled" &&
+                        appointment.status !== "completed" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 gap-1.5 border-[hsl(var(--success)/0.4)] text-[hsl(var(--success))] hover:bg-[hsl(var(--success)/0.1)] text-xs"
+                            disabled={approvingId === appointment.id}
+                            onClick={() => onApprove(appointment.id)}
+                          >
+                            {approvingId === appointment.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <CheckCircle className="h-3 w-3" />
+                            )}
+                            Aprovar
+                          </Button>
+                        )}
                     </div>
                   </div>
                 </div>

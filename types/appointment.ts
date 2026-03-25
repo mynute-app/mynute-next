@@ -23,6 +23,7 @@ export interface Appointment {
   is_cancelled_by_client: boolean;
   is_cancelled_by_employee: boolean;
   is_confirmed_by_client: boolean;
+  is_approved_by_employee: boolean;
   history: AppointmentHistory;
   comments: string | null;
 }
