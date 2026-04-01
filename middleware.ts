@@ -8,6 +8,7 @@ import {
   resolveTenantSlugFromRequest,
   stripTenantScopedPathname,
 } from "@/lib/tenant";
+import { isBackendTokenExpired } from "@/utils/decode-jwt";
 
 const LOGIN_ROUTES = new Set(["/auth/employee"]);
 const TENANT_NATIVE_DASHBOARD_ROUTES = new Set([
@@ -26,7 +27,7 @@ export const middleware = auth(req => {
   const { pathname } = req.nextUrl;
   const pathTenant = extractTenantSlugFromPathname(pathname);
   const authTenant = normalizeTenantSlug(
-    (req.auth as any)?.tenant ?? (req.auth as any)?.subdomain ?? null
+    (req.auth as any)?.tenant ?? (req.auth as any)?.subdomain ?? null,
   );
   const sessionTenant = authTenant ?? resolveTenantSlugFromRequest(req);
 
@@ -34,18 +35,18 @@ export const middleware = auth(req => {
     pathname === "/dashboard" || pathname.startsWith("/dashboard/");
   const isTenantLoginRoute = Boolean(
     pathTenant &&
-      (pathname === `/${pathTenant}/login` ||
-        pathname === `/${pathTenant}/login/`)
+    (pathname === `/${pathTenant}/login` ||
+      pathname === `/${pathTenant}/login/`),
   );
   const isTenantDashboardRoute = Boolean(
     pathTenant &&
-      (pathname === `/${pathTenant}/dashboard` ||
-        pathname.startsWith(`/${pathTenant}/dashboard/`))
+    (pathname === `/${pathTenant}/dashboard` ||
+      pathname.startsWith(`/${pathTenant}/dashboard/`)),
   );
   const isTenantDashboardRoot = Boolean(
     pathTenant &&
-      (pathname === `/${pathTenant}/dashboard` ||
-        pathname === `/${pathTenant}/dashboard/`)
+    (pathname === `/${pathTenant}/dashboard` ||
+      pathname === `/${pathTenant}/dashboard/`),
   );
 
   if (isTenantDashboardRoute) {
@@ -54,6 +55,18 @@ export const middleware = auth(req => {
       url.pathname = `/${pathTenant}/login`;
       url.search = "";
       return NextResponse.redirect(url);
+    }
+
+    const accessToken = (req.auth as any)?.accessToken as string | undefined;
+    if (!accessToken || isBackendTokenExpired(accessToken)) {
+      const url = req.nextUrl.clone();
+      url.pathname = `/${pathTenant}/login`;
+      url.search = "";
+      const response = NextResponse.redirect(url);
+      // Limpa os cookies de sessão do NextAuth para forçar novo login
+      response.cookies.delete("authjs.session-token");
+      response.cookies.delete("__Secure-authjs.session-token");
+      return response;
     }
 
     if (sessionTenant && sessionTenant !== pathTenant) {
@@ -73,7 +86,8 @@ export const middleware = auth(req => {
     }
 
     const rewriteUrl = req.nextUrl.clone();
-    rewriteUrl.pathname = pathname.slice(`/${pathTenant}`.length) || "/dashboard";
+    rewriteUrl.pathname =
+      pathname.slice(`/${pathTenant}`.length) || "/dashboard";
     return NextResponse.rewrite(rewriteUrl);
   }
 

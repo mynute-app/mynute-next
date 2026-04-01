@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { signOut } from "next-auth/react";
 import { Company } from "../../types/company";
 import { extractTenantSlugFromPathname } from "@/lib/tenant";
 
@@ -73,6 +74,9 @@ const fetchCompanyOnce = (force = false) => {
 
   companyPromise = fetch("/api/company", { cache: "no-store" })
     .then(async res => {
+      if (res.status === 401) {
+        throw new Error("UNAUTHORIZED");
+      }
       if (!res.ok) {
         throw new Error(`Erro ao buscar empresa: ${res.status}`);
       }
@@ -119,6 +123,15 @@ export const useGetCompany = () => {
       })
       .catch(e => {
         if (!active) return;
+        if (e instanceof Error && e.message === "UNAUTHORIZED") {
+          signOut({
+            redirect: true,
+            callbackUrl:
+              window.location.pathname.split("/").slice(0, 2).join("/") +
+              "/login",
+          });
+          return;
+        }
         const cached = hydrateCompanyCache();
         setCompany(cached ?? null);
         setError(e instanceof Error ? e.message : "Erro desconhecido");

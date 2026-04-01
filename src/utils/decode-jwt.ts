@@ -57,6 +57,25 @@ export function getCompanyIdFromToken(token: string): string | null {
  * @param token - O JWT token
  * @returns Objeto com email, company_id e dados completos do usuário
  */
+/**
+ * Verifica se o backend JWT token está expirado.
+ * Retorna true se inválido ou expirado.
+ */
+export function isBackendTokenExpired(token: string): boolean {
+  try {
+    const cleanToken = token.replace(/^Bearer\s+/, "");
+    const base64Payload = cleanToken.split(".")[1];
+    if (!base64Payload) return true;
+    const decodedPayload = atob(base64Payload);
+    const payload: JWTPayload = JSON.parse(decodedPayload);
+    if (!payload.exp) return true;
+    // exp é em segundos, Date.now() em milissegundos
+    return Date.now() >= payload.exp * 1000;
+  } catch {
+    return true;
+  }
+}
+
 export function getAuthDataFromToken(token: string) {
   const userData = decodeJWTToken(token);
 

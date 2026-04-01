@@ -1,6 +1,13 @@
 import { NextRequest } from "next/server";
 import { getCompanyFromRequest } from "./get-company-from-request";
 
+export class BackendUnauthorizedError extends Error {
+  constructor(message = "Token de autorização inválido ou expirado") {
+    super(message);
+    this.name = "BackendUnauthorizedError";
+  }
+}
+
 type Options = {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   queryParams?: Record<string, string | number | undefined>;
@@ -22,7 +29,7 @@ export async function fetchFromBackend<T = any>(
   req: NextRequest,
   endpoint: string,
   authToken: string,
-  options: Options = {}
+  options: Options = {},
 ): Promise<T> {
   const useCompanyContext = options.skipCompanyContext !== true;
   const company = useCompanyContext
@@ -37,7 +44,7 @@ export async function fetchFromBackend<T = any>(
         .filter(([_, v]) => v !== undefined && v !== null && v !== "")
         .map(
           ([key, value]) =>
-            `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
+            `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
         )
         .join("&")
     : "";
@@ -69,7 +76,7 @@ export async function fetchFromBackend<T = any>(
         `[fetchFromBackend] Network error calling ${url} | companyId=${
           company?.id ?? "-"
         } schema=${company?.schema_name ?? "-"}:`,
-        networkError
+        networkError,
       );
       throw networkError;
     }
@@ -86,7 +93,9 @@ export async function fetchFromBackend<T = any>(
 
     const errorText = await response.text();
     const shouldRetry =
-      method === "GET" && errorText.includes("SQLSTATE 42P01");
+      method === "GET" &&
+      (errorText.includes("SQLSTATE 42P01") ||
+        errorText.includes("SQLSTATE 42703"));
 
     if (process.env.NODE_ENV !== "production") {
       console.error(
@@ -94,8 +103,12 @@ export async function fetchFromBackend<T = any>(
           response.status
         } on ${url} | companyId=${company?.id ?? "-"} schema=${
           company?.schema_name ?? "-"
-        } | body=${errorText}`
+        } | body=${errorText}`,
       );
+    }
+
+    if (response.status === 401) {
+      throw new BackendUnauthorizedError();
     }
 
     if (shouldRetry && attempt < maxRetries) {
@@ -104,7 +117,7 @@ export async function fetchFromBackend<T = any>(
     }
 
     throw new Error(
-      `Erro ao acessar backend (${response.status}): ${errorText}`
+      `Erro ao acessar backend (${response.status}): ${errorText}`,
     );
   }
 

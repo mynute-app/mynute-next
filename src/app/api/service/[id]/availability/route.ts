@@ -101,14 +101,15 @@ export async function GET(
         "❌ Erro ao buscar disponibilidade do serviço:",
         fetchError
       );
+      // Retorna estrutura vazia e válida para não crashar a tela
       return NextResponse.json(
         {
-          error:
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Erro ao buscar disponibilidade do serviço",
+          service_id: serviceId,
+          available_dates: [],
+          employee_info: [],
+          branch_info: [],
         },
-        { status: 500 }
+        { status: 200 }
       );
     }
   } catch (error) {
