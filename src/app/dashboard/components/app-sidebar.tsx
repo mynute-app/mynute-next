@@ -9,6 +9,7 @@ import {
   Calendar,
   CalendarCheck,
   CalendarClock,
+  CalendarOff,
   ChevronDown,
   ChevronRight,
   Droplets,
@@ -82,9 +83,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const isConfigActive = normalizedPathname.startsWith("/dashboard/config");
   const isActive = (href: string, end = false) =>
-    end
-      ? normalizedPathname === href
-      : normalizedPathname.startsWith(href);
+    end ? normalizedPathname === href : normalizedPathname.startsWith(href);
 
   return (
     <Sidebar
@@ -176,7 +175,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className={cn(
                   navItemBase,
                   "w-full justify-between",
-                  isConfigActive && "bg-sidebar-accent text-sidebar-foreground"
+                  isConfigActive && "bg-sidebar-accent text-sidebar-foreground",
                 )}
               >
                 <span className="flex items-center gap-3">
@@ -192,7 +191,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <div
                 className={cn(
                   "overflow-hidden transition-all duration-200",
-                  isConfigOpen ? "max-h-48 opacity-100" : "max-h-0 opacity-0"
+                  isConfigOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0",
                 )}
               >
                 <div className="space-y-1 py-1">
@@ -207,6 +206,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     icon={<UserCircle className="h-4 w-4" />}
                     label="Conta e Seguranca"
                     isActive={isActive("/dashboard/config/account", true)}
+                  />
+                  <SubNavItem
+                    href={toTenantDashboardPath(
+                      "/dashboard/config/blocked-dates",
+                    )}
+                    icon={<CalendarOff className="h-4 w-4" />}
+                    label="Datas Bloqueadas"
+                    isActive={isActive("/dashboard/config/blocked-dates", true)}
                   />
                   {/* <SubNavItem
                     href="/dashboard/configuracoes/servicos"

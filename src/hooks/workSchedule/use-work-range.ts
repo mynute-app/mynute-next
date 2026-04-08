@@ -17,6 +17,34 @@ interface UseWorkRangeProps {
   onError?: (error: string) => void;
 }
 
+type RequestOptions = {
+  showErrorToast?: boolean;
+  showSuccessToast?: boolean;
+};
+
+const parseErrorMessage = async (response: Response, fallback: string) => {
+  try {
+    const errorData = await response.json();
+    if (
+      typeof errorData?.message === "string" &&
+      errorData.message.length > 0
+    ) {
+      return errorData.message;
+    }
+  } catch {
+    // Ignore JSON parsing errors and use fallback message.
+  }
+
+  try {
+    const text = await response.text();
+    if (text.length > 0) return text;
+  } catch {
+    // Ignore text parsing errors and use fallback message.
+  }
+
+  return fallback;
+};
+
 export const useWorkRange = (props?: UseWorkRangeProps) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -25,17 +53,15 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
   const { toast } = useToast();
 
   // GET - Buscar work_range por ID
-  const getWorkRange = async (branchId: string, workRangeId: string) => {
+  const getWorkRange = async (
+    branchId: string,
+    workRangeId: string,
+    options?: RequestOptions,
+  ) => {
+    const showErrorToast = options?.showErrorToast ?? true;
     setLoading(true);
     setError(null);
     setData(null);
-
-    console.log(
-      "📥 Hook WorkRange - Iniciando getWorkRange para branchId:",
-      branchId,
-      "workRangeId:",
-      workRangeId
-    );
 
     try {
       const response = await fetch(
@@ -45,37 +71,37 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao buscar work_range");
+        const message = await parseErrorMessage(
+          response,
+          "Erro ao buscar work_range",
+        );
+        throw new Error(message);
       }
 
       const result = await response.json();
-
-      console.log("✅ Hook WorkRange - Dados recebidos:", result);
 
       // Normalizar os dados se necessário
       const workRangeData = result.data || result;
 
       setData(workRangeData);
 
-      console.log("📋 Hook WorkRange - Work range data:", workRangeData);
-
       return workRangeData;
     } catch (err: any) {
       const errorMessage = err.message || "Erro interno do servidor";
       setError(errorMessage);
 
-      toast({
-        title: "Erro ao buscar work_range",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      if (showErrorToast) {
+        toast({
+          title: "Erro ao buscar work_range",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
 
-      console.error("❌ Hook WorkRange - Erro ao buscar:", errorMessage);
       props?.onError?.(errorMessage);
       throw err;
     } finally {
@@ -86,20 +112,14 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
   // POST - Criar novo work_range
   const createWorkRange = async (
     branchId: string,
-    workRangeData: Partial<WorkRangeData>
+    workRangeData: Partial<WorkRangeData>,
+    options?: RequestOptions,
   ) => {
+    const showSuccessToast = options?.showSuccessToast ?? true;
+    const showErrorToast = options?.showErrorToast ?? true;
     setLoading(true);
     setSuccess(false);
     setError(null);
-
-    console.log(
-      "➕ Hook WorkRange - Iniciando createWorkRange para branchId:",
-      branchId
-    );
-    console.log(
-      "📋 Hook WorkRange - Data para criar:",
-      JSON.stringify(workRangeData, null, 2)
-    );
 
     try {
       const response = await fetch(`/api/branch/${branchId}/work_range`, {
@@ -111,8 +131,11 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao criar work_range");
+        const message = await parseErrorMessage(
+          response,
+          "Erro ao criar work_range",
+        );
+        throw new Error(message);
       }
 
       const result = await response.json();
@@ -120,12 +143,12 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
       setSuccess(true);
       setData(result.data || result);
 
-      toast({
-        title: "Work range criado!",
-        description: "O horário foi criado com sucesso.",
-      });
-
-      console.log("✅ Hook WorkRange - Criado com sucesso:", result);
+      if (showSuccessToast) {
+        toast({
+          title: "Horario criado!",
+          description: "O horario foi criado com sucesso.",
+        });
+      }
 
       props?.onSuccess?.();
 
@@ -134,13 +157,14 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
       const errorMessage = err.message || "Erro interno do servidor";
       setError(errorMessage);
 
-      toast({
-        title: "Erro ao criar work_range",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      if (showErrorToast) {
+        toast({
+          title: "Erro ao criar work_range",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
 
-      console.error("❌ Hook WorkRange - Erro ao criar:", errorMessage);
       props?.onError?.(errorMessage);
       throw err;
     } finally {
@@ -152,22 +176,14 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
   const updateWorkRange = async (
     branchId: string,
     workRangeId: string,
-    workRangeData: Partial<WorkRangeData>
+    workRangeData: Partial<WorkRangeData>,
+    options?: RequestOptions,
   ) => {
+    const showSuccessToast = options?.showSuccessToast ?? true;
+    const showErrorToast = options?.showErrorToast ?? true;
     setLoading(true);
     setSuccess(false);
     setError(null);
-
-    console.log(
-      "🔄 Hook WorkRange - Iniciando updateWorkRange para branchId:",
-      branchId,
-      "workRangeId:",
-      workRangeId
-    );
-    console.log(
-      "📋 Hook WorkRange - Data para atualizar:",
-      JSON.stringify(workRangeData, null, 2)
-    );
 
     try {
       const response = await fetch(
@@ -178,12 +194,15 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(workRangeData),
-        }
+        },
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao atualizar work_range");
+        const message = await parseErrorMessage(
+          response,
+          "Erro ao atualizar work_range",
+        );
+        throw new Error(message);
       }
 
       const result = await response.json();
@@ -191,12 +210,12 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
       setSuccess(true);
       setData(result.data || result);
 
-      toast({
-        title: "Work range atualizado!",
-        description: "O horário foi atualizado com sucesso.",
-      });
-
-      console.log("✅ Hook WorkRange - Atualizado com sucesso:", result);
+      if (showSuccessToast) {
+        toast({
+          title: "Horario atualizado!",
+          description: "O horario foi atualizado com sucesso.",
+        });
+      }
 
       props?.onSuccess?.();
 
@@ -205,13 +224,14 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
       const errorMessage = err.message || "Erro interno do servidor";
       setError(errorMessage);
 
-      toast({
-        title: "Erro ao atualizar work_range",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      if (showErrorToast) {
+        toast({
+          title: "Erro ao atualizar work_range",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
 
-      console.error("❌ Hook WorkRange - Erro ao atualizar:", errorMessage);
       props?.onError?.(errorMessage);
       throw err;
     } finally {
@@ -220,17 +240,16 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
   };
 
   // DELETE - Deletar work_range
-  const deleteWorkRange = async (branchId: string, workRangeId: string) => {
+  const deleteWorkRange = async (
+    branchId: string,
+    workRangeId: string,
+    options?: RequestOptions,
+  ) => {
+    const showSuccessToast = options?.showSuccessToast ?? true;
+    const showErrorToast = options?.showErrorToast ?? true;
     setLoading(true);
     setSuccess(false);
     setError(null);
-
-    console.log(
-      "🗑️ Hook WorkRange - Iniciando deleteWorkRange para branchId:",
-      branchId,
-      "workRangeId:",
-      workRangeId
-    );
 
     try {
       const response = await fetch(
@@ -240,12 +259,15 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao deletar work_range");
+        const message = await parseErrorMessage(
+          response,
+          "Erro ao deletar work_range",
+        );
+        throw new Error(message);
       }
 
       const result = await response.json();
@@ -253,12 +275,12 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
       setSuccess(true);
       setData(null); // Limpar dados após deletar
 
-      toast({
-        title: "Work range deletado!",
-        description: "O horário foi removido com sucesso.",
-      });
-
-      console.log("✅ Hook WorkRange - Deletado com sucesso:", result);
+      if (showSuccessToast) {
+        toast({
+          title: "Horario removido!",
+          description: "O horario foi removido com sucesso.",
+        });
+      }
 
       props?.onSuccess?.();
 
@@ -267,13 +289,14 @@ export const useWorkRange = (props?: UseWorkRangeProps) => {
       const errorMessage = err.message || "Erro interno do servidor";
       setError(errorMessage);
 
-      toast({
-        title: "Erro ao deletar work_range",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      if (showErrorToast) {
+        toast({
+          title: "Erro ao deletar work_range",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
 
-      console.error("❌ Hook WorkRange - Erro ao deletar:", errorMessage);
       props?.onError?.(errorMessage);
       throw err;
     } finally {

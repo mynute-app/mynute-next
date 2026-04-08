@@ -200,7 +200,7 @@ export function TeamMemberInfoDialog({
       } else if (fieldsSaved) {
         toast({
           title: "Profissional atualizado!",
-          description: "As informacoes foram salvas com sucesso.",
+          description: "As informações foram salvas com sucesso.",
         });
       } else if (imageSaved) {
         toast({
@@ -217,18 +217,18 @@ export function TeamMemberInfoDialog({
     } catch (error) {
       if (fieldsSaved && pendingImageFile && !imageSaved) {
         toast({
-          title: "Foto nao enviada",
+          title: "Foto não enviada",
           description:
-            "Os dados foram salvos, mas a foto nao foi atualizada.",
+            "Os dados foram salvos, mas a foto não foi atualizada.",
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Erro ao salvar alteracoes",
+          title: "Erro ao salvar alterações",
           description:
             error instanceof Error
               ? error.message
-              : "Nao foi possivel salvar as alteracoes.",
+              : "Não foi possível salvar as alterações.",
           variant: "destructive",
         });
       }

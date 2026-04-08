@@ -52,8 +52,9 @@ export default function BranchEquipePage() {
     : params?.branchId;
   const branchId = typeof branchIdParam === "string" ? branchIdParam : "";
 
-  const { company, loading: isCompanyLoading, refetch } = useGetCompany();
-  const { fetchBranchById } = useBranchApi();
+  const { company, loading: isCompanyLoading } = useGetCompany();
+  const { fetchBranchById, linkEmployeeToBranch, unlinkEmployeeFromBranch } =
+    useBranchApi();
   const { toast } = useToast();
 
   const employees = useMemo(
@@ -198,20 +199,14 @@ export default function BranchEquipePage() {
     setIsSaving(true);
 
     const results = await Promise.allSettled([
-      ...toLink.map(employeeId =>
-        fetch(`/api/employee/branch/${employeeId}/branch/${branchId}`, {
-          method: "POST",
-        }),
-      ),
+      ...toLink.map(employeeId => linkEmployeeToBranch(employeeId, branchId)),
       ...toUnlink.map(employeeId =>
-        fetch(`/api/employee/branch/${employeeId}/branch/${branchId}`, {
-          method: "DELETE",
-        }),
+        unlinkEmployeeFromBranch(employeeId, branchId),
       ),
     ]);
 
     const failed = results.some(
-      result => result.status === "rejected" || !result.value?.ok,
+      result => result.status === "rejected" || result.value === false,
     );
 
     if (failed) {
@@ -226,7 +221,6 @@ export default function BranchEquipePage() {
       if (refreshedBranch) {
         setBranchDetails(refreshedBranch);
       }
-      await refetch();
       setInitializedBranchId("");
       setInitialEmployeeIds(new Set(selectedEmployeeIds));
     }
@@ -360,7 +354,7 @@ export default function BranchEquipePage() {
             onClick={handleSave}
             disabled={!hasChanges || isSaving || isLoading}
           >
-            {isSaving ? "Salvando..." : "Salvar alteracoes"}
+            {isSaving ? "Salvando..." : "Salvar alterações"}
           </Button>
         </div>
       </div>

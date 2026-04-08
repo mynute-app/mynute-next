@@ -3,7 +3,7 @@ import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const resolvedParams = await params;
@@ -12,7 +12,7 @@ export async function GET(
     if (!serviceId) {
       return NextResponse.json(
         { message: "ID do serviço não informado." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -27,21 +27,21 @@ export async function GET(
     if (!timezone) {
       return NextResponse.json(
         { message: "Timezone é obrigatório." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!dateForwardStart) {
       return NextResponse.json(
         { message: "date_forward_start é obrigatório." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!dateForwardEnd) {
       return NextResponse.json(
         { message: "date_forward_end é obrigatório." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -55,7 +55,7 @@ export async function GET(
           message:
             "date_forward_start e date_forward_end devem ser números válidos.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,7 +65,7 @@ export async function GET(
     if (!companyId) {
       return NextResponse.json(
         { message: "X-Company-ID header é obrigatório." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -92,14 +92,14 @@ export async function GET(
             "X-Company-ID": companyId,
           },
           skipCompanyContext: true,
-        }
+        },
       );
 
       return NextResponse.json(availability, { status: 200 });
     } catch (fetchError) {
       console.error(
         "❌ Erro ao buscar disponibilidade do serviço:",
-        fetchError
+        fetchError,
       );
       // Retorna estrutura vazia e válida para não crashar a tela
       return NextResponse.json(
@@ -109,14 +109,14 @@ export async function GET(
           employee_info: [],
           branch_info: [],
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
   } catch (error) {
     console.error("❌ Erro no servidor:", error);
     return NextResponse.json(
       { message: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import { fetchWithCache } from "@/lib/cache/client-request-cache";
-import { Branch } from "../../../types/company";
+import { Branch, BranchListResponse } from "../../../types/company";
 
 const parseErrorMessage = async (res: Response, fallback: string) => {
   const text = await res.text();
@@ -16,7 +16,84 @@ const parseErrorMessage = async (res: Response, fallback: string) => {
   return fallback;
 };
 
+const normalizeBranch = (branchData: Branch): Branch => ({
+  ...branchData,
+  is_active:
+    typeof branchData.is_active === "boolean"
+      ? branchData.is_active
+      : typeof branchData.active === "boolean"
+        ? branchData.active
+        : undefined,
+  active:
+    typeof branchData.active === "boolean"
+      ? branchData.active
+      : typeof branchData.is_active === "boolean"
+        ? branchData.is_active
+        : undefined,
+  services: Array.isArray(branchData.services)
+    ? branchData.services.map((service: any) =>
+        typeof service === "number" ? service : service.id,
+      )
+    : branchData.services,
+  employees: Array.isArray(branchData.employees)
+    ? branchData.employees
+    : branchData.employees,
+});
+
 export function useBranchApi() {
+  const fetchBranches = useCallback(
+    async (
+      page = 1,
+      pageSize = 10,
+      force = false,
+    ): Promise<BranchListResponse | null> => {
+      try {
+        const cacheKey = `branches:${page}:${pageSize}`;
+        const branchList = await fetchWithCache(
+          cacheKey,
+          async () => {
+            const queryParams = new URLSearchParams({
+              page: page.toString(),
+              page_size: pageSize.toString(),
+            });
+
+            const res = await fetch(`/api/branch?${queryParams.toString()}`);
+
+            if (!res.ok) {
+              const message = await parseErrorMessage(
+                res,
+                "Erro ao buscar filiais",
+              );
+              throw new Error(message);
+            }
+
+            return res.json();
+          },
+          { ttlMs: 30 * 1000, force },
+        );
+
+        return {
+          ...branchList,
+          branches: Array.isArray(branchList.branches)
+            ? branchList.branches.map((branch: Branch) =>
+                normalizeBranch(branch),
+              )
+            : [],
+        };
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Erro ao buscar filiais";
+        toast({
+          title: "Erro",
+          description: message,
+          variant: "destructive",
+        });
+        return null;
+      }
+    },
+    [],
+  );
+
   /**
    * Busca uma filial por ID
    */
@@ -32,25 +109,17 @@ export function useBranchApi() {
             if (!res.ok) {
               const message = await parseErrorMessage(
                 res,
-                "Erro ao buscar filial por ID"
+                "Erro ao buscar filial por ID",
               );
               throw new Error(message);
             }
 
             return res.json();
           },
-          { ttlMs: 30 * 1000, force }
+          { ttlMs: 30 * 1000, force },
         );
 
-        return {
-          ...branchData,
-          services: Array.isArray(branchData.services)
-            ? branchData.services.map((s: any) =>
-                typeof s === "number" ? s : s.id
-              )
-            : [],
-          employees: branchData.employees ?? [],
-        };
+        return normalizeBranch(branchData as Branch);
       } catch (error) {
         const message =
           error instanceof Error
@@ -65,7 +134,7 @@ export function useBranchApi() {
         return null;
       }
     },
-    []
+    [],
   );
 
   /**
@@ -74,20 +143,20 @@ export function useBranchApi() {
   const linkService = useCallback(
     async (
       branchId: number | string,
-      serviceId: number | string
+      serviceId: number | string,
     ): Promise<boolean> => {
       try {
         const res = await fetch(
           `/api/branch/${branchId}/service/${serviceId}`,
           {
             method: "POST",
-          }
+          },
         );
 
         if (!res.ok) {
           const message = await parseErrorMessage(
             res,
-            "Erro ao vincular o servico"
+            "Erro ao vincular o servico",
           );
           throw new Error(message);
         }
@@ -100,9 +169,7 @@ export function useBranchApi() {
         return true;
       } catch (error) {
         const message =
-          error instanceof Error
-            ? error.message
-            : "Erro ao vincular o servico";
+          error instanceof Error ? error.message : "Erro ao vincular o servico";
         console.error("Erro ao vincular servico:", error);
         toast({
           title: "Erro",
@@ -112,7 +179,7 @@ export function useBranchApi() {
         return false;
       }
     },
-    []
+    [],
   );
 
   /**
@@ -121,20 +188,20 @@ export function useBranchApi() {
   const unlinkService = useCallback(
     async (
       branchId: number | string,
-      serviceId: number | string
+      serviceId: number | string,
     ): Promise<boolean> => {
       try {
         const res = await fetch(
           `/api/branch/${branchId}/service/${serviceId}`,
           {
             method: "DELETE",
-          }
+          },
         );
 
         if (!res.ok) {
           const message = await parseErrorMessage(
             res,
-            "Erro ao desvincular o servico"
+            "Erro ao desvincular o servico",
           );
           throw new Error(message);
         }
@@ -160,12 +227,97 @@ export function useBranchApi() {
         return false;
       }
     },
-    []
+    [],
+  );
+
+  /**
+   * Vincula um profissional a filial
+   */
+  const linkEmployeeToBranch = useCallback(
+    async (
+      employeeId: number | string,
+      branchId: number | string,
+    ): Promise<boolean> => {
+      try {
+        const res = await fetch(
+          `/api/employee/branch/${employeeId}/branch/${branchId}`,
+          {
+            method: "POST",
+          },
+        );
+
+        if (!res.ok) {
+          const message = await parseErrorMessage(
+            res,
+            "Erro ao vincular o profissional",
+          );
+          throw new Error(message);
+        }
+
+        return true;
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Erro ao vincular o profissional";
+        toast({
+          title: "Erro",
+          description: message,
+          variant: "destructive",
+        });
+        return false;
+      }
+    },
+    [],
+  );
+
+  /**
+   * Desvincula um profissional da filial
+   */
+  const unlinkEmployeeFromBranch = useCallback(
+    async (
+      employeeId: number | string,
+      branchId: number | string,
+    ): Promise<boolean> => {
+      try {
+        const res = await fetch(
+          `/api/employee/branch/${employeeId}/branch/${branchId}`,
+          {
+            method: "DELETE",
+          },
+        );
+
+        if (!res.ok) {
+          const message = await parseErrorMessage(
+            res,
+            "Erro ao desvincular o profissional",
+          );
+          throw new Error(message);
+        }
+
+        return true;
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Erro ao desvincular o profissional";
+        toast({
+          title: "Erro",
+          description: message,
+          variant: "destructive",
+        });
+        return false;
+      }
+    },
+    [],
   );
 
   return {
+    fetchBranches,
     fetchBranchById,
     linkService,
     unlinkService,
+    linkEmployeeToBranch,
+    unlinkEmployeeFromBranch,
   };
 }
