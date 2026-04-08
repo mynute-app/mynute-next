@@ -62,7 +62,7 @@ export default function BranchServicesPage() {
     : params?.branchId;
   const branchId = typeof branchIdParam === "string" ? branchIdParam : "";
 
-  const { company, loading: isCompanyLoading, refetch } = useGetCompany();
+  const { company, loading: isCompanyLoading } = useGetCompany();
   const { linkService, unlinkService, fetchBranchById } = useBranchApi();
   const { toast } = useToast();
 
@@ -243,7 +243,6 @@ export default function BranchServicesPage() {
       if (refreshedBranch) {
         setBranchDetails(refreshedBranch);
       }
-      await refetch();
       setInitializedBranchId("");
       setInitialServiceIds(new Set(enabledServiceIds));
     }
@@ -375,7 +374,7 @@ export default function BranchServicesPage() {
             onClick={handleSave}
             disabled={!hasChanges || isSaving || isCompanyLoading}
           >
-            {isSaving ? "Salvando..." : "Salvar alteracoes"}
+            {isSaving ? "Salvando..." : "Salvar alterações"}
           </Button>
         </div>
       </div>

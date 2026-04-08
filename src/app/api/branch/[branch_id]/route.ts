@@ -20,7 +20,7 @@ const fetchBranchWithFallback = async (
   token: string,
   companyId: string | null,
   schemaName: string | null,
-  options: Parameters<typeof fetchFromBackend>[3] = {}
+  options: Parameters<typeof fetchFromBackend>[3] = {},
 ) => {
   try {
     return await fetchFromBackend(req, `/branch/${branchId}`, token, options);
@@ -48,13 +48,12 @@ export const GET = auth(async function GET(req, { params }) {
     if (!authData.isValid) {
       return NextResponse.json(
         { message: authData.error || "Token inválido" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     const resolvedParams = await params;
     const branchId = resolvedParams?.branch_id;
-    console.log("🏢 Buscando filial:", branchId);
 
     const schemaName = resolveSchemaFromHost(req);
 
@@ -65,7 +64,7 @@ export const GET = auth(async function GET(req, { params }) {
       authData.token!,
       authData.companyId,
       schemaName,
-      { method: "GET" }
+      { method: "GET" },
     );
 
     return NextResponse.json(branchData, { status: 200 });
@@ -76,7 +75,7 @@ export const GET = auth(async function GET(req, { params }) {
         message: "Erro interno ao buscar a filial.",
         error: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -89,17 +88,16 @@ export const PATCH = auth(async function PATCH(req, { params }) {
     if (!authData.isValid) {
       return NextResponse.json(
         { message: authData.error || "Token inválido" },
-        { status: 401 }
+        { status: 401 },
       );
     }
     const body = await req.json();
     const resolvedParams = await params;
     const branchId = resolvedParams?.branch_id;
-    console.log("🏢 Atualizando filial:", branchId);
-    console.log("📋 Dados recebidos:", authData.companyId);
 
     const requestBody = {
       name: body.name,
+      is_active: body.is_active,
       street: body.street,
       number: body.number,
       complement: body.complement || "",
@@ -109,8 +107,6 @@ export const PATCH = auth(async function PATCH(req, { params }) {
       state: body.state,
       country: body.country,
     };
-
-    console.log("📤 Enviando dados para API backend:", requestBody);
 
     const schemaName = resolveSchemaFromHost(req);
 
@@ -124,10 +120,9 @@ export const PATCH = auth(async function PATCH(req, { params }) {
       {
         method: "PATCH",
         body: requestBody,
-      }
+      },
     );
 
-    console.log("✅ Filial atualizada com sucesso:", updatedBranch);
     return NextResponse.json(updatedBranch, { status: 200 });
   } catch (error) {
     console.error("❌ Erro ao editar filial:", error);
@@ -136,7 +131,7 @@ export const PATCH = auth(async function PATCH(req, { params }) {
         message: "Erro interno ao editar a filial.",
         error: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -148,13 +143,12 @@ export const DELETE = auth(async function DELETE(req, { params }) {
     if (!authData.isValid) {
       return NextResponse.json(
         { message: authData.error || "Token inválido" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     const resolvedParams = await params;
     const branchId = resolvedParams?.branch_id;
-    console.log("🗑️ Deletando filial:", branchId);
 
     const schemaName = resolveSchemaFromHost(req);
 
@@ -167,10 +161,9 @@ export const DELETE = auth(async function DELETE(req, { params }) {
       schemaName,
       {
         method: "DELETE",
-      }
+      },
     );
 
-    console.log("✅ Filial deletada com sucesso:", deletedBranch);
     return NextResponse.json(deletedBranch, { status: 200 });
   } catch (error) {
     console.error("❌ Erro ao deletar filial:", error);
@@ -179,7 +172,7 @@ export const DELETE = auth(async function DELETE(req, { params }) {
         message: "Erro interno ao deletar a filial.",
         error: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
