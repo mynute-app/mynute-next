@@ -132,7 +132,7 @@ export function useServiceImage({
         `/api/service/${serviceId}/design/images/${imageType}`,
         {
           method: "DELETE",
-        }
+        },
       );
 
       if (!response.ok) {
