@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { toast } from "@/hooks/use-toast";
 import { useGetService } from "./use-get-service";
 
@@ -16,7 +15,6 @@ export function useServiceImage({
   imageType = "main", // Default para "main"
   onSuccess,
 }: UseServiceImageProps) {
-  const { data: session } = useSession();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
@@ -40,15 +38,6 @@ export function useServiceImage({
    * Faz upload da imagem do serviço
    */
   const uploadImage = async (file: File): Promise<boolean> => {
-    if (!session?.accessToken) {
-      toast({
-        title: "Erro",
-        description: "Token de autenticação não encontrado",
-        variant: "destructive",
-      });
-      return false;
-    }
-
     try {
       setIsUploading(true);
 
@@ -56,12 +45,9 @@ export function useServiceImage({
       const formData = new FormData();
       formData.append(imageType, file); // Usa o imageType como nome do campo
 
-      // Fazer requisição para nossa rota PATCH padronizada
+      // Fazer requisição para nossa rota PATCH - o auth é automático via middleware
       const response = await fetch(`/api/service/${serviceId}/design/images`, {
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-        },
         body: formData,
       });
 
@@ -102,8 +88,8 @@ export function useServiceImage({
       }
 
       // Atualizar preview da imagem
-      if (data.image_url) {
-        setImagePreview(data.image_url);
+      if (data.profile?.url) {
+        setImagePreview(data.profile.url);
       }
 
       toast({
@@ -139,15 +125,6 @@ export function useServiceImage({
    * Remove a imagem do serviço
    */
   const removeImage = async (): Promise<boolean> => {
-    if (!session?.accessToken) {
-      toast({
-        title: "Erro",
-        description: "Token de autenticação não encontrado",
-        variant: "destructive",
-      });
-      return false;
-    }
-
     try {
       setIsRemoving(true);
 
@@ -155,9 +132,6 @@ export function useServiceImage({
         `/api/service/${serviceId}/design/images/${imageType}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`,
-          },
         }
       );
 

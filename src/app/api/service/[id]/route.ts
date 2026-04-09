@@ -24,7 +24,7 @@ export const GET = auth(async function GET(req, { params }) {
     if (!serviceId) {
       return NextResponse.json(
         { message: "ID do serviço não informado." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -35,7 +35,7 @@ export const GET = auth(async function GET(req, { params }) {
         token,
         {
           method: "GET",
-        }
+        },
       );
 
       return NextResponse.json(service, { status: 200 });
@@ -48,18 +48,17 @@ export const GET = auth(async function GET(req, { params }) {
               ? fetchError.message
               : "Erro ao buscar serviço",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error) {
     console.error("❌ Erro no servidor:", error);
     return NextResponse.json(
       { message: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
-
 
 export const PATCH = auth(async function PATCH(req, { params }) {
   try {
@@ -80,12 +79,15 @@ export const PATCH = auth(async function PATCH(req, { params }) {
     const serviceId = resolvedParams?.id;
     const body = await req.json();
 
-    const requestBody = {
-      name: body.name,
-      description: body.description,
-      price: Number(body.price),
-      duration: Number(body.duration),
-    };
+    const requestBody: Record<string, unknown> = {};
+    if (body.name !== undefined) requestBody.name = body.name;
+    if (body.description !== undefined)
+      requestBody.description = body.description;
+    if (body.price !== undefined) requestBody.price = Number(body.price);
+    if (body.duration !== undefined)
+      requestBody.duration = Number(body.duration);
+    if (body.is_active !== undefined) requestBody.is_active = body.is_active;
+    if (body.show_image !== undefined) requestBody.show_image = body.show_image;
 
     try {
       const updatedService = await fetchFromBackend(
@@ -95,7 +97,7 @@ export const PATCH = auth(async function PATCH(req, { params }) {
         {
           method: "PATCH",
           body: requestBody,
-        }
+        },
       );
 
       return NextResponse.json(updatedService, { status: 200 });
@@ -108,14 +110,14 @@ export const PATCH = auth(async function PATCH(req, { params }) {
               ? fetchError.message
               : "Erro ao editar serviço",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error) {
     console.error("❌ Erro no servidor:", error);
     return NextResponse.json(
       { message: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -140,7 +142,7 @@ export const DELETE = auth(async function DELETE(req, { params }) {
     if (!serviceId) {
       return NextResponse.json(
         { message: "ID do serviço não informado." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -151,7 +153,7 @@ export const DELETE = auth(async function DELETE(req, { params }) {
 
       return NextResponse.json(
         { message: "Serviço deletado com sucesso" },
-        { status: 200 }
+        { status: 200 },
       );
     } catch (fetchError) {
       console.error("❌ Erro ao deletar serviço:", fetchError);
@@ -162,14 +164,14 @@ export const DELETE = auth(async function DELETE(req, { params }) {
               ? fetchError.message
               : "Erro ao deletar serviço",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error) {
     console.error("❌ Erro no servidor:", error);
     return NextResponse.json(
       { message: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
