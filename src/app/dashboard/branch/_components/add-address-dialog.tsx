@@ -1,6 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useWatch } from "react-hook-form";
+import {
+  Building2,
+  Globe,
+  Hash,
+  Home,
+  Loader2,
+  Map,
+  MapPin,
+  Navigation,
+  Plus,
+  Search,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +26,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus } from "lucide-react";
 import type { Branch } from "../../../../../types/company";
 import { useAddAddressForm } from "../actions/useAddAddressForm";
 
@@ -37,9 +49,30 @@ export const AddAddressDialog = ({
   const { errors, isSubmitting } = formState;
 
   const [isOpen, setIsOpen] = useState(false);
+  const [cepStatus, setCepStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [cepError, setCepError] = useState<string | null>(null);
+  const [lastCep, setLastCep] = useState<string | null>(null);
+
+  const zipCodeValue = useWatch({ control: form.control, name: "zip_code" });
+  const cepDigits = useMemo(
+    () =>
+      String(zipCodeValue || "")
+        .replace(/\D/g, "")
+        .slice(0, 8),
+    [zipCodeValue],
+  );
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      return;
+    }
+
     reset();
+    setCepStatus("idle");
+    setCepError(null);
+    setLastCep(null);
   }, [isOpen, reset]);
 
   const onSubmit = async (data: any) => {
@@ -50,22 +83,66 @@ export const AddAddressDialog = ({
     }
   };
 
-  const fetchAddressByCEP = async (cep: string) => {
-    if (cep.length !== 8) return;
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await response.json();
-      if (!data.erro) {
-        setValue("street", data.logradouro);
-        setValue("city", data.localidade);
-        setValue("neighborhood", data.bairro);
-        setValue("state", data.uf);
-        setValue("country", "Brasil");
-      }
-    } catch (error) {
-      console.error("Erro ao buscar endereco pelo CEP:", error);
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (cepDigits.length !== 8) {
+      setCepStatus("idle");
+      setCepError(null);
+      return;
     }
-  };
+
+    if (lastCep === cepDigits) return;
+
+    const controller = new AbortController();
+    let isActive = true;
+
+    const fetchAddressByCEP = async () => {
+      setCepStatus("loading");
+      setCepError(null);
+
+      try {
+        const response = await fetch(
+          `https://viacep.com.br/ws/${cepDigits}/json/`,
+          { signal: controller.signal },
+        );
+
+        if (!response.ok) {
+          throw new Error("Falha ao obter dados do CEP");
+        }
+
+        const data = await response.json();
+
+        if (!isActive || controller.signal.aborted) return;
+
+        if (data?.erro) {
+          setCepStatus("error");
+          setCepError("CEP não encontrado.");
+          return;
+        }
+
+        setValue("street", data.logradouro || "", { shouldDirty: true });
+        setValue("city", data.localidade || "", { shouldDirty: true });
+        setValue("neighborhood", data.bairro || "", { shouldDirty: true });
+        setValue("state", data.uf || "", { shouldDirty: true });
+        setValue("country", "Brasil", { shouldDirty: true });
+
+        setLastCep(cepDigits);
+        setCepStatus("success");
+      } catch {
+        if (!isActive || controller.signal.aborted) return;
+        setCepStatus("error");
+        setCepError("Não foi possível buscar o CEP.");
+      }
+    };
+
+    void fetchAddressByCEP();
+
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
+  }, [cepDigits, isOpen, lastCep, setValue]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -92,11 +169,15 @@ export const AddAddressDialog = ({
             <div className="mt-4 space-y-4 pb-4 px-2">
               <div className="space-y-2">
                 <Label htmlFor="branch-name">Nome da filial *</Label>
-                <Input
-                  id="branch-name"
-                  placeholder="Nome da filial"
-                  {...register("name")}
-                />
+                <div className="relative">
+                  <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="branch-name"
+                    placeholder="Nome da filial"
+                    className="pl-9"
+                    {...register("name")}
+                  />
+                </div>
                 {errors.name && (
                   <p className="text-xs text-destructive">
                     {String(errors.name.message)}
@@ -107,13 +188,47 @@ export const AddAddressDialog = ({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="branch-zip">CEP *</Label>
-                  <Input
-                    id="branch-zip"
-                    placeholder="00000-000"
-                    {...register("zip_code")}
-                    maxLength={8}
-                    onBlur={event => fetchAddressByCEP(event.target.value)}
-                  />
+                  <div className="relative">
+                    {cepStatus === "loading" ? (
+                      <Loader2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    )}
+                    <Input
+                      id="branch-zip"
+                      placeholder="00000000"
+                      className="pl-9"
+                      maxLength={8}
+                      {...register("zip_code", {
+                        onChange: event => {
+                          const normalized = String(event.target.value || "")
+                            .replace(/\D/g, "")
+                            .slice(0, 8);
+
+                          event.target.value = normalized;
+
+                          if (normalized.length < 8) {
+                            setLastCep(null);
+                            setCepStatus("idle");
+                            setCepError(null);
+                          }
+                        },
+                      })}
+                    />
+                  </div>
+                  {cepStatus === "loading" && (
+                    <p className="text-xs text-muted-foreground">
+                      Buscando endereço pelo CEP...
+                    </p>
+                  )}
+                  {cepStatus === "success" && (
+                    <p className="text-xs text-emerald-600">
+                      Endereço preenchido automaticamente.
+                    </p>
+                  )}
+                  {cepStatus === "error" && cepError && (
+                    <p className="text-xs text-destructive">{cepError}</p>
+                  )}
                   {errors.zip_code && (
                     <p className="text-xs text-destructive">
                       {String(errors.zip_code.message)}
@@ -122,11 +237,15 @@ export const AddAddressDialog = ({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="branch-street">Rua *</Label>
-                  <Input
-                    id="branch-street"
-                    placeholder="Nome da rua"
-                    {...register("street")}
-                  />
+                  <div className="relative">
+                    <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="branch-street"
+                      placeholder="Nome da rua"
+                      className="pl-9"
+                      {...register("street")}
+                    />
+                  </div>
                   {errors.street && (
                     <p className="text-xs text-destructive">
                       {String(errors.street.message)}
@@ -137,12 +256,16 @@ export const AddAddressDialog = ({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="branch-number">Numero *</Label>
-                  <Input
-                    id="branch-number"
-                    placeholder="Numero"
-                    {...register("number")}
-                  />
+                  <Label htmlFor="branch-number">Número *</Label>
+                  <div className="relative">
+                    <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="branch-number"
+                      placeholder="Número"
+                      className="pl-9"
+                      {...register("number")}
+                    />
+                  </div>
                   {errors.number && (
                     <p className="text-xs text-destructive">
                       {String(errors.number.message)}
@@ -151,30 +274,42 @@ export const AddAddressDialog = ({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="branch-complement">Complemento</Label>
-                  <Input
-                    id="branch-complement"
-                    placeholder="Apartamento, bloco, etc."
-                    {...register("complement")}
-                  />
+                  <div className="relative">
+                    <Home className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="branch-complement"
+                      placeholder="Apartamento, bloco, etc."
+                      className="pl-9"
+                      {...register("complement")}
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="branch-neighborhood">Bairro</Label>
-                  <Input
-                    id="branch-neighborhood"
-                    placeholder="Bairro"
-                    {...register("neighborhood")}
-                  />
+                  <div className="relative">
+                    <Navigation className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="branch-neighborhood"
+                      placeholder="Bairro"
+                      className="pl-9"
+                      {...register("neighborhood")}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="branch-city">Cidade *</Label>
-                  <Input
-                    id="branch-city"
-                    placeholder="Cidade"
-                    {...register("city")}
-                  />
+                  <div className="relative">
+                    <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="branch-city"
+                      placeholder="Cidade"
+                      className="pl-9"
+                      {...register("city")}
+                    />
+                  </div>
                   {errors.city && (
                     <p className="text-xs text-destructive">
                       {String(errors.city.message)}
@@ -186,11 +321,15 @@ export const AddAddressDialog = ({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="branch-state">Estado *</Label>
-                  <Input
-                    id="branch-state"
-                    placeholder="Estado"
-                    {...register("state")}
-                  />
+                  <div className="relative">
+                    <Map className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="branch-state"
+                      placeholder="Estado"
+                      className="pl-9"
+                      {...register("state")}
+                    />
+                  </div>
                   {errors.state && (
                     <p className="text-xs text-destructive">
                       {String(errors.state.message)}
@@ -198,12 +337,16 @@ export const AddAddressDialog = ({
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="branch-country">Pais *</Label>
-                  <Input
-                    id="branch-country"
-                    placeholder="Pais"
-                    {...register("country")}
-                  />
+                  <Label htmlFor="branch-country">País *</Label>
+                  <div className="relative">
+                    <Globe className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="branch-country"
+                      placeholder="País"
+                      className="pl-9"
+                      {...register("country")}
+                    />
+                  </div>
                   {errors.country && (
                     <p className="text-xs text-destructive">
                       {String(errors.country.message)}
