@@ -73,7 +73,16 @@ export type Service = {
   location?: string;
   category?: string;
   hidden?: boolean;
+  is_active?: boolean;
+  show_image?: boolean;
 } & Design;
+
+export type ServiceListResponse = {
+  services: Service[];
+  total: number;
+  page: number;
+  page_size: number;
+};
 
 export type Employee = {
   work_schedule: any;

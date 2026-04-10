@@ -1,7 +1,47 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
-import { getAuthDataFromToken } from "../../../utils/decode-jwt";
+import {
+  getAuthDataFromRequest,
+  getAuthDataFromToken,
+} from "../../../utils/decode-jwt";
+
+export const GET = auth(async function GET(req) {
+  try {
+    const authData = getAuthDataFromRequest(req);
+
+    if (!authData.isValid) {
+      return NextResponse.json(
+        { message: authData.error || "Token inválido" },
+        { status: 401 },
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const page = searchParams.get("page") || "1";
+    const pageSize = searchParams.get("page_size") || "10";
+
+    const serviceList = await fetchFromBackend(
+      req,
+      "/service",
+      authData.token!,
+      {
+        method: "GET",
+        queryParams: { page, page_size: pageSize },
+      },
+    );
+
+    return NextResponse.json(serviceList, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        message: "Erro interno ao buscar os serviços.",
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    );
+  }
+});
 
 export const POST = auth(async function POST(req) {
   try {
@@ -21,7 +61,7 @@ export const POST = auth(async function POST(req) {
     if (!authData.companyId) {
       return NextResponse.json(
         { message: "Company ID não encontrado no token" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -51,14 +91,14 @@ export const POST = auth(async function POST(req) {
               ? fetchError.message
               : "Erro ao criar serviço",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error) {
     console.error("❌ Erro no servidor:", error);
     return NextResponse.json(
       { message: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });

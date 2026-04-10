@@ -2,7 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Upload } from "lucide-react";
+import {
+  Building2,
+  Globe,
+  Hash,
+  Home,
+  ImagePlus,
+  Map,
+  MapPin,
+  Navigation,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBranchImage } from "@/hooks/branch/use-branch-image";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import type { Branch } from "../../../../../types/company";
 
 type BranchInfoDialogProps = {
@@ -48,6 +60,25 @@ const buildDefaultValues = (branch: Branch | null): BranchEditFormValues => ({
   state: branch?.state ?? "",
   country: branch?.country ?? "",
 });
+
+const InputWithIcon = ({
+  icon: Icon,
+  className,
+  ...props
+}: React.ComponentProps<typeof Input> & {
+  icon: React.ComponentType<{ className?: string }>;
+}) => (
+  <div className="relative">
+    <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <Input
+      {...props}
+      className={cn(
+        "h-10 rounded-lg border-border/70 bg-background/70 pl-9 shadow-sm focus-visible:ring-primary/30",
+        className,
+      )}
+    />
+  </div>
+);
 
 export function BranchInfoDialog({
   open,
@@ -220,8 +251,8 @@ export function BranchInfoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0">
-        <DialogHeader className="sticky top-0 z-10 bg-background border-b border-border px-6 pb-4 pt-6">
+      <DialogContent className="max-w-3xl p-0">
+        <DialogHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 pb-4 pt-6 backdrop-blur">
           <DialogTitle>
             {branch ? "Editar filial" : "Carregando filial"}
           </DialogTitle>
@@ -239,68 +270,177 @@ export function BranchInfoDialog({
         ) : (
           <form onSubmit={handleSubmit(handleSave)}>
             <div className="px-6">
-              <div className="mt-4 space-y-4 pb-4 px-1">
-                <div className="flex items-start gap-6">
-                  <div
-                    className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center text-primary-foreground text-xl font-bold flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={handleImageClick}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={event => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleImageClick();
-                      }
-                    }}
-                  >
-                    {imageUrl ? (
-                      <img
-                        src={imageUrl}
-                        alt={branch?.name || "Filial"}
-                        className="h-full w-full rounded-xl object-cover"
-                      />
-                    ) : (
-                      <Upload className="w-6 h-6" />
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <Label>Foto da filial</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Clique na imagem para selecionar uma nova foto. Ela será
-                      enviada ao salvar.
+              <div className="mt-5 space-y-6 pb-5">
+                <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+                  <div className="mb-3">
+                    <p className="text-sm font-semibold text-foreground">
+                      Imagem da filial
                     </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleImageClick}
-                        disabled={isSaving || isUploading || isRemoving}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        {isUploading ? "Enviando..." : "Escolher arquivo"}
-                      </Button>
-                      {imageUrl && (
+                    <p className="text-xs text-muted-foreground">
+                      Adicione uma foto para facilitar a identificação da
+                      unidade.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-5">
+                    <button
+                      type="button"
+                      className="group relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-primary/15 to-primary/5"
+                      onClick={handleImageClick}
+                      disabled={isSaving || isUploading || isRemoving}
+                    >
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={branch?.name || "Filial"}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <ImagePlus className="h-6 w-6 text-primary" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 hidden items-center justify-center bg-black/35 text-white group-hover:flex">
+                        <Upload className="h-4 w-4" />
+                      </div>
+                    </button>
+
+                    <div className="flex-1 space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Clique na imagem para selecionar uma nova foto. Ela será
+                        enviada ao salvar.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          onClick={handleMarkRemoveImage}
+                          onClick={handleImageClick}
                           disabled={isSaving || isUploading || isRemoving}
+                          className="gap-2"
                         >
-                          Remover foto
+                          <Upload className="h-4 w-4" />
+                          {isUploading ? "Enviando..." : "Escolher arquivo"}
                         </Button>
-                      )}
+                        {imageUrl && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleMarkRemoveImage}
+                            disabled={isSaving || isUploading || isRemoving}
+                            className="gap-2 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Remover foto
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="branch-name">Nome da filial *</Label>
-                  <Input
-                    id="branch-name"
-                    placeholder="Ex: Unidade Centro"
-                    {...register("name", { required: true })}
-                  />
+
+                <div className="rounded-2xl border border-border/70 bg-card p-4">
+                  <div className="mb-3">
+                    <p className="text-sm font-semibold text-foreground">
+                      Dados da filial
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="branch-name">Nome da filial *</Label>
+                      <InputWithIcon
+                        id="branch-name"
+                        placeholder="Ex: Unidade Centro"
+                        icon={Building2}
+                        {...register("name", { required: true })}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="branch-street">Rua *</Label>
+                      <InputWithIcon
+                        id="branch-street"
+                        placeholder="Nome da rua"
+                        icon={MapPin}
+                        {...register("street", { required: true })}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="branch-number">Número *</Label>
+                        <InputWithIcon
+                          id="branch-number"
+                          placeholder="Número"
+                          icon={Hash}
+                          {...register("number", { required: true })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="branch-complement">Complemento</Label>
+                        <InputWithIcon
+                          id="branch-complement"
+                          placeholder="Apto, sala, etc."
+                          icon={Home}
+                          {...register("complement")}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="branch-neighborhood">Bairro</Label>
+                        <InputWithIcon
+                          id="branch-neighborhood"
+                          placeholder="Bairro"
+                          icon={Navigation}
+                          {...register("neighborhood")}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="branch-zip">CEP *</Label>
+                        <InputWithIcon
+                          id="branch-zip"
+                          placeholder="00000-000"
+                          icon={MapPin}
+                          {...register("zip_code", { required: true })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="branch-city">Cidade *</Label>
+                        <InputWithIcon
+                          id="branch-city"
+                          placeholder="Cidade"
+                          icon={Building2}
+                          {...register("city", { required: true })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="branch-state">Estado *</Label>
+                        <InputWithIcon
+                          id="branch-state"
+                          placeholder="Estado"
+                          icon={Map}
+                          {...register("state", { required: true })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="branch-country">País *</Label>
+                      <InputWithIcon
+                        id="branch-country"
+                        placeholder="País"
+                        icon={Globe}
+                        {...register("country", { required: true })}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <input
@@ -310,85 +450,10 @@ export function BranchInfoDialog({
                   className="hidden"
                   onChange={handleImageChange}
                 />
-
-                <div className="space-y-2">
-                  <Label htmlFor="branch-street">Rua *</Label>
-                  <Input
-                    id="branch-street"
-                    placeholder="Nome da rua"
-                    {...register("street", { required: true })}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-number">Número *</Label>
-                    <Input
-                      id="branch-number"
-                      placeholder="Número"
-                      {...register("number", { required: true })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-complement">Complemento</Label>
-                    <Input
-                      id="branch-complement"
-                      placeholder="Apto, sala, etc."
-                      {...register("complement")}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-neighborhood">Bairro</Label>
-                    <Input
-                      id="branch-neighborhood"
-                      placeholder="Bairro"
-                      {...register("neighborhood")}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-zip">CEP *</Label>
-                    <Input
-                      id="branch-zip"
-                      placeholder="00000-000"
-                      {...register("zip_code", { required: true })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-city">Cidade *</Label>
-                    <Input
-                      id="branch-city"
-                      placeholder="Cidade"
-                      {...register("city", { required: true })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="branch-state">Estado *</Label>
-                    <Input
-                      id="branch-state"
-                      placeholder="Estado"
-                      {...register("state", { required: true })}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="branch-country">País *</Label>
-                  <Input
-                    id="branch-country"
-                    placeholder="País"
-                    {...register("country", { required: true })}
-                  />
-                </div>
               </div>
             </div>
 
-            <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
+            <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t border-border bg-background/95 px-6 py-4 backdrop-blur">
               <Button
                 type="button"
                 variant="outline"
