@@ -2,9 +2,6 @@
 const nextConfig = {
   output: "standalone",
   reactStrictMode: false,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   allowedDevOrigins: ["*.127.0.0.1.nip.io"],
   images: {
     remotePatterns: [

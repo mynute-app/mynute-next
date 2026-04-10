@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import type { Service } from "../../../../types/company";
+import type { Service } from "../../../types/company";
 
 export function useEditService() {
   const [isUpdating, setIsUpdating] = useState(false);
