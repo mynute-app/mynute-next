@@ -99,9 +99,20 @@ export const middleware = auth(req => {
   }
 
   if (req.auth && isLegacyDashboardRoute && sessionTenant) {
-    const url = req.nextUrl.clone();
-    url.pathname = buildTenantPath(sessionTenant, pathname);
-    return NextResponse.redirect(url);
+    // In production Edge runtime, NextResponse.rewrite() re-triggers middleware.
+    // Only redirect paths that are native tenant routes (exist under src/app/[tenant]/dashboard/).
+    // Non-native paths (e.g. /dashboard/branch/{id}/servicos) are served via rewrite
+    // from src/app/dashboard/ and should pass through to avoid an infinite 307 loop.
+    const isNativeLegacyRoute =
+      TENANT_NATIVE_DASHBOARD_ROUTES.has(pathname) ||
+      pathname === "/dashboard" ||
+      pathname === "/dashboard/";
+
+    if (isNativeLegacyRoute) {
+      const url = req.nextUrl.clone();
+      url.pathname = buildTenantPath(sessionTenant, pathname);
+      return NextResponse.redirect(url);
+    }
   }
 
   return NextResponse.next();
