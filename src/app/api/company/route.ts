@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { getAuthDataFromToken } from "../../../utils/decode-jwt";
-import { fetchFromBackend } from "../../../lib/api/fetch-from-backend";
+import {
+  fetchFromBackend,
+  BackendUnauthorizedError,
+} from "../../../lib/api/fetch-from-backend";
 import { resolveTenantSlugFromRequest } from "@/lib/tenant";
 
 const resolveSchemaFromRequest = (req: Request) => {
@@ -22,17 +25,23 @@ export const GET = auth(async function GET(req) {
     if (!companyId) {
       return NextResponse.json(
         { status: 401, message: "Company ID nao encontrado" },
-        { status: 401 }
+        { status: 401 },
       );
     }
     try {
       const companyData = await fetchFromBackend(
         req,
         `/company/${companyId}`,
-        token
+        token,
       );
       return NextResponse.json(companyData);
     } catch (fetchError) {
+      if (fetchError instanceof BackendUnauthorizedError) {
+        return NextResponse.json(
+          { error: "Token de autorização inválido ou expirado" },
+          { status: 401 },
+        );
+      }
       const schemaName = resolveSchemaFromRequest(req);
       try {
         const companyData = await fetchFromBackend(
@@ -46,10 +55,16 @@ export const GET = auth(async function GET(req) {
               "X-Company-ID": companyId,
               ...(schemaName ? { "X-Company-Schema": schemaName } : {}),
             },
-          }
+          },
         );
         return NextResponse.json(companyData);
       } catch (fallbackError) {
+        if (fallbackError instanceof BackendUnauthorizedError) {
+          return NextResponse.json(
+            { error: "Token de autorização inválido ou expirado" },
+            { status: 401 },
+          );
+        }
         return NextResponse.json(
           {
             error:
@@ -57,7 +72,7 @@ export const GET = auth(async function GET(req) {
                 ? fallbackError.message
                 : "Erro ao buscar empresa",
           },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
@@ -65,7 +80,7 @@ export const GET = auth(async function GET(req) {
     console.error("❌ Erro ao buscar empresa:", error);
     return NextResponse.json(
       { status: 500, error: "Erro interno ao buscar empresa." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -86,7 +101,7 @@ export async function POST(req: Request) {
     console.log("🔗 [ROUTE] URL Completa:", `${backendUrl}${endpoint}`);
     console.log(
       "📤 [ROUTE] Dados enviados ao backend:",
-      JSON.stringify(dataToSend, null, 2)
+      JSON.stringify(dataToSend, null, 2),
     );
 
     const backendData = await fetchFromBackend(req as any, endpoint, "", {
@@ -97,13 +112,13 @@ export async function POST(req: Request) {
 
     console.log(
       "✅ [ROUTE] Response do Backend:",
-      JSON.stringify(backendData, null, 2)
+      JSON.stringify(backendData, null, 2),
     );
     console.log("=".repeat(50) + "\n");
 
     return NextResponse.json(
       { message: "Empresa cadastrada com sucesso", data: backendData },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("\n" + "=".repeat(50));
@@ -118,7 +133,7 @@ export async function POST(req: Request) {
         message: errorMessage,
         error: errorMessage,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

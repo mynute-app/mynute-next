@@ -4,35 +4,19 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Briefcase, Clock, DollarSign, Upload, X } from "lucide-react";
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  FiClock,
-  FiDollarSign,
-  FiAlignLeft,
-  FiCamera,
-  FiX,
-  FiUsers,
-  FiScissors,
-} from "react-icons/fi";
-import { Star } from "lucide-react";
 import { useEditService } from "@/hooks/services/use-edit-service";
 import { useServiceImage } from "@/hooks/services/use-service-image";
 import { useGetService } from "@/hooks/services/use-get-service";
@@ -45,16 +29,35 @@ import {
   formatCurrencyMask,
 } from "@/utils/format-masks";
 import { ServiceDescriptionEditor } from "@/components/services/service-description-editor";
+import { cn } from "@/lib/utils";
 
 const editServiceSchema = z.object({
   name: z.string().min(1, "O nome é obrigatório."),
   description: z.string().min(1, "A descrição é obrigatória."),
   duration: z.string().min(1, "A duração é obrigatória."),
   price: z.string().optional(),
-  imageUrl: z.string().optional(),
 });
 
 export type EditServiceFormValues = z.infer<typeof editServiceSchema>;
+
+const InputWithIcon = ({
+  icon: Icon,
+  className,
+  ...props
+}: React.ComponentProps<typeof Input> & {
+  icon: React.ComponentType<{ className?: string }>;
+}) => (
+  <div className="relative">
+    <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <Input
+      {...props}
+      className={cn(
+        "h-10 rounded-lg border-border/70 bg-background/70 pl-9 shadow-sm focus-visible:ring-primary/30",
+        className,
+      )}
+    />
+  </div>
+);
 
 type Props = {
   isOpen: boolean;
@@ -65,6 +68,8 @@ type Props = {
         imageUrl?: string;
         category?: string;
         hidden?: boolean;
+        is_active?: boolean;
+        show_image?: boolean;
       })
     | null;
   onSave: (updatedService: any) => void;
@@ -76,50 +81,28 @@ export const EditServiceDialog = ({
   onOpenChange,
   service,
   onSave,
-  categories = [],
 }: Props) => {
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [durationDisplay, setDurationDisplay] = React.useState("");
   const [priceDisplay, setPriceDisplay] = React.useState("");
-  const isBufferLocked = true;
+  const [showImage, setShowImage] = React.useState(true);
+  const [imageFile, setImageFile] = React.useState<File | null>(null);
+  const [imagePreview, setImagePreview] = React.useState<string>("");
+  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
 
-  // Estados extras (não serão enviados ao backend ainda)
-  const [extraFields, setExtraFields] = React.useState({
-    priceFrom: false,
-    bufferTime: 15,
-    category: "",
-    active: true,
-    featured: false,
-  });
-
-  // Hook para atualizar serviço
   const { isUpdating, updateService } = useEditService();
-
-  // Hook para gerenciar imagens
-  const {
-    imagePreview,
-    isUploading,
-    isRemoving,
-    handleImageChange,
-    handleRemoveImage,
-  } = useServiceImage({
+  const { uploadImage } = useServiceImage({
     serviceId: service?.id || "",
     currentImage: service?.imageUrl,
     imageType: "profile",
-  });
-
-  const { service: serviceData, loading: loadingServiceData } = useGetService({
-    serviceId: service?.id || "",
-    enabled: !!service?.id,
   });
 
   const { register, handleSubmit, formState, reset, setValue, watch } =
     useForm<EditServiceFormValues>({
       resolver: zodResolver(editServiceSchema),
     });
+
   const descriptionValue = watch("description") || "";
 
-  // Reset form quando o serviço muda
   useEffect(() => {
     if (service) {
       const duration = Number(service.duration) || 0;
@@ -127,36 +110,18 @@ export const EditServiceDialog = ({
 
       setDurationDisplay(duration > 0 ? formatTimeMask(duration) : "");
       setPriceDisplay(price > 0 ? formatCurrencyMask(price) : "");
-
-      // Inicializar campos extras (valores padrão por enquanto)
-      setExtraFields({
-        priceFrom: false,
-        bufferTime: 15,
-        category: service.category || "",
-        active: !service.hidden,
-        featured: false,
-      });
+      setShowImage(service.show_image ?? true);
+      setImagePreview(service.imageUrl || "");
+      setImageFile(null);
 
       reset({
         name: service.name || "",
         description: service.description || "",
         duration: String(service.duration || ""),
         price: String(service.price || ""),
-        imageUrl: service.imageUrl || "",
       });
     }
   }, [service, reset]);
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      handleImageChange(file);
-    }
-  };
-
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
 
   const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const maskedValue = applyTimeMask(e.target.value);
@@ -170,24 +135,50 @@ export const EditServiceDialog = ({
     setValue("price", unmaskCurrency(maskedValue).toString());
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+  };
+
   const onSubmit = async (data: EditServiceFormValues) => {
     if (!service) return;
 
     try {
-      // Atualizar os dados básicos do serviço
+      // Fazer upload da imagem se houver arquivo novo
+      if (imageFile) {
+        setIsUploadingImage(true);
+        const uploadSuccess = await uploadImage(imageFile);
+        setIsUploadingImage(false);
+
+        if (!uploadSuccess) {
+          return; // Não continua se falhar o upload
+        }
+      }
+
+      // Atualizar dados do serviço
       const updatedService = await updateService({
         id: service.id,
         name: data.name,
         description: data.description,
         price: unmaskCurrency(priceDisplay).toString(),
         duration: unmaskTime(durationDisplay).toString(),
+        show_image: showImage,
       });
 
       if (updatedService) {
-        // Adicionar a URL da imagem atual (o hook já gerencia upload/remoção)
-        updatedService.imageUrl = imagePreview || undefined;
-
-        // Enviar o serviço atualizado para o componente pai
+        setImageFile(null); // Limpar arquivo após sucesso
         onSave(updatedService);
       }
     } catch (error) {
@@ -198,255 +189,190 @@ export const EditServiceDialog = ({
   if (!service) return null;
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={open => {
-        if (!open) {
-          onOpenChange(false);
-        }
-      }}
-    >
-      <DialogContent className="services-dialog max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Editar Serviço</DialogTitle>
-          <DialogDescription>Atualize os dados do serviço e salve as alterações.</DialogDescription>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl p-0">
+        <DialogHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 pb-4 pt-6 backdrop-blur">
+          <div className="space-y-1">
+            <DialogTitle className="text-xl">Editar Serviço</DialogTitle>
+            <DialogDescription className="text-sm">
+              Altere os detalhes e configurações do seu serviço
+            </DialogDescription>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-2">
-            <Label>Imagem do Serviço</Label>
-            <div
-              className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
-              onClick={handleImageClick}
-              role="button"
-              tabIndex={0}
-              onKeyDown={event => {
-                if (event.key === "Enter" || event.key === " ") {
-                  handleImageClick();
-                }
-              }}
-            >
-              {imagePreview ? (
-                <div className="relative inline-block">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="mx-auto h-24 w-24 rounded-lg object-cover"
-                  />
-                  {isUploading && (
-                    <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
-                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="px-6">
+            <div className="mt-5 space-y-6 pb-5">
+              {/* Imagem */}
+              <div className="rounded-2xl border border-border/70 bg-card p-4">
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-foreground">
+                    Imagem do Serviço
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <div className="relative h-48 w-full overflow-hidden rounded-lg bg-muted">
+                        {imagePreview.includes("localhost") ||
+                        imagePreview.includes("127.0.0.1") ? (
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Image
+                            src={imagePreview}
+                            alt="Preview"
+                            fill
+                            className="object-cover"
+                          />
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute right-2 top-2"
+                        onClick={handleRemoveImage}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
+                  ) : (
+                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/50 bg-background/50 p-8 transition-colors hover:border-border hover:bg-background">
+                      <Upload className="mb-2 h-6 w-6 text-muted-foreground" />
+                      <p className="text-sm font-medium text-foreground">
+                        Clique para fazer upload da imagem
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG até 5MB
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        disabled={isUploadingImage}
+                        className="hidden"
+                      />
+                    </label>
                   )}
                 </div>
-              ) : (
-                <>
-                  <FiCamera className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    Clique para fazer upload ou arraste uma imagem
+              </div>
+
+              {/* Dados do Serviço */}
+              <div className="rounded-2xl border border-border/70 bg-card p-4">
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-foreground">
+                    Dados do Serviço
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    PNG, JPG até 5MB
-                  </p>
-                </>
-              )}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="service-name">Nome do Serviço *</Label>
+                    <InputWithIcon
+                      id="service-name"
+                      placeholder="Ex: Corte de cabelo masculino"
+                      icon={Briefcase}
+                      {...register("name", { required: true })}
+                    />
+                    {formState.errors.name && (
+                      <p className="text-sm text-red-500">
+                        {formState.errors.name.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="service-description">Descrição *</Label>
+                    <ServiceDescriptionEditor
+                      value={descriptionValue}
+                      onChange={value =>
+                        setValue("description", value, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }
+                      error={formState.errors.description?.message}
+                    />
+                    <input type="hidden" {...register("description")} />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="service-duration">Duração (min) *</Label>
+                      <InputWithIcon
+                        id="service-duration"
+                        placeholder="Ex: 30"
+                        icon={Clock}
+                        value={durationDisplay}
+                        onChange={handleDurationChange}
+                      />
+                      {formState.errors.duration && (
+                        <p className="text-sm text-red-500">
+                          {formState.errors.duration.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="service-price">Preço (R$)</Label>
+                      <InputWithIcon
+                        id="service-price"
+                        placeholder="Ex: 50,00"
+                        icon={DollarSign}
+                        value={priceDisplay}
+                        onChange={handlePriceChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileSelect}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="name">Nome do Serviço *</Label>
-              <Input
-                id="name"
-                placeholder="Ex: Corte de cabelo masculino"
-                {...register("name")}
-                required
-              />
-              {formState.errors.name && (
-                <p className="text-sm text-red-500">
-                  {formState.errors.name.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <ServiceDescriptionEditor
-                value={descriptionValue}
-                onChange={value =>
-                  setValue("description", value, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-                error={formState.errors.description?.message}
-              />
-              <input type="hidden" {...register("description")} />
-            </div>
-
-            {/* <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
-              <Select
-                value={extraFields.category}
-                onValueChange={value =>
-                  setExtraFields(prev => ({ ...prev, category: value }))
-                }
-                disabled={categories.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      categories.length > 0 ? "Selecione..." : "Sem categorias"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div> */}
-
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duração (minutos) *</Label>
-              <Input
-                id="duration"
-                placeholder="Ex: 30"
-                value={durationDisplay}
-                onChange={handleDurationChange}
-              />
-              {formState.errors.duration && (
-                <p className="text-sm text-red-500">
-                  {formState.errors.duration.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-             
-                <Label htmlFor="price">Preço (R$)</Label>
-                {/* <div className="flex items-center gap-2 ml-auto">
-                  <Switch
-                    id="priceFrom"
-                    checked={extraFields.priceFrom}
-                    onCheckedChange={checked =>
-                      setExtraFields(prev => ({ ...prev, priceFrom: checked }))
-                    }
-                  />
-                  <Label
-                    htmlFor="priceFrom"
-                    className="text-sm font-normal text-muted-foreground"
-                  >
-                    A partir de
-                  </Label>
-                </div> */}
-         
-              <Input
-                id="price"
-                placeholder="Ex: 50,00"
-                value={priceDisplay}
-                onChange={handlePriceChange}
-              />
-            </div>
-
-            {/* <div className="space-y-2">
-              <Label htmlFor="bufferTime">Intervalo após (min)</Label>
-              <Select
-                value={isBufferLocked ? "" : String(extraFields.bufferTime)}
-                onValueChange={value =>
-                  setExtraFields(prev => ({
-                    ...prev,
-                    bufferTime: Number.parseInt(value, 10),
-                  }))
-                }
-                disabled={isBufferLocked}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Em breve" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">Sem intervalo</SelectItem>
-                  <SelectItem value="5">5 minutos</SelectItem>
-                  <SelectItem value="10">10 minutos</SelectItem>
-                  <SelectItem value="15">15 minutos</SelectItem>
-                  <SelectItem value="30">30 minutos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div> */}
-          </div>
-
-          {/* <div className="space-y-4 pt-4 border-t border-border">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Serviço Ativo</Label>
-                <p className="text-sm text-muted-foreground">
-                  Serviços inativos não aparecem na página pública
-                </p>
-              </div>
+          <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 border-t border-border bg-background/95 px-6 py-4 backdrop-blur">
+            <div className="flex items-center gap-3">
               <Switch
-                checked={extraFields.active}
-                onCheckedChange={checked =>
-                  setExtraFields(prev => ({ ...prev, active: checked }))
-                }
+                id="show-image"
+                checked={showImage}
+                onCheckedChange={setShowImage}
               />
+              <Label
+                htmlFor="show-image"
+                className="cursor-pointer text-sm font-normal"
+              >
+                Exibir imagem na página pública
+              </Label>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label className="flex items-center gap-2">
-                  <Star className="w-4 h-4 text-accent" />
-                  Destaque
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Serviços em destaque aparecem primeiro
-                </p>
-              </div>
-              <Switch
-                checked={extraFields.featured}
-                onCheckedChange={checked =>
-                  setExtraFields(prev => ({ ...prev, featured: checked }))
-                }
-              />
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isUpdating || isUploadingImage}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="btn-gradient"
+                disabled={isUpdating || isUploadingImage}
+              >
+                {isUploadingImage
+                  ? "Enviando imagem..."
+                  : isUpdating
+                    ? "Salvando..."
+                    : "Salvar Alterações"}
+              </Button>
             </div>
-          </div> */}
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isUpdating || isUploading}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              className="btn-gradient"
-              disabled={isUpdating || isUploading}
-            >
-              {isUpdating
-                ? "Salvando..."
-                : isUploading
-                ? "Enviando imagem..."
-                : "Salvar Alterações"}
-            </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
   );
 };
-
-
-
-

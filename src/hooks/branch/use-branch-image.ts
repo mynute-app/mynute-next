@@ -5,59 +5,92 @@ import { toast } from "@/hooks/use-toast";
 interface UseBranchImageProps {
   branchId: number | string;
   currentImage?: string;
-  imageType?: string; // Novo parâmetro para especificar o tipo da imagem
-  onSuccess?: () => void; // Callback para executar após sucesso
+  imageType?: string;
+  onSuccess?: () => void;
 }
+
+type RequestOptions = {
+  showSuccessToast?: boolean;
+  showErrorToast?: boolean;
+};
+
+const isValidBranchId = (value: number | string) => {
+  if (!value) return false;
+  if (typeof value === "number") return value > 0;
+  return value.trim().length > 0;
+};
+
+const readErrorMessage = async (response: Response, fallback: string) => {
+  try {
+    const errorData = await response.json();
+    if (
+      typeof errorData?.message === "string" &&
+      errorData.message.length > 0
+    ) {
+      return errorData.message;
+    }
+  } catch {
+    // Ignore JSON parsing error and fallback to text/fallback.
+  }
+
+  try {
+    const text = await response.text();
+    if (text.length > 0) return text;
+  } catch {
+    // Ignore text parsing error and keep fallback.
+  }
+
+  return fallback;
+};
 
 export function useBranchImage({
   branchId,
   currentImage,
-  imageType = "profile", // Default para "profile"
-  onSuccess, // Novo callback
+  imageType = "profile",
+  onSuccess,
 }: UseBranchImageProps) {
   const { data: session } = useSession();
   const [imagePreview, setImagePreview] = useState<string | null>(
-    currentImage || null
+    currentImage || null,
   );
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
 
-  /**
-   * Faz upload da imagem da filial
-   */
-  const uploadImage = async (file: File): Promise<boolean> => {
-    // Validação de segurança - aceita number > 0 ou string não vazia
-    if (
-      !branchId ||
-      (typeof branchId === "number" && branchId <= 0) ||
-      (typeof branchId === "string" && branchId.trim().length === 0)
-    ) {
-      console.error("❌ Erro: branchId inválido:", branchId);
-      toast({
-        title: "Erro",
-        description: "ID da filial não encontrado.",
-        variant: "destructive",
-      });
+  const uploadImage = async (
+    file: File,
+    options?: RequestOptions,
+  ): Promise<boolean> => {
+    const showSuccessToast = options?.showSuccessToast ?? true;
+    const showErrorToast = options?.showErrorToast ?? true;
+
+    if (!isValidBranchId(branchId)) {
+      if (showErrorToast) {
+        toast({
+          title: "Erro",
+          description: "ID da filial não encontrado.",
+          variant: "destructive",
+        });
+      }
       return false;
     }
 
     if (!session?.accessToken) {
-      toast({
-        title: "Erro",
-        description: "Token de autenticação não encontrado",
-        variant: "destructive",
-      });
+      if (showErrorToast) {
+        toast({
+          title: "Erro",
+          description: "Token de autenticação não encontrado.",
+          variant: "destructive",
+        });
+      }
       return false;
     }
 
     try {
       setIsUploading(true);
 
-      // Preparar FormData
       const formData = new FormData();
-      formData.append(imageType, file); // Usa o imageType como nome do campo
+      formData.append(imageType, file);
 
-      // Fazer requisição para nossa rota PATCH padronizada
       const response = await fetch(`/api/branch/${branchId}/design/images`, {
         method: "PATCH",
         headers: {
@@ -67,94 +100,84 @@ export function useBranchImage({
       });
 
       if (!response.ok) {
-        let errorMessage = "Erro interno do servidor";
-
-        try {
-          const errorData = await response.json();
-          console.error("❌ Erro na resposta:", errorData);
-          errorMessage = errorData.message || errorMessage;
-        } catch (parseError) {
-          // Se não conseguir fazer parse do JSON, tenta pegar como texto
-          try {
-            const errorText = await response.text();
-            console.error("❌ Erro na resposta (texto):", errorText);
-            errorMessage = errorText || errorMessage;
-          } catch (textError) {
-            console.error("❌ Erro ao processar resposta de erro:", textError);
-          }
+        const errorMessage = await readErrorMessage(
+          response,
+          "Erro interno do servidor",
+        );
+        if (showErrorToast) {
+          toast({
+            title: "Erro ao fazer upload",
+            description: errorMessage,
+            variant: "destructive",
+          });
         }
-
-        toast({
-          title: "Erro ao fazer upload",
-          description: errorMessage,
-          variant: "destructive",
-        });
         return false;
       }
 
       const data = await response.json();
 
-      // Atualizar preview da imagem
-      if (data.image_url) {
-        setImagePreview(data.image_url);
+      const uploadedUrl =
+        data?.[imageType]?.url ||
+        data?.image_url ||
+        data?.data?.[imageType]?.url;
+
+      if (typeof uploadedUrl === "string" && uploadedUrl.length > 0) {
+        setImagePreview(uploadedUrl);
       }
 
-      toast({
-        title: "Sucesso!",
-        description: `Imagem ${imageType} da filial atualizada com sucesso`,
-      });
-
-      // Chamar callback de sucesso se fornecido
-      if (onSuccess) {
-        onSuccess();
+      if (showSuccessToast) {
+        toast({
+          title: "Sucesso",
+          description: "Imagem da filial atualizada com sucesso.",
+        });
       }
+
+      onSuccess?.();
 
       return true;
-    } catch (error) {
-      console.error("❌ Erro no upload:", error);
-      toast({
-        title: "Erro",
-        description: "Erro interno ao fazer upload da imagem",
-        variant: "destructive",
-      });
+    } catch {
+      if (showErrorToast) {
+        toast({
+          title: "Erro",
+          description: "Erro interno ao fazer upload da imagem.",
+          variant: "destructive",
+        });
+      }
       return false;
     } finally {
       setIsUploading(false);
     }
   };
 
-  /**
-   * Remove a imagem da filial
-   */
-  const removeImage = async (): Promise<boolean> => {
-    // Validação de segurança - aceita number > 0 ou string não vazia
-    if (
-      !branchId ||
-      (typeof branchId === "number" && branchId <= 0) ||
-      (typeof branchId === "string" && branchId.trim().length === 0)
-    ) {
-      console.error("❌ Erro: branchId inválido:", branchId);
-      toast({
-        title: "Erro",
-        description: "ID da filial não encontrado.",
-        variant: "destructive",
-      });
+  const removeImage = async (options?: RequestOptions): Promise<boolean> => {
+    const showSuccessToast = options?.showSuccessToast ?? true;
+    const showErrorToast = options?.showErrorToast ?? true;
+
+    if (!isValidBranchId(branchId)) {
+      if (showErrorToast) {
+        toast({
+          title: "Erro",
+          description: "ID da filial não encontrado.",
+          variant: "destructive",
+        });
+      }
       return false;
     }
 
     if (!session?.accessToken) {
-      toast({
-        title: "Erro",
-        description: "Token de autenticação não encontrado",
-        variant: "destructive",
-      });
+      if (showErrorToast) {
+        toast({
+          title: "Erro",
+          description: "Token de autenticação não encontrado.",
+          variant: "destructive",
+        });
+      }
       return false;
     }
 
     try {
       setIsRemoving(true);
 
-      // Fazer requisição DELETE para a nova rota com image_type
       const response = await fetch(
         `/api/branch/${branchId}/design/images/${imageType}`,
         {
@@ -162,101 +185,90 @@ export function useBranchImage({
           headers: {
             Authorization: `Bearer ${session.accessToken}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
-        let errorMessage = "Erro interno do servidor";
-
-        try {
-          const errorData = await response.json();
-          console.error("❌ Erro na resposta:", errorData);
-          errorMessage = errorData.message || errorMessage;
-        } catch (parseError) {
-          // Se não conseguir fazer parse do JSON, tenta pegar como texto
-          try {
-            const errorText = await response.text();
-            console.error("❌ Erro na resposta (texto):", errorText);
-            errorMessage = errorText || errorMessage;
-          } catch (textError) {
-            console.error("❌ Erro ao processar resposta de erro:", textError);
-          }
+        const errorMessage = await readErrorMessage(
+          response,
+          "Erro interno do servidor",
+        );
+        if (showErrorToast) {
+          toast({
+            title: "Erro ao remover imagem",
+            description: errorMessage,
+            variant: "destructive",
+          });
         }
-
-        toast({
-          title: "Erro ao remover imagem",
-          description: errorMessage,
-          variant: "destructive",
-        });
         return false;
       }
 
-      // Limpar preview da imagem
       setImagePreview(null);
 
-      toast({
-        title: "Sucesso!",
-        description: `Imagem ${imageType} da filial removida com sucesso`,
-      });
-
-      // Chamar callback de sucesso se fornecido
-      if (onSuccess) {
-        onSuccess();
+      if (showSuccessToast) {
+        toast({
+          title: "Sucesso",
+          description: "Imagem da filial removida com sucesso.",
+        });
       }
 
+      onSuccess?.();
+
       return true;
-    } catch (error) {
-      console.error("❌ Erro na remoção:", error);
-      toast({
-        title: "Erro",
-        description: "Erro interno ao remover a imagem",
-        variant: "destructive",
-      });
+    } catch {
+      if (showErrorToast) {
+        toast({
+          title: "Erro",
+          description: "Erro interno ao remover a imagem.",
+          variant: "destructive",
+        });
+      }
       return false;
     } finally {
       setIsRemoving(false);
     }
   };
 
-  /**
-   * Handler para mudança de imagem (upload)
-   */
-  const handleImageChange = async (file: File | null): Promise<boolean> => {
-    // Se file for null, não faz nada (remoção é tratada por handleRemoveImage)
+  const handleImageChange = async (
+    file: File | null,
+    options?: RequestOptions,
+  ): Promise<boolean> => {
     if (!file) return false;
 
-    // Validações básicas no frontend
+    const showErrorToast = options?.showErrorToast ?? true;
+
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Tipo de arquivo inválido",
-        description: "Use apenas JPEG, PNG ou WebP",
-        variant: "destructive",
-      });
+      if (showErrorToast) {
+        toast({
+          title: "Tipo de arquivo inválido",
+          description: "Use apenas JPEG, PNG ou WebP.",
+          variant: "destructive",
+        });
+      }
       return false;
     }
 
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      toast({
-        title: "Arquivo muito grande",
-        description: "Máximo 5MB permitido",
-        variant: "destructive",
-      });
+      if (showErrorToast) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "Máximo de 5MB permitido.",
+          variant: "destructive",
+        });
+      }
       return false;
     }
 
-    // Preview temporário enquanto faz upload
     const reader = new FileReader();
     reader.onload = e => {
       setImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
 
-    // Fazer upload
-    const success = await uploadImage(file);
+    const success = await uploadImage(file, options);
 
-    // Se falhou, reverter o preview
     if (!success) {
       setImagePreview(currentImage || null);
     }
@@ -264,11 +276,8 @@ export function useBranchImage({
     return success;
   };
 
-  /**
-   * Handler para remoção de imagem
-   */
-  const handleRemoveImage = async () => {
-    await removeImage();
+  const handleRemoveImage = async (options?: RequestOptions) => {
+    await removeImage(options);
   };
 
   return {

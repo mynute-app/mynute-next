@@ -32,7 +32,8 @@ export type Design = {
 };
 
 export type Branch = {
-  id: number;
+  id: string | number;
+  company_id?: string;
   name: string;
   street: string;
   number: string;
@@ -42,11 +43,25 @@ export type Branch = {
   city: string;
   state: string;
   country: string;
+  time_zone?: string;
+  total_service_density?: number;
+  services_count?: number;
+  employees_count?: number;
+  work_schedule_summary?: string;
+  is_active?: boolean;
+  active?: boolean;
   image?: string;
   services?: number[];
   employees?: Employee[];
   work_schedule?: any[];
 } & Design;
+
+export type BranchListResponse = {
+  branches: Branch[];
+  total: number;
+  page: number;
+  page_size: number;
+};
 
 export type Service = {
   id: any;
@@ -58,7 +73,16 @@ export type Service = {
   location?: string;
   category?: string;
   hidden?: boolean;
+  is_active?: boolean;
+  show_image?: boolean;
 } & Design;
+
+export type ServiceListResponse = {
+  services: Service[];
+  total: number;
+  page: number;
+  page_size: number;
+};
 
 export type Employee = {
   work_schedule: any;

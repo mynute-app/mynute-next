@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import Image from "next/image";
 import { AddServiceDialog } from "./add-service-dialog";
 import { EditServiceDialog } from "./edit-service-dialog";
 import { DeleteServiceDialog } from "./delete-service-dailog";
 import type { Service } from "../../../../types/company";
 import { useDeleteService } from "../../../hooks/service/useDeleteServiceForm";
-import { useGetCompany } from "@/hooks/get-company";
+import { useServiceApi } from "@/hooks/services/use-service-api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,19 +31,30 @@ export const ServicesPage = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [deletingService, setDeletingService] = useState<Service | null>(null);
   const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  const { company, loading } = useGetCompany();
+  const { fetchServices } = useServiceApi();
   const { handleDelete } = useDeleteService();
   const { toast } = useToast();
 
+  const loadServices = useCallback(
+    async (force = false) => {
+      setIsLoading(true);
+      const result = await fetchServices(1, 50, force);
+      if (result) {
+        setServices(result.services);
+      }
+      setIsLoading(false);
+    },
+    [fetchServices],
+  );
+
   useEffect(() => {
-    if (company?.services) {
-      setServices(company.services);
-    }
-  }, [company]);
+    void loadServices();
+  }, [loadServices]);
 
   const categories = useMemo(() => {
     const uniqueCategories = services
@@ -89,43 +100,37 @@ export const ServicesPage = () => {
     }
   };
 
+  const handleToggleStatus = async (service: Service, newValue: boolean) => {
+    setServices(prev =>
+      prev.map(s => (s.id === service.id ? { ...s, is_active: newValue } : s)),
+    );
+    try {
+      const response = await fetch(`/api/service/${service.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: newValue }),
+      });
+      if (!response.ok) throw new Error();
+      const updated = await response.json();
+      setServices(prev =>
+        prev.map(s => (s.id === updated.id ? { ...s, ...updated } : s)),
+      );
+    } catch {
+      setServices(prev =>
+        prev.map(s =>
+          s.id === service.id ? { ...s, is_active: !newValue } : s,
+        ),
+      );
+      toast({
+        title: "Erro ao atualizar status do serviço",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAddService = (newService: Service) => {
     setServices(prev => [...prev, newService]);
-    void (async () => {
-      try {
-        const result = await autoLinkService({
-          serviceId: newService.id,
-          branches: company?.branches ?? [],
-          employees: company?.employees ?? [],
-        });
-
-        if (result.skipped) {
-          return;
-        }
-
-        if (result.failed > 0) {
-          toast({
-            title: "Servico criado",
-            description:
-              "Nao foi possivel vincular automaticamente o servico. Verifique as filiais e a equipe.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        toast({
-          title: "Vinculo automatico aplicado",
-          description: "Servico vinculado as filiais e equipe.",
-        });
-      } catch (error) {
-        toast({
-          title: "Servico criado",
-          description:
-            "Falha ao vincular automaticamente o servico. Verifique as filiais e a equipe.",
-          variant: "destructive",
-        });
-      }
-    })();
+    void loadServices(true);
   };
 
   const formatPrice = (price: Service["price"]) => {
@@ -213,7 +218,7 @@ export const ServicesPage = () => {
               </div>
             </div>
 
-            {loading ? (
+            {isLoading ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <div
@@ -263,6 +268,11 @@ export const ServicesPage = () => {
                   const imageUrl = service.design?.images?.profile?.url;
                   const priceLabel = formatPrice(service.price);
                   const durationLabel = formatDuration(service.duration);
+                  const isInactive =
+                    service.is_active === false ||
+                    (service.is_active === undefined &&
+                      service.hidden === true);
+                  const isActive = !isInactive;
                   const hasPrice =
                     service.price !== undefined &&
                     service.price !== null &&
@@ -273,24 +283,34 @@ export const ServicesPage = () => {
                     <div
                       key={service.id}
                       className={cn(
-                        "overflow-hidden rounded-xl border border-border bg-card shadow-sm card-hover",
-                        service.hidden && "opacity-60",
+                        "flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm card-hover",
+                        isInactive && "opacity-60",
                       )}
                     >
                       <div className="relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
                         {imageUrl ? (
-                          <Image
-                            src={imageUrl}
-                            alt={service.name}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 33vw"
-                            priority={index === firstImageIndex}
-                            className="object-cover"
-                          />
+                          // Use plain img for local dev URLs (localhost), Image component for production URLs
+                          imageUrl.includes("localhost") ||
+                          imageUrl.includes("127.0.0.1") ? (
+                            <img
+                              src={imageUrl}
+                              alt={service.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <Image
+                              src={imageUrl}
+                              alt={service.name}
+                              fill
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                              priority={index === firstImageIndex}
+                              className="object-cover"
+                            />
+                          )
                         ) : (
                           <Briefcase className="h-8 w-8 text-muted-foreground" />
                         )}
-                        {service.hidden && (
+                        {isInactive && (
                           <Badge
                             variant="destructive"
                             className="absolute right-3 top-3"
@@ -300,7 +320,7 @@ export const ServicesPage = () => {
                         )}
                       </div>
 
-                      <div className="p-5">
+                      <div className="flex-1 p-5">
                         <div className="flex items-start justify-between mb-2">
                           <div>
                             <h3 className="font-semibold text-foreground">
@@ -354,32 +374,37 @@ export const ServicesPage = () => {
                             <span>{durationLabel}</span>
                           </div>
                         </div>
+                      </div>
 
-                        <div className="flex items-center justify-end border-t border-border pt-4">
-                          {/* <div className="flex items-center gap-2">
-                            <Switch />
-                            <span className="text-sm text-muted-foreground">
-                              Ativo
-                            </span>
-                          </div> */}
-                          <div className="flex items-center gap-1 ">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => setEditingService(service)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => setDeletingService(service)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                      <div className="flex items-center justify-between border-t border-border p-4">
+                        <div className="flex items-start gap-2">
+                          <Switch
+                            checked={isActive}
+                            onCheckedChange={checked =>
+                              handleToggleStatus(service, checked)
+                            }
+                          />
+                          <span className="text-sm text-muted-foreground">
+                            {isActive ? "Ativo" : "Inativo"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setEditingService(service)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeletingService(service)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -395,7 +420,6 @@ export const ServicesPage = () => {
         isOpen={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onCreate={handleAddService}
-        categories={categoryOptions}
       />
 
       {editingService && (
@@ -409,6 +433,8 @@ export const ServicesPage = () => {
             price: editingService.price ? String(editingService.price) : "",
             imageUrl: editingService.design?.images?.profile?.url,
             category: editingService.category,
+            is_active: editingService.is_active,
+            show_image: editingService.show_image,
           }}
           categories={categoryOptions}
           onOpenChange={open => {

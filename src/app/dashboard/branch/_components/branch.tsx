@@ -36,8 +36,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
+import { DataPagination } from "@/components/ui/data-pagination";
 import { useToast } from "@/hooks/use-toast";
-import { useGetCompany } from "@/hooks/get-company";
 import { useBranchApi } from "@/hooks/branch/use-branch-api";
 import type { Branch } from "../../../../../types/company";
 import { AddAddressDialog } from "./add-address-dialog";
@@ -46,15 +47,17 @@ import { BranchScheduleDialog } from "./branch-schedule-dialog";
 
 type BranchCardProps = {
   branch: Branch;
-  servicesCount: number;
-  employeesCount: number;
+  servicesCount: number | null;
+  employeesCount: number | null;
   scheduleSummary: string | null;
   hasBranchStatus: boolean;
+  isUpdatingStatus: boolean;
   onEdit: (branch: Branch) => void;
   onViewSchedule: (branch: Branch) => void;
   onManageServices: (branch: Branch) => void;
   onManageEmployees: (branch: Branch) => void;
   onDelete: (branch: Branch) => void;
+  onToggleStatus: (branch: Branch, nextValue: boolean) => void;
 };
 
 type BranchStatCardProps = {
@@ -66,7 +69,37 @@ type BranchStatCardProps = {
 };
 
 type BranchStatus = {
+  is_active?: boolean;
   active?: boolean;
+};
+
+const getBranchActiveStatus = (branch: Branch): boolean | undefined => {
+  const status = branch as BranchStatus;
+  if (typeof status.is_active === "boolean") return status.is_active;
+  if (typeof status.active === "boolean") return status.active;
+  return undefined;
+};
+
+const getBranchServicesCount = (branch: Branch): number | null => {
+  if (typeof branch.services_count === "number") return branch.services_count;
+  if (Array.isArray(branch.services)) return branch.services.length;
+  return null;
+};
+
+const getBranchEmployeesCount = (branch: Branch): number | null => {
+  if (typeof branch.employees_count === "number") return branch.employees_count;
+  if (Array.isArray(branch.employees)) return branch.employees.length;
+  return null;
+};
+
+const formatServicesLabel = (count: number | null) => {
+  if (count === null) return "Serviços";
+  return `${count} ${count === 1 ? "Serviço" : "Serviços"}`;
+};
+
+const formatEmployeesLabel = (count: number | null) => {
+  if (count === null) return "Equipe";
+  return `${count} ${count === 1 ? "Profissional" : "Profissionais"}`;
 };
 
 const weekDayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
@@ -107,7 +140,7 @@ const formatBranchAddress = (branch: Branch) => {
     .join(", ");
   const locationParts = [branch.city, branch.state].filter(Boolean).join(" - ");
   const pieces = [addressParts, locationParts].filter(Boolean);
-  return pieces.length ? pieces.join(" - ") : "Endereco nao informado";
+  return pieces.length ? pieces.join(" - ") : "Endereço não informado";
 };
 
 const extractTime = (value?: string) => {
@@ -164,19 +197,32 @@ const getScheduleSummary = (workSchedule?: Branch["work_schedule"]) => {
   return timeLabel ? `${daysLabel} - ${timeLabel}` : daysLabel;
 };
 
+const getBranchScheduleSummary = (branch: Branch): string | null => {
+  if (
+    typeof branch.work_schedule_summary === "string" &&
+    branch.work_schedule_summary.trim().length > 0
+  ) {
+    return branch.work_schedule_summary;
+  }
+
+  return getScheduleSummary(branch.work_schedule);
+};
+
 const BranchCard = ({
   branch,
   servicesCount,
   employeesCount,
   scheduleSummary,
   hasBranchStatus,
+  isUpdatingStatus,
   onEdit,
   onViewSchedule,
   onManageServices,
   onManageEmployees,
   onDelete,
+  onToggleStatus,
 }: BranchCardProps) => {
-  const branchStatus = (branch as BranchStatus).active;
+  const branchStatus = getBranchActiveStatus(branch);
   const showStatusBadge = hasBranchStatus && typeof branchStatus === "boolean";
   const handleMenuAction = (action: () => void) => () => {
     setTimeout(action, 0);
@@ -225,14 +271,14 @@ const BranchCard = ({
                 onSelect={handleMenuAction(() => onViewSchedule(branch))}
               >
                 <Clock className="mr-2 h-4 w-4" />
-                Horarios
+                Horários
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={handleMenuAction(() => onManageServices(branch))}
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                Gerenciar servicos
+                Gerenciar serviços
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={handleMenuAction(() => onManageEmployees(branch))}
@@ -259,7 +305,7 @@ const BranchCard = ({
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="h-4 w-4 flex-shrink-0" />
-            <span>{scheduleSummary || "Horarios nao configurados"}</span>
+            <span>{scheduleSummary || "Horários não configurados"}</span>
           </div>
           {/* TODO: phone/email not available on branch payload yet. */}
         </div>
@@ -272,7 +318,7 @@ const BranchCard = ({
             onClick={() => onManageServices(branch)}
           >
             <Sparkles className="mr-1.5 h-4 w-4" />
-            {servicesCount} Servicos
+            {formatServicesLabel(servicesCount)}
           </Button>
           <Button
             variant="outline"
@@ -281,85 +327,73 @@ const BranchCard = ({
             onClick={() => onManageEmployees(branch)}
           >
             <Users className="mr-1.5 h-4 w-4" />
-            {employeesCount} Equipe
+            {formatEmployeesLabel(employeesCount)}
           </Button>
         </div>
 
-        {/* TODO: enable status toggle when backend supports branch active state. */}
+        {showStatusBadge && (
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2">
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                Filial ativa
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Controle a disponibilidade desta unidade.
+              </p>
+            </div>
+            <Switch
+              checked={branchStatus}
+              onCheckedChange={checked => onToggleStatus(branch, checked)}
+              disabled={isUpdatingStatus}
+              aria-label={`Alterar status da filial ${branch.name}`}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
+const DEFAULT_PAGE_SIZE = 10;
+
 export default function BranchManager() {
-  const { company, loading } = useGetCompany();
   const { toast } = useToast();
-  const { fetchBranchById } = useBranchApi();
+  const { fetchBranches, fetchBranchById } = useBranchApi();
   const router = useRouter();
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalBranches, setTotalBranches] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [branchToDelete, setBranchToDelete] = useState<Branch | null>(null);
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [activeBranch, setActiveBranch] = useState<Branch | null>(null);
+  const [updatingBranchId, setUpdatingBranchId] = useState<Branch["id"] | null>(
+    null,
+  );
+
+  const loadBranches = useCallback(
+    async (page: number, force = false) => {
+      setIsLoading(true);
+      const branchList = await fetchBranches(page, DEFAULT_PAGE_SIZE, force);
+
+      if (branchList) {
+        setBranches(branchList.branches);
+        setTotalBranches(branchList.total);
+        setCurrentPage(branchList.page);
+      }
+
+      setIsLoading(false);
+    },
+    [fetchBranches],
+  );
 
   useEffect(() => {
-    if (company?.branches) {
-      setBranches(company.branches);
-    }
-  }, [company?.branches]);
-
-  useEffect(() => {
-    if (!branches.length) return;
-
-    const branchesNeedingDetails = branches.filter(branch => {
-      const hasServices = Array.isArray(branch.services);
-      const hasEmployees = Array.isArray(branch.employees);
-      const hasSchedule = Array.isArray(branch.work_schedule);
-      return !(hasServices && hasEmployees && hasSchedule);
-    });
-
-    if (!branchesNeedingDetails.length) return;
-
-    let isActive = true;
-
-    const hydrateBranches = async () => {
-      const results = await Promise.allSettled(
-        branchesNeedingDetails.map(branch => fetchBranchById(branch.id)),
-      );
-
-      if (!isActive) return;
-
-      const hydratedBranches = results
-        .map(result => (result.status === "fulfilled" ? result.value : null))
-        .filter(Boolean) as Branch[];
-
-      if (!hydratedBranches.length) return;
-
-      setBranches(prev => {
-        const byId = new Map(prev.map(item => [item.id, item]));
-        hydratedBranches.forEach(branch => {
-          const current = byId.get(branch.id);
-          byId.set(branch.id, {
-            ...current,
-            ...branch,
-            work_schedule: Array.isArray(branch.work_schedule)
-              ? branch.work_schedule
-              : [],
-          });
-        });
-        return Array.from(byId.values());
-      });
-    };
-
-    hydrateBranches();
-
-    return () => {
-      isActive = false;
-    };
-  }, [branches, fetchBranchById]);
+    void loadBranches(currentPage);
+  }, [currentPage, loadBranches]);
 
   const filteredBranches = useMemo(() => {
     const normalizedTerm = searchTerm.trim().toLowerCase();
@@ -383,39 +417,42 @@ export default function BranchManager() {
   }, [branches, searchTerm]);
 
   const branchStats = useMemo(() => {
-    const total = branches.length;
-    const totalEmployees = branches.reduce(
-      (sum, branch) => sum + (branch.employees?.length ?? 0),
-      0,
-    );
-    const totalServices = branches.reduce(
-      (sum, branch) => sum + (branch.services?.length ?? 0),
-      0,
-    );
+    const employeesValues = branches
+      .map(getBranchEmployeesCount)
+      .filter((value): value is number => value !== null);
+    const servicesValues = branches
+      .map(getBranchServicesCount)
+      .filter((value): value is number => value !== null);
+
+    const totalEmployees = employeesValues.length
+      ? employeesValues.reduce((sum, value) => sum + value, 0)
+      : null;
+    const totalServices = servicesValues.length
+      ? servicesValues.reduce((sum, value) => sum + value, 0)
+      : null;
 
     return {
-      total,
+      total: totalBranches,
       totalEmployees,
       totalServices,
     };
-  }, [branches]);
+  }, [branches, totalBranches]);
 
   const hasBranchStatus = useMemo(
     () =>
       branches.some(
-        branch => typeof (branch as BranchStatus).active === "boolean",
+        branch => typeof getBranchActiveStatus(branch) === "boolean",
       ),
     [branches],
   );
 
-  const handleAddBranch = useCallback((newBranch: Branch) => {
-    setBranches(prev => [...prev, newBranch]);
-  }, []);
-
-  const handleDeleteBranch = useCallback((id: number) => {
-    setBranches(prev => prev.filter(branch => branch.id !== id));
-    setActiveBranch(prev => (prev?.id === id ? null : prev));
-  }, []);
+  const handleAddBranch = useCallback(
+    async (_newBranch: Branch) => {
+      setCurrentPage(1);
+      await loadBranches(1, true);
+    },
+    [loadBranches],
+  );
 
   const handleDeleteRequest = useCallback((branch: Branch) => {
     setBranchToDelete(branch);
@@ -434,28 +471,40 @@ export default function BranchManager() {
         throw new Error("Erro ao excluir filial");
       }
 
-      toast({
-        title: "Filial excluida!",
-        description: "A filial foi removida com sucesso.",
-      });
-
-      handleDeleteBranch(branchToDelete.id);
-      setDeleteDialogOpen(false);
-      setBranchToDelete(null);
+      const targetPage =
+        branches.length === 1 && currentPage > 1
+          ? currentPage - 1
+          : currentPage;
 
       if (activeBranch?.id === branchToDelete.id) {
         setInfoDialogOpen(false);
         setScheduleDialogOpen(false);
         setActiveBranch(null);
       }
+
+      setDeleteDialogOpen(false);
+      setBranchToDelete(null);
+      await loadBranches(targetPage, true);
+
+      toast({
+        title: "Filial excluída!",
+        description: "A filial foi removida com sucesso.",
+      });
     } catch (error) {
       toast({
         title: "Erro ao excluir",
-        description: "Nao foi possivel excluir a filial.",
+        description: "Não foi possível excluir a filial.",
         variant: "destructive",
       });
     }
-  }, [branchToDelete, activeBranch?.id, handleDeleteBranch, toast]);
+  }, [
+    activeBranch?.id,
+    branchToDelete,
+    branches.length,
+    currentPage,
+    loadBranches,
+    toast,
+  ]);
 
   const handleOpenInfoDialog = useCallback(
     async (branch: Branch) => {
@@ -527,14 +576,74 @@ export default function BranchManager() {
     [infoDialogOpen],
   );
 
-  const handleBranchSaved = useCallback((updatedBranch: Branch) => {
-    setBranches(prev =>
-      prev.map(branch =>
-        branch.id === updatedBranch.id ? updatedBranch : branch,
-      ),
-    );
-    setActiveBranch(updatedBranch);
-  }, []);
+  const handleBranchSaved = useCallback(
+    (updatedBranch: Branch) => {
+      setBranches(prev =>
+        prev.map(branch =>
+          branch.id === updatedBranch.id ? updatedBranch : branch,
+        ),
+      );
+      setActiveBranch(updatedBranch);
+
+      // Keep aggregated counters/summaries consistent with paginated source.
+      void loadBranches(currentPage, true);
+    },
+    [currentPage, loadBranches],
+  );
+
+  const handleToggleBranchStatus = useCallback(
+    async (branch: Branch, nextValue: boolean) => {
+      setUpdatingBranchId(branch.id);
+
+      try {
+        const response = await fetch(`/api/branch/${branch.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: branch.name,
+            is_active: nextValue,
+            street: branch.street,
+            number: branch.number,
+            complement: branch.complement ?? "",
+            neighborhood: branch.neighborhood ?? "",
+            zip_code: branch.zip_code,
+            city: branch.city,
+            state: branch.state,
+            country: branch.country,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || "Erro ao atualizar status da filial");
+        }
+
+        const updatedBranch = (await response.json()) as Branch;
+        handleBranchSaved(updatedBranch);
+
+        toast({
+          title: "Status atualizado",
+          description: nextValue
+            ? "A filial foi ativada com sucesso."
+            : "A filial foi desativada com sucesso.",
+        });
+      } catch (error) {
+        toast({
+          title: "Erro ao atualizar status",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Não foi possível atualizar o status da filial.",
+          variant: "destructive",
+        });
+      } finally {
+        setUpdatingBranchId(null);
+      }
+    },
+    [handleBranchSaved, toast],
+  );
 
   return (
     <BranchPageShell>
@@ -567,18 +676,14 @@ export default function BranchManager() {
           />
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        {isLoading ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {Array.from({ length: 3 }).map((_, index) => (
               <Skeleton key={index} className="h-20 w-full" />
             ))}
           </div>
         ) : (
-          <div
-            className={`grid grid-cols-2 gap-4 ${
-              hasBranchStatus ? "md:grid-cols-4" : "md:grid-cols-3"
-            }`}
-          >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <BranchStatCard
               icon={Building2}
               label="Total"
@@ -586,37 +691,28 @@ export default function BranchManager() {
               iconClassName="text-primary"
               iconBgClassName="bg-primary/10"
             />
-            {/* TODO: add active branches when backend exposes branch status. */}
-            {hasBranchStatus && (
+            {branchStats.totalEmployees !== null && (
               <BranchStatCard
-                icon={Building2}
-                label="Ativas"
-                value={
-                  branches.filter(branch => (branch as BranchStatus).active)
-                    .length
-                }
-                iconClassName="text-success"
-                iconBgClassName="bg-[hsl(var(--success)/0.12)]"
+                icon={Users}
+                label="Profissionais"
+                value={branchStats.totalEmployees}
+                iconClassName="text-accent"
+                iconBgClassName="bg-accent/10"
               />
             )}
-            <BranchStatCard
-              icon={Users}
-              label="Profissionais"
-              value={branchStats.totalEmployees}
-              iconClassName="text-accent"
-              iconBgClassName="bg-accent/10"
-            />
-            <BranchStatCard
-              icon={Sparkles}
-              label="Servicos"
-              value={branchStats.totalServices}
-              iconClassName="text-secondary-foreground"
-              iconBgClassName="bg-secondary"
-            />
+            {branchStats.totalServices !== null && (
+              <BranchStatCard
+                icon={Sparkles}
+                label="Serviços"
+                value={branchStats.totalServices}
+                iconClassName="text-secondary-foreground"
+                iconBgClassName="bg-secondary"
+              />
+            )}
           </div>
         )}
 
-        {loading ? (
+        {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
               <Skeleton key={index} className="h-64 w-full" />
@@ -625,13 +721,9 @@ export default function BranchManager() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredBranches.map(branch => {
-              const servicesCount = Array.isArray(branch.services)
-                ? branch.services.length
-                : 0;
-              const employeesCount = Array.isArray(branch.employees)
-                ? branch.employees.length
-                : 0;
-              const scheduleSummary = getScheduleSummary(branch.work_schedule);
+              const servicesCount = getBranchServicesCount(branch);
+              const employeesCount = getBranchEmployeesCount(branch);
+              const scheduleSummary = getBranchScheduleSummary(branch);
 
               return (
                 <BranchCard
@@ -641,18 +733,29 @@ export default function BranchManager() {
                   employeesCount={employeesCount}
                   scheduleSummary={scheduleSummary}
                   hasBranchStatus={hasBranchStatus}
+                  isUpdatingStatus={updatingBranchId === branch.id}
                   onEdit={handleOpenInfoDialog}
                   onViewSchedule={handleOpenScheduleDialog}
                   onManageServices={handleManageServices}
                   onManageEmployees={handleManageEmployees}
                   onDelete={handleDeleteRequest}
+                  onToggleStatus={handleToggleBranchStatus}
                 />
               );
             })}
           </div>
         )}
 
-        {!loading && filteredBranches.length === 0 && (
+        {!searchTerm && totalBranches > DEFAULT_PAGE_SIZE && (
+          <DataPagination
+            page={currentPage}
+            pageSize={DEFAULT_PAGE_SIZE}
+            total={totalBranches}
+            onPageChange={page => setCurrentPage(page)}
+          />
+        )}
+
+        {!isLoading && filteredBranches.length === 0 && (
           <div className="py-12 text-center">
             <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
             <h3 className="mb-2 text-lg font-medium">
@@ -698,8 +801,8 @@ export default function BranchManager() {
             <AlertDialogTitle>Excluir filial?</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja excluir a filial "{branchToDelete?.name}"?
-              Esta acao nao pode ser desfeita e todos os vinculos com
-              profissionais e servicos serao removidos.
+              Esta ação não pode ser desfeita e todos os vínculos com
+              profissionais e serviços serão removidos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

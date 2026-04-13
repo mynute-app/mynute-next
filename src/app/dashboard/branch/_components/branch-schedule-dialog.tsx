@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -79,7 +78,7 @@ const extractTime = (value?: string) => {
 };
 
 const buildScheduleState = (
-  ranges: ScheduleRange[] | null | undefined
+  ranges: ScheduleRange[] | null | undefined,
 ): ScheduleDayState[] => {
   const byWeekday = new Map<number, ScheduleRange>();
 
@@ -139,7 +138,7 @@ export function BranchScheduleDialog({
 
     scheduleTouchedRef.current = false;
     const fallbackSchedule = buildScheduleState(
-      branch.work_schedule as ScheduleRange[] | undefined
+      branch.work_schedule as ScheduleRange[] | undefined,
     );
     setScheduleDays(fallbackSchedule);
     setInitialScheduleDays(fallbackSchedule);
@@ -149,11 +148,16 @@ export function BranchScheduleDialog({
     const loadSchedule = async () => {
       setIsScheduleFetching(true);
       try {
-        const ranges = await getBranchWorkSchedule(branch.id.toString());
+        const ranges = await getBranchWorkSchedule(branch.id.toString(), {
+          showErrorToast: false,
+        });
         if (cancelled || scheduleTouchedRef.current) return;
         const normalized = buildScheduleState(ranges as ScheduleRange[]);
         setScheduleDays(normalized);
         setInitialScheduleDays(normalized);
+      } catch {
+        if (cancelled || scheduleTouchedRef.current) return;
+        // Keep fallback based on branch.work_schedule when request fails.
       } finally {
         if (!cancelled) setIsScheduleFetching(false);
       }
@@ -171,7 +175,7 @@ export function BranchScheduleDialog({
 
     return scheduleDays.some(day => {
       const initialDay = initialScheduleDays.find(
-        item => item.weekday === day.weekday
+        item => item.weekday === day.weekday,
       );
 
       if (!initialDay) return true;
@@ -205,26 +209,26 @@ export function BranchScheduleDialog({
           end_time: day.end_time || DEFAULT_END_TIME,
           time_zone: day.time_zone || DEFAULT_TIME_ZONE,
         };
-      })
+      }),
     );
   };
 
   const handleTimeChange = (
     weekday: number,
     field: "start_time" | "end_time",
-    value: string
+    value: string,
   ) => {
     scheduleTouchedRef.current = true;
     setScheduleDays(prev =>
       prev.map(day =>
-        day.weekday === weekday ? { ...day, [field]: value } : day
-      )
+        day.weekday === weekday ? { ...day, [field]: value } : day,
+      ),
     );
   };
 
   const applyScheduleChanges = async (branchId: string) => {
     const initialByWeekday = new Map(
-      initialScheduleDays.map(day => [day.weekday, day])
+      initialScheduleDays.map(day => [day.weekday, day]),
     );
     const rangesToCreate: BranchWorkScheduleRange[] = [];
     const rangesToUpdate: Array<{ id: string; data: ScheduleUpdatePayload }> =
@@ -283,20 +287,43 @@ export function BranchScheduleDialog({
     }
 
     if (rangesToCreate.length > 0) {
-      await createBranchWorkSchedule(branchId, {
-        branch_work_ranges: rangesToCreate,
-      });
+      await createBranchWorkSchedule(
+        branchId,
+        {
+          branch_work_ranges: rangesToCreate,
+        },
+        {
+          showSuccessToast: false,
+          showErrorToast: false,
+        },
+      );
     }
 
-    for (const update of rangesToUpdate) {
-      await updateWorkRange(branchId, update.id, update.data);
+    if (rangesToUpdate.length > 0) {
+      await Promise.all(
+        rangesToUpdate.map(update =>
+          updateWorkRange(branchId, update.id, update.data, {
+            showSuccessToast: false,
+            showErrorToast: false,
+          }),
+        ),
+      );
     }
 
-    for (const rangeId of rangesToDelete) {
-      await deleteWorkRange(branchId, rangeId);
+    if (rangesToDelete.length > 0) {
+      await Promise.all(
+        rangesToDelete.map(rangeId =>
+          deleteWorkRange(branchId, rangeId, {
+            showSuccessToast: false,
+            showErrorToast: false,
+          }),
+        ),
+      );
     }
 
-    const refreshed = await getBranchWorkSchedule(branchId);
+    const refreshed = await getBranchWorkSchedule(branchId, {
+      showErrorToast: false,
+    });
     const normalized = buildScheduleState(refreshed as ScheduleRange[]);
     setScheduleDays(normalized);
     setInitialScheduleDays(normalized);
@@ -317,7 +344,7 @@ export function BranchScheduleDialog({
 
     try {
       const refreshedSchedule = await applyScheduleChanges(
-        branch.id.toString()
+        branch.id.toString(),
       );
 
       if (refreshedSchedule) {
@@ -327,14 +354,19 @@ export function BranchScheduleDialog({
         });
       }
 
+      toast({
+        title: "Horários atualizados!",
+        description: "Os horários da filial foram salvos com sucesso.",
+      });
+
       onOpenChange(false);
     } catch (error) {
       toast({
-        title: "Erro ao salvar horarios",
+        title: "Erro ao salvar horários",
         description:
           error instanceof Error
             ? error.message
-            : "Nao foi possivel salvar os horarios.",
+            : "Não foi possível salvar os horários.",
         variant: "destructive",
       });
     } finally {
@@ -344,13 +376,13 @@ export function BranchScheduleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="border-b border-border px-6 pb-4 pt-6">
+      <DialogContent className="max-w-2xl p-0">
+        <DialogHeader className="sticky top-0 z-10 border-b border-border bg-background px-6 pb-4 pt-6">
           <DialogTitle>
-            {branch ? "Horarios da filial" : "Carregando filial"}
+            {branch ? "Horários da filial" : "Carregando filial"}
           </DialogTitle>
           <DialogDescription className="sr-only">
-            Configure os horarios de funcionamento da filial.
+            Configure os horários de funcionamento da filial.
           </DialogDescription>
         </DialogHeader>
 
@@ -361,11 +393,11 @@ export function BranchScheduleDialog({
             ))}
           </div>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <ScrollArea className="flex-1 px-6">
+          <div>
+            <div className="px-6">
               <div className="mt-4 space-y-4 pb-4">
                 <p className="text-sm text-muted-foreground">
-                  Configure os horarios de funcionamento desta filial.
+                  Configure os horários de funcionamento desta filial.
                 </p>
 
                 <div className="space-y-3">
@@ -398,7 +430,7 @@ export function BranchScheduleDialog({
                                   handleTimeChange(
                                     day.weekday,
                                     "start_time",
-                                    event.target.value
+                                    event.target.value,
                                   )
                                 }
                                 className="h-9 w-28"
@@ -414,7 +446,7 @@ export function BranchScheduleDialog({
                                   handleTimeChange(
                                     day.weekday,
                                     "end_time",
-                                    event.target.value
+                                    event.target.value,
                                   )
                                 }
                                 className="h-9 w-28"
@@ -430,9 +462,9 @@ export function BranchScheduleDialog({
                       ))}
                 </div>
               </div>
-            </ScrollArea>
+            </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
+            <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
               <Button
                 type="button"
                 variant="outline"
@@ -446,7 +478,7 @@ export function BranchScheduleDialog({
                 disabled={!branch || isSaving || !hasScheduleChanges}
                 onClick={handleSave}
               >
-                {isSaving ? "Salvando..." : "Salvar horarios"}
+                {isSaving ? "Salvando..." : "Salvar horários"}
               </Button>
             </div>
           </div>
