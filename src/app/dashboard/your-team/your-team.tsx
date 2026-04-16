@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Calendar,
   Clock,
@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { useGetCompany } from "@/hooks/get-company";
 import { useGetEmployeeById } from "@/hooks/get-employee-by-id";
 import { useDeleteEmployee } from "@/hooks/employee/use-delete-employee";
+import { useEmployeeApi } from "@/hooks/employee/use-employee-api";
+import { formatPhone } from "@/utils/format-cnpj";
 import type { Employee } from "../../../../types/company";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +56,23 @@ const getInitials = (member: Employee) => {
   return initials ? initials.toUpperCase() : "?";
 };
 
+const formatPhoneForDisplay = (phone?: string) => {
+  if (!phone) return "";
+
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return "";
+
+  // API commonly returns E.164 (+55...). Show only national portion for BR mask.
+  const nationalNumber =
+    digits.startsWith("55") && digits.length > 11 ? digits.slice(2) : digits;
+
+  return formatPhone(nationalNumber);
+};
+
 type MemberDialogKey = "info" | "services" | "schedule" | "services-schedule";
+
+const isEmployeeActive = (member: Employee) =>
+  (member as { is_active?: boolean }).is_active !== false;
 
 export default function YourTeam() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,12 +86,34 @@ export default function YourTeam() {
   const [memberToDelete, setMemberToDelete] = useState<Employee | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [activeById, setActiveById] = useState<Record<number, boolean>>({});
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isEmployeesLoading, setIsEmployeesLoading] = useState(true);
 
   const { company, loading, refetch } = useGetCompany();
-  const employees = useMemo<Employee[]>(
-    () => company?.employees ?? [],
-    [company?.employees],
+  const { fetchEmployees } = useEmployeeApi();
+
+  const refreshEmployees = useCallback(
+    async (force = false) => {
+      const data = await fetchEmployees(1, 200, force);
+      if (!data) return;
+      setEmployees(data.employees);
+    },
+    [fetchEmployees],
   );
+
+  useEffect(() => {
+    let active = true;
+    setIsEmployeesLoading(true);
+
+    void refreshEmployees().finally(() => {
+      if (!active) return;
+      setIsEmployeesLoading(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [refreshEmployees]);
 
   const { employee: selectedEmployeeData } = useGetEmployeeById(
     selectedMemberId,
@@ -82,7 +122,7 @@ export default function YourTeam() {
 
   const { deleteEmployee, isDeleting } = useDeleteEmployee({
     onSuccess: () => {
-      refetch();
+      void refreshEmployees(true);
     },
   });
 
@@ -185,6 +225,45 @@ export default function YourTeam() {
     setDeleteDialogOpen(true);
   };
 
+  const handleToggleStatus = async (member: Employee, newValue: boolean) => {
+    setEmployees(prev =>
+      prev.map(item =>
+        item.id === member.id ? { ...item, is_active: newValue } : item,
+      ),
+    );
+
+    try {
+      const response = await fetch(`/api/employee/${member.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: newValue }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar status do profissional");
+      }
+
+      const updated = (await response.json()) as Employee;
+      setEmployees(prev =>
+        prev.map(item =>
+          item.id === member.id ? { ...item, ...updated } : item,
+        ),
+      );
+    } catch {
+      setEmployees(prev =>
+        prev.map(item =>
+          item.id === member.id ? { ...item, is_active: !newValue } : item,
+        ),
+      );
+
+      toast({
+        title: "Erro ao atualizar status",
+        description: "Não foi possível atualizar o profissional.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (!memberToDelete) return;
     const success = await deleteEmployee(memberToDelete.id);
@@ -224,7 +303,7 @@ export default function YourTeam() {
               </div>
             </div>
 
-            {loading ? (
+            {isEmployeesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <div
@@ -265,7 +344,7 @@ export default function YourTeam() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
                 {filteredEmployees.map(member => {
-                  const isActive = activeById[member.id] ?? true;
+                  const isActive = isEmployeeActive(member);
                   const services = Array.isArray(member.services)
                     ? member.services
                     : [];
@@ -284,25 +363,37 @@ export default function YourTeam() {
                     (member as { phone?: string; phone_number?: string })
                       .phone_number ||
                     "";
+                  const formattedPhone = formatPhoneForDisplay(phoneValue);
                   const descriptionValue =
                     (member as { bio?: string; description?: string })?.bio ||
                     (member as { bio?: string; description?: string })
                       ?.description ||
                     "";
                   const rating = 0;
-                  const appointmentsCount = 0;
-                  const workingDaysLabel = "Sem agenda";
+                  const appointmentsCount =
+                    (member as { appointments_count?: number })
+                      .appointments_count ?? 0;
+                  const workingDaysLabel =
+                    (
+                      member as {
+                        schedule_label?: string;
+                        has_schedule?: boolean;
+                      }
+                    ).schedule_label ||
+                    ((member as { has_schedule?: boolean }).has_schedule
+                      ? "Com agenda"
+                      : "Sem agenda");
 
                   return (
                     <div
                       key={member.id}
                       className={cn(
-                        "bg-card rounded-xl border border-border shadow-sm p-5 card-hover",
+                        "bg-card rounded-xl border border-border shadow-sm p-4 sm:p-5 card-hover",
                         !isActive && "opacity-60",
                       )}
                     >
-                      <div className="flex items-start gap-4">
-                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center text-primary-foreground text-xl font-bold flex-shrink-0">
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center text-primary-foreground text-base font-bold flex-shrink-0 sm:h-16 sm:w-16 sm:text-xl">
                           {getInitials(member)}
                         </div>
 
@@ -316,16 +407,16 @@ export default function YourTeam() {
                                 {roleLabel}
                               </p>
                             </div>
-                            <div className="flex items-center gap-1">
-                              {/* <Switch
+                            <div className="flex items-center gap-2">
+                              <Switch
                                 checked={isActive}
                                 onCheckedChange={checked =>
-                                  setActiveById(prev => ({
-                                    ...prev,
-                                    [member.id]: checked,
-                                  }))
+                                  handleToggleStatus(member, checked)
                                 }
-                              /> */}
+                              />
+                              <span className="text-xs text-muted-foreground">
+                                {isActive ? "Ativo" : "Inativo"}
+                              </span>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button
@@ -403,14 +494,18 @@ export default function YourTeam() {
                               : "Nenhuma descricao cadastrada."}
                           </p>
 
-                          <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
+                          <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+                            <span className="flex items-center gap-1 min-w-0">
                               <Mail className="w-3.5 h-3.5" />
-                              {emailValue || "Email nao informado"}
+                              <span className="truncate">
+                                {emailValue || "Email nao informado"}
+                              </span>
                             </span>
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 min-w-0">
                               <Phone className="w-3.5 h-3.5" />
-                              {phoneValue || "Telefone nao informado"}
+                              <span className="truncate">
+                                {formattedPhone || "Telefone nao informado"}
+                              </span>
                             </span>
                           </div>
 
@@ -432,7 +527,7 @@ export default function YourTeam() {
                             )}
                           </div>
 
-                          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
+                          <div className="mt-4 flex flex-col gap-2 border-t border-border pt-4 text-sm sm:flex-row sm:items-center sm:gap-4">
                             {rating > 0 && (
                               <div className="flex items-center gap-1">
                                 <Star className="w-4 h-4 text-accent fill-accent" />
@@ -465,6 +560,7 @@ export default function YourTeam() {
         setIsOpen={setAddDialogOpen}
         onSuccess={() => {
           refetch();
+          void refreshEmployees(true);
         }}
         availableServices={availableServices}
       />

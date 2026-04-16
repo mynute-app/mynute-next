@@ -86,19 +86,33 @@ export type ServiceListResponse = {
 
 export type Employee = {
   work_schedule: any;
-  id: number;
+  id: number | string;
   name: string;
   surname: string;
   email: string;
   phone: string;
   permission: string;
   role: string;
+  description?: string;
+  is_active?: boolean;
+  services_count?: number;
+  appointments_count?: number;
+  has_schedule?: boolean;
+  schedule_label?: string;
   branches: Branch[];
   services: Service[];
   meta?: {
     design?: Design["design"];
   };
 };
+
+export type EmployeeListResponse = {
+  employees: Employee[];
+  total: number;
+  page: number;
+  page_size: number;
+};
+
 export interface Company {
   id: string;
   legal_name: string;

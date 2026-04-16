@@ -10,9 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { useGetCompany } from "@/hooks/get-company";
 import { useToast } from "@/hooks/use-toast";
 import { useBranchApi } from "@/hooks/branch/use-branch-api";
+import { useEmployeeApi } from "@/hooks/employee/use-employee-api";
 import type { Branch, Employee } from "../../../../../../types/company";
 
 const PageShell = ({ children }: { children: React.ReactNode }) => (
@@ -52,26 +52,17 @@ export default function BranchEquipePage() {
     : params?.branchId;
   const branchId = typeof branchIdParam === "string" ? branchIdParam : "";
 
-  const { company, loading: isCompanyLoading } = useGetCompany();
+  const { fetchEmployees } = useEmployeeApi();
   const { fetchBranchById, linkEmployeeToBranch, unlinkEmployeeFromBranch } =
     useBranchApi();
   const { toast } = useToast();
-
-  const employees = useMemo(
-    () => (company?.employees ?? []) as Employee[],
-    [company?.employees],
-  );
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isEmployeesLoading, setIsEmployeesLoading] = useState(false);
 
   const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
   const [isBranchLoading, setIsBranchLoading] = useState(false);
 
-  const branch = useMemo(
-    () =>
-      branchDetails ??
-      company?.branches?.find(item => String(item.id) === branchId) ??
-      null,
-    [branchDetails, company?.branches, branchId],
-  );
+  const branch = useMemo(() => branchDetails ?? null, [branchDetails]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<number>>(
@@ -84,7 +75,26 @@ export default function BranchEquipePage() {
   const [initializedBranchId, setInitializedBranchId] = useState("");
 
   useEffect(() => {
-    if (!branchId || isCompanyLoading || initializedBranchId === branchId) {
+    let active = true;
+    setIsEmployeesLoading(true);
+
+    fetchEmployees(1, 200)
+      .then(data => {
+        if (!active || !data) return;
+        setEmployees(data.employees);
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsEmployeesLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [fetchEmployees]);
+
+  useEffect(() => {
+    if (!branchId || isEmployeesLoading || initializedBranchId === branchId) {
       return;
     }
 
@@ -101,7 +111,7 @@ export default function BranchEquipePage() {
     setSelectedEmployeeIds(initialIds);
     setInitialEmployeeIds(new Set(initialIds));
     setInitializedBranchId(branchId);
-  }, [branchId, branch, employees, isCompanyLoading, initializedBranchId]);
+  }, [branchId, branch, employees, isEmployeesLoading, initializedBranchId]);
 
   useEffect(() => {
     if (!branchId) return;
@@ -236,7 +246,7 @@ export default function BranchEquipePage() {
     );
   }
 
-  const isLoading = isCompanyLoading || isBranchLoading;
+  const isLoading = isEmployeesLoading || isBranchLoading;
 
   return (
     <PageShell>
