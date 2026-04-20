@@ -1,8 +1,12 @@
 import NextAuth from "next-auth";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import Credentials from "next-auth/providers/credentials";
-import { signInSchema } from "@/lib/zod";
 import { resolveTenantSlugFromRequest } from "@/lib/tenant";
+
+const signInSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
 import { getCompanyByTenantSlug } from "@/lib/tenant-company";
 
 function getTenantFromAuthRequest(
