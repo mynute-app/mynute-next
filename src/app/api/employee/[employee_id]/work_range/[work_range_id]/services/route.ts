@@ -19,7 +19,7 @@ export const POST = auth(async function POST(req, ctx) {
 
     console.log(
       "📦 Body recebido (POST employee work_range services):",
-      JSON.stringify(body, null, 2)
+      JSON.stringify(body, null, 2),
     );
     console.log("🔍 POST Employee ID:", employee_id);
     console.log("🔍 POST Work Range ID:", work_range_id);
@@ -31,12 +31,12 @@ export const POST = auth(async function POST(req, ctx) {
       {
         method: "POST",
         body: body,
-      }
+      },
     );
 
     console.log(
       "✅ Sucesso com POST (employee work_range services):",
-      responseData
+      responseData,
     );
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
@@ -46,7 +46,7 @@ export const POST = auth(async function POST(req, ctx) {
         message: "Erro interno do servidor",
         error: process.env.NODE_ENV === "development" ? error : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -73,12 +73,12 @@ export const GET = auth(async function GET(req, ctx) {
       token,
       {
         method: "GET",
-      }
+      },
     );
 
     console.log(
       "✅ Sucesso com GET (employee work_range services):",
-      responseData
+      responseData,
     );
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
@@ -88,7 +88,7 @@ export const GET = auth(async function GET(req, ctx) {
         message: "Erro interno do servidor",
         error: process.env.NODE_ENV === "development" ? error : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -110,7 +110,7 @@ export const PUT = auth(async function PUT(req, ctx) {
 
     console.log(
       "📦 Body recebido (PUT employee work_range services):",
-      JSON.stringify(body, null, 2)
+      JSON.stringify(body, null, 2),
     );
     console.log("🔍 PUT Employee ID:", employee_id);
     console.log("🔍 PUT Work Range ID:", work_range_id);
@@ -120,14 +120,16 @@ export const PUT = auth(async function PUT(req, ctx) {
       `/employee/${employee_id}/work_range/${work_range_id}/services`,
       token,
       {
-        method: "PUT",
+        // Backend does not support PUT for this endpoint (405). Keep PUT in
+        // frontend proxy for compatibility but forward as POST.
+        method: "POST",
         body: body,
-      }
+      },
     );
 
     console.log(
       "✅ Sucesso com PUT (employee work_range services):",
-      responseData
+      responseData,
     );
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
@@ -137,7 +139,7 @@ export const PUT = auth(async function PUT(req, ctx) {
         message: "Erro interno do servidor",
         error: process.env.NODE_ENV === "development" ? error : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -164,12 +166,12 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       token,
       {
         method: "DELETE",
-      }
+      },
     );
 
     console.log(
       "✅ Sucesso com DELETE (employee work_range services):",
-      responseData
+      responseData,
     );
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
@@ -179,8 +181,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
         message: "Erro interno do servidor",
         error: process.env.NODE_ENV === "development" ? error : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
-

@@ -54,7 +54,7 @@ const parseBackendError = (error: unknown) => {
   }
 
   const match = error.message.match(
-    /^Erro ao acessar backend \((\d+)\):\s*(.*)$/s,
+    /^Erro ao acessar backend \((\d+)\):\s*(.*)$/,
   );
   if (!match) {
     return fallback;
