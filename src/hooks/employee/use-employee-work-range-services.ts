@@ -251,91 +251,6 @@ export const useEmployeeWorkRangeServices = (
     }
   };
 
-  // PUT - Atualizar services do work_range do employee
-  const updateEmployeeWorkRangeServices = async (
-    employeeId: string,
-    workRangeId: string,
-    serviceIds: string[]
-  ) => {
-    setLoading(true);
-    setSuccess(false);
-    setError(null);
-
-    console.log("🔄 Hook EmployeeWorkRangeServices - Atualizando services:", {
-      employeeId,
-      workRangeId,
-      serviceIds,
-    });
-
-    try {
-      const servicesPayload = serviceIds.map(id => ({
-        id: id,
-      }));
-
-      const requestBody = {
-        services: servicesPayload,
-      };
-
-      console.log(
-        "🔍 Hook EmployeeWorkRangeServices - Request body para atualização:",
-        JSON.stringify(requestBody, null, 2)
-      );
-
-      const response = await fetch(
-        `/api/employee/${employeeId}/work_range/${workRangeId}/services`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      console.log(
-        "✅ Hook EmployeeWorkRangeServices - Services atualizados:",
-        responseData
-      );
-
-      setSuccess(true);
-      setError(null);
-      setData(responseData.data || responseData);
-
-      toast({
-        title: "Services atualizados",
-        description:
-          "Services do work_range do employee atualizados com sucesso.",
-      });
-
-      props?.onSuccess?.();
-      return responseData;
-    } catch (err: any) {
-      const errorMessage = err.message || "Erro interno do servidor";
-      setError(errorMessage);
-
-      toast({
-        title: "Erro ao atualizar services",
-        description: errorMessage,
-        variant: "destructive",
-      });
-
-      props?.onError?.(errorMessage);
-      console.error(
-        "❌ Hook EmployeeWorkRangeServices - Erro ao atualizar:",
-        err
-      );
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // DELETE - Remover todos os services do work_range do employee
   const removeAllEmployeeWorkRangeServices = async (
     employeeId: string,
@@ -418,8 +333,7 @@ export const useEmployeeWorkRangeServices = (
     // Funções
     getEmployeeWorkRangeServices,
     addServicesToEmployeeWorkRange,
-    removeServiceFromEmployeeWorkRange, // Nova função
-    updateEmployeeWorkRangeServices,
+    removeServiceFromEmployeeWorkRange,
     removeAllEmployeeWorkRangeServices,
     reset,
 
