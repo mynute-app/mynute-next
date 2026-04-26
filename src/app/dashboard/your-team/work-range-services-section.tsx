@@ -2,23 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Service } from "../../../../types/company";
 import { toast } from "@/hooks/use-toast";
-import {
-  Briefcase,
-  CheckCircle,
-  Clock,
-  Calendar,
-  Trash2,
-} from "lucide-react";
+import { Briefcase, CheckCircle, Clock, Calendar, Trash2 } from "lucide-react";
 
 type Props = {
   selectedMember: any | null;
@@ -64,15 +54,13 @@ const formatTime = (time: string): string => {
 };
 
 const toServiceIds = (
-  services: WorkRange["services"] | undefined
+  services: WorkRange["services"] | undefined,
 ): string[] => {
   if (!Array.isArray(services)) return [];
 
   return services
     .map(service =>
-      typeof service === "object" && service !== null
-        ? service.id
-        : service
+      typeof service === "object" && service !== null ? service.id : service,
     )
     .filter(value => value !== undefined && value !== null)
     .map(value => value.toString());
@@ -102,7 +90,7 @@ export function WorkRangeServicesSection({
         `/api/employee/${selectedMember.id}/service/${serviceId}`,
         {
           method: "POST",
-        }
+        },
       );
 
       if (!res.ok) throw new Error("Erro ao vincular o servico");
@@ -137,14 +125,14 @@ export function WorkRangeServicesSection({
         `/api/employee/${selectedMember.id}/service/${serviceId}`,
         {
           method: "DELETE",
-        }
+        },
       );
 
       if (!res.ok) throw new Error("Erro ao desvincular o servico");
 
       const updatedServices =
-        selectedMember.services?.filter((service: Service) =>
-          service.id !== serviceId
+        selectedMember.services?.filter(
+          (service: Service) => service.id !== serviceId,
         ) ?? [];
 
       setSelectedMember({
@@ -153,7 +141,7 @@ export function WorkRangeServicesSection({
       });
 
       setSelectedServiceIds(prev =>
-        prev.filter(id => id !== serviceId.toString())
+        prev.filter(id => id !== serviceId.toString()),
       );
 
       toast({
@@ -200,7 +188,7 @@ export function WorkRangeServicesSection({
   useEffect(() => {
     if (selectedWorkRangeId && selectedMember?.id) {
       const selectedRange = workRanges.find(
-        range => range.id.toString() === selectedWorkRangeId
+        range => range.id.toString() === selectedWorkRangeId,
       );
       setSelectedServiceIds(toServiceIds(selectedRange?.services));
       return;
@@ -230,27 +218,64 @@ export function WorkRangeServicesSection({
 
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `/api/employee/${selectedMember.id}/work_range/${selectedWorkRangeId}/services`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            services: selectedServiceIds.map(id => ({ id })),
-          }),
-        }
+      const selectedRange = workRanges.find(
+        range => range.id.toString() === selectedWorkRangeId,
+      );
+      const currentServiceIds = toServiceIds(selectedRange?.services);
+
+      const toAdd = selectedServiceIds.filter(
+        serviceId => !currentServiceIds.includes(serviceId),
+      );
+      const toRemove = currentServiceIds.filter(
+        serviceId => !selectedServiceIds.includes(serviceId),
       );
 
-      if (!response.ok) {
-        throw new Error("Erro ao salvar servicos");
+      if (toRemove.length > 0) {
+        const removeResults = await Promise.allSettled(
+          toRemove.map(serviceId =>
+            fetch(
+              `/api/employee/${selectedMember.id}/work_range/${selectedWorkRangeId}/service/${serviceId}`,
+              {
+                method: "DELETE",
+              },
+            ),
+          ),
+        );
+
+        const hasRemoveError = removeResults.some(
+          result =>
+            result.status === "rejected" ||
+            (result.status === "fulfilled" && !result.value.ok),
+        );
+
+        if (hasRemoveError) {
+          throw new Error("Erro ao remover servicos antigos do horario");
+        }
+      }
+
+      if (toAdd.length > 0) {
+        const addResponse = await fetch(
+          `/api/employee/${selectedMember.id}/work_range/${selectedWorkRangeId}/services`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              services: toAdd.map(id => ({ id })),
+            }),
+          },
+        );
+
+        if (!addResponse.ok) {
+          throw new Error("Erro ao adicionar servicos no horario");
+        }
       }
 
       const updatedWorkRanges = workRanges.map(range => {
         if (range.id.toString() === selectedWorkRangeId) {
           const updatedServices = employeeServices.filter(service =>
-            selectedServiceIds.includes(service.id.toString())
+            selectedServiceIds.includes(service.id.toString()),
           );
           return { ...range, services: updatedServices };
         }
@@ -290,7 +315,7 @@ export function WorkRangeServicesSection({
         `/api/employee/${selectedMember.id}/work_range/${selectedWorkRangeId}/services`,
         {
           method: "DELETE",
-        }
+        },
       );
 
       if (!response.ok) {
@@ -325,7 +350,7 @@ export function WorkRangeServicesSection({
 
   const handleSelectAllServices = () => {
     setSelectedServiceIds(
-      employeeServices.map(service => service.id.toString())
+      employeeServices.map(service => service.id.toString()),
     );
   };
 
@@ -341,7 +366,7 @@ export function WorkRangeServicesSection({
   };
 
   const selectedWorkRange = workRanges.find(
-    range => range.id.toString() === selectedWorkRangeId
+    range => range.id.toString() === selectedWorkRangeId,
   );
 
   if (loadingServices) {
@@ -411,13 +436,11 @@ export function WorkRangeServicesSection({
                 Escolha o horario especifico para configurar os servicos.
               </p>
             </div>
-           
           </div>
 
           <div className="flex flex-wrap gap-2 pt-2">
             {workRanges.map(range => {
-              const isSelected =
-                range.id.toString() === selectedWorkRangeId;
+              const isSelected = range.id.toString() === selectedWorkRangeId;
               const rangeLabel = weekdayNames[range.weekday] || "Dia";
               const serviceCount = getRangeServiceCount(range);
 
@@ -544,7 +567,7 @@ export function WorkRangeServicesSection({
                 ) : (
                   employeeServices.map(service => {
                     const isSelected = selectedServiceIds.includes(
-                      service.id.toString()
+                      service.id.toString(),
                     );
                     const price =
                       service.price && Number(service.price) > 0

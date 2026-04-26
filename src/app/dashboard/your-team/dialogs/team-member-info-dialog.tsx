@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { useUploadEmployeeImage } from "@/hooks/use-upload-employee-image";
 import type { Employee } from "../../../../../types/company";
@@ -48,11 +47,10 @@ export function TeamMemberInfoDialog({
       phone: "",
       role: "",
     }),
-    []
+    [],
   );
   const [formState, setFormState] = useState<MemberFormState>(emptyState);
-  const [initialState, setInitialState] =
-    useState<MemberFormState>(emptyState);
+  const [initialState, setInitialState] = useState<MemberFormState>(emptyState);
   const [isSaving, setIsSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [serverAvatarUrl, setServerAvatarUrl] = useState("");
@@ -97,8 +95,7 @@ export function TeamMemberInfoDialog({
     setFormState(nextState);
     setInitialState(nextState);
 
-    const profileImageUrl =
-      member?.meta?.design?.images?.profile?.url || "";
+    const profileImageUrl = member?.meta?.design?.images?.profile?.url || "";
     const nextMemberId = member.id ?? null;
     const isNewMember = previousMemberIdRef.current !== nextMemberId;
     previousMemberIdRef.current = nextMemberId;
@@ -218,8 +215,7 @@ export function TeamMemberInfoDialog({
       if (fieldsSaved && pendingImageFile && !imageSaved) {
         toast({
           title: "Foto não enviada",
-          description:
-            "Os dados foram salvos, mas a foto não foi atualizada.",
+          description: "Os dados foram salvos, mas a foto não foi atualizada.",
           variant: "destructive",
         });
       } else {
@@ -242,9 +238,7 @@ export function TeamMemberInfoDialog({
     fileInputRef.current?.click();
   };
 
-  const handleImageChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !member) return;
 
@@ -263,7 +257,7 @@ export function TeamMemberInfoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] min-h-0 flex flex-col p-0">
+      <DialogContent className="max-w-3xl h-[90vh] min-h-0 overflow-hidden flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>
             {member ? "Editar profissional" : "Carregando profissional..."}
@@ -275,7 +269,7 @@ export function TeamMemberInfoDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0 px-6">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6">
           {!member ? (
             <div className="py-6 text-sm text-muted-foreground">
               Buscando dados do profissional...
@@ -308,8 +302,8 @@ export function TeamMemberInfoDialog({
                 <div className="flex-1 space-y-2">
                   <Label>Foto do profissional</Label>
                   <p className="text-sm text-muted-foreground">
-                    Clique na imagem para selecionar uma nova foto.
-                    Ela sera enviada ao salvar.
+                    Clique na imagem para selecionar uma nova foto. Ela sera
+                    enviada ao salvar.
                   </p>
                   <Button
                     type="button"
@@ -340,9 +334,7 @@ export function TeamMemberInfoDialog({
                   <Input
                     id="name"
                     value={formState.name}
-                    onChange={event =>
-                      handleChange("name", event.target.value)
-                    }
+                    onChange={event => handleChange("name", event.target.value)}
                     placeholder="Nome do profissional"
                   />
                 </div>
@@ -405,7 +397,7 @@ export function TeamMemberInfoDialog({
               </div>
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t bg-muted/30">
           <Button
