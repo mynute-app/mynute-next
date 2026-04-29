@@ -96,7 +96,7 @@ export function TeamMemberInfoDialog({
     setInitialState(nextState);
 
     const profileImageUrl = member?.meta?.design?.images?.profile?.url || "";
-    const nextMemberId = member.id ?? null;
+    const nextMemberId = member.id != null ? Number(member.id) : null;
     const isNewMember = previousMemberIdRef.current !== nextMemberId;
     previousMemberIdRef.current = nextMemberId;
 

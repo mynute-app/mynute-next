@@ -32,7 +32,8 @@ const resolveInitialEmployeeIds = (
   branchData: Branch | null,
   employees: Employee[],
 ) => {
-  const fromBranch = branchData?.employees?.map(employee => employee.id) ?? [];
+  const fromBranch =
+    branchData?.employees?.map(employee => Number(employee.id)) ?? [];
 
   const fromCompany = employees
     .filter(employee =>
@@ -40,7 +41,7 @@ const resolveInitialEmployeeIds = (
         branch => String(branch.id) === String(branchData?.id),
       ),
     )
-    .map(employee => employee.id);
+    .map(employee => Number(employee.id));
 
   return new Set<number>([...fromBranch, ...fromCompany]);
 };
@@ -100,12 +101,12 @@ export default function BranchEquipePage() {
 
     const initialIds = branch
       ? resolveInitialEmployeeIds(branch, employees)
-      : new Set(
+      : new Set<number>(
           employees
             .filter(employee =>
               employee.branches?.some(item => String(item.id) === branchId),
             )
-            .map(employee => employee.id),
+            .map(employee => Number(employee.id)),
         );
 
     setSelectedEmployeeIds(initialIds);
@@ -159,7 +160,7 @@ export default function BranchEquipePage() {
     () =>
       employees.reduce(
         (total, employee) =>
-          total + (selectedEmployeeIds.has(employee.id) ? 1 : 0),
+          total + (selectedEmployeeIds.has(Number(employee.id)) ? 1 : 0),
         0,
       ),
     [employees, selectedEmployeeIds],
@@ -191,18 +192,18 @@ export default function BranchEquipePage() {
     const toLink = employees
       .filter(
         employee =>
-          selectedEmployeeIds.has(employee.id) &&
-          !initialEmployeeIds.has(employee.id),
+          selectedEmployeeIds.has(Number(employee.id)) &&
+          !initialEmployeeIds.has(Number(employee.id)),
       )
-      .map(employee => employee.id);
+      .map(employee => Number(employee.id));
 
     const toUnlink = employees
       .filter(
         employee =>
-          initialEmployeeIds.has(employee.id) &&
-          !selectedEmployeeIds.has(employee.id),
+          initialEmployeeIds.has(Number(employee.id)) &&
+          !selectedEmployeeIds.has(Number(employee.id)),
       )
-      .map(employee => employee.id);
+      .map(employee => Number(employee.id));
 
     if (toLink.length === 0 && toUnlink.length === 0) return;
 
@@ -304,7 +305,7 @@ export default function BranchEquipePage() {
         ) : (
           <div className="grid gap-4">
             {filteredEmployees.map(employee => {
-              const isEnabled = selectedEmployeeIds.has(employee.id);
+              const isEnabled = selectedEmployeeIds.has(Number(employee.id));
               const roleLabel = employee.role || employee.permission || "";
 
               return (
@@ -315,7 +316,9 @@ export default function BranchEquipePage() {
                   <div className="flex items-center gap-4">
                     <Switch
                       checked={isEnabled}
-                      onCheckedChange={() => toggleEmployee(employee.id)}
+                      onCheckedChange={() =>
+                        toggleEmployee(Number(employee.id))
+                      }
                       disabled={isSaving}
                     />
                     <UserAvatar

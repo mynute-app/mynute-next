@@ -43,6 +43,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 import AddTeamMemberDialog from "./add-team-member-modal";
 import { TeamMemberInfoDialog } from "./dialogs/team-member-info-dialog";
 import { TeamMemberScheduleDialog } from "./dialogs/team-member-schedule-dialog";
@@ -91,6 +92,7 @@ export default function YourTeam() {
 
   const { company, loading, refetch } = useGetCompany();
   const { fetchEmployees } = useEmployeeApi();
+  const { toast } = useToast();
 
   const refreshEmployees = useCallback(
     async (force = false) => {
@@ -145,8 +147,9 @@ export default function YourTeam() {
       const next = { ...prev };
 
       employees.forEach(employee => {
-        if (next[employee.id] === undefined) {
-          next[employee.id] = true;
+        const empId = Number(employee.id);
+        if (next[empId] === undefined) {
+          next[empId] = true;
           changed = true;
         }
       });
@@ -193,9 +196,9 @@ export default function YourTeam() {
   };
 
   const handleOpenDialog = (member: Employee, dialog: MemberDialogKey) => {
-    if (selectedMemberId !== member.id) {
+    if (selectedMemberId !== Number(member.id)) {
       setSelectedMember(null);
-      setSelectedMemberId(member.id);
+      setSelectedMemberId(Number(member.id));
     }
     setActiveDialog(dialog);
   };
