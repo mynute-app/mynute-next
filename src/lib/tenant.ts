@@ -5,6 +5,7 @@ const RESERVED_PATH_SEGMENTS = new Set([
   "auth",
   "dashboard",
   "register",
+  "system-admin",
   "_next",
   "favicon.ico",
 ]);

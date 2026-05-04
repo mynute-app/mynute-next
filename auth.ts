@@ -23,6 +23,51 @@ export const { handlers, auth, signIn } = NextAuth({
   trustHost: true,
   providers: [
     Credentials({
+      id: "system-admin-login",
+      name: "System Admin Login",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize: async (credentials) => {
+        try {
+          const { email, password } = await signInSchema.parseAsync(credentials);
+
+          const response = await fetch(`${process.env.BACKEND_URL}/system-admin/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Falha ao autenticar. Codigo: ${response.status}`);
+          }
+
+          const token = response.headers.get("X-Auth-Token");
+
+          if (!token) {
+            throw new Error("Token nao encontrado na resposta.");
+          }
+
+          const fallbackName = email?.split("@")[0] || "Admin";
+
+          return {
+            email,
+            name: fallbackName,
+            token,
+            userType: "system_admin",
+          };
+        } catch (error) {
+          if (error instanceof ZodError) {
+            console.error("Erro de validacao:", error.errors);
+            return null;
+          }
+          console.error("Erro durante a autenticacao system_admin:", error);
+          return null;
+        }
+      },
+    }),
+    Credentials({
       id: "employee-login",
       name: "Employee Login",
       credentials: {
@@ -160,6 +205,7 @@ export const { handlers, auth, signIn } = NextAuth({
       if (user) {
         const u = user as any;
         token.accessToken = u.token;
+        token.userType = u.userType;
         token.companyId = u.companyId;
         token.subdomain = u.subdomain;
         token.tenant = u.tenant ?? u.subdomain;
@@ -171,6 +217,7 @@ export const { handlers, auth, signIn } = NextAuth({
     async session({ session, token }) {
       (session as any).accessToken = (token as any).accessToken;
       (session as any).tenant = (token as any).tenant ?? (token as any).subdomain;
+      (session as any).userType = (token as any).userType;
 
       session.user = {
         ...session.user,

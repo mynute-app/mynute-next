@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Vitor Augusto\\\\Documents\\\\next.js\\\\Mynute\\\\agenda-kaki-next\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table)"
+    ]
+  }
+}
