@@ -86,7 +86,10 @@ function formatDateTime(dateStr?: string): string {
 function getAppointmentStatus(
   isFulfilled: boolean,
   isCancelled: boolean,
-): { label: string; variant: "default" | "secondary" | "destructive" | "outline" } {
+): {
+  label: string;
+  variant: "default" | "secondary" | "destructive" | "outline";
+} {
   if (isCancelled) return { label: "Cancelado", variant: "destructive" };
   if (isFulfilled) return { label: "Concluído", variant: "default" };
   return { label: "Agendado", variant: "secondary" };
@@ -266,7 +269,8 @@ function ClientDetailModal({
                               <div className="flex items-start justify-between gap-2">
                                 <div>
                                   <p className="text-sm font-medium">
-                                    {apt.service_name || "Serviço não informado"}
+                                    {apt.service_name ||
+                                      "Serviço não informado"}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
                                     {formatDateTime(apt.start_time)}
