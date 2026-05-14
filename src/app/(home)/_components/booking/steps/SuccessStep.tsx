@@ -1,9 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   CheckCircle2,
   Copy,
@@ -45,11 +43,9 @@ export function SuccessStep({
 }: SuccessStepProps) {
   const [copied, setCopied] = useState(false);
 
-  // Buscar informações
   const branch = branches.find(b => b.id === selectedSlot.branchId);
   const employee = employees.find(e => e.id === selectedSlot.employeeId);
 
-  // Formatar data
   const formattedDate = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     day: "numeric",
@@ -57,30 +53,27 @@ export function SuccessStep({
     year: "numeric",
   }).format(new Date(selectedSlot.date + "T00:00:00"));
 
-  // Texto do comprovante
   const appointmentText = `
-📋 SOLICITAÇÃO DE AGENDAMENTO RECEBIDA
+ðŸ“‹ SOLICITAÃ‡ÃƒO DE AGENDAMENTO RECEBIDA
 
-📅 Data: ${formattedDate}
-⏰ Horário: ${selectedSlot.time}
+ðŸ“… Data: ${formattedDate}
+â° HorÃ¡rio: ${selectedSlot.time}
 
-💼 Serviço: ${service.name}
-${service.duration ? `⏱️ Duração: ${service.duration} minutos` : ""}
-${service.price ? `💰 Valor: R$ ${service.price.toFixed(2)}` : ""}
+ðŸ’¼ ServiÃ§o: ${service.name}
+${service.duration ? `â±ï¸ DuraÃ§Ã£o: ${service.duration} minutos` : ""}
+${service.price ? `ðŸ’° Valor: R$ ${service.price.toFixed(2)}` : ""}
 
-👤 Cliente: ${clientData.name} ${clientData.surname}
-📧 E-mail: ${clientData.email}
-📱 Telefone: ${clientData.phone}
+ðŸ‘¤ Cliente: ${clientData.name} ${clientData.surname}
+ðŸ“§ E-mail: ${clientData.email}
+ðŸ“± Telefone: ${clientData.phone}
 
-👨‍💼 Profissional: ${employee?.name} ${employee?.surname || ""}
+ðŸ‘¨â€ðŸ’¼ Profissional: ${employee?.name} ${employee?.surname || ""}
 
-📍 Local: ${branch?.name}
-${branch?.street}, ${branch?.number}${
-    branch?.complement ? ` - ${branch?.complement}` : ""
-  }
+ðŸ“ Local: ${branch?.name}
+${branch?.street}, ${branch?.number}${branch?.complement ? ` - ${branch?.complement}` : ""}
 ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
 
-ℹ️ Sua solicitação será analisada e você receberá uma confirmação por e-mail.
+â„¹ï¸ Sua solicitaÃ§Ã£o serÃ¡ analisada e vocÃª receberÃ¡ uma confirmaÃ§Ã£o por e-mail.
   `.trim();
 
   const handleCopy = async () => {
@@ -89,167 +82,120 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error("Erro ao copiar:", error);
+      // ignored
     }
   };
 
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: "Comprovante de Agendamento",
-          text: appointmentText,
-        });
-      } catch (error) {
-        console.error("Erro ao compartilhar:", error);
+        await navigator.share({ title: "Comprovante de Agendamento", text: appointmentText });
+      } catch {
+        handleCopy();
       }
     } else {
-      // Fallback: copiar
       handleCopy();
     }
   };
 
+  const accent = brandColor || "hsl(var(--primary))";
+
   return (
-    <div className="flex items-center justify-center py-8">
-      <Card className="max-w-2xl w-full border-2 border-blue-500/20">
-        <CardContent className="p-8 space-y-6">
-          {/* Ícone animado */}
-          <div className="flex justify-center">
-            <div className="relative">
-              <div
-                className="absolute inset-0 rounded-full animate-ping opacity-20"
-                style={{
-                  backgroundColor: brandColor || "rgb(59, 130, 246)",
-                }}
-              />
-              <div
-                className="relative rounded-full p-4 animate-scale-in"
-                style={{
-                  backgroundColor: brandColor
-                    ? `${brandColor}15`
-                    : "rgba(59, 130, 246, 0.1)",
-                }}
-              >
-                <CheckCircle2
-                  className="w-16 h-16"
-                  style={{ color: brandColor || "rgb(59, 130, 246)" }}
-                />
-              </div>
+    <div className="flex items-center justify-center py-6">
+      <div className="max-w-lg w-full space-y-5">
+        {/* Header de sucesso */}
+        <div className="rounded-xl border border-border bg-card p-6 flex flex-col items-center text-center gap-4 shadow-[0_1px_3px_0_hsl(215_25%_15%/0.07)]">
+          <div className="relative">
+            <div
+              className="absolute inset-0 rounded-full animate-ping opacity-20"
+              style={{ backgroundColor: accent }}
+            />
+            <div
+              className="relative rounded-full p-4"
+              style={{ backgroundColor: `${brandColor ? brandColor : "hsl(var(--primary))"}18` }}
+            >
+              <CheckCircle2 className="w-14 h-14" style={{ color: accent }} />
             </div>
           </div>
-
-          {/* Título */}
-          <div className="text-center space-y-2 animate-fade-in-up">
-            <h2 className="text-2xl font-bold text-blue-600">
-              Solicitação Recebida!
-            </h2>
-            <p className="text-muted-foreground">
-              Sua solicitação foi enviada e aguarda confirmação do profissional.
+          <div>
+            <h2 className="text-xl font-bold text-foreground">SolicitaÃ§Ã£o Recebida!</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Sua solicitaÃ§Ã£o foi enviada e aguarda confirmaÃ§Ã£o.
             </p>
           </div>
 
-          {/* Aviso de aprovação pendente */}
-          <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900 p-4">
-            <Info className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              Você receberá um <strong>e-mail de confirmação</strong> assim que
-              o profissional aprovar o agendamento.
-            </p>
-          </div>
-
-          <Separator />
-
-          {/* Informações do agendamento */}
-          <div className="space-y-4">
-            {/* Data e Hora */}
-            <div className="flex items-start gap-3">
-              <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="font-medium capitalize">{formattedDate}</p>
-                <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                  <Clock className="w-4 h-4" />
-                  {selectedSlot.time}
-                  {service.duration && ` (${service.duration} min)`}
-                </p>
-              </div>
-            </div>
-
-            {/* Serviço */}
-            <div className="flex items-start gap-3">
-              <Briefcase className="w-5 h-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="font-medium">{service.name}</p>
-                {service.price && (
-                  <p className="text-sm text-muted-foreground">
-                    R$ {service.price.toFixed(2)}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Profissional */}
-            <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="font-medium">
-                  {employee?.name} {employee?.surname || ""}
-                </p>
-                <p className="text-sm text-muted-foreground">Profissional</p>
-              </div>
-            </div>
-
-            {/* Local */}
-            <div className="flex items-start gap-3">
-              <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="font-medium">{branch?.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {branch?.street}, {branch?.number}
-                  {branch?.complement && ` - ${branch?.complement}`}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {branch?.neighborhood} - {branch?.city}/{branch?.state}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Botões de ação */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" onClick={handleCopy} className="gap-2">
-              {copied ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  Copiado!
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  Copiar
-                </>
-              )}
-            </Button>
-            <Button variant="outline" onClick={handleShare} className="gap-2">
-              <Share2 className="w-4 h-4" />
-              Compartilhar
-            </Button>
-          </div>
-
-          {/* Botão principal */}
-          <Button
-            onClick={onComplete}
-            className="w-full"
-            size="lg"
+          {/* Aviso pendente */}
+          <div
+            className="w-full flex items-start gap-3 rounded-lg p-3 text-left"
             style={{
-              backgroundColor: brandColor || "rgb(59, 130, 246)",
+              backgroundColor: brandColor ? `${brandColor}10` : "hsl(var(--muted))",
+              border: `1px solid ${brandColor ? `${brandColor}25` : "hsl(var(--border))"}`,
             }}
           >
-            Fazer novo agendamento
+            <Info className="w-4 h-4 mt-0.5 shrink-0" style={{ color: accent }} />
+            <p className="text-xs" style={{ color: accent }}>
+              VocÃª receberÃ¡ um <strong>e-mail de confirmaÃ§Ã£o</strong> assim que o profissional aprovar o agendamento.
+            </p>
+          </div>
+        </div>
+
+        {/* Detalhes do agendamento */}
+        <div className="rounded-xl border border-border bg-card shadow-[0_1px_3px_0_hsl(215_25%_15%/0.07)] divide-y divide-border">
+          {[
+            {
+              icon: Calendar,
+              label: "Data e HorÃ¡rio",
+              value: `${formattedDate} Ã s ${selectedSlot.time}${service.duration ? ` (${service.duration} min)` : ""}`,
+            },
+            {
+              icon: Briefcase,
+              label: "ServiÃ§o",
+              value: service.name,
+              sub: service.price ? `R$ ${service.price.toFixed(2)}` : undefined,
+            },
+            {
+              icon: User,
+              label: "Profissional",
+              value: `${employee?.name ?? ""} ${employee?.surname ?? ""}`.trim() || "â€”",
+            },
+            {
+              icon: MapPin,
+              label: "Local",
+              value: branch?.name ?? "â€”",
+              sub: branch
+                ? `${branch.street}, ${branch.number}${branch.complement ? ` â€” ${branch.complement}` : ""} Â· ${branch.neighborhood}`
+                : undefined,
+            },
+          ].map(({ icon: Icon, label, value, sub }) => (
+            <div key={label} className="flex items-start gap-3 px-4 py-3">
+              <Icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-sm font-medium text-foreground capitalize leading-snug">{value}</p>
+                {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* AÃ§Ãµes */}
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="outline" onClick={handleCopy} className="gap-2 rounded-lg">
+            {copied ? <><Check className="w-4 h-4" />Copiado!</> : <><Copy className="w-4 h-4" />Copiar</>}
           </Button>
-        </CardContent>
-      </Card>
+          <Button variant="outline" onClick={handleShare} className="gap-2 rounded-lg">
+            <Share2 className="w-4 h-4" />Compartilhar
+          </Button>
+        </div>
+
+        <Button
+          onClick={onComplete}
+          className="w-full rounded-lg h-11 font-semibold"
+          style={{ backgroundColor: accent, color: "#fff", borderColor: accent }}
+        >
+          Fazer novo agendamento
+        </Button>
+      </div>
     </div>
   );
 }

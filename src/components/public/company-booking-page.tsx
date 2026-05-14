@@ -13,11 +13,12 @@ export function CompanyBookingPage({ company }: CompanyBookingPageProps) {
   const brandColor = company?.design?.colors?.primary || undefined;
 
   return (
-    <div className="h-[100dvh] overflow-auto">
-      <section className="relative h-40 w-full overflow-hidden bg-background md:h-48 lg:h-56">
+    <div className="booking-page h-[100dvh] overflow-auto bg-background">
+      {/* Hero Banner */}
+      <section className="relative h-44 w-full overflow-hidden md:h-56 lg:h-64">
         {company?.design?.images?.banner?.url ? (
           <Image
-            src={company.design.images.banner.url || "/placeholder.svg"}
+            src={company.design.images.banner.url}
             alt="Banner da empresa"
             fill
             className="object-cover"
@@ -27,30 +28,42 @@ export function CompanyBookingPage({ company }: CompanyBookingPageProps) {
           <div
             className="absolute inset-0"
             style={{
-              backgroundColor: company?.design?.colors?.primary || "#3B82F6",
+              background: brandColor
+                ? `linear-gradient(135deg, ${brandColor}ee, ${brandColor}99)`
+                : "linear-gradient(135deg, #1e3a5f, #2563eb)",
             }}
           />
         )}
 
-        <div className="absolute inset-0 bg-black/20" />
+        {/* Overlay gradiente no rodapé para transição suave com o fundo */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
 
-        <div className="absolute inset-0 flex items-center justify-center">
-          {company?.design?.images?.logo?.url ? (
-            <div className="relative h-16 w-28 rounded-md bg-white/20 md:h-24 md:w-40">
+        {/* Logo centrada */}
+        {company?.design?.images?.logo?.url ? (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 md:bottom-auto md:top-1/2 md:-translate-y-1/2">
+            <div className="relative h-14 w-24 rounded-xl overflow-hidden bg-white/90 shadow-lg ring-2 ring-white/50 md:h-20 md:w-36">
               <Image
-                src={company.design.images.logo.url || "/placeholder.svg"}
+                src={company.design.images.logo.url}
                 alt="Logo da empresa"
                 fill
-                className="object-contain drop-shadow-md"
-                sizes="(max-width: 768px) 112px, 160px"
+                className="object-contain p-1"
+                sizes="(max-width: 768px) 96px, 144px"
                 priority
               />
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : (
+          /* Sem logo: mostrar nome da empresa no banner */
+          <div className="absolute inset-0 flex items-end justify-start px-4 pb-4 md:items-center md:justify-center md:pb-0">
+            <h1 className="text-xl font-bold text-white drop-shadow-md md:text-3xl">
+              {company?.trading_name || company?.legal_name}
+            </h1>
+          </div>
+        )}
       </section>
 
-      <div className="container mx-auto max-w-5xl px-4 py-2">
+      {/* Conteúdo principal */}
+      <div className="container mx-auto max-w-5xl px-4 py-4 md:py-6">
         <ServiceList
           services={services}
           employees={employees}
