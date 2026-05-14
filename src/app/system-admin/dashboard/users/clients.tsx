@@ -36,7 +36,7 @@ export function ClientsPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const filtered = clients.filter((c) =>
+  const filtered = clients.filter(c =>
     c.email.toLowerCase().includes(search.toLowerCase()),
   );
 
@@ -57,7 +57,6 @@ export function ClientsPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-7xl p-6 lg:p-8">
           <div className="space-y-6 pb-12">
-
             <div>
               <h1 className="text-2xl font-bold">Usuarios</h1>
               <p className="text-sm text-muted-foreground mt-1">
@@ -72,7 +71,7 @@ export function ClientsPage() {
                   placeholder="Buscar por email..."
                   className="pl-9"
                   value={search}
-                  onChange={(e) => handleSearch(e.target.value)}
+                  onChange={e => handleSearch(e.target.value)}
                 />
               </div>
             </div>
@@ -86,7 +85,9 @@ export function ClientsPage() {
             ) : filtered.length === 0 ? (
               <div className="py-16 text-center">
                 <p className="text-sm text-muted-foreground">
-                  {search ? "Nenhum cliente encontrado para a busca." : "Nenhum cliente cadastrado."}
+                  {search
+                    ? "Nenhum cliente encontrado para a busca."
+                    : "Nenhum cliente cadastrado."}
                 </p>
               </div>
             ) : (
@@ -100,15 +101,20 @@ export function ClientsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paginated.map((client) => (
+                      {paginated.map(client => (
                         <TableRow
                           key={client.id}
                           className="cursor-pointer hover:bg-muted/50 transition-colors"
                           onClick={() => handleRowClick(client)}
                         >
-                          <TableCell className="font-medium">{client.email}</TableCell>
+                          <TableCell className="font-medium">
+                            {client.email}
+                          </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="font-mono text-xs">
+                            <Badge
+                              variant="outline"
+                              className="font-mono text-xs"
+                            >
                               {client.id}
                             </Badge>
                           </TableCell>
@@ -127,7 +133,6 @@ export function ClientsPage() {
                 )}
               </>
             )}
-
           </div>
         </div>
       </div>

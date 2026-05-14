@@ -151,7 +151,6 @@ export function ClientDetailPage({ id }: { id: string }) {
     <div className="flex min-h-0 flex-1 flex-col bg-background text-foreground">
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-7xl p-6 lg:p-8 space-y-6 pb-12">
-
           <Button variant="ghost" size="sm" asChild className="-ml-2">
             <Link href="/system-admin/dashboard/users">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -368,7 +367,6 @@ export function ClientDetailPage({ id }: { id: string }) {
               </div>
             )}
           </div>
-
         </div>
       </div>
     </div>
