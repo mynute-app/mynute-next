@@ -67,6 +67,15 @@ export const GET = auth(async function GET(req, context) {
       );
     }
 
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return NextResponse.json(
+        { message: "ID do cliente inválido" },
+        { status: 400 },
+      );
+    }
+
     const data = await fetchFromBackend<AdminClientAppointmentsResponse>(
       req,
       `/system-admin/clients/${id}/appointments`,

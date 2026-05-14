@@ -66,8 +66,10 @@ export function useClientAppointments(clientId: string | null) {
       setData(null);
       setError(null);
       setHasFetched(false);
+    } else {
+      fetchAppointments();
     }
-  }, [clientId]);
+  }, [clientId, fetchAppointments]);
 
   return {
     data,
