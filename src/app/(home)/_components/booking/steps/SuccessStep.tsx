@@ -89,7 +89,10 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Comprovante de Agendamento", text: appointmentText });
+        await navigator.share({
+          title: "Comprovante de Agendamento",
+          text: appointmentText,
+        });
       } catch {
         handleCopy();
       }
@@ -112,13 +115,17 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
             />
             <div
               className="relative rounded-full p-4"
-              style={{ backgroundColor: `${brandColor ? brandColor : "hsl(var(--primary))"}18` }}
+              style={{
+                backgroundColor: `${brandColor ? brandColor : "hsl(var(--primary))"}18`,
+              }}
             >
               <CheckCircle2 className="w-14 h-14" style={{ color: accent }} />
             </div>
           </div>
           <div>
-            <h2 className="text-xl font-bold text-foreground">SolicitaÃ§Ã£o Recebida!</h2>
+            <h2 className="text-xl font-bold text-foreground">
+              SolicitaÃ§Ã£o Recebida!
+            </h2>
             <p className="text-sm text-muted-foreground mt-1">
               Sua solicitaÃ§Ã£o foi enviada e aguarda confirmaÃ§Ã£o.
             </p>
@@ -128,13 +135,19 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
           <div
             className="w-full flex items-start gap-3 rounded-lg p-3 text-left"
             style={{
-              backgroundColor: brandColor ? `${brandColor}10` : "hsl(var(--muted))",
+              backgroundColor: brandColor
+                ? `${brandColor}10`
+                : "hsl(var(--muted))",
               border: `1px solid ${brandColor ? `${brandColor}25` : "hsl(var(--border))"}`,
             }}
           >
-            <Info className="w-4 h-4 mt-0.5 shrink-0" style={{ color: accent }} />
+            <Info
+              className="w-4 h-4 mt-0.5 shrink-0"
+              style={{ color: accent }}
+            />
             <p className="text-xs" style={{ color: accent }}>
-              VocÃª receberÃ¡ um <strong>e-mail de confirmaÃ§Ã£o</strong> assim que o profissional aprovar o agendamento.
+              VocÃª receberÃ¡ um <strong>e-mail de confirmaÃ§Ã£o</strong> assim
+              que o profissional aprovar o agendamento.
             </p>
           </div>
         </div>
@@ -156,7 +169,9 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
             {
               icon: User,
               label: "Profissional",
-              value: `${employee?.name ?? ""} ${employee?.surname ?? ""}`.trim() || "â€”",
+              value:
+                `${employee?.name ?? ""} ${employee?.surname ?? ""}`.trim() ||
+                "â€”",
             },
             {
               icon: MapPin,
@@ -171,8 +186,12 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
               <Icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">{label}</p>
-                <p className="text-sm font-medium text-foreground capitalize leading-snug">{value}</p>
-                {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+                <p className="text-sm font-medium text-foreground capitalize leading-snug">
+                  {value}
+                </p>
+                {sub && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+                )}
               </div>
             </div>
           ))}
@@ -180,18 +199,41 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
 
         {/* AÃ§Ãµes */}
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" onClick={handleCopy} className="gap-2 rounded-lg">
-            {copied ? <><Check className="w-4 h-4" />Copiado!</> : <><Copy className="w-4 h-4" />Copiar</>}
+          <Button
+            variant="outline"
+            onClick={handleCopy}
+            className="gap-2 rounded-lg"
+          >
+            {copied ? (
+              <>
+                <Check className="w-4 h-4" />
+                Copiado!
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                Copiar
+              </>
+            )}
           </Button>
-          <Button variant="outline" onClick={handleShare} className="gap-2 rounded-lg">
-            <Share2 className="w-4 h-4" />Compartilhar
+          <Button
+            variant="outline"
+            onClick={handleShare}
+            className="gap-2 rounded-lg"
+          >
+            <Share2 className="w-4 h-4" />
+            Compartilhar
           </Button>
         </div>
 
         <Button
           onClick={onComplete}
           className="w-full rounded-lg h-11 font-semibold"
-          style={{ backgroundColor: accent, color: "#fff", borderColor: accent }}
+          style={{
+            backgroundColor: accent,
+            color: "#fff",
+            borderColor: accent,
+          }}
         >
           Fazer novo agendamento
         </Button>

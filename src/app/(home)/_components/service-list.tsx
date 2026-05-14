@@ -48,14 +48,14 @@ export function ServiceList({
     return services.filter(s =>
       [s.name, s.description, s.category]
         .filter(Boolean)
-        .some(v => String(v).toLowerCase().includes(q))
+        .some(v => String(v).toLowerCase().includes(q)),
     );
   }, [services, query]);
   const handleServiceSelect = async (service: Service) => {
     if (!companyId) {
       return;
     }
-   
+
     try {
       const availabilityData = await fetchAvailability({
         serviceId: service.id,
@@ -129,7 +129,7 @@ export function ServiceList({
       </BookingProvider>
     );
   }
-  
+
   return (
     <>
       <div className="flex flex-col h-full md:block md:space-y-5">

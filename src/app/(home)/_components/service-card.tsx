@@ -17,7 +17,7 @@ function formatPrice(value: unknown) {
 }
 
 function formatDuration(value?: string | number) {
-  const n = typeof value === "string" ? parseInt(value) : value ?? 0;
+  const n = typeof value === "string" ? parseInt(value) : (value ?? 0);
   return `${n} min`;
 }
 
@@ -47,7 +47,7 @@ export function ServiceCard({
         "group relative bg-card rounded-xl border border-border overflow-hidden cursor-pointer",
         "transition-all duration-200 ease-out hover:-translate-y-0.5",
         "shadow-[0_1px_3px_0_hsl(215_25%_15%/0.07)] hover:shadow-[0_6px_16px_-4px_hsl(215_25%_15%/0.12)]",
-        "active:scale-[0.98]"
+        "active:scale-[0.98]",
       )}
       onClick={() => onSelect?.(service)}
     >
@@ -65,7 +65,9 @@ export function ServiceCard({
             className="absolute inset-0 flex items-center justify-center"
             style={
               accentBg
-                ? { background: `linear-gradient(135deg, ${brandColor}22, ${brandColor}0a)` }
+                ? {
+                    background: `linear-gradient(135deg, ${brandColor}22, ${brandColor}0a)`,
+                  }
                 : undefined
             }
           >
@@ -73,7 +75,10 @@ export function ServiceCard({
               className="w-14 h-14 rounded-2xl flex items-center justify-center"
               style={
                 accentBg
-                  ? { backgroundColor: accentBg, border: `1px solid ${accentBorder}` }
+                  ? {
+                      backgroundColor: accentBg,
+                      border: `1px solid ${accentBorder}`,
+                    }
                   : { backgroundColor: "hsl(var(--muted))" }
               }
             >
@@ -136,8 +141,16 @@ export function ServiceCard({
             className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium"
             style={
               accentBg
-                ? { backgroundColor: accentBg, border: `1px solid ${accentBorder}`, color: brandColor }
-                : { backgroundColor: "hsl(var(--muted))", border: "1px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))" }
+                ? {
+                    backgroundColor: accentBg,
+                    border: `1px solid ${accentBorder}`,
+                    color: brandColor,
+                  }
+                : {
+                    backgroundColor: "hsl(var(--muted))",
+                    border: "1px solid hsl(var(--border))",
+                    color: "hsl(var(--muted-foreground))",
+                  }
             }
           >
             <Clock className="w-3 h-3" />
@@ -148,8 +161,16 @@ export function ServiceCard({
               className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold"
               style={
                 brandColor
-                  ? { backgroundColor: `${brandColor}12`, border: `1px solid ${brandColor}25`, color: brandColor }
-                  : { backgroundColor: "hsl(var(--muted))", border: "1px solid hsl(var(--border))", color: "hsl(var(--foreground))" }
+                  ? {
+                      backgroundColor: `${brandColor}12`,
+                      border: `1px solid ${brandColor}25`,
+                      color: brandColor,
+                    }
+                  : {
+                      backgroundColor: "hsl(var(--muted))",
+                      border: "1px solid hsl(var(--border))",
+                      color: "hsl(var(--foreground))",
+                    }
               }
             >
               {formatPrice(service.price)}
@@ -176,7 +197,11 @@ export function ServiceCard({
           className="w-full font-semibold rounded-lg h-9"
           style={
             brandColor
-              ? { backgroundColor: brandColor, color: "#fff", borderColor: brandColor }
+              ? {
+                  backgroundColor: brandColor,
+                  color: "#fff",
+                  borderColor: brandColor,
+                }
               : undefined
           }
           onClick={e => {

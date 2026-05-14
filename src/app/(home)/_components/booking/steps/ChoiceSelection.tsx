@@ -65,7 +65,7 @@ export function ChoiceSelection({
               "bg-card border border-border text-left",
               "transition-all duration-200 ease-out hover:-translate-y-0.5",
               "shadow-[0_1px_3px_0_hsl(215_25%_15%/0.07)] hover:shadow-[0_6px_16px_-4px_hsl(215_25%_15%/0.12)]",
-              "active:scale-[0.98]"
+              "active:scale-[0.98]",
             )}
           >
             <div
@@ -73,7 +73,10 @@ export function ChoiceSelection({
               style={
                 brandColor
                   ? { backgroundColor: `${brandColor}18`, color: brandColor }
-                  : { backgroundColor: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }
+                  : {
+                      backgroundColor: "hsl(var(--muted))",
+                      color: "hsl(var(--muted-foreground))",
+                    }
               }
             >
               <Icon className="w-5 h-5" />
@@ -82,7 +85,9 @@ export function ChoiceSelection({
               <h3 className="font-semibold text-base text-foreground group-hover:text-primary transition-colors">
                 {title}
               </h3>
-              <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {description}
+              </p>
             </div>
           </button>
         ))}

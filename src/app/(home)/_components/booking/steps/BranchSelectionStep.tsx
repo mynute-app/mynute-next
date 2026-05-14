@@ -60,7 +60,7 @@ export function BranchSelectionStep({
               "bg-card border border-border",
               "transition-all duration-200 ease-out hover:-translate-y-0.5",
               "shadow-[0_1px_3px_0_hsl(215_25%_15%/0.07)] hover:shadow-[0_6px_16px_-4px_hsl(215_25%_15%/0.12)]",
-              "active:scale-[0.98]"
+              "active:scale-[0.98]",
             )}
           >
             {/* Ãcone / Imagem */}
@@ -81,7 +81,11 @@ export function BranchSelectionStep({
               ) : (
                 <MapPin
                   className="w-5 h-5"
-                  style={brandColor ? { color: brandColor } : { color: "hsl(var(--muted-foreground))" }}
+                  style={
+                    brandColor
+                      ? { color: brandColor }
+                      : { color: "hsl(var(--muted-foreground))" }
+                  }
                 />
               )}
             </div>
@@ -104,9 +108,15 @@ export function BranchSelectionStep({
             <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mb-3">
               <MapPin className="w-6 h-6 text-muted-foreground" />
             </div>
-            <p className="font-semibold text-foreground">Nenhum local disponÃ­vel</p>
+            <p className="font-semibold text-foreground">
+              Nenhum local disponÃ­vel
+            </p>
             <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-              NÃ£o hÃ¡ locais disponÃ­veis{selectedEmployeeId ? " para este profissional no horÃ¡rio selecionado" : ""}.
+              NÃ£o hÃ¡ locais disponÃ­veis
+              {selectedEmployeeId
+                ? " para este profissional no horÃ¡rio selecionado"
+                : ""}
+              .
             </p>
           </div>
         )}

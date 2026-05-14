@@ -28,7 +28,7 @@ export function EmployeeSelectionStep({
   brandColor,
 }: EmployeeSelectionStepProps) {
   const availableEmployees = employees.filter(emp =>
-    availableEmployeeIds.includes(emp.id)
+    availableEmployeeIds.includes(emp.id),
   );
 
   return (
@@ -67,7 +67,7 @@ export function EmployeeSelectionStep({
               "bg-card border border-border",
               "transition-all duration-200 ease-out hover:-translate-y-0.5",
               "shadow-[0_1px_3px_0_hsl(215_25%_15%/0.07)] hover:shadow-[0_6px_16px_-4px_hsl(215_25%_15%/0.12)]",
-              "active:scale-[0.98]"
+              "active:scale-[0.98]",
             )}
           >
             <Avatar className="w-12 h-12 shrink-0 ring-2 ring-border group-hover:ring-primary/30 transition-colors">
@@ -93,7 +93,9 @@ export function EmployeeSelectionStep({
               <p className="font-semibold text-base text-foreground group-hover:text-primary transition-colors truncate">
                 {employee.name} {employee.surname}
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">DisponÃ­vel</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                DisponÃ­vel
+              </p>
             </div>
 
             <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
@@ -105,9 +107,12 @@ export function EmployeeSelectionStep({
             <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mb-3">
               <User className="w-6 h-6 text-muted-foreground" />
             </div>
-            <p className="font-semibold text-foreground">Nenhum profissional disponÃ­vel</p>
+            <p className="font-semibold text-foreground">
+              Nenhum profissional disponÃ­vel
+            </p>
             <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-              Tente selecionar outro horÃ¡rio{selectedBranchId ? " ou local" : ""}.
+              Tente selecionar outro horÃ¡rio
+              {selectedBranchId ? " ou local" : ""}.
             </p>
           </div>
         )}
@@ -115,4 +120,3 @@ export function EmployeeSelectionStep({
     </div>
   );
 }
-

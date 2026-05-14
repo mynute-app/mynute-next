@@ -37,14 +37,24 @@ export function DateCard({
               className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold"
               style={
                 brandColor
-                  ? { backgroundColor: `${brandColor}18`, color: brandColor, border: `1px solid ${brandColor}30` }
-                  : { backgroundColor: "hsl(var(--primary)/0.1)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary)/0.2)" }
+                  ? {
+                      backgroundColor: `${brandColor}18`,
+                      color: brandColor,
+                      border: `1px solid ${brandColor}30`,
+                    }
+                  : {
+                      backgroundColor: "hsl(var(--primary)/0.1)",
+                      color: "hsl(var(--primary))",
+                      border: "1px solid hsl(var(--primary)/0.2)",
+                    }
               }
             >
               {label}
             </span>
           )}
-          <p className="text-sm font-medium text-foreground capitalize">{formattedDate}</p>
+          <p className="text-sm font-medium text-foreground capitalize">
+            {formattedDate}
+          </p>
         </div>
       </div>
 
@@ -64,7 +74,9 @@ export function DateCard({
                   "relative h-9 rounded-lg text-xs font-medium transition-all duration-150",
                   "border focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
                   isOccupiedByClient && "opacity-40 cursor-not-allowed",
-                  !isSelected && !isOccupiedByClient && "bg-background border-border text-foreground hover:border-primary/50 hover:bg-primary/5",
+                  !isSelected &&
+                    !isOccupiedByClient &&
+                    "bg-background border-border text-foreground hover:border-primary/50 hover:bg-primary/5",
                 )}
                 style={
                   isSelected && !isOccupiedByClient
@@ -75,8 +87,14 @@ export function DateCard({
                       }
                     : undefined
                 }
-                title={isOccupiedByClient ? "Você já tem um agendamento neste horário" : undefined}
-                onClick={() => !isOccupiedByClient && onSlotSelect(date, slot, branchId)}
+                title={
+                  isOccupiedByClient
+                    ? "Você já tem um agendamento neste horário"
+                    : undefined
+                }
+                onClick={() =>
+                  !isOccupiedByClient && onSlotSelect(date, slot, branchId)
+                }
               >
                 {isOccupiedByClient && (
                   <Lock className="w-2.5 h-2.5 absolute top-1 right-1" />
