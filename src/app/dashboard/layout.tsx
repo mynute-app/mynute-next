@@ -12,7 +12,12 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
   const accessToken = (session as any)?.accessToken as string | undefined;
-  if (!session || !session.user || !accessToken || isBackendTokenExpired(accessToken)) {
+  if (
+    !session ||
+    !session.user ||
+    !accessToken ||
+    isBackendTokenExpired(accessToken)
+  ) {
     redirect("/auth/employee");
   }
   return (

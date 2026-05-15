@@ -13,7 +13,12 @@ export default async function SystemAdminDashboardLayout({
   const session = await auth();
   const accessToken = (session as any)?.accessToken as string | undefined;
 
-  if (!session || !session.user || !accessToken || isBackendTokenExpired(accessToken)) {
+  if (
+    !session ||
+    !session.user ||
+    !accessToken ||
+    isBackendTokenExpired(accessToken)
+  ) {
     redirect("/auth/system-admin");
   }
 

@@ -7,19 +7,17 @@ import {
   Plus,
   Loader2,
   ArrowLeft,
-  ArrowRight,
   Check,
-  ChevronDown,
   Clock,
+  User,
+  Scissors,
+  MapPin,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -40,16 +38,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useGetCompany } from "@/hooks/get-company";
 import { useServiceAvailability } from "@/hooks/service/useServiceAvailability";
 import { useCreateAppointment } from "@/hooks/appointment/useCreateAppointment";
 import { useClientByEmail } from "@/hooks/use-client-by-email";
 import { useCreateClient } from "@/hooks/use-create-client";
-import { DateCard } from "@/app/(home)/_components/date-card";
 import { Calendar } from "@/app/(home)/_components/calendar";
 import { clientFormSchema, type ClientFormData } from "./client-form-schema";
 import type { Service } from "../../../../../../types/company";
@@ -118,7 +112,7 @@ export function CreateAppointmentDialog({
   const [showClientForm, setShowClientForm] = useState(false);
 
   const [availability, setAvailability] = useState<ServiceAvailability | null>(
-    null
+    null,
   );
   const [existingClient, setExistingClient] = useState<any>(null);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
@@ -200,7 +194,7 @@ export function CreateAppointmentDialog({
   const employeeOptions = useMemo(() => {
     if (!availableEmployees.length || !availability?.employee_info) return [];
     return availability.employee_info.filter(emp =>
-      availableEmployees.includes(emp.id)
+      availableEmployees.includes(emp.id),
     );
   }, [availableEmployees, availability?.employee_info]);
 
@@ -244,8 +238,8 @@ export function CreateAppointmentDialog({
     setShowClientForm(false);
     try {
       await checkEmail(email);
-    } catch (error) {
-      console.error("Erro ao buscar cliente:", error);
+    } catch {
+      // erro tratado no hook (toast)
     } finally {
       setIsCheckingEmail(false);
     }
@@ -265,8 +259,6 @@ export function CreateAppointmentDialog({
       setExistingClient(null);
     }
   }, [client, isCheckingEmail]);
-
-
 
   // Reset all state when dialog closes
   useEffect(() => {
@@ -405,6 +397,18 @@ export function CreateAppointmentDialog({
     setDialogOpen(false);
   };
 
+  const steps: { key: Step; label: string }[] = [
+    { key: "service", label: "Serviço" },
+    { key: "datetime", label: "Data e hora" },
+    { key: "employee", label: "Profissional" },
+    { key: "client", label: "Cliente" },
+  ];
+  const stepIndex = steps.findIndex(s => s.key === currentStep);
+
+  const selectedEmployee = employeeOptions.find(
+    e => e.id === formData.employeeId,
+  );
+
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       {!hideTrigger && (
@@ -416,131 +420,146 @@ export function CreateAppointmentDialog({
         </DialogTrigger>
       )}
 
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>Criar Novo Agendamento</DialogTitle>
-          <DialogDescription>
-            {currentStep === "service" &&
-              "Selecione o serviço para verificar disponibilidade"}
-            {currentStep === "datetime" && "Escolha a data e horário"}
-            {currentStep === "employee" && "Selecione o funcionário"}
-            {currentStep === "client" && "Preencha o email do cliente"}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <Badge
-              variant={currentStep === "service" ? "default" : "secondary"}
-              className="text-xs"
-            >
-              1. Serviço
-            </Badge>
-            <ArrowRight className="h-3 w-3 text-muted-foreground" />
-            <Badge
-              variant={currentStep === "datetime" ? "default" : "secondary"}
-              className="text-xs"
-            >
-              2. Data/Hora
-            </Badge>
-            <ArrowRight className="h-3 w-3 text-muted-foreground" />
-            <Badge
-              variant={currentStep === "employee" ? "default" : "secondary"}
-              className="text-xs"
-            >
-              3. Funcionário
-            </Badge>
-            <ArrowRight className="h-3 w-3 text-muted-foreground" />
-            <Badge
-              variant={currentStep === "client" ? "default" : "secondary"}
-              className="text-xs"
-            >
-              4. Cliente
-            </Badge>
+      <DialogContent className="p-0 gap-0 sm:max-w-[680px] max-h-[92vh] overflow-hidden rounded-2xl">
+        {/* Header estilo Google Calendar */}
+        <div className="flex flex-col gap-0">
+          <div className="flex items-center justify-between px-6 pt-5 pb-4">
+            <h2 className="text-lg font-semibold tracking-tight">
+              Novo agendamento
+            </h2>
           </div>
+
+          {/* Step indicator */}
+          <div className="flex items-center gap-0 px-6 pb-5">
+            {steps.map((step, i) => {
+              const isDone = i < stepIndex;
+              const isActive = i === stepIndex;
+              return (
+                <div key={step.key} className="flex items-center">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={[
+                        "flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold transition-colors",
+                        isDone
+                          ? "bg-primary text-primary-foreground"
+                          : isActive
+                            ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                            : "bg-muted text-muted-foreground",
+                      ].join(" ")}
+                    >
+                      {isDone ? <Check className="h-3 w-3" /> : i + 1}
+                    </div>
+                    <span
+                      className={[
+                        "text-xs font-medium hidden sm:block",
+                        isActive
+                          ? "text-foreground"
+                          : isDone
+                            ? "text-muted-foreground"
+                            : "text-muted-foreground/60",
+                      ].join(" ")}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
+                  {i < steps.length - 1 && (
+                    <div
+                      className={[
+                        "mx-2 h-px flex-1 w-8 transition-colors",
+                        i < stepIndex ? "bg-primary" : "bg-border",
+                      ].join(" ")}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="h-px bg-border" />
         </div>
 
-        <Separator />
+        {/* Conteúdo por step */}
+        <ScrollArea className="flex-1 max-h-[calc(92vh-220px)]">
+          <div className="px-6 py-5 space-y-4">
 
-        <ScrollArea className="max-h-[calc(90vh-280px)] pr-4">
-          <div className="grid gap-6 py-4 px-2">
+            {/* ── STEP 1: SERVIÇO ── */}
             {currentStep === "service" && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="service">Serviço *</Label>
-                  <Select
-                    value={formData.serviceId}
-                    onValueChange={handleServiceSelect}
-                    disabled={loadingCompany || loadingAvailability}
-                  >
-                    <SelectTrigger id="service">
-                      <SelectValue
-                        placeholder={
-                          loadingCompany
-                            ? "Carregando serviços..."
-                            : "Selecione o serviço"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent className="z-[10001]" position="popper">
-                      {loadingCompany ? (
-                        <div className="flex items-center justify-center p-4">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        </div>
-                      ) : !company?.services ||
-                        company.services.length === 0 ? (
-                        <div className="p-4 text-center text-sm text-muted-foreground">
-                          Nenhum serviço cadastrado
-                        </div>
-                      ) : (
-                        company.services.map((service: any) => (
-                          <SelectItem key={service.id} value={service.id}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {service.name}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {service.duration}min - R${" "}
-                                {service.price.toFixed(2)}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Selecione o serviço para verificar a disponibilidade.
+                </p>
 
-                {loadingAvailability && (
-                  <div className="flex items-center justify-center p-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    <span className="ml-2 text-sm text-muted-foreground">
-                      Buscando disponibilidade...
-                    </span>
+                {loadingCompany ? (
+                  <div className="flex items-center gap-2 py-6 justify-center text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span className="text-sm">Carregando serviços...</span>
+                  </div>
+                ) : !company?.services || company.services.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Nenhum serviço cadastrado
+                  </div>
+                ) : (
+                  <div className="grid gap-2">
+                    {company.services.map((service: any) => {
+                      const isSelected = formData.serviceId === service.id;
+                      return (
+                        <button
+                          key={service.id}
+                          type="button"
+                          onClick={() => handleServiceSelect(service.id)}
+                          className={[
+                            "w-full text-left flex items-center gap-4 rounded-xl border px-4 py-3.5 transition-all",
+                            isSelected
+                              ? "border-primary bg-primary/5 ring-1 ring-primary"
+                              : "border-border hover:border-primary/40 hover:bg-muted/50",
+                          ].join(" ")}
+                        >
+                          <div
+                            className={[
+                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground",
+                            ].join(" ")}
+                          >
+                            <Scissors className="h-4 w-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">
+                              {service.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {service.duration} min &nbsp;·&nbsp; R${" "}
+                              {service.price.toFixed(2)}
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <Check className="h-4 w-4 text-primary shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
 
-                {selectedService && availability && !loadingAvailability && (
-                  <div className="p-4 bg-muted rounded-lg space-y-2">
-                    <h4 className="font-semibold">Serviço Selecionado</h4>
-                    <p className="text-sm">{selectedService.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {availability.available_dates.length} datas disponíveis
-                    </p>
+                {loadingAvailability && (
+                  <div className="flex items-center gap-2 pt-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">Buscando disponibilidade...</span>
                   </div>
                 )}
               </div>
             )}
 
+            {/* ── STEP 2: DATA E HORA ── */}
             {currentStep === "datetime" && (
               <div className="space-y-4">
                 {organizedDates.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Nenhuma data disponível
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Nenhuma data disponível para este serviço
                   </div>
                 ) : (
                   <>
-                    {/* Calendário */}
                     <Calendar
                       selectedDate={
                         formData.selectedDate
@@ -559,77 +578,77 @@ export function CreateAppointmentDialog({
                         setSelectedSlot(null);
                       }}
                       availableDates={availability?.available_dates.map(
-                        d => d.date
+                        d => d.date,
                       )}
                     />
 
-                    {/* Horários disponíveis para a data selecionada */}
                     {formData.selectedDate && selectedDateSlots.length > 0 && (
-                      <Card>
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            Horários Disponíveis
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                            {[...selectedDateSlots]
-                              .sort((a: TimeSlot, b: TimeSlot) =>
-                                a.time.localeCompare(b.time)
-                              )
-                              .map((slot: TimeSlot) => {
-                                const isSelected =
-                                  selectedSlot?.time === slot.time;
-
-                                return (
-                                  <Button
-                                    key={slot.time}
-                                    variant={isSelected ? "default" : "outline"}
-                                    size="sm"
-                                    className="text-xs"
-                                    onClick={() => {
-                                      if (formData.selectedDate) {
-                                        handleSlotSelect(
-                                          formData.selectedDate,
-                                          slot,
-                                          organizedDates.find(
-                                            d =>
-                                              d.date === formData.selectedDate
-                                          )?.branch_id || ""
-                                        );
-                                      }
-                                    }}
-                                  >
-                                    {slot.time}
-                                  </Button>
-                                );
-                              })}
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <div className="space-y-2">
+                        <p className="flex items-center gap-1.5 text-sm font-medium">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          Horários disponíveis
+                        </p>
+                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+                          {[...selectedDateSlots]
+                            .sort((a: TimeSlot, b: TimeSlot) =>
+                              a.time.localeCompare(b.time),
+                            )
+                            .map((slot: TimeSlot) => {
+                              const isSelected =
+                                selectedSlot?.time === slot.time;
+                              return (
+                                <button
+                                  key={slot.time}
+                                  type="button"
+                                  onClick={() => {
+                                    if (formData.selectedDate) {
+                                      handleSlotSelect(
+                                        formData.selectedDate,
+                                        slot,
+                                        organizedDates.find(
+                                          d =>
+                                            d.date === formData.selectedDate,
+                                        )?.branch_id || "",
+                                      );
+                                    }
+                                  }}
+                                  className={[
+                                    "rounded-lg py-2 text-xs font-medium transition-all",
+                                    isSelected
+                                      ? "bg-primary text-primary-foreground shadow-sm"
+                                      : "border border-border hover:border-primary/50 hover:bg-muted/60 text-foreground",
+                                  ].join(" ")}
+                                >
+                                  {slot.time}
+                                </button>
+                              );
+                            })}
+                        </div>
+                      </div>
                     )}
 
                     {formData.selectedDate &&
                       selectedDateSlots.length === 0 && (
-                        <Card>
-                          <CardContent className="p-6 text-center">
-                            <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">
-                              Nenhum horário disponível para esta data.
-                            </p>
-                          </CardContent>
-                        </Card>
+                        <div className="flex flex-col items-center gap-2 py-6 text-muted-foreground">
+                          <Clock className="h-8 w-8 opacity-40" />
+                          <p className="text-sm">
+                            Nenhum horário disponível para esta data
+                          </p>
+                        </div>
                       )}
 
                     {selectedBranchInfo && formData.selectedTime && (
-                      <div className="p-4 bg-muted rounded-lg space-y-2">
-                        <h4 className="font-semibold text-sm">Filial</h4>
-                        <p className="text-sm">{selectedBranchInfo.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {selectedBranchInfo.street},{" "}
-                          {selectedBranchInfo.number}
-                        </p>
+                      <div className="flex items-start gap-3 rounded-xl border bg-muted/40 px-4 py-3">
+                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium">
+                            {selectedBranchInfo.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {selectedBranchInfo.street},{" "}
+                            {selectedBranchInfo.number}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </>
@@ -637,86 +656,164 @@ export function CreateAppointmentDialog({
               </div>
             )}
 
+            {/* ── STEP 3: PROFISSIONAL ── */}
             {currentStep === "employee" && (
               <div className="space-y-4">
+                {/* Mini-resumo */}
                 {selectedService && (
-                  <div className="p-4 bg-muted rounded-lg space-y-2">
-                    <h4 className="font-semibold text-sm">
-                      Resumo do Agendamento
-                    </h4>
-                    <div className="space-y-1 text-sm">
-                      <p>
-                        <span className="font-medium">Serviço:</span>{" "}
-                        {selectedService.name}
-                      </p>
-                      {formData.selectedDate && (
-                        <p>
-                          <span className="font-medium">Data:</span>{" "}
-                          {new Intl.DateTimeFormat("pt-BR", {
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1 rounded-full border px-2.5 py-1 bg-muted/50">
+                      <Scissors className="h-3 w-3" />
+                      {selectedService.name}
+                    </span>
+                    {formData.selectedDate && formData.selectedTime && (
+                      <span className="flex items-center gap-1 rounded-full border px-2.5 py-1 bg-muted/50">
+                        <Clock className="h-3 w-3" />
+                        {new Intl.DateTimeFormat("pt-BR", {
+                          weekday: "short",
+                          day: "numeric",
+                          month: "short",
+                        }).format(
+                          new Date(formData.selectedDate + "T00:00:00"),
+                        )}{" "}
+                        às {formData.selectedTime}
+                      </span>
+                    )}
+                    {selectedBranchInfo && (
+                      <span className="flex items-center gap-1 rounded-full border px-2.5 py-1 bg-muted/50">
+                        <MapPin className="h-3 w-3" />
+                        {selectedBranchInfo.name}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <p className="text-sm text-muted-foreground">
+                  Selecione o profissional disponível para este horário.
+                </p>
+
+                {employeeOptions.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Nenhum profissional disponível para este horário
+                  </div>
+                ) : (
+                  <div className="grid gap-2">
+                    {employeeOptions.map((emp: any) => {
+                      const isSelected = formData.employeeId === emp.id;
+                      const initials = `${emp.name?.[0] ?? ""}${emp.surname?.[0] ?? ""}`.toUpperCase();
+                      return (
+                        <button
+                          key={emp.id}
+                          type="button"
+                          onClick={() =>
+                            setFormData(prev => ({
+                              ...prev,
+                              employeeId: emp.id,
+                            }))
+                          }
+                          className={[
+                            "w-full text-left flex items-center gap-4 rounded-xl border px-4 py-3 transition-all",
+                            isSelected
+                              ? "border-primary bg-primary/5 ring-1 ring-primary"
+                              : "border-border hover:border-primary/40 hover:bg-muted/50",
+                          ].join(" ")}
+                        >
+                          <div
+                            className={[
+                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-foreground",
+                            ].join(" ")}
+                          >
+                            {initials || <User className="h-4 w-4" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm">
+                              {emp.name} {emp.surname}
+                            </p>
+                            {emp.role && (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {emp.role}
+                              </p>
+                            )}
+                          </div>
+                          {isSelected && (
+                            <Check className="h-4 w-4 text-primary shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── STEP 4: CLIENTE ── */}
+            {currentStep === "client" && (
+              <div className="space-y-4">
+                {/* Resumo final */}
+                <div className="rounded-xl border bg-muted/30 divide-y">
+                  {[
+                    {
+                      icon: <Scissors className="h-4 w-4" />,
+                      label: selectedService?.name,
+                      sub: selectedService
+                        ? `${selectedService.duration} min · R$ ${selectedService.price.toFixed(2)}`
+                        : null,
+                    },
+                    {
+                      icon: <Clock className="h-4 w-4" />,
+                      label: formData.selectedDate
+                        ? new Intl.DateTimeFormat("pt-BR", {
                             weekday: "long",
                             day: "numeric",
                             month: "long",
                           }).format(
-                            new Date(formData.selectedDate + "T00:00:00")
+                            new Date(formData.selectedDate + "T00:00:00"),
+                          )
+                        : null,
+                      sub: formData.selectedTime,
+                    },
+                    {
+                      icon: <User className="h-4 w-4" />,
+                      label: selectedEmployee
+                        ? `${selectedEmployee.name} ${selectedEmployee.surname}`
+                        : null,
+                      sub: selectedEmployee?.role || null,
+                    },
+                    {
+                      icon: <MapPin className="h-4 w-4" />,
+                      label: selectedBranchInfo?.name || null,
+                      sub:
+                        selectedBranchInfo
+                          ? `${selectedBranchInfo.street}, ${selectedBranchInfo.number}`
+                          : null,
+                    },
+                  ]
+                    .filter(row => row.label)
+                    .map((row, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-3 px-4 py-3"
+                      >
+                        <span className="text-muted-foreground mt-0.5 shrink-0">
+                          {row.icon}
+                        </span>
+                        <div>
+                          <p className="text-sm font-medium">{row.label}</p>
+                          {row.sub && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {row.sub}
+                            </p>
                           )}
-                        </p>
-                      )}
-                      {formData.selectedTime && (
-                        <p>
-                          <span className="font-medium">Horário:</span>{" "}
-                          {formData.selectedTime}
-                        </p>
-                      )}
-                      {selectedBranchInfo && (
-                        <p>
-                          <span className="font-medium">Filial:</span>{" "}
-                          {selectedBranchInfo.name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-2 px-2">
-                  <Label htmlFor="employee">Selecione o Funcionário *</Label>
-                  {employeeOptions.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Nenhum funcionário disponível para este horário
-                    </div>
-                  ) : (
-                    <Select
-                      value={formData.employeeId || ""}
-                      onValueChange={value =>
-                        setFormData(prev => ({ ...prev, employeeId: value }))
-                      }
-                    >
-                      <SelectTrigger id="employee">
-                        <SelectValue placeholder="Selecione o funcionário" />
-                      </SelectTrigger>
-                      <SelectContent className="z-[10001]" position="popper">
-                        {employeeOptions.map((emp: any) => (
-                          <SelectItem key={emp.id} value={emp.id}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {emp.name} {emp.surname}
-                              </span>
-                              {emp.role && (
-                                <span className="text-xs text-muted-foreground">
-                                  {emp.role}
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                        </div>
+                      </div>
+                    ))}
                 </div>
-              </div>
-            )}
 
-            {currentStep === "client" && (
-              <div className="space-y-4">
+                <div className="h-px bg-border" />
+
                 <Form {...form}>
                   <form
                     onSubmit={form.handleSubmit(handleSubmit)}
@@ -727,7 +824,7 @@ export function CreateAppointmentDialog({
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email do Cliente *</FormLabel>
+                          <FormLabel>Email do cliente</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Input
@@ -739,9 +836,10 @@ export function CreateAppointmentDialog({
                                   handleEmailBlur();
                                 }}
                                 disabled={isCheckingEmail}
+                                className="pr-9"
                               />
                               {isCheckingEmail && (
-                                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />
+                                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
                               )}
                             </div>
                           </FormControl>
@@ -751,65 +849,66 @@ export function CreateAppointmentDialog({
                     />
 
                     {existingClient && (
-                      <div className="p-3 rounded-md border border-[hsl(var(--success)/0.3)] bg-[hsl(var(--success)/0.12)]">
-                        <p className="text-sm text-[hsl(var(--success))] font-medium">
-                          ✓ Cliente encontrado no sistema
-                        </p>
-                        <p className="text-xs text-[hsl(var(--success)/0.85)] mt-1">
-                          {existingClient.name} {existingClient.surname}
-                        </p>
+                      <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/40 px-4 py-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                          {`${existingClient.name?.[0] ?? ""}${existingClient.surname?.[0] ?? ""}`.toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+                            {existingClient.name} {existingClient.surname}
+                          </p>
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
+                            Cliente encontrado no sistema
+                          </p>
+                        </div>
+                        <Check className="ml-auto h-4 w-4 text-emerald-600 shrink-0" />
                       </div>
                     )}
 
                     {showClientForm && !existingClient && (
-                      <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                      <div className="rounded-xl border bg-muted/30 p-4 space-y-4">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium">
-                            Preencha os dados do novo cliente
-                          </p>
-                          <Badge variant="outline">Novo Cliente</Badge>
+                          <p className="text-sm font-medium">Novo cliente</p>
+                          <span className="text-xs text-muted-foreground rounded-full border px-2.5 py-0.5">
+                            Será criado automaticamente
+                          </span>
                         </div>
 
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nome *</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Nome do cliente"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="surname"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Sobrenome *</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Sobrenome do cliente"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <div className="grid grid-cols-2 gap-3">
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Nome</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="João" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="surname"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Sobrenome</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Silva" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
 
                         <FormField
                           control={form.control}
                           name="phone"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Telefone *</FormLabel>
+                              <FormLabel>Telefone</FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="(11) 99999-9999"
@@ -824,73 +923,45 @@ export function CreateAppointmentDialog({
                     )}
                   </form>
                 </Form>
-
-                <Separator />
-                <div className="p-4 bg-muted rounded-lg space-y-3">
-                  <h4 className="font-semibold">Resumo do Agendamento</h4>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      <span className="text-muted-foreground">Serviço:</span>{" "}
-                      {selectedService?.name}
-                    </p>
-                    <p>
-                      <span className="text-muted-foreground">Data:</span>{" "}
-                      {
-                        organizedDates.find(
-                          d => d.date === formData.selectedDate
-                        )?.formattedDate
-                      }
-                    </p>
-                    <p>
-                      <span className="text-muted-foreground">Horário:</span>{" "}
-                      {formData.selectedTime}
-                    </p>
-                    <p>
-                      <span className="text-muted-foreground">
-                        Funcionário:
-                      </span>{" "}
-                      {
-                        employeeOptions.find(e => e.id === formData.employeeId)
-                          ?.name
-                      }{" "}
-                      {
-                        employeeOptions.find(e => e.id === formData.employeeId)
-                          ?.surname
-                      }
-                    </p>
-                    <p>
-                      <span className="text-muted-foreground">Filial:</span>{" "}
-                      {selectedBranchInfo?.name}
-                    </p>
-                  </div>
-                </div>
               </div>
             )}
           </div>
         </ScrollArea>
 
-        <DialogFooter className="flex justify-between">
+        {/* Footer com botões de navegação */}
+        <div className="flex items-center justify-between border-t px-6 py-4 bg-background">
           <div>
             {currentStep !== "service" && (
-              <Button variant="outline" onClick={handleBack}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
+              <Button variant="ghost" size="sm" onClick={handleBack}>
+                <ArrowLeft className="h-4 w-4 mr-1.5" />
                 Voltar
               </Button>
             )}
           </div>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleReset}>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleReset}>
               Cancelar
             </Button>
 
             {currentStep !== "client" ? (
-              <Button onClick={handleNext} disabled={!formData.serviceId}>
-                Avançar
-                <ArrowRight className="h-4 w-4 ml-2" />
+              <Button
+                size="sm"
+                onClick={handleNext}
+                disabled={
+                  (currentStep === "service" &&
+                    (!formData.serviceId || loadingAvailability)) ||
+                  (currentStep === "datetime" &&
+                    (!formData.selectedDate || !formData.selectedTime)) ||
+                  (currentStep === "employee" && !formData.employeeId)
+                }
+              >
+                Continuar
+                <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
               <Button
+                size="sm"
                 onClick={form.handleSubmit(handleSubmit)}
                 disabled={
                   creatingAppointment || creatingClient || isCheckingEmail
@@ -898,21 +969,20 @@ export function CreateAppointmentDialog({
               >
                 {creatingAppointment || creatingClient ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {creatingClient ? "Criando cliente..." : "Criando..."}
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    {creatingClient ? "Criando cliente..." : "Salvando..."}
                   </>
                 ) : (
                   <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Criar Agendamento
+                    <Check className="h-4 w-4 mr-1.5" />
+                    Confirmar agendamento
                   </>
                 )}
               </Button>
             )}
           </div>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
-

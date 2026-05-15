@@ -17,7 +17,12 @@ export default async function TenantDashboardLayout({
   const session = await auth();
   const accessToken = (session as any)?.accessToken as string | undefined;
 
-  if (!session || !session.user || !accessToken || isBackendTokenExpired(accessToken)) {
+  if (
+    !session ||
+    !session.user ||
+    !accessToken ||
+    isBackendTokenExpired(accessToken)
+  ) {
     redirect(`/${tenant}/login`);
   }
 
