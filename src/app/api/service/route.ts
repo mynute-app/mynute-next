@@ -32,12 +32,9 @@ export const GET = auth(async function GET(req) {
     );
 
     return NextResponse.json(serviceList, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      {
-        message: "Erro interno ao buscar os serviços.",
-        error: error instanceof Error ? error.message : String(error),
-      },
+      { message: "Erro interno ao buscar os serviços." },
       { status: 500 },
     );
   }
@@ -81,21 +78,13 @@ export const POST = auth(async function POST(req) {
       });
 
       return NextResponse.json(createdService, { status: 201 });
-    } catch (fetchError) {
-      console.error("❌ Erro ao criar o serviço:", fetchError);
-
+    } catch {
       return NextResponse.json(
-        {
-          error:
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Erro ao criar serviço",
-        },
+        { error: "Erro ao criar serviço" },
         { status: 500 },
       );
     }
-  } catch (error) {
-    console.error("❌ Erro no servidor:", error);
+  } catch {
     return NextResponse.json(
       { message: "Erro interno do servidor" },
       { status: 500 },

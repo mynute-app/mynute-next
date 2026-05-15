@@ -48,10 +48,7 @@ export async function POST(
       console.error("Erro ao enviar codigo:", errorText);
 
       return NextResponse.json(
-        {
-          error: "Erro ao enviar codigo de verificacao",
-          details: errorText,
-        },
+        { error: "Erro ao enviar codigo de verificacao" },
         { status: response.status },
       );
     }
@@ -82,10 +79,7 @@ export async function POST(
     console.error("Erro ao processar envio de codigo:", error);
 
     return NextResponse.json(
-      {
-        error: "Erro interno ao enviar codigo de verificacao",
-        details: error instanceof Error ? error.message : "Erro desconhecido",
-      },
+      { error: "Erro interno ao enviar codigo de verificacao" },
       { status: 500 },
     );
   }

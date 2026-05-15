@@ -43,9 +43,10 @@ export function ServiceList({
   const isMobile = useIsMobile();
 
   const filtered = useMemo(() => {
+    const activeServices = services.filter(s => s.is_active !== false);
     const q = query.trim().toLowerCase();
-    if (!q) return services;
-    return services.filter(s =>
+    if (!q) return activeServices;
+    return activeServices.filter(s =>
       [s.name, s.description, s.category]
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q)),

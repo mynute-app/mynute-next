@@ -35,7 +35,6 @@ export const GET = auth(async function GET(req, { params }) {
 
     return NextResponse.json(client, { status: 200 });
   } catch (error) {
-    console.error("❌ Erro ao buscar cliente:", error);
     return NextResponse.json(
       {
         message: "Erro interno ao buscar cliente.",

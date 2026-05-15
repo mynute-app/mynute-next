@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Employee } from "../../types/company";
 
-export function useGetEmployeeById(id: number | null, reloadKey = 0) {
+export function useGetEmployeeById(id: string | null, reloadKey = 0) {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(false);
 

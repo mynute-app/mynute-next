@@ -94,7 +94,7 @@ export type Employee = {
   permission: string;
   role: string;
   description?: string;
-  is_active?: boolean;
+  is_active: boolean;
   services_count?: number;
   appointments_count?: number;
   has_schedule?: boolean;

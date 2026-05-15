@@ -72,8 +72,7 @@ const formatPhoneForDisplay = (phone?: string) => {
 
 type MemberDialogKey = "info" | "services" | "schedule" | "services-schedule";
 
-const isEmployeeActive = (member: Employee) =>
-  (member as { is_active?: boolean }).is_active !== false;
+const isEmployeeActive = (member: Employee) => member.is_active !== false;
 
 export default function YourTeam() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -81,12 +80,11 @@ export default function YourTeam() {
   const [activeDialog, setActiveDialog] = useState<MemberDialogKey | null>(
     null,
   );
-  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<Employee | null>(null);
   const [memberReloadKey, setMemberReloadKey] = useState(0);
   const [memberToDelete, setMemberToDelete] = useState<Employee | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [activeById, setActiveById] = useState<Record<number, boolean>>({});
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isEmployeesLoading, setIsEmployeesLoading] = useState(true);
 
@@ -118,7 +116,7 @@ export default function YourTeam() {
   }, [refreshEmployees]);
 
   const { employee: selectedEmployeeData } = useGetEmployeeById(
-    selectedMemberId,
+    selectedMemberId ? String(selectedMemberId) : null,
     memberReloadKey,
   );
 
@@ -138,25 +136,6 @@ export default function YourTeam() {
       setSelectedMember(selectedEmployeeData);
     }
   }, [selectedEmployeeData, selectedMemberId]);
-
-  useEffect(() => {
-    if (employees.length === 0) return;
-
-    setActiveById(prev => {
-      let changed = false;
-      const next = { ...prev };
-
-      employees.forEach(employee => {
-        const empId = Number(employee.id);
-        if (next[empId] === undefined) {
-          next[empId] = true;
-          changed = true;
-        }
-      });
-
-      return changed ? next : prev;
-    });
-  }, [employees]);
 
   const availableServices = useMemo(() => {
     if (!Array.isArray(company?.services)) return [];
@@ -196,9 +175,9 @@ export default function YourTeam() {
   };
 
   const handleOpenDialog = (member: Employee, dialog: MemberDialogKey) => {
-    if (selectedMemberId !== Number(member.id)) {
+    if (selectedMemberId !== String(member.id)) {
       setSelectedMember(null);
-      setSelectedMemberId(Number(member.id));
+      setSelectedMemberId(String(member.id));
     }
     setActiveDialog(dialog);
   };
