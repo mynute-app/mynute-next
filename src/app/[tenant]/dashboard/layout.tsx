@@ -4,6 +4,7 @@ import { DashboardTheme } from "@/app/dashboard/components/dashboard-theme";
 import { MobileSidebarToggle } from "@/app/dashboard/components/mobile-sidebar-toggle";
 import { redirect } from "next/navigation";
 import { auth } from "../../../../auth";
+import { isBackendTokenExpired } from "@/utils/decode-jwt";
 
 export default async function TenantDashboardLayout({
   children,
@@ -14,8 +15,9 @@ export default async function TenantDashboardLayout({
 }>) {
   const { tenant } = await params;
   const session = await auth();
+  const accessToken = (session as any)?.accessToken as string | undefined;
 
-  if (!session || !session.user) {
+  if (!session || !session.user || !accessToken || isBackendTokenExpired(accessToken)) {
     redirect(`/${tenant}/login`);
   }
 

@@ -3,6 +3,7 @@ import { AdminSidebar } from "./components/admin-sidebar";
 import { MobileSidebarToggle } from "@/app/dashboard/components/mobile-sidebar-toggle";
 import { auth } from "../../../../auth";
 import { redirect } from "next/navigation";
+import { isBackendTokenExpired, decodeJWTToken } from "@/utils/decode-jwt";
 
 export default async function SystemAdminDashboardLayout({
   children,
@@ -10,8 +11,14 @@ export default async function SystemAdminDashboardLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
+  const accessToken = (session as any)?.accessToken as string | undefined;
 
-  if (!session || !session.user) {
+  if (!session || !session.user || !accessToken || isBackendTokenExpired(accessToken)) {
+    redirect("/auth/system-admin");
+  }
+
+  const decoded = decodeJWTToken(accessToken);
+  if (decoded?.type !== "system_admin") {
     redirect("/auth/system-admin");
   }
 
