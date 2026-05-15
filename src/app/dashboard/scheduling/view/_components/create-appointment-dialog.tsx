@@ -15,11 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -481,7 +477,6 @@ export function CreateAppointmentDialog({
         {/* Conteúdo por step */}
         <ScrollArea className="flex-1 max-h-[calc(92vh-220px)]">
           <div className="px-6 py-5 space-y-4">
-
             {/* ── STEP 1: SERVIÇO ── */}
             {currentStep === "service" && (
               <div className="space-y-3">
@@ -606,8 +601,7 @@ export function CreateAppointmentDialog({
                                         formData.selectedDate,
                                         slot,
                                         organizedDates.find(
-                                          d =>
-                                            d.date === formData.selectedDate,
+                                          d => d.date === formData.selectedDate,
                                         )?.branch_id || "",
                                       );
                                     }
@@ -700,7 +694,8 @@ export function CreateAppointmentDialog({
                   <div className="grid gap-2">
                     {employeeOptions.map((emp: any) => {
                       const isSelected = formData.employeeId === emp.id;
-                      const initials = `${emp.name?.[0] ?? ""}${emp.surname?.[0] ?? ""}`.toUpperCase();
+                      const initials =
+                        `${emp.name?.[0] ?? ""}${emp.surname?.[0] ?? ""}`.toUpperCase();
                       return (
                         <button
                           key={emp.id}
@@ -785,18 +780,14 @@ export function CreateAppointmentDialog({
                     {
                       icon: <MapPin className="h-4 w-4" />,
                       label: selectedBranchInfo?.name || null,
-                      sub:
-                        selectedBranchInfo
-                          ? `${selectedBranchInfo.street}, ${selectedBranchInfo.number}`
-                          : null,
+                      sub: selectedBranchInfo
+                        ? `${selectedBranchInfo.street}, ${selectedBranchInfo.number}`
+                        : null,
                     },
                   ]
                     .filter(row => row.label)
                     .map((row, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-3 px-4 py-3"
-                      >
+                      <div key={i} className="flex items-start gap-3 px-4 py-3">
                         <span className="text-muted-foreground mt-0.5 shrink-0">
                           {row.icon}
                         </span>
