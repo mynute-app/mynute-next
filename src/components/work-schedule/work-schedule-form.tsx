@@ -185,20 +185,11 @@ export function WorkScheduleForm({
   };
 
   const salvarHorarios = async () => {
-    console.log("💾 Componente - Iniciando salvarHorarios");
-    console.log("📊 Componente - workRanges atual:", workRanges);
-
     const allRanges: WorkScheduleRange[] = [];
 
     workRanges.forEach(ranges => {
-      console.log("📋 Componente - Processando ranges:", ranges);
       allRanges.push(...ranges);
     });
-
-    console.log(
-      "🔍 Componente - allRanges final:",
-      JSON.stringify(allRanges, null, 2)
-    );
 
     if (allRanges.length === 0) {
       toast({
@@ -210,8 +201,6 @@ export function WorkScheduleForm({
     }
 
     try {
-      console.log("🚀 Componente - Usando addWorkScheduleRanges");
-
       // Usar a nova função que combina existentes com novos
       await addWorkScheduleRanges(employeeId, allRanges);
 
