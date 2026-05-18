@@ -91,7 +91,9 @@ export default function YourTeam() {
       if (!active) return;
       setIsEmployeesLoading(false);
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [refreshEmployees]);
 
   const availableServices = useMemo(() => {
@@ -106,19 +108,30 @@ export default function YourTeam() {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     if (!normalizedSearch) return employees;
     return employees.filter(employee => {
-      const fullName = `${employee.name || ""} ${employee.surname || ""}`.trim().toLowerCase();
+      const fullName = `${employee.name || ""} ${employee.surname || ""}`
+        .trim()
+        .toLowerCase();
       const email = (employee.email || "").toLowerCase();
       const role = (employee.role || "").toLowerCase();
       const matchesServices = Array.isArray(employee.services)
-        ? employee.services.some(service => (service.name || "").toLowerCase().includes(normalizedSearch))
+        ? employee.services.some(service =>
+            (service.name || "").toLowerCase().includes(normalizedSearch),
+          )
         : false;
-      return fullName.includes(normalizedSearch) || email.includes(normalizedSearch) || role.includes(normalizedSearch) || matchesServices;
+      return (
+        fullName.includes(normalizedSearch) ||
+        email.includes(normalizedSearch) ||
+        role.includes(normalizedSearch) ||
+        matchesServices
+      );
     });
   }, [employees, searchTerm]);
 
   const handleToggleStatus = async (member: Employee, newValue: boolean) => {
     setEmployees(prev =>
-      prev.map(item => item.id === member.id ? { ...item, is_active: newValue } : item),
+      prev.map(item =>
+        item.id === member.id ? { ...item, is_active: newValue } : item,
+      ),
     );
     try {
       const response = await fetch(`/api/employee/${member.id}`, {
@@ -126,16 +139,25 @@ export default function YourTeam() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_active: newValue }),
       });
-      if (!response.ok) throw new Error("Erro ao atualizar status do profissional");
+      if (!response.ok)
+        throw new Error("Erro ao atualizar status do profissional");
       const updated = (await response.json()) as Employee;
       setEmployees(prev =>
-        prev.map(item => item.id === member.id ? { ...item, ...updated } : item),
+        prev.map(item =>
+          item.id === member.id ? { ...item, ...updated } : item,
+        ),
       );
     } catch {
       setEmployees(prev =>
-        prev.map(item => item.id === member.id ? { ...item, is_active: !newValue } : item),
+        prev.map(item =>
+          item.id === member.id ? { ...item, is_active: !newValue } : item,
+        ),
       );
-      toast({ title: "Erro ao atualizar status", description: "Não foi possível atualizar o profissional.", variant: "destructive" });
+      toast({
+        title: "Erro ao atualizar status",
+        description: "Não foi possível atualizar o profissional.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -145,7 +167,9 @@ export default function YourTeam() {
   };
 
   const { deleteEmployee, isDeleting } = useDeleteEmployee({
-    onSuccess: () => { void refreshEmployees(true); },
+    onSuccess: () => {
+      void refreshEmployees(true);
+    },
   });
 
   const handleConfirmDelete = async () => {
@@ -166,13 +190,17 @@ export default function YourTeam() {
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="mx-auto w-full max-w-7xl p-6 lg:p-8">
           <div className="space-y-6 pb-12 lg:pt-0">
-
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="page-header mb-0">
                 <h1 className="page-title">Equipe</h1>
-                <p className="page-description">Gerencie os profissionais da equipe.</p>
+                <p className="page-description">
+                  Gerencie os profissionais da equipe.
+                </p>
               </div>
-              <Button className="btn-gradient" onClick={() => setAddDialogOpen(true)}>
+              <Button
+                className="btn-gradient"
+                onClick={() => setAddDialogOpen(true)}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Novo Profissional
               </Button>
@@ -193,7 +221,10 @@ export default function YourTeam() {
             {isEmployeesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                  <div
+                    key={index}
+                    className="rounded-xl border border-border bg-card p-5 shadow-sm"
+                  >
                     <div className="flex items-start gap-4">
                       <Skeleton className="h-16 w-16 rounded-xl" />
                       <div className="flex-1 space-y-3">
@@ -211,9 +242,16 @@ export default function YourTeam() {
               </div>
             ) : filteredEmployees.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
-                <h3 className="text-sm font-medium">Nenhum profissional encontrado</h3>
-                <p className="mt-1 text-sm text-muted-foreground">Tente ajustar a busca ou cadastre um novo profissional.</p>
-                <Button className="mt-4 gap-2 btn-gradient" onClick={() => setAddDialogOpen(true)}>
+                <h3 className="text-sm font-medium">
+                  Nenhum profissional encontrado
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Tente ajustar a busca ou cadastre um novo profissional.
+                </p>
+                <Button
+                  className="mt-4 gap-2 btn-gradient"
+                  onClick={() => setAddDialogOpen(true)}
+                >
                   <Plus className="h-4 w-4" />
                   Criar profissional
                 </Button>
@@ -222,13 +260,26 @@ export default function YourTeam() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
                 {filteredEmployees.map(member => {
                   const isActive = isEmployeeActive(member);
-                  const services = Array.isArray(member.services) ? member.services : [];
-                  const serviceNames = services.map(s => s?.name).filter(Boolean) as string[];
-                  const roleLabel = member.role || member.permission || "Profissional";
-                  const emailValue = member.email || (member as { user?: { email?: string } }).user?.email || "";
-                  const phoneValue = member.phone || (member as { phone_number?: string }).phone_number || "";
+                  const services = Array.isArray(member.services)
+                    ? member.services
+                    : [];
+                  const serviceNames = services
+                    .map(s => s?.name)
+                    .filter(Boolean) as string[];
+                  const roleLabel =
+                    member.role || member.permission || "Profissional";
+                  const emailValue =
+                    member.email ||
+                    (member as { user?: { email?: string } }).user?.email ||
+                    "";
+                  const phoneValue =
+                    member.phone ||
+                    (member as { phone_number?: string }).phone_number ||
+                    "";
                   const formattedPhone = formatPhoneForDisplay(phoneValue);
-                  const appointmentsCount = (member as { appointments_count?: number }).appointments_count ?? 0;
+                  const appointmentsCount =
+                    (member as { appointments_count?: number })
+                      .appointments_count ?? 0;
 
                   return (
                     <div
@@ -240,7 +291,12 @@ export default function YourTeam() {
                       onClick={() => navigateTo(member, "info")}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigateTo(member, "info"); } }}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          navigateTo(member, "info");
+                        }
+                      }}
                     >
                       <div className="flex items-start gap-3 sm:gap-4">
                         <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center text-primary-foreground text-base font-bold flex-shrink-0 sm:h-16 sm:w-16 sm:text-xl">
@@ -253,32 +309,53 @@ export default function YourTeam() {
                               <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                                 {member.name} {member.surname}
                               </h3>
-                              <p className="text-sm text-muted-foreground">{roleLabel}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {roleLabel}
+                              </p>
                             </div>
-                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <div
+                              className="flex items-center gap-2"
+                              onClick={e => e.stopPropagation()}
+                            >
                               <Switch
                                 checked={isActive}
-                                onCheckedChange={checked => handleToggleStatus(member, checked)}
+                                onCheckedChange={checked =>
+                                  handleToggleStatus(member, checked)
+                                }
                               />
                               <span className="text-xs text-muted-foreground hidden sm:inline">
                                 {isActive ? "Ativo" : "Inativo"}
                               </span>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                  >
                                     <MoreHorizontal className="w-4 h-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onSelect={() => navigateTo(member, "info")}>
+                                  <DropdownMenuItem
+                                    onSelect={() => navigateTo(member, "info")}
+                                  >
                                     <Search className="w-4 h-4 mr-2" />
                                     Ver perfil
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onSelect={() => navigateTo(member, "services")}>
+                                  <DropdownMenuItem
+                                    onSelect={() =>
+                                      navigateTo(member, "services")
+                                    }
+                                  >
                                     <Sparkles className="w-4 h-4 mr-2" />
                                     Servicos
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onSelect={() => navigateTo(member, "schedule")}>
+                                  <DropdownMenuItem
+                                    onSelect={() =>
+                                      navigateTo(member, "schedule")
+                                    }
+                                  >
                                     <Calendar className="w-4 h-4 mr-2" />
                                     Horarios
                                   </DropdownMenuItem>
@@ -305,7 +382,9 @@ export default function YourTeam() {
                             {formattedPhone && (
                               <span className="flex items-center gap-1 min-w-0">
                                 <Phone className="w-3.5 h-3.5" />
-                                <span className="truncate">{formattedPhone}</span>
+                                <span className="truncate">
+                                  {formattedPhone}
+                                </span>
                               </span>
                             )}
                           </div>
@@ -313,12 +392,19 @@ export default function YourTeam() {
                           <div className="flex flex-wrap gap-1 mt-3">
                             {serviceNames.length > 0 ? (
                               serviceNames.map(service => (
-                                <Badge key={`${member.id}-${service}`} variant="outline" className="text-xs">
+                                <Badge
+                                  key={`${member.id}-${service}`}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
                                   {service}
                                 </Badge>
                               ))
                             ) : (
-                              <Badge variant="outline" className="text-xs text-muted-foreground">
+                              <Badge
+                                variant="outline"
+                                className="text-xs text-muted-foreground"
+                              >
                                 Sem servicos
                               </Badge>
                             )}
@@ -344,7 +430,10 @@ export default function YourTeam() {
       <AddTeamMemberDialog
         isOpen={addDialogOpen}
         setIsOpen={setAddDialogOpen}
-        onSuccess={() => { refetch(); void refreshEmployees(true); }}
+        onSuccess={() => {
+          refetch();
+          void refreshEmployees(true);
+        }}
         availableServices={availableServices}
       />
 
@@ -354,12 +443,16 @@ export default function YourTeam() {
             <AlertDialogTitle>Excluir profissional</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja excluir{" "}
-              <strong>{memberToDelete?.name} {memberToDelete?.surname}</strong>?{" "}
-              Esta acao nao pode ser desfeita.
+              <strong>
+                {memberToDelete?.name} {memberToDelete?.surname}
+              </strong>
+              ? Esta acao nao pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               disabled={isDeleting}

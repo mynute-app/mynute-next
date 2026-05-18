@@ -181,8 +181,7 @@ const resolveInitialEmployeeIds = (
   branchData: Branch | null,
   employees: Employee[],
 ) => {
-  const fromBranch =
-    branchData?.employees?.map(e => Number(e.id)) ?? [];
+  const fromBranch = branchData?.employees?.map(e => Number(e.id)) ?? [];
   const fromCompany = employees
     .filter(e => e.branches?.some(b => String(b.id) === String(branchData?.id)))
     .map(e => Number(e.id));
@@ -198,7 +197,8 @@ const formatPrice = (price?: Service["price"]) => {
 };
 
 const formatDuration = (duration?: Service["duration"]) => {
-  if (duration === undefined || duration === null || duration === "") return null;
+  if (duration === undefined || duration === null || duration === "")
+    return null;
   if (typeof duration === "number") return `${duration} min`;
   const v = Number(duration);
   return Number.isFinite(v) ? `${v} min` : String(duration);
@@ -227,13 +227,23 @@ const InputWithIcon = ({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function BranchDetailPage({ branchId, initialTab = "info" }: Props) {
+export default function BranchDetailPage({
+  branchId,
+  initialTab = "info",
+}: Props) {
   const router = useRouter();
   const { toast } = useToast();
-  const { fetchBranchById, linkService, unlinkService, linkEmployeeToBranch, unlinkEmployeeFromBranch } = useBranchApi();
+  const {
+    fetchBranchById,
+    linkService,
+    unlinkService,
+    linkEmployeeToBranch,
+    unlinkEmployeeFromBranch,
+  } = useBranchApi();
   const { company, loading: isCompanyLoading } = useGetCompany();
   const { fetchEmployees } = useEmployeeApi();
-  const { getBranchWorkSchedule, createBranchWorkSchedule } = useBranchWorkSchedule();
+  const { getBranchWorkSchedule, createBranchWorkSchedule } =
+    useBranchWorkSchedule();
   const { updateWorkRange, deleteWorkRange } = useWorkRange();
 
   const [tab, setTab] = useState<BranchDetailTab>(initialTab);
@@ -255,19 +265,26 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
   });
 
   const defaultValues = useMemo(() => buildDefaultValues(branch), [branch]);
-  const { register, handleSubmit, reset, formState } = useForm<BranchEditFormValues>({ defaultValues });
+  const { register, handleSubmit, reset, formState } =
+    useForm<BranchEditFormValues>({ defaultValues });
 
   // ── Schedule tab state ──
   const [isSavingSchedule, setIsSavingSchedule] = useState(false);
   const [scheduleDays, setScheduleDays] = useState<ScheduleDayState[]>([]);
-  const [initialScheduleDays, setInitialScheduleDays] = useState<ScheduleDayState[]>([]);
+  const [initialScheduleDays, setInitialScheduleDays] = useState<
+    ScheduleDayState[]
+  >([]);
   const [isScheduleFetching, setIsScheduleFetching] = useState(false);
   const scheduleTouchedRef = useRef(false);
 
   // ── Services tab state ──
   const [isSavingServices, setIsSavingServices] = useState(false);
-  const [enabledServiceIds, setEnabledServiceIds] = useState<Set<string>>(new Set());
-  const [initialServiceIds, setInitialServiceIds] = useState<Set<string>>(new Set());
+  const [enabledServiceIds, setEnabledServiceIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [initialServiceIds, setInitialServiceIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [servicesInitializedFor, setServicesInitializedFor] = useState("");
   const [servicesSearch, setServicesSearch] = useState("");
 
@@ -275,8 +292,12 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
   const [isSavingTeam, setIsSavingTeam] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isEmployeesLoading, setIsEmployeesLoading] = useState(false);
-  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<number>>(new Set());
-  const [initialEmployeeIds, setInitialEmployeeIds] = useState<Set<number>>(new Set());
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [initialEmployeeIds, setInitialEmployeeIds] = useState<Set<number>>(
+    new Set(),
+  );
   const [teamInitializedFor, setTeamInitializedFor] = useState("");
   const [teamSearch, setTeamSearch] = useState("");
 
@@ -287,17 +308,24 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
     let active = true;
     setIsBranchLoading(true);
 
-    fetchBranchById(branchId).then(data => {
-      if (!active || !data) return;
-      setBranch(data);
-      reset(buildDefaultValues(data));
-      const img = data.design?.images?.profile?.url || data.design?.images?.logo?.url || "";
-      setImageUrl(img);
-    }).finally(() => {
-      if (active) setIsBranchLoading(false);
-    });
+    fetchBranchById(branchId)
+      .then(data => {
+        if (!active || !data) return;
+        setBranch(data);
+        reset(buildDefaultValues(data));
+        const img =
+          data.design?.images?.profile?.url ||
+          data.design?.images?.logo?.url ||
+          "";
+        setImageUrl(img);
+      })
+      .finally(() => {
+        if (active) setIsBranchLoading(false);
+      });
 
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [branchId, fetchBranchById, reset]);
 
   // ─── Schedule fetch when tab opens ────────────────────────────────────────
@@ -306,25 +334,32 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
     if (tab !== "schedule" || !branch) return;
 
     scheduleTouchedRef.current = false;
-    const fallback = buildScheduleState(branch.work_schedule as ScheduleRange[] | undefined);
+    const fallback = buildScheduleState(
+      branch.work_schedule as ScheduleRange[] | undefined,
+    );
     setScheduleDays(fallback);
     setInitialScheduleDays(fallback);
 
     let cancelled = false;
     setIsScheduleFetching(true);
 
-    getBranchWorkSchedule(branch.id.toString(), { showErrorToast: false }).then(ranges => {
-      if (cancelled || scheduleTouchedRef.current) return;
-      const normalized = buildScheduleState(ranges as ScheduleRange[]);
-      setScheduleDays(normalized);
-      setInitialScheduleDays(normalized);
-    }).catch(() => {
-      // keep fallback
-    }).finally(() => {
-      if (!cancelled) setIsScheduleFetching(false);
-    });
+    getBranchWorkSchedule(branch.id.toString(), { showErrorToast: false })
+      .then(ranges => {
+        if (cancelled || scheduleTouchedRef.current) return;
+        const normalized = buildScheduleState(ranges as ScheduleRange[]);
+        setScheduleDays(normalized);
+        setInitialScheduleDays(normalized);
+      })
+      .catch(() => {
+        // keep fallback
+      })
+      .finally(() => {
+        if (!cancelled) setIsScheduleFetching(false);
+      });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, branch?.id]);
 
@@ -337,13 +372,20 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
     const ids = new Set(
       normalizeServiceIds(
         branch?.services ??
-        company?.branches?.find(b => String(b.id) === branchId)?.services,
+          company?.branches?.find(b => String(b.id) === branchId)?.services,
       ),
     );
     setEnabledServiceIds(ids);
     setInitialServiceIds(new Set(ids));
     setServicesInitializedFor(branchId);
-  }, [tab, branchId, branch?.services, company?.branches, isCompanyLoading, servicesInitializedFor]);
+  }, [
+    tab,
+    branchId,
+    branch?.services,
+    company?.branches,
+    isCompanyLoading,
+    servicesInitializedFor,
+  ]);
 
   // ─── Team fetch when tab opens ─────────────────────────────────────────────
 
@@ -354,14 +396,18 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
     let active = true;
     setIsEmployeesLoading(true);
 
-    fetchEmployees(1, 200).then(data => {
-      if (!active || !data) return;
-      setEmployees(data.employees);
-    }).finally(() => {
-      if (active) setIsEmployeesLoading(false);
-    });
+    fetchEmployees(1, 200)
+      .then(data => {
+        if (!active || !data) return;
+        setEmployees(data.employees);
+      })
+      .finally(() => {
+        if (active) setIsEmployeesLoading(false);
+      });
 
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
@@ -374,7 +420,14 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
     setSelectedEmployeeIds(ids);
     setInitialEmployeeIds(new Set(ids));
     setTeamInitializedFor(branchId);
-  }, [tab, branchId, branch, employees, isEmployeesLoading, teamInitializedFor]);
+  }, [
+    tab,
+    branchId,
+    branch,
+    employees,
+    isEmployeesLoading,
+    teamInitializedFor,
+  ]);
 
   // ─── Info handlers ─────────────────────────────────────────────────────────
 
@@ -415,12 +468,18 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
     setIsSavingInfo(true);
     try {
       if (hasPendingImage && pendingImageFile) {
-        const ok = await uploadImage(pendingImageFile, { showSuccessToast: false, showErrorToast: false });
+        const ok = await uploadImage(pendingImageFile, {
+          showSuccessToast: false,
+          showErrorToast: false,
+        });
         if (!ok) throw new Error("Erro ao enviar a imagem da filial.");
         setPendingImageFile(null);
         setIsImageMarkedForRemoval(false);
       } else if (isImageMarkedForRemoval) {
-        const ok = await removeImage({ showSuccessToast: false, showErrorToast: false });
+        const ok = await removeImage({
+          showSuccessToast: false,
+          showErrorToast: false,
+        });
         if (!ok) throw new Error("Erro ao remover a imagem da filial.");
         setIsImageMarkedForRemoval(false);
       }
@@ -435,15 +494,21 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
           const errorText = await response.text();
           throw new Error(errorText || "Erro ao atualizar filial");
         }
-        const updatedBranch = await response.json() as Branch;
+        const updatedBranch = (await response.json()) as Branch;
         setBranch(updatedBranch);
         reset(buildDefaultValues(updatedBranch));
-        toast({ title: "Filial atualizada!", description: "Os dados foram salvos com sucesso." });
+        toast({
+          title: "Filial atualizada!",
+          description: "Os dados foram salvos com sucesso.",
+        });
       }
     } catch (error) {
       toast({
         title: "Erro ao salvar alterações",
-        description: error instanceof Error ? error.message : "Não foi possível salvar as alterações.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível salvar as alterações.",
         variant: "destructive",
       });
     } finally {
@@ -456,9 +521,12 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
   const hasScheduleChanges = useMemo(() => {
     if (!scheduleDays.length || !initialScheduleDays.length) return false;
     return scheduleDays.some(day => {
-      const initialDay = initialScheduleDays.find(d => d.weekday === day.weekday);
+      const initialDay = initialScheduleDays.find(
+        d => d.weekday === day.weekday,
+      );
       if (!initialDay) return true;
-      if (!day.enabled && !initialDay.enabled) return day.enabled !== initialDay.enabled;
+      if (!day.enabled && !initialDay.enabled)
+        return day.enabled !== initialDay.enabled;
       return (
         day.enabled !== initialDay.enabled ||
         day.start_time !== initialDay.start_time ||
@@ -485,69 +553,142 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
     );
   };
 
-  const handleTimeChange = (weekday: number, field: "start_time" | "end_time", value: string) => {
+  const handleTimeChange = (
+    weekday: number,
+    field: "start_time" | "end_time",
+    value: string,
+  ) => {
     scheduleTouchedRef.current = true;
     setScheduleDays(prev =>
-      prev.map(day => day.weekday === weekday ? { ...day, [field]: value } : day),
+      prev.map(day =>
+        day.weekday === weekday ? { ...day, [field]: value } : day,
+      ),
     );
   };
 
-  const applyScheduleChanges = useCallback(async (bid: string) => {
-    const initialByWeekday = new Map(initialScheduleDays.map(d => [d.weekday, d]));
-    const rangesToCreate: BranchWorkScheduleRange[] = [];
-    const rangesToUpdate: Array<{ id: string; data: ScheduleUpdatePayload }> = [];
-    const rangesToDelete: string[] = [];
+  const applyScheduleChanges = useCallback(
+    async (bid: string) => {
+      const initialByWeekday = new Map(
+        initialScheduleDays.map(d => [d.weekday, d]),
+      );
+      const rangesToCreate: BranchWorkScheduleRange[] = [];
+      const rangesToUpdate: Array<{ id: string; data: ScheduleUpdatePayload }> =
+        [];
+      const rangesToDelete: string[] = [];
 
-    scheduleDays.forEach(day => {
-      const initialDay = initialByWeekday.get(day.weekday);
-      const initialId = initialDay?.id;
-      const timeZone = day.time_zone || DEFAULT_TIME_ZONE;
-      const startTime = day.start_time || DEFAULT_START_TIME;
-      const endTime = day.end_time || DEFAULT_END_TIME;
+      scheduleDays.forEach(day => {
+        const initialDay = initialByWeekday.get(day.weekday);
+        const initialId = initialDay?.id;
+        const timeZone = day.time_zone || DEFAULT_TIME_ZONE;
+        const startTime = day.start_time || DEFAULT_START_TIME;
+        const endTime = day.end_time || DEFAULT_END_TIME;
 
-      if (!day.enabled) {
-        if (initialId) rangesToDelete.push(initialId);
-        return;
+        if (!day.enabled) {
+          if (initialId) rangesToDelete.push(initialId);
+          return;
+        }
+        if (initialId) {
+          const hasUpdates =
+            !initialDay ||
+            day.start_time !== initialDay.start_time ||
+            day.end_time !== initialDay.end_time ||
+            timeZone !== initialDay.time_zone;
+          if (hasUpdates)
+            rangesToUpdate.push({
+              id: initialId,
+              data: {
+                start_time: startTime,
+                end_time: endTime,
+                weekday: day.weekday,
+                time_zone: timeZone,
+              },
+            });
+          return;
+        }
+        rangesToCreate.push({
+          branch_id: bid,
+          weekday: day.weekday,
+          start_time: startTime,
+          end_time: endTime,
+          time_zone: timeZone,
+          services: [],
+        });
+      });
+
+      if (
+        rangesToCreate.length === 0 &&
+        rangesToUpdate.length === 0 &&
+        rangesToDelete.length === 0
+      )
+        return null;
+
+      if (rangesToCreate.length > 0) {
+        await createBranchWorkSchedule(
+          bid,
+          { branch_work_ranges: rangesToCreate },
+          { showSuccessToast: false, showErrorToast: false },
+        );
       }
-      if (initialId) {
-        const hasUpdates = !initialDay || day.start_time !== initialDay.start_time || day.end_time !== initialDay.end_time || timeZone !== initialDay.time_zone;
-        if (hasUpdates) rangesToUpdate.push({ id: initialId, data: { start_time: startTime, end_time: endTime, weekday: day.weekday, time_zone: timeZone } });
-        return;
+      if (rangesToUpdate.length > 0) {
+        await Promise.all(
+          rangesToUpdate.map(u =>
+            updateWorkRange(bid, u.id, u.data, {
+              showSuccessToast: false,
+              showErrorToast: false,
+            }),
+          ),
+        );
       }
-      rangesToCreate.push({ branch_id: bid, weekday: day.weekday, start_time: startTime, end_time: endTime, time_zone: timeZone, services: [] });
-    });
+      if (rangesToDelete.length > 0) {
+        await Promise.all(
+          rangesToDelete.map(id =>
+            deleteWorkRange(bid, id, {
+              showSuccessToast: false,
+              showErrorToast: false,
+            }),
+          ),
+        );
+      }
 
-    if (rangesToCreate.length === 0 && rangesToUpdate.length === 0 && rangesToDelete.length === 0) return null;
-
-    if (rangesToCreate.length > 0) {
-      await createBranchWorkSchedule(bid, { branch_work_ranges: rangesToCreate }, { showSuccessToast: false, showErrorToast: false });
-    }
-    if (rangesToUpdate.length > 0) {
-      await Promise.all(rangesToUpdate.map(u => updateWorkRange(bid, u.id, u.data, { showSuccessToast: false, showErrorToast: false })));
-    }
-    if (rangesToDelete.length > 0) {
-      await Promise.all(rangesToDelete.map(id => deleteWorkRange(bid, id, { showSuccessToast: false, showErrorToast: false })));
-    }
-
-    const refreshed = await getBranchWorkSchedule(bid, { showErrorToast: false });
-    const normalized = buildScheduleState(refreshed as ScheduleRange[]);
-    setScheduleDays(normalized);
-    setInitialScheduleDays(normalized);
-    scheduleTouchedRef.current = false;
-    return refreshed;
-  }, [scheduleDays, initialScheduleDays, createBranchWorkSchedule, updateWorkRange, deleteWorkRange, getBranchWorkSchedule]);
+      const refreshed = await getBranchWorkSchedule(bid, {
+        showErrorToast: false,
+      });
+      const normalized = buildScheduleState(refreshed as ScheduleRange[]);
+      setScheduleDays(normalized);
+      setInitialScheduleDays(normalized);
+      scheduleTouchedRef.current = false;
+      return refreshed;
+    },
+    [
+      scheduleDays,
+      initialScheduleDays,
+      createBranchWorkSchedule,
+      updateWorkRange,
+      deleteWorkRange,
+      getBranchWorkSchedule,
+    ],
+  );
 
   const handleSaveSchedule = async () => {
     if (!branch || !hasScheduleChanges) return;
     setIsSavingSchedule(true);
     try {
       const refreshed = await applyScheduleChanges(branch.id.toString());
-      if (refreshed) setBranch(prev => prev ? { ...prev, work_schedule: refreshed } : prev);
-      toast({ title: "Horários atualizados!", description: "Os horários da filial foram salvos com sucesso." });
+      if (refreshed)
+        setBranch(prev =>
+          prev ? { ...prev, work_schedule: refreshed } : prev,
+        );
+      toast({
+        title: "Horários atualizados!",
+        description: "Os horários da filial foram salvos com sucesso.",
+      });
     } catch (error) {
       toast({
         title: "Erro ao salvar horários",
-        description: error instanceof Error ? error.message : "Não foi possível salvar os horários.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível salvar os horários.",
         variant: "destructive",
       });
     } finally {
@@ -558,26 +699,31 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
   // ─── Services handlers ─────────────────────────────────────────────────────
 
   const allServices = useMemo(
-    () => (Array.isArray(company?.services) ? (company.services as Service[]) : []),
+    () =>
+      Array.isArray(company?.services) ? (company.services as Service[]) : [],
     [company?.services],
   );
 
   const hasServicesChanges = useMemo(() => {
     if (enabledServiceIds.size !== initialServiceIds.size) return true;
-    for (const id of enabledServiceIds) if (!initialServiceIds.has(id)) return true;
+    for (const id of enabledServiceIds)
+      if (!initialServiceIds.has(id)) return true;
     return false;
   }, [enabledServiceIds, initialServiceIds]);
 
   const filteredServices = useMemo(() => {
     const term = servicesSearch.trim().toLowerCase();
     if (!term) return allServices;
-    return allServices.filter(s => [s.name, s.category ?? ""].join(" ").toLowerCase().includes(term));
+    return allServices.filter(s =>
+      [s.name, s.category ?? ""].join(" ").toLowerCase().includes(term),
+    );
   }, [allServices, servicesSearch]);
 
   const groupedCategories = useMemo(() => {
     const groups = new Map<string, Service[]>();
     filteredServices.forEach(s => {
-      const label = (typeof s.category === "string" ? s.category.trim() : "") || "Outros";
+      const label =
+        (typeof s.category === "string" ? s.category.trim() : "") || "Outros";
       const curr = groups.get(label) ?? [];
       curr.push(s);
       groups.set(label, curr);
@@ -595,8 +741,20 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
 
   const handleSaveServices = async () => {
     if (!branchId) return;
-    const toEnable = allServices.filter(s => enabledServiceIds.has(String(s.id)) && !initialServiceIds.has(String(s.id))).map(s => s.id);
-    const toDisable = allServices.filter(s => initialServiceIds.has(String(s.id)) && !enabledServiceIds.has(String(s.id))).map(s => s.id);
+    const toEnable = allServices
+      .filter(
+        s =>
+          enabledServiceIds.has(String(s.id)) &&
+          !initialServiceIds.has(String(s.id)),
+      )
+      .map(s => s.id);
+    const toDisable = allServices
+      .filter(
+        s =>
+          initialServiceIds.has(String(s.id)) &&
+          !enabledServiceIds.has(String(s.id)),
+      )
+      .map(s => s.id);
     if (toEnable.length === 0 && toDisable.length === 0) return;
 
     setIsSavingServices(true);
@@ -604,10 +762,16 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
       ...toEnable.map(id => linkService(branchId, id)),
       ...toDisable.map(id => unlinkService(branchId, id)),
     ]);
-    const failed = results.some(r => r.status === "rejected" || r.value === false);
+    const failed = results.some(
+      r => r.status === "rejected" || r.value === false,
+    );
 
     if (failed) {
-      toast({ title: "Erro ao salvar serviços", description: "Nem todas as alterações foram aplicadas.", variant: "destructive" });
+      toast({
+        title: "Erro ao salvar serviços",
+        description: "Nem todas as alterações foram aplicadas.",
+        variant: "destructive",
+      });
     } else {
       const refreshed = await fetchBranchById(branchId, true);
       if (refreshed) setBranch(refreshed);
@@ -621,7 +785,8 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
 
   const hasTeamChanges = useMemo(() => {
     if (selectedEmployeeIds.size !== initialEmployeeIds.size) return true;
-    for (const id of selectedEmployeeIds) if (!initialEmployeeIds.has(id)) return true;
+    for (const id of selectedEmployeeIds)
+      if (!initialEmployeeIds.has(id)) return true;
     return false;
   }, [selectedEmployeeIds, initialEmployeeIds]);
 
@@ -629,7 +794,11 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
     const term = teamSearch.trim().toLowerCase();
     if (!term) return employees;
     return employees.filter(e =>
-      [e.name, e.surname, e.role, e.permission].filter(Boolean).join(" ").toLowerCase().includes(term),
+      [e.name, e.surname, e.role, e.permission]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(term),
     );
   }, [employees, teamSearch]);
 
@@ -643,8 +812,20 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
 
   const handleSaveTeam = async () => {
     if (!branchId) return;
-    const toLink = employees.filter(e => selectedEmployeeIds.has(Number(e.id)) && !initialEmployeeIds.has(Number(e.id))).map(e => Number(e.id));
-    const toUnlink = employees.filter(e => initialEmployeeIds.has(Number(e.id)) && !selectedEmployeeIds.has(Number(e.id))).map(e => Number(e.id));
+    const toLink = employees
+      .filter(
+        e =>
+          selectedEmployeeIds.has(Number(e.id)) &&
+          !initialEmployeeIds.has(Number(e.id)),
+      )
+      .map(e => Number(e.id));
+    const toUnlink = employees
+      .filter(
+        e =>
+          initialEmployeeIds.has(Number(e.id)) &&
+          !selectedEmployeeIds.has(Number(e.id)),
+      )
+      .map(e => Number(e.id));
     if (toLink.length === 0 && toUnlink.length === 0) return;
 
     setIsSavingTeam(true);
@@ -652,10 +833,16 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
       ...toLink.map(id => linkEmployeeToBranch(id, branchId)),
       ...toUnlink.map(id => unlinkEmployeeFromBranch(id, branchId)),
     ]);
-    const failed = results.some(r => r.status === "rejected" || r.value === false);
+    const failed = results.some(
+      r => r.status === "rejected" || r.value === false,
+    );
 
     if (failed) {
-      toast({ title: "Erro ao salvar equipe", description: "Nem todas as alterações foram aplicadas.", variant: "destructive" });
+      toast({
+        title: "Erro ao salvar equipe",
+        description: "Nem todas as alterações foram aplicadas.",
+        variant: "destructive",
+      });
     } else {
       const refreshed = await fetchBranchById(branchId, true);
       if (refreshed) setBranch(refreshed);
@@ -674,7 +861,6 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
       <div className="custom-scrollbar flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-4xl p-6 lg:p-8">
           <div className="space-y-6 pb-12">
-
             {/* Header */}
             <div className="flex items-center gap-4">
               <Button
@@ -691,7 +877,9 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
                 ) : (
                   <h1 className="page-title truncate">{branchName}</h1>
                 )}
-                <p className="text-sm text-muted-foreground">Detalhes da filial</p>
+                <p className="text-sm text-muted-foreground">
+                  Detalhes da filial
+                </p>
               </div>
             </div>
 
@@ -729,8 +917,12 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
                     <div className="space-y-5">
                       {/* Image */}
                       <div className="rounded-2xl border border-border bg-card p-5">
-                        <p className="mb-1 text-sm font-semibold">Imagem da filial</p>
-                        <p className="mb-4 text-xs text-muted-foreground">Adicione uma foto para facilitar a identificação.</p>
+                        <p className="mb-1 text-sm font-semibold">
+                          Imagem da filial
+                        </p>
+                        <p className="mb-4 text-xs text-muted-foreground">
+                          Adicione uma foto para facilitar a identificação.
+                        </p>
                         <div className="flex items-center gap-5">
                           <button
                             type="button"
@@ -739,7 +931,11 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
                             disabled={isSavingInfo || isUploading || isRemoving}
                           >
                             {imageUrl ? (
-                              <img src={imageUrl} alt={branchName} className="h-full w-full object-cover" />
+                              <img
+                                src={imageUrl}
+                                alt={branchName}
+                                className="h-full w-full object-cover"
+                              />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center">
                                 <ImagePlus className="h-6 w-6 text-primary" />
@@ -749,16 +945,44 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
                               <Upload className="h-4 w-4" />
                             </div>
                           </button>
-                          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageChange}
+                          />
                           <div className="flex-1 space-y-2">
-                            <p className="text-sm text-muted-foreground">Clique na imagem para selecionar uma nova foto.</p>
+                            <p className="text-sm text-muted-foreground">
+                              Clique na imagem para selecionar uma nova foto.
+                            </p>
                             <div className="flex flex-wrap gap-2">
-                              <Button type="button" variant="outline" size="sm" onClick={handleImageClick} disabled={isSavingInfo || isUploading || isRemoving} className="gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleImageClick}
+                                disabled={
+                                  isSavingInfo || isUploading || isRemoving
+                                }
+                                className="gap-2"
+                              >
                                 <Upload className="h-4 w-4" />
-                                {isUploading ? "Enviando..." : "Escolher arquivo"}
+                                {isUploading
+                                  ? "Enviando..."
+                                  : "Escolher arquivo"}
                               </Button>
                               {imageUrl && (
-                                <Button type="button" variant="ghost" size="sm" onClick={handleMarkRemoveImage} disabled={isSavingInfo || isUploading || isRemoving} className="gap-2 text-destructive hover:text-destructive">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={handleMarkRemoveImage}
+                                  disabled={
+                                    isSavingInfo || isUploading || isRemoving
+                                  }
+                                  className="gap-2 text-destructive hover:text-destructive"
+                                >
                                   <Trash2 className="h-4 w-4" />
                                   Remover foto
                                 </Button>
@@ -770,55 +994,112 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
 
                       {/* Form */}
                       <div className="rounded-2xl border border-border bg-card p-5">
-                        <p className="mb-4 text-sm font-semibold">Dados da filial</p>
+                        <p className="mb-4 text-sm font-semibold">
+                          Dados da filial
+                        </p>
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label htmlFor="branch-name">Nome da filial *</Label>
-                            <InputWithIcon id="branch-name" placeholder="Ex: Unidade Centro" icon={Building2} {...register("name", { required: true })} />
+                            <Label htmlFor="branch-name">
+                              Nome da filial *
+                            </Label>
+                            <InputWithIcon
+                              id="branch-name"
+                              placeholder="Ex: Unidade Centro"
+                              icon={Building2}
+                              {...register("name", { required: true })}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="branch-street">Rua *</Label>
-                            <InputWithIcon id="branch-street" placeholder="Nome da rua" icon={MapPin} {...register("street", { required: true })} />
+                            <InputWithIcon
+                              id="branch-street"
+                              placeholder="Nome da rua"
+                              icon={MapPin}
+                              {...register("street", { required: true })}
+                            />
                           </div>
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                               <Label htmlFor="branch-number">Número *</Label>
-                              <InputWithIcon id="branch-number" placeholder="Número" icon={Hash} {...register("number", { required: true })} />
+                              <InputWithIcon
+                                id="branch-number"
+                                placeholder="Número"
+                                icon={Hash}
+                                {...register("number", { required: true })}
+                              />
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor="branch-complement">Complemento</Label>
-                              <InputWithIcon id="branch-complement" placeholder="Apto, sala, etc." icon={Home} {...register("complement")} />
+                              <Label htmlFor="branch-complement">
+                                Complemento
+                              </Label>
+                              <InputWithIcon
+                                id="branch-complement"
+                                placeholder="Apto, sala, etc."
+                                icon={Home}
+                                {...register("complement")}
+                              />
                             </div>
                           </div>
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                              <Label htmlFor="branch-neighborhood">Bairro</Label>
-                              <InputWithIcon id="branch-neighborhood" placeholder="Bairro" icon={Navigation} {...register("neighborhood")} />
+                              <Label htmlFor="branch-neighborhood">
+                                Bairro
+                              </Label>
+                              <InputWithIcon
+                                id="branch-neighborhood"
+                                placeholder="Bairro"
+                                icon={Navigation}
+                                {...register("neighborhood")}
+                              />
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor="branch-zip">CEP</Label>
-                              <InputWithIcon id="branch-zip" placeholder="00000-000" icon={MapIcon} {...register("zip_code")} />
+                              <InputWithIcon
+                                id="branch-zip"
+                                placeholder="00000-000"
+                                icon={MapIcon}
+                                {...register("zip_code")}
+                              />
                             </div>
                           </div>
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             <div className="space-y-2 sm:col-span-2">
                               <Label htmlFor="branch-city">Cidade *</Label>
-                              <InputWithIcon id="branch-city" placeholder="Cidade" icon={MapPin} {...register("city", { required: true })} />
+                              <InputWithIcon
+                                id="branch-city"
+                                placeholder="Cidade"
+                                icon={MapPin}
+                                {...register("city", { required: true })}
+                              />
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor="branch-state">Estado *</Label>
-                              <InputWithIcon id="branch-state" placeholder="UF" icon={MapIcon} {...register("state", { required: true })} />
+                              <InputWithIcon
+                                id="branch-state"
+                                placeholder="UF"
+                                icon={MapIcon}
+                                {...register("state", { required: true })}
+                              />
                             </div>
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="branch-country">País</Label>
-                            <InputWithIcon id="branch-country" placeholder="Brasil" icon={Globe} {...register("country")} />
+                            <InputWithIcon
+                              id="branch-country"
+                              placeholder="Brasil"
+                              icon={Globe}
+                              {...register("country")}
+                            />
                           </div>
                         </div>
                       </div>
 
                       <div className="flex justify-end">
-                        <Button type="submit" className="btn-gradient" disabled={isSavingInfo || isUploading || isRemoving}>
+                        <Button
+                          type="submit"
+                          className="btn-gradient"
+                          disabled={isSavingInfo || isUploading || isRemoving}
+                        >
                           {isSavingInfo ? "Salvando..." : "Salvar alterações"}
                         </Button>
                       </div>
@@ -830,8 +1111,12 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
               {/* ── Tab: Horários ── */}
               <TabsContent value="schedule" className="mt-6">
                 <div className="rounded-2xl border border-border bg-card p-5">
-                  <p className="mb-1 text-sm font-semibold">Horários de funcionamento</p>
-                  <p className="mb-5 text-xs text-muted-foreground">Configure os dias e horários de atendimento desta filial.</p>
+                  <p className="mb-1 text-sm font-semibold">
+                    Horários de funcionamento
+                  </p>
+                  <p className="mb-5 text-xs text-muted-foreground">
+                    Configure os dias e horários de atendimento desta filial.
+                  </p>
 
                   {isScheduleFetching ? (
                     <div className="space-y-3">
@@ -842,35 +1127,68 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
                   ) : (
                     <div className="space-y-3">
                       {scheduleDays.map(day => (
-                        <div key={day.weekday} className={cn("flex flex-col gap-3 rounded-xl border p-4 transition-colors sm:flex-row sm:items-center", day.enabled ? "border-primary/20 bg-primary/5" : "border-border bg-muted/20")}>
+                        <div
+                          key={day.weekday}
+                          className={cn(
+                            "flex flex-col gap-3 rounded-xl border p-4 transition-colors sm:flex-row sm:items-center",
+                            day.enabled
+                              ? "border-primary/20 bg-primary/5"
+                              : "border-border bg-muted/20",
+                          )}
+                        >
                           <div className="flex w-36 flex-shrink-0 items-center gap-3">
                             <Switch
                               checked={day.enabled}
-                              onCheckedChange={checked => handleToggleDay(day.weekday, checked)}
+                              onCheckedChange={checked =>
+                                handleToggleDay(day.weekday, checked)
+                              }
                               disabled={isSavingSchedule}
                             />
-                            <span className={cn("text-sm font-medium", day.enabled ? "text-foreground" : "text-muted-foreground")}>
+                            <span
+                              className={cn(
+                                "text-sm font-medium",
+                                day.enabled
+                                  ? "text-foreground"
+                                  : "text-muted-foreground",
+                              )}
+                            >
                               {day.label}
                             </span>
                           </div>
                           {day.enabled && (
                             <div className="flex flex-wrap items-center gap-2">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">De</span>
+                                <span className="text-xs text-muted-foreground">
+                                  De
+                                </span>
                                 <Input
                                   type="time"
                                   value={day.start_time}
-                                  onChange={e => handleTimeChange(day.weekday, "start_time", e.target.value)}
+                                  onChange={e =>
+                                    handleTimeChange(
+                                      day.weekday,
+                                      "start_time",
+                                      e.target.value,
+                                    )
+                                  }
                                   className="h-8 w-28 text-sm"
                                   disabled={isSavingSchedule}
                                 />
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">às</span>
+                                <span className="text-xs text-muted-foreground">
+                                  às
+                                </span>
                                 <Input
                                   type="time"
                                   value={day.end_time}
-                                  onChange={e => handleTimeChange(day.weekday, "end_time", e.target.value)}
+                                  onChange={e =>
+                                    handleTimeChange(
+                                      day.weekday,
+                                      "end_time",
+                                      e.target.value,
+                                    )
+                                  }
                                   className="h-8 w-28 text-sm"
                                   disabled={isSavingSchedule}
                                 />
@@ -883,7 +1201,15 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
                   )}
 
                   <div className="mt-5 flex justify-end border-t border-border pt-4">
-                    <Button className="btn-gradient" onClick={handleSaveSchedule} disabled={!hasScheduleChanges || isSavingSchedule || isScheduleFetching}>
+                    <Button
+                      className="btn-gradient"
+                      onClick={handleSaveSchedule}
+                      disabled={
+                        !hasScheduleChanges ||
+                        isSavingSchedule ||
+                        isScheduleFetching
+                      }
+                    >
                       {isSavingSchedule ? "Salvando..." : "Salvar horários"}
                     </Button>
                   </div>
@@ -896,14 +1222,33 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="relative max-w-md flex-1">
                       <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input placeholder="Buscar serviços..." value={servicesSearch} onChange={e => setServicesSearch(e.target.value)} className="pl-10" />
+                      <Input
+                        placeholder="Buscar serviços..."
+                        value={servicesSearch}
+                        onChange={e => setServicesSearch(e.target.value)}
+                        className="pl-10"
+                      />
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setEnabledServiceIds(new Set(allServices.map(s => String(s.id))))} disabled={isSavingServices || isCompanyLoading}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setEnabledServiceIds(
+                            new Set(allServices.map(s => String(s.id))),
+                          )
+                        }
+                        disabled={isSavingServices || isCompanyLoading}
+                      >
                         <Check className="mr-1.5 h-4 w-4" />
                         Todos
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => setEnabledServiceIds(new Set())} disabled={isSavingServices || isCompanyLoading}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEnabledServiceIds(new Set())}
+                        disabled={isSavingServices || isCompanyLoading}
+                      >
                         <X className="mr-1.5 h-4 w-4" />
                         Nenhum
                       </Button>
@@ -912,32 +1257,57 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
 
                   {isCompanyLoading ? (
                     <div className="space-y-3">
-                      {Array.from({ length: 4 }).map((_, i) => (<Skeleton key={i} className="h-16 w-full" />))}
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
                     </div>
                   ) : groupedCategories.length === 0 ? (
-                    <div className="rounded-xl border bg-card p-6 text-muted-foreground">Nenhum serviço encontrado.</div>
+                    <div className="rounded-xl border bg-card p-6 text-muted-foreground">
+                      Nenhum serviço encontrado.
+                    </div>
                   ) : (
                     groupedCategories.map(([category, catServices]) => (
                       <div key={category} className="space-y-3">
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{category}</h2>
+                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                          {category}
+                        </h2>
                         <div className="grid gap-3">
                           {catServices.map(service => {
                             const sid = String(service.id);
                             const isEnabled = enabledServiceIds.has(sid);
                             return (
-                              <div key={sid} className="flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+                              <div
+                                key={sid}
+                                className="flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+                              >
                                 <div className="flex items-center gap-4">
-                                  <Switch checked={isEnabled} onCheckedChange={() => toggleService(sid)} disabled={isSavingServices} />
+                                  <Switch
+                                    checked={isEnabled}
+                                    onCheckedChange={() => toggleService(sid)}
+                                    disabled={isSavingServices}
+                                  />
                                   <div>
-                                    <p className="font-medium">{service.name}</p>
-                                    {(formatPrice(service.price) || formatDuration(service.duration)) && (
+                                    <p className="font-medium">
+                                      {service.name}
+                                    </p>
+                                    {(formatPrice(service.price) ||
+                                      formatDuration(service.duration)) && (
                                       <p className="text-sm text-muted-foreground">
-                                        {[formatPrice(service.price), formatDuration(service.duration)].filter(Boolean).join(" · ")}
+                                        {[
+                                          formatPrice(service.price),
+                                          formatDuration(service.duration),
+                                        ]
+                                          .filter(Boolean)
+                                          .join(" · ")}
                                       </p>
                                     )}
                                   </div>
                                 </div>
-                                <Badge variant={isEnabled ? "default" : "secondary"}>{isEnabled ? "Ativo" : "Inativo"}</Badge>
+                                <Badge
+                                  variant={isEnabled ? "default" : "secondary"}
+                                >
+                                  {isEnabled ? "Ativo" : "Inativo"}
+                                </Badge>
                               </div>
                             );
                           })}
@@ -947,7 +1317,15 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
                   )}
 
                   <div className="flex justify-end border-t border-border pt-4">
-                    <Button className="btn-gradient" onClick={handleSaveServices} disabled={!hasServicesChanges || isSavingServices || isCompanyLoading}>
+                    <Button
+                      className="btn-gradient"
+                      onClick={handleSaveServices}
+                      disabled={
+                        !hasServicesChanges ||
+                        isSavingServices ||
+                        isCompanyLoading
+                      }
+                    >
                       {isSavingServices ? "Salvando..." : "Salvar alterações"}
                     </Button>
                   </div>
@@ -959,43 +1337,87 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
                 <div className="space-y-5">
                   <div className="relative max-w-md">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input placeholder="Buscar profissionais..." value={teamSearch} onChange={e => setTeamSearch(e.target.value)} className="pl-10" />
+                    <Input
+                      placeholder="Buscar profissionais..."
+                      value={teamSearch}
+                      onChange={e => setTeamSearch(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
 
                   <div className="flex flex-wrap gap-3">
                     <div className="rounded-xl border bg-card px-4 py-3">
-                      <span className="text-2xl font-bold text-primary">{isEmployeesLoading ? "-" : selectedEmployeeIds.size}</span>
-                      <span className="ml-2 text-sm text-muted-foreground">nesta filial</span>
+                      <span className="text-2xl font-bold text-primary">
+                        {isEmployeesLoading ? "-" : selectedEmployeeIds.size}
+                      </span>
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        nesta filial
+                      </span>
                     </div>
                     <div className="rounded-xl border bg-card px-4 py-3">
-                      <span className="text-2xl font-bold">{isEmployeesLoading ? "-" : employees.length}</span>
-                      <span className="ml-2 text-sm text-muted-foreground">total</span>
+                      <span className="text-2xl font-bold">
+                        {isEmployeesLoading ? "-" : employees.length}
+                      </span>
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        total
+                      </span>
                     </div>
                   </div>
 
                   {isEmployeesLoading ? (
                     <div className="space-y-3">
-                      {Array.from({ length: 4 }).map((_, i) => (<Skeleton key={i} className="h-16 w-full" />))}
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
                     </div>
                   ) : filteredEmployees.length === 0 ? (
-                    <div className="rounded-xl border bg-card p-6 text-muted-foreground">Nenhum profissional encontrado.</div>
+                    <div className="rounded-xl border bg-card p-6 text-muted-foreground">
+                      Nenhum profissional encontrado.
+                    </div>
                   ) : (
                     <div className="grid gap-3">
                       {filteredEmployees.map(employee => {
-                        const isEnabled = selectedEmployeeIds.has(Number(employee.id));
+                        const isEnabled = selectedEmployeeIds.has(
+                          Number(employee.id),
+                        );
                         return (
-                          <div key={employee.id} className="flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div
+                            key={employee.id}
+                            className="flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+                          >
                             <div className="flex items-center gap-4">
-                              <Switch checked={isEnabled} onCheckedChange={() => toggleEmployee(Number(employee.id))} disabled={isSavingTeam} />
-                              <UserAvatar name={employee.name} surname={employee.surname} imageUrl={employee.meta?.design?.images?.profile?.url} size="md" className="flex-shrink-0" />
+                              <Switch
+                                checked={isEnabled}
+                                onCheckedChange={() =>
+                                  toggleEmployee(Number(employee.id))
+                                }
+                                disabled={isSavingTeam}
+                              />
+                              <UserAvatar
+                                name={employee.name}
+                                surname={employee.surname}
+                                imageUrl={
+                                  employee.meta?.design?.images?.profile?.url
+                                }
+                                size="md"
+                                className="flex-shrink-0"
+                              />
                               <div>
-                                <p className="font-medium">{getEmployeeName(employee)}</p>
+                                <p className="font-medium">
+                                  {getEmployeeName(employee)}
+                                </p>
                                 {(employee.role || employee.permission) && (
-                                  <p className="text-sm text-muted-foreground">{employee.role || employee.permission}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {employee.role || employee.permission}
+                                  </p>
                                 )}
                               </div>
                             </div>
-                            <Badge variant={isEnabled ? "default" : "secondary"}>{isEnabled ? "Nesta filial" : "Não vinculado"}</Badge>
+                            <Badge
+                              variant={isEnabled ? "default" : "secondary"}
+                            >
+                              {isEnabled ? "Nesta filial" : "Não vinculado"}
+                            </Badge>
                           </div>
                         );
                       })}
@@ -1003,7 +1425,13 @@ export default function BranchDetailPage({ branchId, initialTab = "info" }: Prop
                   )}
 
                   <div className="flex justify-end border-t border-border pt-4">
-                    <Button className="btn-gradient" onClick={handleSaveTeam} disabled={!hasTeamChanges || isSavingTeam || isEmployeesLoading}>
+                    <Button
+                      className="btn-gradient"
+                      onClick={handleSaveTeam}
+                      disabled={
+                        !hasTeamChanges || isSavingTeam || isEmployeesLoading
+                      }
+                    >
                       {isSavingTeam ? "Salvando..." : "Salvar alterações"}
                     </Button>
                   </div>

@@ -486,13 +486,7 @@ export default function BranchManager() {
         variant: "destructive",
       });
     }
-  }, [
-    branchToDelete,
-    branches.length,
-    currentPage,
-    loadBranches,
-    toast,
-  ]);
+  }, [branchToDelete, branches.length, currentPage, loadBranches, toast]);
 
   const handleOpenInfoDialog = useCallback(
     (branch: Branch) => {
