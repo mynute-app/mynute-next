@@ -14,21 +14,20 @@ export const GET = auth(async function GET(req, ctx) {
       employee_id: string;
     };
 
-
     const responseData = await fetchFromBackend(
       req,
       `/employee/${employee_id}/work_schedule`,
       token,
       {
         method: "GET",
-      }
+      },
     );
 
     return NextResponse.json(responseData, { status: 200 });
   } catch {
     return NextResponse.json(
       { message: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -50,7 +49,7 @@ export const POST = auth(async function POST(req, ctx) {
     if (!body.work_schedule || !body.work_schedule.employee_work_ranges) {
       return NextResponse.json(
         { message: "work_schedule com employee_work_ranges é obrigatório" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -61,15 +60,14 @@ export const POST = auth(async function POST(req, ctx) {
       {
         method: "POST",
         body: body.work_schedule,
-      }
+      },
     );
 
     return NextResponse.json(responseData, { status: 200 });
   } catch {
     return NextResponse.json(
       { message: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
-

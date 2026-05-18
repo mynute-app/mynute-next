@@ -83,19 +83,19 @@ export function useBranchAppointments({
               headers: {
                 "Content-Type": "application/json",
               },
-            }
+            },
           );
 
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(
-              errorData.message || "Erro ao buscar agendamentos da filial"
+              errorData.message || "Erro ao buscar agendamentos da filial",
             );
           }
 
           return (await response.json()) as BranchAppointmentsResponse;
         },
-        { ttlMs: 10 * 1000, force }
+        { ttlMs: 10 * 1000, force },
       );
       setData(appointmentsData);
       return appointmentsData;
@@ -119,7 +119,17 @@ export function useBranchAppointments({
     if (enabled && branchId) {
       fetchAppointments(false);
     }
-  }, [branchId, page, pageSize, startDate, endDate, cancelled, employeeId, serviceId, enabled]);
+  }, [
+    branchId,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    cancelled,
+    employeeId,
+    serviceId,
+    enabled,
+  ]);
 
   return {
     data,

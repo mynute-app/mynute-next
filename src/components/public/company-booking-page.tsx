@@ -8,7 +8,9 @@ type CompanyBookingPageProps = {
 
 export function CompanyBookingPage({ company }: CompanyBookingPageProps) {
   const services = company?.services ?? [];
-  const employees = (company?.employees ?? []).filter(e => e.is_active !== false);
+  const employees = (company?.employees ?? []).filter(
+    e => e.is_active !== false,
+  );
   const branches = company?.branches ?? [];
   const brandColor = company?.design?.colors?.primary || undefined;
 
