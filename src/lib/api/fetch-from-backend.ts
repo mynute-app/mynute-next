@@ -8,6 +8,16 @@ export class BackendUnauthorizedError extends Error {
   }
 }
 
+export class BackendHttpError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "BackendHttpError";
+  }
+}
+
 type Options = {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   queryParams?: Record<string, string | number | undefined>;
@@ -116,7 +126,8 @@ export async function fetchFromBackend<T = any>(
       continue;
     }
 
-    throw new Error(
+    throw new BackendHttpError(
+      response.status,
       `Erro ao acessar backend (${response.status}): ${errorText}`,
     );
   }

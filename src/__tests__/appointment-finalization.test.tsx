@@ -821,3 +821,49 @@ describe("AppointmentDetailsDialog — Finalizar button", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+// ── BackendHttpError (Aud3) ───────────────────────────────────────────────────
+
+describe("BackendHttpError", () => {
+  it("preserves status code and message", async () => {
+    const { BackendHttpError } = await import(
+      "@/lib/api/fetch-from-backend"
+    );
+    const error = new BackendHttpError(422, "Estoque insuficiente");
+    expect(error.status).toBe(422);
+    expect(error.message).toBe("Estoque insuficiente");
+    expect(error.name).toBe("BackendHttpError");
+    expect(error instanceof Error).toBe(true);
+  });
+
+  it("fetchFromBackend throws BackendHttpError with correct status on non-401 error", async () => {
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 422,
+      headers: { get: () => null },
+      text: async () => "Estoque insuficiente",
+    }) as unknown as typeof fetch;
+
+    try {
+      const { fetchFromBackend, BackendHttpError } = await import(
+        "@/lib/api/fetch-from-backend"
+      );
+      const mockReq = {} as any;
+
+      let caughtError: unknown;
+      try {
+        await fetchFromBackend(mockReq, "/test-endpoint", "token-123", {
+          skipCompanyContext: true,
+        });
+      } catch (err) {
+        caughtError = err;
+      }
+
+      expect(caughtError).toBeInstanceOf(BackendHttpError);
+      expect((caughtError as InstanceType<typeof BackendHttpError>).status).toBe(422);
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+});

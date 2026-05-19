@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
-import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
+import { fetchFromBackend, BackendUnauthorizedError, BackendHttpError } from "@/lib/api/fetch-from-backend";
 import { getAuthDataFromRequest } from "@/utils/decode-jwt";
 
 /**
@@ -39,12 +39,13 @@ export const PATCH = auth(async function PATCH(req, ctx) {
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
+    if (error instanceof BackendUnauthorizedError) {
+      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    }
+    const status = error instanceof BackendHttpError ? error.status : 500;
     return NextResponse.json(
-      {
-        message: "Erro interno ao finalizar agendamento.",
-        error: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
+      { message: error instanceof Error ? error.message : "Erro ao finalizar agendamento" },
+      { status },
     );
   }
 });
