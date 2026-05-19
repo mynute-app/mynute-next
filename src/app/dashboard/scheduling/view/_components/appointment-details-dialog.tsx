@@ -45,7 +45,10 @@ import {
   Phone,
   Loader2,
   CheckCircle,
+  PackageCheck,
 } from "lucide-react";
+import { AppointmentFinalizationDialog } from "./appointment-finalization-dialog";
+import type { FinalizeAppointmentResponse } from "../../../../../../types/inventory";
 import type {
   Appointment,
   ClientInfo,
@@ -70,6 +73,7 @@ interface AppointmentDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
   onAppointmentDeleted?: () => void;
   onAppointmentApproved?: () => void;
+  onAppointmentFinalized?: (response: FinalizeAppointmentResponse) => void;
 }
 
 export function AppointmentDetailsDialog({
@@ -82,8 +86,10 @@ export function AppointmentDetailsDialog({
   onOpenChange,
   onAppointmentDeleted,
   onAppointmentApproved,
+  onAppointmentFinalized,
 }: AppointmentDetailsDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [finalizationOpen, setFinalizationOpen] = useState(false);
   const [editedEmployeeId, setEditedEmployeeId] = useState<string>("");
   const [editedDate, setEditedDate] = useState<Date | null>(null);
   const [editedTime, setEditedTime] = useState<string | null>(null);
@@ -117,9 +123,6 @@ export function AppointmentDetailsDialog({
     // Se não encontrou nenhum funcionário na branch, retorna todos
     // (pode ser que a estrutura de dados não tenha branches preenchidas)
     if (filtered.length === 0) {
-      console.log(
-        "⚠️ Nenhum funcionário encontrado para branch, mostrando todos",
-      );
       return companyEmployees;
     }
 
@@ -168,17 +171,6 @@ export function AppointmentDetailsDialog({
       setEditedTime(null);
     }
   }, [open]);
-
-  // Debug: verificar funcionários
-  useEffect(() => {
-    if (isEditing) {
-      console.log("🔍 Debug - Funcionários:");
-      console.log("  Total funcionários da empresa:", companyEmployees?.length);
-      console.log("  Branch ID do agendamento:", appointment?.branch_id);
-      console.log("  Funcionários filtrados:", branchEmployees.length);
-      console.log("  Funcionários:", branchEmployees);
-    }
-  }, [isEditing, branchEmployees, companyEmployees, appointment?.branch_id]);
 
   // Initialize edit values when appointment changes
   useEffect(() => {
@@ -247,7 +239,6 @@ export function AppointmentDetailsDialog({
 
   const handleSaveEdit = () => {
     if (!editedDate || !editedTime) {
-      console.error("Data ou horário não selecionado");
       return;
     }
 
@@ -259,13 +250,6 @@ export function AppointmentDetailsDialog({
     const endDateTime = new Date(startDateTime);
     endDateTime.setMinutes(endDateTime.getMinutes() + (service?.duration || 0));
 
-    // TODO: Implementar atualização do agendamento
-    console.log("Salvar edição:", {
-      appointmentId: appointment?.id,
-      employeeId: editedEmployeeId,
-      startTime: startDateTime.toISOString(),
-      endTime: endDateTime.toISOString(),
-    });
     setIsEditing(false);
   };
 
@@ -660,6 +644,17 @@ export function AppointmentDetailsDialog({
                       )}
                     </Button>
                   )}
+                  {!appointment.is_fulfilled &&
+                    appointment.is_approved_by_employee && (
+                      <Button
+                        variant="default"
+                        onClick={() => setFinalizationOpen(true)}
+                        className="bg-[hsl(var(--success))] hover:bg-[hsl(var(--success)/0.9)] text-white"
+                      >
+                        <PackageCheck className="h-4 w-4 mr-2" />
+                        Finalizar
+                      </Button>
+                    )}
                   <Button variant="outline" onClick={() => setIsEditing(true)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Editar
@@ -677,6 +672,16 @@ export function AppointmentDetailsDialog({
           )}
         </DialogFooter>
       </DialogContent>
+
+      <AppointmentFinalizationDialog
+        appointmentId={appointment?.id ?? ""}
+        open={finalizationOpen}
+        onOpenChange={setFinalizationOpen}
+        onFinalized={response => {
+          onAppointmentFinalized?.(response);
+          onOpenChange(false);
+        }}
+      />
 
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent className="z-[10001]">

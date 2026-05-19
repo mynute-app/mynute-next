@@ -347,6 +347,128 @@ export const mockBranchAppointmentsResponse: BranchAppointmentsResponse = {
   page_size: 10,
 };
 
+// ─── Inventory ────────────────────────────────────────────────────────────────
+
+import type {
+  ServiceInventoryItem,
+  AppointmentInventoryUsage,
+  FinalizeAppointmentResponse,
+} from "../../../types/inventory";
+
+export const MOCK_INVENTORY_IDS = {
+  product1: "prod-inv-001",
+  product2: "prod-inv-002",
+  unit1: "unit-inv-001",
+  usage1: "usage-inv-001",
+  usage2: "usage-inv-002",
+  serviceItem1: "svc-item-001",
+  serviceItem2: "svc-item-002",
+};
+
+export const mockServiceInventoryItems: ServiceInventoryItem[] = [
+  {
+    id: MOCK_INVENTORY_IDS.serviceItem1,
+    service_id: MOCK_IDS.service1,
+    product_id: MOCK_INVENTORY_IDS.product1,
+    product_name: "Shampoo Profissional 500ml",
+    unit_id: MOCK_INVENTORY_IDS.unit1,
+    unit_symbol: "ml",
+    unit_cost_cents: 1500,
+    default_quantity: 50,
+    is_required: true,
+    notes: "",
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+  },
+  {
+    id: MOCK_INVENTORY_IDS.serviceItem2,
+    service_id: MOCK_IDS.service1,
+    product_id: MOCK_INVENTORY_IDS.product2,
+    product_name: "Condicionador Hidratante 300ml",
+    unit_id: MOCK_INVENTORY_IDS.unit1,
+    unit_symbol: "ml",
+    unit_cost_cents: 2000,
+    default_quantity: 30,
+    is_required: false,
+    notes: "Usar conforme necessidade",
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+  },
+];
+
+export const mockServiceInventoryItemsResponse = {
+  items: mockServiceInventoryItems,
+  total: 2,
+};
+
+export const mockAppointmentInventoryUsages: AppointmentInventoryUsage[] = [
+  {
+    id: MOCK_INVENTORY_IDS.usage1,
+    appointment_id: MOCK_IDS.appointment1,
+    service_inventory_item_id: MOCK_INVENTORY_IDS.serviceItem1,
+    product_id: MOCK_INVENTORY_IDS.product1,
+    product_name: "Shampoo Profissional 500ml",
+    location_id: "loc-001",
+    batch_id: "batch-abc-001",
+    serial_id: null,
+    movement_id: null,
+    planned_quantity: 50,
+    actual_quantity: null,
+    unit_id: MOCK_INVENTORY_IDS.unit1,
+    unit_symbol: "ml",
+    unit_cost: 1500,
+    total_cost: 75000,
+    source: "service_default",
+    status: "reserved",
+    notes: "",
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+  },
+  {
+    id: MOCK_INVENTORY_IDS.usage2,
+    appointment_id: MOCK_IDS.appointment1,
+    service_inventory_item_id: MOCK_INVENTORY_IDS.serviceItem2,
+    product_id: MOCK_INVENTORY_IDS.product2,
+    product_name: "Condicionador Hidratante 300ml",
+    location_id: "loc-001",
+    batch_id: null,
+    serial_id: null,
+    movement_id: null,
+    planned_quantity: 30,
+    actual_quantity: null,
+    unit_id: MOCK_INVENTORY_IDS.unit1,
+    unit_symbol: "ml",
+    unit_cost: 2000,
+    total_cost: 60000,
+    source: "service_default",
+    status: "planned",
+    notes: "",
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+  },
+];
+
+export const mockAppointmentInventoryUsagesResponse = {
+  items: mockAppointmentInventoryUsages,
+};
+
+export const mockFinalizeResponse: FinalizeAppointmentResponse = {
+  appointment_id: MOCK_IDS.appointment1,
+  is_fulfilled: true,
+  items: [
+    {
+      ...mockAppointmentInventoryUsages[0],
+      actual_quantity: 50,
+      status: "consumed",
+    },
+    {
+      ...mockAppointmentInventoryUsages[1],
+      actual_quantity: 30,
+      status: "consumed",
+    },
+  ],
+};
+
 // ─── Company Clients ──────────────────────────────────────────────────────────
 
 export const mockCompanyClients = [

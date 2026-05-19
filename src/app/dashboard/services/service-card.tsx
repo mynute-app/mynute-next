@@ -1,7 +1,6 @@
 import { HiOutlineMenuAlt1, HiOutlineDotsVertical } from "react-icons/hi";
 import { FiUser } from "react-icons/fi";
-import { BsUpload } from "react-icons/bs";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,8 +9,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MdOutlineModeEdit } from "react-icons/md";
 import { GoTrash } from "react-icons/go";
+import { useServiceInventoryItems } from "@/hooks/services/use-service-inventory-items";
+
+const formatCentsToBRL = (cents: number) =>
+  new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(cents / 100);
 
 type ServiceCardProps = {
+  serviceId: string;
   name: string;
   duration?: string;
   buffer?: string;
@@ -37,6 +44,7 @@ const getFixedColor = (name: string) => {
 };
 
 const ServiceCard = ({
+  serviceId,
   name,
   duration,
   buffer,
@@ -47,6 +55,16 @@ const ServiceCard = ({
 }: ServiceCardProps) => {
   const colorClass = getFixedColor(name);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { items, loading: loadingInventory, fetchItems } = useServiceInventoryItems(serviceId);
+
+  useEffect(() => {
+    if (serviceId) fetchItems();
+  }, [serviceId, fetchItems]);
+
+  const stockCost = useMemo(
+    () => items.reduce((sum, i) => sum + i.unit_cost_cents * i.default_quantity, 0),
+    [items],
+  );
 
   const handleEdit = () => {
     setDropdownOpen(false);
@@ -79,6 +97,13 @@ const ServiceCard = ({
           <p className="text-sm text-gray-500">
             Duração: {duration} · {price}
           </p>
+          {!loadingInventory && (
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {items.length === 0
+                ? "Sem insumos"
+                : `Insumos: ${formatCentsToBRL(stockCost)}`}
+            </p>
+          )}
         </div>
       </div>
 

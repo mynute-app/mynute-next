@@ -17,6 +17,7 @@ const TENANT_NATIVE_DASHBOARD_ROUTES = new Set([
   "/dashboard/agendamentos",
   "/dashboard/clientes",
   "/dashboard/services",
+  "/dashboard/inventory",
   "/dashboard/your-team",
   "/dashboard/branch",
   "/dashboard/config/your-brand",

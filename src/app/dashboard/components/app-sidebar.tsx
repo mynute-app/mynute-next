@@ -21,6 +21,7 @@ import {
   UserCog,
   Users,
   Wrench,
+  Package,
 } from "lucide-react";
 
 import { Sidebar } from "@/components/ui/sidebar";
@@ -148,6 +149,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 icon={<Sparkles className="h-5 w-5" />}
                 label="Servicos"
                 isActive={isActive("/dashboard/services")}
+              />
+              <NavItem
+                href={toTenantDashboardPath("/dashboard/inventory")}
+                icon={<Package className="h-5 w-5" />}
+                label="Estoque"
+                isActive={isActive("/dashboard/inventory")}
               />
               <NavItem
                 href={toTenantDashboardPath("/dashboard/your-team")}

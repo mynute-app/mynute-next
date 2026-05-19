@@ -23,6 +23,7 @@ const config: Config = {
     "<rootDir>/.next/",
     "<rootDir>/node_modules/",
     "<rootDir>/tests/screenshots/",
+    "<rootDir>/src/__tests__/helpers/",
   ],
 };
 
