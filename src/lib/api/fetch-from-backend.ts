@@ -128,7 +128,14 @@ export async function fetchFromBackend<T = any>(
 
     throw new BackendHttpError(
       response.status,
-      `Erro ao acessar backend (${response.status}): ${errorText}`,
+      (() => {
+        try {
+          const parsed = JSON.parse(errorText) as { message?: string; pt_message?: string };
+          return parsed.pt_message || parsed.message || `Erro ao acessar backend (${response.status})`;
+        } catch {
+          return errorText || `Erro ao acessar backend (${response.status})`;
+        }
+      })(),
     );
   }
 

@@ -73,6 +73,9 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   disconnect: jest.fn(),
 }));
 
+// Polyfill scrollIntoView (required by Radix UI Select in jsdom)
+Element.prototype.scrollIntoView = jest.fn();
+
 // Suppress console.error for known React/Next.js test warnings
 const originalError = console.error;
 beforeAll(() => {

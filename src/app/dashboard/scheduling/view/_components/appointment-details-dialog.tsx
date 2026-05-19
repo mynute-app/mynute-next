@@ -48,7 +48,7 @@ import {
   PackageCheck,
 } from "lucide-react";
 import { AppointmentFinalizationDialog } from "./appointment-finalization-dialog";
-import type { FinalizeAppointmentResponse } from "../../../../../../types/inventory";
+import type { FinalizeAppointmentResponse } from "@/types/inventory";
 import type {
   Appointment,
   ClientInfo,

@@ -2,7 +2,7 @@ import { useState } from "react";
 import type {
   FinalizeAppointmentRequest,
   FinalizeAppointmentResponse,
-} from "../../../types/inventory";
+} from "@/types/inventory";
 
 export function useFinalizeAppointment() {
   const [loading, setLoading] = useState(false);

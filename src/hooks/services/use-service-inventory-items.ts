@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import type {
   ServiceInventoryItem,
   CreateServiceInventoryItem,
-} from "../../../types/inventory";
+} from "@/types/inventory";
 
 export function useServiceInventoryItems(serviceId: string) {
   const [items, setItems] = useState<ServiceInventoryItem[]>([]);

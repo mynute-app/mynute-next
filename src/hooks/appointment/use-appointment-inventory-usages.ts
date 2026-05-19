@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import type { AppointmentInventoryUsage } from "../../../types/inventory";
+import type { AppointmentInventoryUsage } from "@/types/inventory";
 
 export function useAppointmentInventoryUsages(appointmentId: string) {
   const [usages, setUsages] = useState<AppointmentInventoryUsage[]>([]);

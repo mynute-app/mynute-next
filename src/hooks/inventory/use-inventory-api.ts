@@ -13,6 +13,7 @@ import type {
   InventoryAlertList,
   InventoryUnitList,
   InventoryLocationList,
+  InventoryBatchList,
 } from "@/types/inventory";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -138,6 +139,16 @@ export async function fetchBalance(
 
   const query = params.toString() ? `?${params.toString()}` : "";
   return apiFetch<InventoryBalanceList>(`/api/inventory/balance${query}`);
+}
+
+export async function fetchBatches(
+  productId: string,
+  status = "active",
+): Promise<InventoryBatchList> {
+  const params = new URLSearchParams({ product_id: productId, status });
+  return apiFetch<InventoryBatchList>(
+    `/api/inventory/batches?${params.toString()}`,
+  );
 }
 
 // ── Settings ──────────────────────────────────────────────────────────────────

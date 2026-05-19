@@ -21,6 +21,7 @@ import {
   mockAppointmentInventoryUsages,
   mockAppointmentInventoryUsagesResponse,
   mockFinalizeResponse,
+  mockUsageWithTrackBatch,
   MOCK_IDS,
   MOCK_INVENTORY_IDS,
 } from "@/mocks/data";
@@ -293,10 +294,10 @@ describe("AppointmentFinalizationDialog", () => {
     });
   });
 
-  it("shows batch_id input for usages with batch_id set", async () => {
+  it("shows batch_id select (combobox) for usage with track_batch=true", async () => {
     (global.fetch as jest.Mock) = jest.fn().mockResolvedValue({
       ok: true,
-      json: async () => mockAppointmentInventoryUsagesResponse,
+      json: async () => ({ items: [mockUsageWithTrackBatch] }),
     });
 
     const { AppointmentFinalizationDialog } = await import(
@@ -314,16 +315,19 @@ describe("AppointmentFinalizationDialog", () => {
       );
     });
 
-    // usage1 has batch_id: "batch-abc-001" → input should appear
     await waitFor(() => {
-      const batchInput = screen.getByPlaceholderText(/id do lote/i);
-      expect(batchInput).toBeInTheDocument();
-      // pre-populated from reservation
-      expect((batchInput as HTMLInputElement).value).toBe("batch-abc-001");
+      // track_batch=true → a Select (labeled "Lote") must appear for the user to pick a batch
+      const batchSelect = screen.getByLabelText(/lote/i);
+      expect(batchSelect).toBeInTheDocument();
+      expect(batchSelect).toHaveAttribute('role', 'combobox');
+      // The old free-text Input must NOT be rendered
+      expect(
+        screen.queryByPlaceholderText(/id do lote/i),
+      ).not.toBeInTheDocument();
     });
   });
 
-  it("does NOT show batch_id input for usages with batch_id null", async () => {
+  it("does NOT show batch_id input for usages with track_batch=false", async () => {
     (global.fetch as jest.Mock) = jest.fn().mockResolvedValue({
       ok: true,
       json: async () => mockAppointmentInventoryUsagesResponse,
@@ -345,10 +349,9 @@ describe("AppointmentFinalizationDialog", () => {
     });
 
     await waitFor(() => {
-      // Only one batch input (for usage1 which has batch_id)
-      const batchInputs = screen.queryAllByPlaceholderText(/id do lote/i);
-      expect(batchInputs).toHaveLength(1);
-      // No serial inputs (both usages have serial_id: null)
+      // Both usages have track_batch=false → no element labeled "Lote" should exist
+      expect(screen.queryByLabelText(/lote/i)).not.toBeInTheDocument();
+      // No serial inputs (both usages have track_serial=false)
       const serialInputs = screen.queryAllByPlaceholderText(/número de série/i);
       expect(serialInputs).toHaveLength(0);
     });
@@ -571,11 +574,13 @@ describe("AppointmentFinalizationDialog", () => {
     });
   });
 
-  it("does NOT show batch_id input when batch_id is undefined (Go omitempty)", async () => {
+  it("does NOT show batch_id input when track_batch is false (Go omitempty absent field)", async () => {
     const omitemptyUsage = {
       ...mockAppointmentInventoryUsages[0],
       batch_id: undefined as unknown as null,
       serial_id: undefined as unknown as null,
+      track_batch: false,
+      track_serial: false,
     };
     (global.fetch as jest.Mock) = jest.fn().mockResolvedValue({
       ok: true,
@@ -598,9 +603,8 @@ describe("AppointmentFinalizationDialog", () => {
     });
 
     await waitFor(() => {
-      // When batch_id is undefined (Go omitempty absent field), input must NOT render
-      const batchInputs = screen.queryAllByPlaceholderText(/id do lote/i);
-      expect(batchInputs).toHaveLength(0);
+      // When batch_id is undefined (Go omitempty absent field), Select (labeled Lote) must NOT render
+      expect(screen.queryByLabelText(/lote/i)).not.toBeInTheDocument();
       const serialInputs = screen.queryAllByPlaceholderText(/número de série/i);
       expect(serialInputs).toHaveLength(0);
     });
@@ -652,6 +656,272 @@ describe("AppointmentFinalizationDialog", () => {
       const callBody = JSON.parse(patchCall[1].body);
       // Negative quantity must be clamped to 0
       expect(callBody.items[0].actual_quantity).toBe(0);
+    });
+  });
+
+  it("shows serial_id input for usage with track_serial=true", async () => {
+    const usageWithSerial = {
+      ...mockUsageWithTrackBatch,
+      id: "usage-serial-test",
+      product_name: "Produto com Série",
+      track_batch: false,
+      track_serial: true,
+    };
+    (global.fetch as jest.Mock) = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [usageWithSerial] }),
+    });
+
+    const { AppointmentFinalizationDialog } = await import(
+      "@/app/dashboard/scheduling/view/_components/appointment-finalization-dialog"
+    );
+
+    await act(async () => {
+      render(
+        <AppointmentFinalizationDialog
+          appointmentId={MOCK_IDS.appointment1}
+          open={true}
+          onOpenChange={() => {}}
+          onFinalized={() => {}}
+        />,
+      );
+    });
+
+    await waitFor(() => {
+      // track_serial=true → serial input must appear
+      const serialInput = screen.getByPlaceholderText(/número de série/i);
+      expect(serialInput).toBeInTheDocument();
+      // no batch Select since track_batch=false
+      expect(screen.queryByLabelText(/lote/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it("blocks submit and shows error toast when track_batch=true and batch_id is empty", async () => {
+    (global.fetch as jest.Mock) = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [mockUsageWithTrackBatch] }),
+    });
+
+    const { AppointmentFinalizationDialog } = await import(
+      "@/app/dashboard/scheduling/view/_components/appointment-finalization-dialog"
+    );
+
+    await act(async () => {
+      render(
+        <AppointmentFinalizationDialog
+          appointmentId={MOCK_IDS.appointment1}
+          open={true}
+          onOpenChange={() => {}}
+          onFinalized={() => {}}
+        />,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Produto com Lote")).toBeInTheDocument();
+    });
+
+    // Submit without filling batch_id (field is visible but empty)
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /finalizar atendimento/i }));
+    });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringMatching(/lote/i),
+          variant: "destructive",
+        }),
+      );
+      // PATCH (finalize) request must NOT be sent — only GETs (usages + batches)
+      const patchCalls = (global.fetch as jest.Mock).mock.calls.filter(
+        (call: unknown[]) =>
+          typeof call[1] === "object" &&
+          (call[1] as RequestInit).method === "PATCH",
+      );
+      expect(patchCalls).toHaveLength(0);
+    });
+  });
+
+  it("skips batch_id validation when actual_quantity is 0 (C1)", async () => {
+    // When qty=0, the item is skipped — batch_id should NOT be required
+    (global.fetch as jest.Mock) = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ items: [mockUsageWithTrackBatch] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ batches: [], total: 0 }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          appointment_id: MOCK_IDS.appointment1,
+          is_fulfilled: true,
+          items: [],
+        }),
+      });
+
+    const { AppointmentFinalizationDialog } = await import(
+      "@/app/dashboard/scheduling/view/_components/appointment-finalization-dialog"
+    );
+    const onFinalized = jest.fn();
+
+    await act(async () => {
+      render(
+        <AppointmentFinalizationDialog
+          appointmentId={MOCK_IDS.appointment1}
+          open={true}
+          onOpenChange={() => {}}
+          onFinalized={onFinalized}
+        />,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Produto com Lote")).toBeInTheDocument();
+    });
+
+    // Set actual_quantity to 0
+    const qtyInput = screen.getByLabelText(/quantidade real/i);
+    await act(async () => {
+      fireEvent.change(qtyInput, { target: { value: "0" } });
+    });
+
+    // Submit without selecting batch — should succeed because qty=0
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: /finalizar atendimento/i }),
+      );
+    });
+
+    await waitFor(() => {
+      // No destructive toast — batch validation is skipped for qty=0
+      const destructiveCalls = mockToast.mock.calls.filter(
+        (args: unknown[]) =>
+          (args[0] as { variant?: string })?.variant === "destructive",
+      );
+      expect(destructiveCalls).toHaveLength(0);
+      // Finalize callback was triggered
+      expect(onFinalized).toHaveBeenCalledWith(
+        expect.objectContaining({ is_fulfilled: true }),
+      );
+    });
+  });
+
+  it("verifies fetchBatches is called with correct product_id and shows batch select trigger (C2)", async () => {
+    const mockBatchId = "batch-uuid-001";
+    const mockBatchCode = "LOTE-2026-01";
+
+    (global.fetch as jest.Mock) = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ items: [mockUsageWithTrackBatch] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          batches: [
+            {
+              id: mockBatchId,
+              product_id: mockUsageWithTrackBatch.product_id,
+              location_id: "loc-001",
+              batch_code: mockBatchCode,
+              quantity_on_hand: 100,
+              quantity_reserved: 5,
+              unit_cost: 500,
+              expires_at: null,
+              status: "active",
+            },
+          ],
+          total: 1,
+        }),
+      });
+
+    const { AppointmentFinalizationDialog } = await import(
+      "@/app/dashboard/scheduling/view/_components/appointment-finalization-dialog"
+    );
+
+    await act(async () => {
+      render(
+        <AppointmentFinalizationDialog
+          appointmentId={MOCK_IDS.appointment1}
+          open={true}
+          onOpenChange={() => {}}
+          onFinalized={() => {}}
+        />,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Produto com Lote")).toBeInTheDocument();
+    });
+
+    // Verify that fetchBatches was called for the right product
+    await waitFor(() => {
+      const batchesFetchCall = (global.fetch as jest.Mock).mock.calls.find(
+        (call: unknown[]) =>
+          typeof call[0] === "string" &&
+          (call[0] as string).includes("/api/inventory/batches"),
+      );
+      expect(batchesFetchCall).toBeDefined();
+      expect(batchesFetchCall![0]).toContain(
+        `product_id=${mockUsageWithTrackBatch.product_id}`,
+      );
+    });
+
+    // Verify the batch select trigger (labeled "Lote") is present
+    const batchSelect = screen.getByLabelText(/lote/i);
+    expect(batchSelect).toBeInTheDocument();
+  });
+
+  it("blocks submit and shows error toast when track_serial=true and serial_id is empty", async () => {
+    const usageWithSerial = {
+      ...mockUsageWithTrackBatch,
+      id: "usage-serial-val-test",
+      product_name: "Produto com Série",
+      track_batch: false,
+      track_serial: true,
+    };
+    (global.fetch as jest.Mock) = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [usageWithSerial] }),
+    });
+
+    const { AppointmentFinalizationDialog } = await import(
+      "@/app/dashboard/scheduling/view/_components/appointment-finalization-dialog"
+    );
+
+    await act(async () => {
+      render(
+        <AppointmentFinalizationDialog
+          appointmentId={MOCK_IDS.appointment1}
+          open={true}
+          onOpenChange={() => {}}
+          onFinalized={() => {}}
+        />,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Produto com Série")).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /finalizar atendimento/i }));
+    });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringMatching(/série/i),
+          variant: "destructive",
+        }),
+      );
+      expect((global.fetch as jest.Mock).mock.calls).toHaveLength(1);
     });
   });
 });

@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { autoLinkService } from "@/lib/services/auto-link-service";
 import { ServiceDescription } from "@/components/services/service-description";
 import {
   Briefcase,
@@ -131,6 +130,7 @@ export const ServicesPage = () => {
   const handleAddService = (newService: Service) => {
     setServices(prev => [...prev, newService]);
     void loadServices(true);
+    setEditingService(newService); // auto-open edit dialog to add inventory items
   };
 
   const formatPrice = (price: Service["price"]) => {

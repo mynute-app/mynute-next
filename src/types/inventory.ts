@@ -303,7 +303,9 @@ export interface AppointmentInventoryUsage {
   unit_symbol?: string | null;
   unit_cost: number;
   total_cost: number;
-  source: "service_default" | "ad_hoc";
+  source: "service_default" | "ad_hoc" | "automatic";
+  track_batch: boolean;
+  track_serial: boolean;
   status: UsageStatus;
   notes: string;
   created_at: string;
@@ -335,4 +337,23 @@ export interface FinalizeAppointmentResponse {
   appointment_id: string;
   is_fulfilled: boolean;
   items: AppointmentInventoryUsage[];
+}
+
+// ── Batches ───────────────────────────────────────────────────────────────────
+
+export interface InventoryBatch {
+  id: string;
+  product_id: string;
+  location_id: string;
+  batch_code: string;
+  quantity_on_hand: number;
+  quantity_reserved: number;
+  unit_cost: number;
+  expires_at?: string | null;
+  status: string;
+}
+
+export interface InventoryBatchList {
+  batches: InventoryBatch[];
+  total: number;
 }

@@ -25,10 +25,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, PackageCheck } from "lucide-react";
 import { useAppointmentInventoryUsages } from "@/hooks/appointment/use-appointment-inventory-usages";
 import { useFinalizeAppointment } from "@/hooks/appointment/use-finalize-appointment";
+import { fetchBatches } from "@/hooks/inventory/use-inventory-api";
 import type {
   FinalizeAppointmentResponse,
   FinalizeUsageItem,
-} from "../../../../../../types/inventory";
+  InventoryBatch,
+} from "@/types/inventory";
 
 interface AppointmentFinalizationDialogProps {
   appointmentId: string;
@@ -63,12 +65,40 @@ export function AppointmentFinalizationDialog({
 
   const [form, setForm] = useState<Record<string, UsageFormState>>({});
   const [shortagePolicy, setShortagePolicy] = useState<string>("__none__");
+  const [batchOptions, setBatchOptions] = useState<Record<string, InventoryBatch[]>>({});
 
   useEffect(() => {
     if (open && appointmentId) {
       fetchUsages();
     }
   }, [open, appointmentId, fetchUsages]);
+
+  // Reset shortage policy and batch options when dialog closes (fix M5)
+  useEffect(() => {
+    if (!open) {
+      setShortagePolicy("__none__");
+      setBatchOptions({});
+    }
+  }, [open]);
+
+  // Load batch options for products that require batch tracking
+  useEffect(() => {
+    if (!open) return;
+    const productIds = [
+      ...new Set(
+        usages.filter(u => u.track_batch).map(u => u.product_id),
+      ),
+    ];
+    productIds.forEach(pid => {
+      fetchBatches(pid)
+        .then(res =>
+          setBatchOptions(prev => ({ ...prev, [pid]: res.batches }))
+        )
+        .catch(() => {
+          toast({ title: "Erro ao carregar lotes", description: "Não foi possível buscar os lotes para um ou mais produtos.", variant: "destructive" });
+        });
+    });
+  }, [usages, open]);
 
   useEffect(() => {
     const initial: Record<string, UsageFormState> = {};
@@ -98,6 +128,29 @@ export function AppointmentFinalizationDialog({
     }));
 
   const handleSubmit = async () => {
+    // Client-side validation: batch/serial required when product requires tracking
+    for (const u of activeUsages) {
+      const f = form[u.id];
+      const actualQty = Math.max(0, Number(f?.actual_quantity) || 0);
+      if (actualQty <= 0) continue; // skipped items don't need batch/serial
+      if (u.track_batch && (!f?.batch_id || f.batch_id.trim() === "")) {
+        toast({
+          title: "Lote obrigatório",
+          description: `Informe o lote para "${u.product_name ?? "produto"}".`,
+          variant: "destructive",
+        });
+        return;
+      }
+      if (u.track_serial && (!f?.serial_id || f.serial_id.trim() === "")) {
+        toast({
+          title: "Número de série obrigatório",
+          description: `Informe o número de série para "${u.product_name ?? "produto"}".`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const usageItems: FinalizeUsageItem[] = activeUsages.map(u => {
       const f = form[u.id] ?? {
         actual_quantity: String(u.planned_quantity),
@@ -219,32 +272,49 @@ export function AppointmentFinalizationDialog({
                     </div>
                   </div>
 
-                  {usage.batch_id != null && (
+                  {usage.track_batch && (
                     <div className="space-y-1">
                       <Label
                         htmlFor={`batch-${usage.id}`}
                         className="text-xs"
                       >
-                        Lote (batch_id)
+                        Lote <span className="text-destructive">*</span>
                       </Label>
-                      <Input
-                        id={`batch-${usage.id}`}
+                      <Select
                         value={form[usage.id]?.batch_id ?? ""}
-                        onChange={e =>
-                          updateField(usage.id, "batch_id", e.target.value)
+                        onValueChange={val =>
+                          updateField(usage.id, "batch_id", val)
                         }
-                        placeholder="ID do lote"
-                      />
+                      >
+                        <SelectTrigger id={`batch-${usage.id}`}>
+                          <SelectValue placeholder="Selecione um lote" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(batchOptions[usage.product_id] ?? []).map(
+                            batch => (
+                              <SelectItem key={batch.id} value={batch.id}>
+                                {batch.batch_code} ·{" "}
+                                {
+                                  (batch.quantity_on_hand - batch.quantity_reserved).toFixed(0)
+                                }{" "}
+                                disp.
+                                {batch.expires_at &&
+                                  ` · Vence ${new Date(batch.expires_at).toLocaleDateString("pt-BR")}`}
+                              </SelectItem>
+                            ),
+                          )}
+                        </SelectContent>
+                      </Select>
                     </div>
                   )}
 
-                  {usage.serial_id != null && (
+                  {usage.track_serial && (
                     <div className="space-y-1">
                       <Label
                         htmlFor={`serial-${usage.id}`}
                         className="text-xs"
                       >
-                        Número de série (serial_id)
+                        Número de série <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id={`serial-${usage.id}`}

@@ -277,6 +277,25 @@ export interface UpdateServiceInventoryItem {
   notes?: string;
 }
 
+// ── Inventory Batch ───────────────────────────────────────────────────────────
+
+export interface InventoryBatch {
+  id: string;
+  product_id: string;
+  location_id: string;
+  batch_code: string;
+  quantity_on_hand: number;
+  quantity_reserved: number;
+  unit_cost: number;
+  expires_at?: string | null;
+  status: string;
+}
+
+export interface InventoryBatchList {
+  batches: InventoryBatch[];
+  total: number;
+}
+
 // ── Appointment Inventory Usages ─────────────────────────────────────────────
 
 export type UsageStatus =
@@ -303,9 +322,11 @@ export interface AppointmentInventoryUsage {
   unit_symbol?: string | null;
   unit_cost: number;
   total_cost: number;
-  source: "service_default" | "ad_hoc";
+  source: "service_default" | "ad_hoc" | "automatic";
   status: UsageStatus;
   notes: string;
+  track_batch: boolean;
+  track_serial: boolean;
   created_at: string;
   updated_at: string;
 }

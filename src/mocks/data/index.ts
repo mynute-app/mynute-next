@@ -353,7 +353,7 @@ import type {
   ServiceInventoryItem,
   AppointmentInventoryUsage,
   FinalizeAppointmentResponse,
-} from "../../../types/inventory";
+} from "@/types/inventory";
 
 export const MOCK_INVENTORY_IDS = {
   product1: "prod-inv-001",
@@ -361,6 +361,7 @@ export const MOCK_INVENTORY_IDS = {
   unit1: "unit-inv-001",
   usage1: "usage-inv-001",
   usage2: "usage-inv-002",
+  usage3: "usage-inv-003",
   serviceItem1: "svc-item-001",
   serviceItem2: "svc-item-002",
 };
@@ -409,7 +410,7 @@ export const mockAppointmentInventoryUsages: AppointmentInventoryUsage[] = [
     product_id: MOCK_INVENTORY_IDS.product1,
     product_name: "Shampoo Profissional 500ml",
     location_id: "loc-001",
-    batch_id: "batch-abc-001",
+    batch_id: null,
     serial_id: null,
     movement_id: null,
     planned_quantity: 50,
@@ -421,6 +422,8 @@ export const mockAppointmentInventoryUsages: AppointmentInventoryUsage[] = [
     source: "service_default",
     status: "reserved",
     notes: "",
+    track_batch: false,
+    track_serial: false,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
   },
@@ -443,6 +446,8 @@ export const mockAppointmentInventoryUsages: AppointmentInventoryUsage[] = [
     source: "service_default",
     status: "planned",
     notes: "",
+    track_batch: false,
+    track_serial: false,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
   },
@@ -467,6 +472,32 @@ export const mockFinalizeResponse: FinalizeAppointmentResponse = {
       status: "consumed",
     },
   ],
+};
+
+// Usage where the product requires batch tracking (track_batch=true)
+export const mockUsageWithTrackBatch: AppointmentInventoryUsage = {
+  id: MOCK_INVENTORY_IDS.usage3,
+  appointment_id: MOCK_IDS.appointment1,
+  service_inventory_item_id: null,
+  product_id: MOCK_INVENTORY_IDS.product1,
+  product_name: "Produto com Lote",
+  location_id: "loc-001",
+  batch_id: null,
+  serial_id: null,
+  movement_id: null,
+  planned_quantity: 10,
+  actual_quantity: null,
+  unit_id: MOCK_INVENTORY_IDS.unit1,
+  unit_symbol: "un",
+  unit_cost: 500,
+  total_cost: 5000,
+  source: "service_default",
+  status: "reserved",
+  notes: "",
+  track_batch: true,
+  track_serial: false,
+  created_at: "2026-01-01T00:00:00Z",
+  updated_at: "2026-01-01T00:00:00Z",
 };
 
 // ─── Company Clients ──────────────────────────────────────────────────────────
