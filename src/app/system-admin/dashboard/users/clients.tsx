@@ -127,7 +127,8 @@ export function ClientsPage() {
                 {totalPages > 1 && (
                   <DataPagination
                     page={page}
-                    totalPages={totalPages}
+                    pageSize={PAGE_SIZE}
+                    total={filtered.length}
                     onPageChange={setPage}
                   />
                 )}

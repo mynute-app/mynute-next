@@ -137,6 +137,7 @@ export function AppointmentDetailsDialog({
         phone: "",
         permission: "",
         role: "",
+        is_active: true,
         branches: [],
         services: [],
         work_schedule: null,

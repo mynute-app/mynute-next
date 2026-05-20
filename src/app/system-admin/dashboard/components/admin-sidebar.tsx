@@ -7,6 +7,7 @@ import {
   Building2,
   ChevronDown,
   ChevronRight,
+  Headphones,
   LayoutDashboard,
   Settings,
   ShieldCheck,
@@ -46,14 +47,24 @@ const NavItem = ({ href, icon, label, isActive = false }: NavItemProps) => (
   </Link>
 );
 
-const SubNavItem = ({ href, icon, label, isActive = false }: SubNavItemProps) => (
-  <Link href={href} className={cn(subNavItemBase, isActive && subNavItemActive)}>
+const SubNavItem = ({
+  href,
+  icon,
+  label,
+  isActive = false,
+}: SubNavItemProps) => (
+  <Link
+    href={href}
+    className={cn(subNavItemBase, isActive && subNavItemActive)}
+  >
     {icon}
     <span>{label}</span>
   </Link>
 );
 
-export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AdminSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const [isConfigOpen, setIsConfigOpen] = React.useState(true);
 
@@ -73,8 +84,12 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
             <ShieldCheck className="h-6 w-6 text-sidebar-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">Mynute</h1>
-            <p className="text-xs text-sidebar-foreground/60">Painel Administrativo</p>
+            <h1 className="text-lg font-bold text-sidebar-foreground">
+              Mynute
+            </h1>
+            <p className="text-xs text-sidebar-foreground/60">
+              Painel Administrativo
+            </p>
           </div>
         </div>
 
@@ -109,6 +124,12 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                 icon={<Users className="h-5 w-5" />}
                 label="Usuarios"
                 isActive={isActive("/system-admin/dashboard/users")}
+              />
+              <NavItem
+                href="/system-admin/dashboard/support"
+                icon={<Headphones className="h-5 w-5" />}
+                label="Suporte"
+                isActive={isActive("/system-admin/dashboard/support")}
               />
             </div>
           </div>
@@ -148,7 +169,10 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                     href="/system-admin/dashboard/config/account"
                     icon={<ShieldCheck className="h-4 w-4" />}
                     label="Minha Conta"
-                    isActive={isActive("/system-admin/dashboard/config/account", true)}
+                    isActive={isActive(
+                      "/system-admin/dashboard/config/account",
+                      true,
+                    )}
                   />
                 </div>
               </div>

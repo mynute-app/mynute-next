@@ -775,7 +775,7 @@ export function CreateAppointmentDialog({
                       label: selectedEmployee
                         ? `${selectedEmployee.name} ${selectedEmployee.surname}`
                         : null,
-                      sub: selectedEmployee?.role || null,
+                      sub: (selectedEmployee as any)?.role || null,
                     },
                     {
                       icon: <MapPin className="h-4 w-4" />,
