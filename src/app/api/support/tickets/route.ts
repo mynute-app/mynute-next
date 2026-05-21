@@ -44,8 +44,6 @@ export const GET = auth(async function GET(req) {
         { message: authData.error || "Token inválido" },
         { status: 401 },
       );
-    if (authData.user?.type !== "employee")
-      return NextResponse.json({ message: "Acesso negado" }, { status: 403 });
 
     const { searchParams } = new URL(req.url);
     const page = searchParams.get("page") || "1";
@@ -75,8 +73,6 @@ export const POST = auth(async function POST(req) {
         { message: authData.error || "Token inválido" },
         { status: 401 },
       );
-    if (authData.user?.type !== "employee")
-      return NextResponse.json({ message: "Acesso negado" }, { status: 403 });
 
     const body = await req.json();
     const data = await fetchFromBackend(

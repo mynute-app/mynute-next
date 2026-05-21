@@ -44,8 +44,6 @@ export const POST = auth(async function POST(req, context) {
         { message: authData.error || "Token inválido" },
         { status: 401 },
       );
-    if (authData.user?.type !== "employee")
-      return NextResponse.json({ message: "Acesso negado" }, { status: 403 });
 
     const { id } = await context.params;
     const body = await req.json();

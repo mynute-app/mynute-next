@@ -44,8 +44,6 @@ export const PATCH = auth(async function PATCH(req, context) {
         { message: authData.error || "Token inválido" },
         { status: 401 },
       );
-    if (authData.user?.type !== "system_admin")
-      return NextResponse.json({ message: "Acesso negado" }, { status: 403 });
 
     const { id } = await context.params;
     const body = await req.json();
