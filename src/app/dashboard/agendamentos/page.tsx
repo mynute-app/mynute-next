@@ -1,17 +1,18 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Calendar,
+  ChevronLeft,
+  ChevronRight,
   Clock,
-  Filter,
   Loader2,
-  MoreHorizontal,
   Plus,
   Search,
   User,
   Building2,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,8 @@ import { useGetCompany } from "@/hooks/get-company";
 import { useTenantSlug } from "@/hooks/use-tenant-slug";
 import { buildTenantPath } from "@/lib/tenant";
 import type { Appointment } from "../../../../types/appointment";
+
+const PAGE_SIZE = 20;
 
 const statusConfig = {
   confirmed: {
@@ -116,9 +119,18 @@ const resolveStatus = (appointment: Appointment): StatusKey => {
 export default function AgendamentosPage() {
   const tenant = useTenantSlug();
   const { company, loading: isCompanyLoading } = useGetCompany();
+
   const [selectedBranchId, setSelectedBranchId] = useState("");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("all");
+  const [selectedServiceId, setSelectedServiceId] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "cancelled">("all");
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "week">("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState<"all" | "today" | "week">("all");
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedBranchId, selectedEmployeeId, selectedServiceId, statusFilter, dateFilter]);
 
   useEffect(() => {
     if (!selectedBranchId && company?.branches?.length) {
@@ -127,72 +139,64 @@ export default function AgendamentosPage() {
   }, [company?.branches, selectedBranchId]);
 
   const dateRange = useMemo(() => {
-    if (filter === "all") return { startDate: undefined, endDate: undefined };
-
+    if (dateFilter === "all") return { startDate: undefined, endDate: undefined };
     const today = new Date();
-    if (filter === "today") {
-      const formatted = formatDateParam(today);
-      return { startDate: formatted, endDate: formatted };
+    if (dateFilter === "today") {
+      const f = formatDateParam(today);
+      return { startDate: f, endDate: f };
     }
-
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay());
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
+    return { startDate: formatDateParam(startOfWeek), endDate: formatDateParam(endOfWeek) };
+  }, [dateFilter]);
 
-    return {
-      startDate: formatDateParam(startOfWeek),
-      endDate: formatDateParam(endOfWeek),
-    };
-  }, [filter]);
+  const cancelledParam = useMemo(() => {
+    if (statusFilter === "cancelled") return true;
+    if (statusFilter === "active") return false;
+    return undefined;
+  }, [statusFilter]);
 
   const {
     appointments,
     clientInfo,
     serviceInfo,
     employeeInfo,
+    totalCount,
     isLoading: isLoadingAppointments,
     error,
     refetch,
   } = useBranchAppointments({
     branchId: selectedBranchId,
-    page: 1,
-    pageSize: 200,
+    page,
+    pageSize: PAGE_SIZE,
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
+    cancelled: cancelledParam,
+    employeeId: selectedEmployeeId !== "all" ? selectedEmployeeId : undefined,
+    serviceId: selectedServiceId !== "all" ? selectedServiceId : undefined,
     enabled: !!selectedBranchId,
   });
 
-  const clientById = useMemo(
-    () => new Map(clientInfo.map(client => [client.id, client])),
-    [clientInfo],
-  );
-  const serviceById = useMemo(
-    () => new Map(serviceInfo.map(service => [service.id, service])),
-    [serviceInfo],
-  );
-  const employeeById = useMemo(
-    () => new Map(employeeInfo.map(employee => [employee.id, employee])),
-    [employeeInfo],
-  );
+  const clientById = useMemo(() => new Map(clientInfo.map(c => [c.id, c])), [clientInfo]);
+  const serviceById = useMemo(() => new Map(serviceInfo.map(s => [s.id, s])), [serviceInfo]);
+  const employeeById = useMemo(() => new Map(employeeInfo.map(e => [e.id, e])), [employeeInfo]);
   const branchById = useMemo(
-    () =>
-      new Map(
-        company?.branches?.map(branch => [branch.id.toString(), branch]) || [],
-      ),
+    () => new Map(company?.branches?.map(b => [b.id.toString(), b]) || []),
     [company?.branches],
   );
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const rows = useMemo(() => {
-    const sortedAppointments = [...appointments].sort((a, b) => {
-      const timeA = new Date(a.start_time).getTime();
-      const timeB = new Date(b.start_time).getTime();
-      if (Number.isNaN(timeA) || Number.isNaN(timeB)) return 0;
-      return timeB - timeA;
+    const sorted = [...appointments].sort((a, b) => {
+      const tA = new Date(a.start_time).getTime();
+      const tB = new Date(b.start_time).getTime();
+      if (Number.isNaN(tA) || Number.isNaN(tB)) return 0;
+      return tB - tA;
     });
 
-    return sortedAppointments
+    return sorted
       .map(appointment => {
         const client = clientById.get(appointment.client_id);
         const service = serviceById.get(appointment.service_id);
@@ -200,18 +204,11 @@ export default function AgendamentosPage() {
         const branch = branchById.get(appointment.branch_id);
         const status = resolveStatus(appointment);
 
-        const clientName = client
-          ? `${client.name} ${client.surname}`.trim()
-          : "Cliente nao informado";
+        const clientName = client ? `${client.name} ${client.surname}`.trim() : "Cliente nao informado";
         const serviceName = service?.name || "Servico nao informado";
-        const employeeName = employee
-          ? `${employee.name} ${employee.surname}`.trim()
-          : "Profissional nao informado";
+        const employeeName = employee ? `${employee.name} ${employee.surname}`.trim() : "Profissional nao informado";
         const branchName = branch?.name || "Filial nao informada";
-
-        const searchStack = [clientName, serviceName, employeeName, branchName]
-          .join(" ")
-          .toLowerCase();
+        const searchStack = [clientName, serviceName, employeeName, branchName].join(" ").toLowerCase();
 
         return {
           id: appointment.id,
@@ -226,25 +223,29 @@ export default function AgendamentosPage() {
           searchStack,
         };
       })
-      .filter(item =>
-        normalizedSearch ? item.searchStack.includes(normalizedSearch) : true,
-      );
-  }, [
-    appointments,
-    clientById,
-    serviceById,
-    employeeById,
-    branchById,
-    normalizedSearch,
-  ]);
+      .filter(item => normalizedSearch ? item.searchStack.includes(normalizedSearch) : true);
+  }, [appointments, clientById, serviceById, employeeById, branchById, normalizedSearch]);
 
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   const isLoading = isCompanyLoading || isLoadingAppointments;
   const hasBranches = (company?.branches?.length ?? 0) > 0;
   const branches = company?.branches ?? [];
   const hasMultipleBranches = branches.length > 1;
   const branchLabel = branches[0]?.name || "Sem filial";
-  const handleRetry = () => {
-    refetch();
+
+  const hasActiveFilters =
+    selectedEmployeeId !== "all" ||
+    selectedServiceId !== "all" ||
+    statusFilter !== "all" ||
+    dateFilter !== "all";
+
+  const clearFilters = () => {
+    setSelectedEmployeeId("all");
+    setSelectedServiceId("all");
+    setStatusFilter("all");
+    setDateFilter("all");
+    setSearchTerm("");
+    setPage(1);
   };
 
   return (
@@ -253,85 +254,125 @@ export default function AgendamentosPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="page-header mb-0">
             <h1 className="page-title">Agendamentos</h1>
-            <p className="page-description">Gerencie todos os agendamentos</p>
+            <p className="page-description">
+              {totalCount > 0
+                ? `${totalCount} agendamento${totalCount !== 1 ? "s" : ""} encontrado${totalCount !== 1 ? "s" : ""}`
+                : "Gerencie todos os agendamentos"}
+            </p>
           </div>
           <Button className="btn-gradient" asChild>
-            <Link
-              href={buildTenantPath(
-                tenant,
-                "/dashboard/scheduling/view",
-                "/dashboard/scheduling/view"
-              )}
-            >
+            <Link href={buildTenantPath(tenant, "/dashboard/scheduling/view", "/dashboard/scheduling/view")}>
               <Plus className="w-4 h-4 mr-2" />
               Novo Agendamento
             </Link>
           </Button>
         </div>
 
-        <div className="bg-card rounded-xl border border-border shadow-sm p-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+        <div className="bg-card rounded-xl border border-border shadow-sm p-4 space-y-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por cliente, servico ou filial..."
+                placeholder="Buscar por cliente, servico ou profissional..."
                 className="pl-9"
                 value={searchTerm}
-                onChange={event => setSearchTerm(event.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 disabled={isLoading || !hasBranches}
               />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {hasMultipleBranches ? (
-                <Select
-                  value={selectedBranchId}
-                  onValueChange={setSelectedBranchId}
+
+            {hasMultipleBranches ? (
+              <Select
+                value={selectedBranchId}
+                onValueChange={v => { setSelectedBranchId(v); setSelectedEmployeeId("all"); setSelectedServiceId("all"); }}
+                disabled={!hasBranches}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Selecione a filial" />
+                </SelectTrigger>
+                <SelectContent>
+                  {branches.map(branch => (
+                    <SelectItem key={branch.id} value={branch.id.toString()}>{branch.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="w-[200px] rounded-md border border-border bg-muted/50 px-3 py-2 text-sm font-medium text-foreground">
+                {branchLabel}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+              {(["all", "today", "week"] as const).map(item => (
+                <Button
+                  key={item}
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-7 text-xs",
+                    dateFilter === item
+                      ? "bg-background text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  onClick={() => setDateFilter(item)}
                   disabled={!hasBranches}
                 >
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Selecione a filial" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {branches.map(branch => (
-                      <SelectItem key={branch.id} value={branch.id.toString()}>
-                        {branch.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="w-[200px] rounded-md border border-border bg-muted/50 px-3 py-2 text-sm font-medium text-foreground">
-                  {branchLabel}
-                </div>
-              )}
-
-              <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
-                {(["all", "today", "week"] as const).map(item => (
-                  <Button
-                    key={item}
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      filter === item
-                        ? "bg-background text-foreground shadow-sm border border-border"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                    onClick={() => setFilter(item)}
-                    disabled={!hasBranches}
-                  >
-                    {item === "all"
-                      ? "Todos"
-                      : item === "today"
-                        ? "Hoje"
-                        : "Semana"}
-                  </Button>
-                ))}
-              </div>
-
-              {/* <Button variant="outline" size="icon" disabled>
-                <Filter className="w-4 h-4" />
-              </Button> */}
+                  {item === "all" ? "Todos" : item === "today" ? "Hoje" : "Semana"}
+                </Button>
+              ))}
             </div>
+
+            <Select
+              value={statusFilter}
+              onValueChange={v => setStatusFilter(v as "all" | "active" | "cancelled")}
+              disabled={!hasBranches}
+            >
+              <SelectTrigger className="h-9 w-[150px] text-xs">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="active">Ativos</SelectItem>
+                <SelectItem value="cancelled">Cancelados</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {employeeInfo.length > 0 && (
+              <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId} disabled={!hasBranches}>
+                <SelectTrigger className="h-9 w-[170px] text-xs">
+                  <SelectValue placeholder="Profissional" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os profissionais</SelectItem>
+                  {employeeInfo.map(emp => (
+                    <SelectItem key={emp.id} value={emp.id}>{emp.name} {emp.surname}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {serviceInfo.length > 0 && (
+              <Select value={selectedServiceId} onValueChange={setSelectedServiceId} disabled={!hasBranches}>
+                <SelectTrigger className="h-9 w-[150px] text-xs">
+                  <SelectValue placeholder="Servico" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os servicos</SelectItem>
+                  {serviceInfo.map(svc => (
+                    <SelectItem key={svc.id} value={svc.id}>{svc.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" className="h-9 gap-1 text-xs text-muted-foreground" onClick={clearFilters}>
+                <X className="h-3 w-3" />
+                Limpar filtros
+              </Button>
+            )}
           </div>
         </div>
 
@@ -341,32 +382,22 @@ export default function AgendamentosPage() {
               <div className="rounded-xl border border-border bg-muted/30 p-6">
                 <div className="flex items-center justify-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm font-medium">
-                    Carregando agendamentos...
-                  </span>
+                  <span className="text-sm font-medium">Carregando agendamentos...</span>
                 </div>
                 <div className="mt-6 space-y-3 animate-pulse">
-                  <div className="h-3 w-40 rounded-full bg-muted" />
-                  <div className="h-10 rounded-lg bg-muted/70" />
-                  <div className="h-10 rounded-lg bg-muted/70" />
-                  <div className="h-10 rounded-lg bg-muted/70" />
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="h-10 rounded-lg bg-muted/70" />
+                  ))}
                 </div>
               </div>
             </div>
           ) : !hasBranches ? (
-            <div className="p-8 text-center text-muted-foreground">
-              Nenhuma filial cadastrada.
-            </div>
+            <div className="p-8 text-center text-muted-foreground">Nenhuma filial cadastrada.</div>
           ) : error ? (
-            <div className="p-6">
-              <ErrorState
-                title="Erro ao carregar agendamentos"
-                onRetry={handleRetry}
-              />
-            </div>
+            <div className="p-6"><ErrorState title="Erro ao carregar agendamentos" onRetry={refetch} /></div>
           ) : rows.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
-              Nenhum agendamento encontrado.
+              Nenhum agendamento encontrado{hasActiveFilters ? " para os filtros selecionados" : ""}.
             </div>
           ) : (
             <Table>
@@ -379,7 +410,6 @@ export default function AgendamentosPage() {
                   <TableHead className="font-semibold">Profissional</TableHead>
                   <TableHead className="font-semibold">Valor</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -394,9 +424,7 @@ export default function AgendamentosPage() {
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                           <User className="w-4 h-4 text-primary" />
                         </div>
-                        <span className="font-medium">
-                          {appointment.clientName}
-                        </span>
+                        <span className="font-medium">{appointment.clientName}</span>
                       </div>
                     </TableCell>
                     <TableCell>{appointment.serviceName}</TableCell>
@@ -419,31 +447,46 @@ export default function AgendamentosPage() {
                       </div>
                     </TableCell>
                     <TableCell>{appointment.employeeName}</TableCell>
-                    <TableCell className="font-medium">
-                      {appointment.priceLabel}
-                    </TableCell>
+                    <TableCell className="font-medium">{appointment.priceLabel}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-xs",
-                          statusConfig[appointment.status].className,
-                        )}
-                      >
+                      <Badge variant="outline" className={cn("text-xs", statusConfig[appointment.status].className)}>
                         {statusConfig[appointment.status].label}
                       </Badge>
                     </TableCell>
-                    {/* <TableCell>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           )}
         </div>
+
+        {!isLoading && totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Pagina {page} de {totalPages} &nbsp;·&nbsp; {totalCount} agendamento{totalCount !== 1 ? "s" : ""}
+            </p>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                const pageNum =
+                  totalPages <= 5 ? i + 1
+                  : page <= 3 ? i + 1
+                  : page >= totalPages - 2 ? totalPages - 4 + i
+                  : page - 2 + i;
+                return (
+                  <Button key={pageNum} variant={page === pageNum ? "default" : "outline"} size="icon" className="h-8 w-8 text-xs" onClick={() => setPage(pageNum)}>
+                    {pageNum}
+                  </Button>
+                );
+              })}
+              <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </PageShell>
   );

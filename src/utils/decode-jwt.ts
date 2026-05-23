@@ -1,6 +1,8 @@
 /**
  * Tipo que representa os dados do usuário no JWT
  */
+export type UserType = "employee" | "system_admin";
+
 export interface JWTUserData {
   id: string;
   name: string;
@@ -9,6 +11,7 @@ export interface JWTUserData {
   phone: string;
   verified: boolean;
   company_id: string;
+  type: UserType;
   tags?: any;
 }
 

@@ -4,13 +4,20 @@ import { DashboardTheme } from "./components/dashboard-theme";
 import { auth } from "../../../auth";
 import { redirect } from "next/navigation";
 import { MobileSidebarToggle } from "./components/mobile-sidebar-toggle";
+import { isBackendTokenExpired } from "@/utils/decode-jwt";
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const session = await auth();
-  if (!session || !session.user) {
+  const accessToken = (session as any)?.accessToken as string | undefined;
+  if (
+    !session ||
+    !session.user ||
+    !accessToken ||
+    isBackendTokenExpired(accessToken)
+  ) {
     redirect("/auth/employee");
   }
   return (

@@ -15,6 +15,8 @@ interface UseBranchAppointmentsProps {
   startDate?: string; // Formato: DD/MM/YYYY
   endDate?: string; // Formato: DD/MM/YYYY
   cancelled?: boolean;
+  employeeId?: string;
+  serviceId?: string;
   enabled?: boolean;
 }
 
@@ -37,6 +39,8 @@ export function useBranchAppointments({
   startDate,
   endDate,
   cancelled,
+  employeeId,
+  serviceId,
   enabled = true,
 }: UseBranchAppointmentsProps) {
   const [data, setData] = useState<BranchAppointmentsResponse | null>(null);
@@ -65,6 +69,8 @@ export function useBranchAppointments({
       if (endDate) queryParams.append("end_date", endDate);
       if (cancelled !== undefined)
         queryParams.append("cancelled", cancelled.toString());
+      if (employeeId) queryParams.append("employee_id", employeeId);
+      if (serviceId) queryParams.append("service_id", serviceId);
 
       const cacheKey = `branch-appointments:${branchId}:${queryParams.toString()}`;
       const appointmentsData = await fetchWithCache(
@@ -77,19 +83,19 @@ export function useBranchAppointments({
               headers: {
                 "Content-Type": "application/json",
               },
-            }
+            },
           );
 
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(
-              errorData.message || "Erro ao buscar agendamentos da filial"
+              errorData.message || "Erro ao buscar agendamentos da filial",
             );
           }
 
           return (await response.json()) as BranchAppointmentsResponse;
         },
-        { ttlMs: 10 * 1000, force }
+        { ttlMs: 10 * 1000, force },
       );
       setData(appointmentsData);
       return appointmentsData;
@@ -113,7 +119,17 @@ export function useBranchAppointments({
     if (enabled && branchId) {
       fetchAppointments(false);
     }
-  }, [branchId, page, pageSize, startDate, endDate, cancelled, enabled]);
+  }, [
+    branchId,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    cancelled,
+    employeeId,
+    serviceId,
+    enabled,
+  ]);
 
   return {
     data,

@@ -10,7 +10,7 @@ export const GET = auth(async function GET(req, { params }) {
     if (!authData.isValid) {
       return NextResponse.json(
         { message: authData.error || "Token inválido" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -20,7 +20,7 @@ export const GET = auth(async function GET(req, { params }) {
     if (!clientId) {
       return NextResponse.json(
         { message: "ID do cliente não informado." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -30,18 +30,17 @@ export const GET = auth(async function GET(req, { params }) {
       authData.token!,
       {
         method: "GET",
-      }
+      },
     );
 
     return NextResponse.json(client, { status: 200 });
   } catch (error) {
-    console.error("❌ Erro ao buscar cliente:", error);
     return NextResponse.json(
       {
         message: "Erro interno ao buscar cliente.",
         error: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -53,7 +52,7 @@ export const DELETE = auth(async function DELETE(req, { params }) {
     if (!authData.isValid) {
       return NextResponse.json(
         { message: authData.error || "Token inválido" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -63,17 +62,22 @@ export const DELETE = auth(async function DELETE(req, { params }) {
     if (!clientId) {
       return NextResponse.json(
         { message: "ID do cliente não informado." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    await fetchFromBackend(req, `/company-client/${clientId}`, authData.token!, {
-      method: "DELETE",
-    });
+    await fetchFromBackend(
+      req,
+      `/company-client/${clientId}`,
+      authData.token!,
+      {
+        method: "DELETE",
+      },
+    );
 
     return NextResponse.json(
       { message: "Cliente deletado com sucesso" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("❌ Erro ao deletar cliente:", error);
@@ -82,7 +86,7 @@ export const DELETE = auth(async function DELETE(req, { params }) {
         message: "Erro interno ao deletar cliente.",
         error: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });

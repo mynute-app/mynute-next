@@ -17,13 +17,6 @@ export const POST = auth(async function POST(req, ctx) {
 
     const body = await req.json();
 
-    console.log(
-      "📦 Body recebido (POST employee work_range services):",
-      JSON.stringify(body, null, 2),
-    );
-    console.log("🔍 POST Employee ID:", employee_id);
-    console.log("🔍 POST Work Range ID:", work_range_id);
-
     const responseData = await fetchFromBackend(
       req,
       `/employee/${employee_id}/work_range/${work_range_id}/services`,
@@ -34,18 +27,10 @@ export const POST = auth(async function POST(req, ctx) {
       },
     );
 
-    console.log(
-      "✅ Sucesso com POST (employee work_range services):",
-      responseData,
-    );
     return NextResponse.json(responseData, { status: 200 });
-  } catch (error) {
-    console.error("❌ Erro ao adicionar services ao work_range:", error);
+  } catch {
     return NextResponse.json(
-      {
-        message: "Erro interno do servidor",
-        error: process.env.NODE_ENV === "development" ? error : undefined,
-      },
+      { message: "Erro interno do servidor" },
       { status: 500 },
     );
   }
@@ -64,9 +49,6 @@ export const GET = auth(async function GET(req, ctx) {
       work_range_id: string;
     };
 
-    console.log("🔍 GET Employee ID:", employee_id);
-    console.log("🔍 GET Work Range ID:", work_range_id);
-
     const responseData = await fetchFromBackend(
       req,
       `/employee/${employee_id}/work_range/${work_range_id}/services`,
@@ -76,18 +58,10 @@ export const GET = auth(async function GET(req, ctx) {
       },
     );
 
-    console.log(
-      "✅ Sucesso com GET (employee work_range services):",
-      responseData,
-    );
     return NextResponse.json(responseData, { status: 200 });
-  } catch (error) {
-    console.error("❌ Erro ao buscar services do work_range:", error);
+  } catch {
     return NextResponse.json(
-      {
-        message: "Erro interno do servidor",
-        error: process.env.NODE_ENV === "development" ? error : undefined,
-      },
+      { message: "Erro interno do servidor" },
       { status: 500 },
     );
   }
@@ -108,13 +82,6 @@ export const PUT = auth(async function PUT(req, ctx) {
 
     const body = await req.json();
 
-    console.log(
-      "📦 Body recebido (PUT employee work_range services):",
-      JSON.stringify(body, null, 2),
-    );
-    console.log("🔍 PUT Employee ID:", employee_id);
-    console.log("🔍 PUT Work Range ID:", work_range_id);
-
     const responseData = await fetchFromBackend(
       req,
       `/employee/${employee_id}/work_range/${work_range_id}/services`,
@@ -127,18 +94,10 @@ export const PUT = auth(async function PUT(req, ctx) {
       },
     );
 
-    console.log(
-      "✅ Sucesso com PUT (employee work_range services):",
-      responseData,
-    );
     return NextResponse.json(responseData, { status: 200 });
-  } catch (error) {
-    console.error("❌ Erro ao atualizar services do work_range:", error);
+  } catch {
     return NextResponse.json(
-      {
-        message: "Erro interno do servidor",
-        error: process.env.NODE_ENV === "development" ? error : undefined,
-      },
+      { message: "Erro interno do servidor" },
       { status: 500 },
     );
   }
@@ -157,9 +116,6 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       work_range_id: string;
     };
 
-    console.log("🔍 DELETE Employee ID:", employee_id);
-    console.log("🔍 DELETE Work Range ID:", work_range_id);
-
     const responseData = await fetchFromBackend(
       req,
       `/employee/${employee_id}/work_range/${work_range_id}/services`,
@@ -169,18 +125,10 @@ export const DELETE = auth(async function DELETE(req, ctx) {
       },
     );
 
-    console.log(
-      "✅ Sucesso com DELETE (employee work_range services):",
-      responseData,
-    );
     return NextResponse.json(responseData, { status: 200 });
-  } catch (error) {
-    console.error("❌ Erro ao remover services do work_range:", error);
+  } catch {
     return NextResponse.json(
-      {
-        message: "Erro interno do servidor",
-        error: process.env.NODE_ENV === "development" ? error : undefined,
-      },
+      { message: "Erro interno do servidor" },
       { status: 500 },
     );
   }

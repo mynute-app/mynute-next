@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       if (!body[field]) {
         return NextResponse.json(
           { error: `Campo obrigatório ausente: ${field}` },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -28,13 +28,12 @@ export async function POST(req: NextRequest) {
     if (!companyId) {
       return NextResponse.json(
         { error: "X-Company-ID header é obrigatório." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Fazer requisição direta ao backend (rota pública, sem autenticação)
     const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
-
 
     try {
       const response = await fetch(
@@ -46,15 +45,12 @@ export async function POST(req: NextRequest) {
             "X-Company-ID": companyId,
           },
           body: JSON.stringify(body),
-        }
+        },
       );
 
-
       const data = await response.json();
-      console.log("Data:", JSON.stringify(data, null, 2));
 
       if (!response.ok) {
-        console.error("❌ Erro do backend:", data);
         return NextResponse.json(
           {
             error:
@@ -63,36 +59,25 @@ export async function POST(req: NextRequest) {
               "Erro ao criar agendamento",
             details: data,
           },
-          { status: response.status }
+          { status: response.status },
         );
       }
 
       return NextResponse.json(data, { status: 201 });
     } catch (fetchError) {
-      console.error("❌ Erro ao fazer fetch para o backend:", fetchError);
-      console.error(
-        "Stack:",
-        fetchError instanceof Error ? fetchError.stack : "N/A"
-      );
-      console.error(
-        "Causa:",
-        fetchError instanceof Error ? (fetchError as any).cause : "N/A"
-      );
-
       // Erro de conexão recusada
       if (
         fetchError instanceof Error &&
         (fetchError as any).cause?.code === "ECONNREFUSED"
       ) {
         const errorMessage = `Não foi possível conectar ao backend em ${backendUrl}. Verifique se o servidor está rodando.`;
-        console.error("🔴", errorMessage);
         return NextResponse.json(
           {
             error: errorMessage,
             details:
               "Backend não está acessível. Verifique a URL e se o servidor está rodando.",
           },
-          { status: 503 }
+          { status: 503 },
         );
       }
 
@@ -104,14 +89,13 @@ export async function POST(req: NextRequest) {
               : "Erro ao criar agendamento",
           details: "Erro ao comunicar com o backend",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error) {
-    console.error("❌ Erro no servidor:", error);
     return NextResponse.json(
       { error: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

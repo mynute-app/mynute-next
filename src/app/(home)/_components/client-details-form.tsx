@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +13,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Mail,
+  Calendar,
+  Clock,
+  Briefcase,
+  MapPin,
 } from "lucide-react";
 import { useClientByEmail } from "@/hooks/use-client-by-email";
 import { useCreateClient } from "@/hooks/use-create-client";
@@ -94,7 +97,7 @@ export function ClientDetailsForm({
     (branch: any) => branch.id === selectedSlot.branchId,
   );
 
-  // Verificar se já existe token no localStorage ao carregar
+  // Verificar se jÃ¡ existe token no localStorage ao carregar
   useEffect(() => {
     const storedToken = localStorage.getItem("client_token");
 
@@ -102,7 +105,7 @@ export function ClientDetailsForm({
       const userData = decodeJWTToken(storedToken);
 
       if (userData) {
-        // Preencher os dados do formulário com os dados do token
+        // Preencher os dados do formulÃ¡rio com os dados do token
         setClientData({
           name: userData.name,
           surname: userData.surname,
@@ -147,26 +150,26 @@ export function ClientDetailsForm({
     setErrors(prev => ({ ...prev, email: "" }));
 
     if (!email) {
-      setErrors(prev => ({ ...prev, email: "Email é obrigatório" }));
+      setErrors(prev => ({ ...prev, email: "Email Ã© obrigatÃ³rio" }));
       return;
     }
 
     if (!validateEmail(email)) {
       setErrors(prev => ({
         ...prev,
-        email: "Digite um email válido (exemplo: seu@email.com)",
+        email: "Digite um email vÃ¡lido (exemplo: seu@email.com)",
       }));
       return;
     }
 
-    // Email válido, buscar no servidor
+    // Email vÃ¡lido, buscar no servidor
     setIsCheckingEmail(true);
     await checkEmail(email);
     setIsCheckingEmail(false);
     setEmailValidated(true);
   };
 
-  // Preencher campos automaticamente quando cliente for encontrado (verificado ou não)
+  // Preencher campos automaticamente quando cliente for encontrado (verificado ou nÃ£o)
   useEffect(() => {
     if (client) {
       setClientData(prev => ({
@@ -197,7 +200,8 @@ export function ClientDetailsForm({
     if (phoneDuplicate) {
       setErrors(prev => ({
         ...prev,
-        phone: "Este número de telefone já está cadastrado. Use outro número.",
+        phone:
+          "Este nÃºmero de telefone jÃ¡ estÃ¡ cadastrado. Use outro nÃºmero.",
       }));
       return;
     }
@@ -209,7 +213,7 @@ export function ClientDetailsForm({
     ) {
       setErrors(prev => ({
         ...prev,
-        email: "Este email já está cadastrado.",
+        email: "Este email jÃ¡ estÃ¡ cadastrado.",
       }));
       return;
     }
@@ -229,23 +233,23 @@ export function ClientDetailsForm({
     const newErrors: Record<string, string> = {};
 
     if (!clientData.email.trim()) {
-      newErrors.email = "Email é obrigatório";
+      newErrors.email = "Email Ã© obrigatÃ³rio";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientData.email.trim())) {
-      newErrors.email = "Email deve ter um formato válido";
+      newErrors.email = "Email deve ter um formato vÃ¡lido";
     }
 
     if (!clientData.name.trim()) {
-      newErrors.name = "Nome é obrigatório";
+      newErrors.name = "Nome Ã© obrigatÃ³rio";
     }
 
     if (!clientData.surname.trim()) {
-      newErrors.surname = "Sobrenome é obrigatório";
+      newErrors.surname = "Sobrenome Ã© obrigatÃ³rio";
     }
 
     if (!clientData.phone.trim()) {
-      newErrors.phone = "Telefone é obrigatório";
+      newErrors.phone = "Telefone Ã© obrigatÃ³rio";
     } else if (!/^[\d\s\-\(\)\+]+$/.test(clientData.phone.trim())) {
-      newErrors.phone = "Telefone deve conter apenas números";
+      newErrors.phone = "Telefone deve conter apenas nÃºmeros";
     }
 
     setErrors(newErrors);
@@ -281,7 +285,7 @@ export function ClientDetailsForm({
     if (!validateEmail(clientData.email.trim())) {
       setErrors(prev => ({
         ...prev,
-        email: "Digite um email válido antes de fazer login",
+        email: "Digite um email vÃ¡lido antes de fazer login",
       }));
       return;
     }
@@ -291,7 +295,7 @@ export function ClientDetailsForm({
     if (!codeSent) {
       setErrors(prev => ({
         ...prev,
-        email: "Erro ao enviar código. Verifique seu email e tente novamente.",
+        email: "Erro ao enviar cÃ³digo. Verifique seu email e tente novamente.",
       }));
       return;
     }
@@ -340,298 +344,351 @@ export function ClientDetailsForm({
   };
 
   return (
-    <div className="space-y-6 pb-24 lg:pb-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={onBack}>
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onBack}
+          className="flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-card hover:bg-muted transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 text-foreground" />
+        </button>
         <div>
-          <h2 className="text-2xl font-bold">Seus dados</h2>
-          <p className="text-muted-foreground text-sm">
+          <h2 className="text-base font-semibold text-foreground">
+            Seus dados
+          </h2>
+          <p className="text-xs text-muted-foreground">
             Preencha seus dados para finalizar o agendamento
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Formulário de dados do cliente */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  {isLoggedIn ? "Seus dados" : "Informações pessoais"}
+      {/* Card principal de dados */}
+      <div className="rounded-xl border border-border bg-card shadow-[0_1px_3px_0_hsl(215_25%_15%/0.07)]">
+        {/* Card header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <User className="w-4 h-4 text-muted-foreground" />
+            {isLoggedIn ? "Seus dados" : "InformaÃ§Ãµes pessoais"}
+          </div>
+          {isLoggedIn && (
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Trocar email
+            </button>
+          )}
+        </div>
+
+        {/* Card content */}
+        <div className="p-4 space-y-4">
+          {isLoggedIn ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">Nome</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {clientData.name}
+                  </p>
                 </div>
-                {isLoggedIn && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleLogout}
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Trocar email
-                  </Button>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">
+                    Sobrenome
+                  </p>
+                  <p className="text-sm font-medium text-foreground">
+                    {clientData.surname}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">Email</p>
+                <p className="text-sm font-medium text-foreground break-all">
+                  {clientData.email}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">Telefone</p>
+                <p className="text-sm font-medium text-foreground">
+                  {formatPhone(clientData.phone.replace(/^\+55/, ""))}
+                </p>
+              </div>
+              <div className="space-y-1.5 pt-3 border-t border-border">
+                <Label htmlFor="notes" className="text-sm">
+                  ObservaÃ§Ãµes{" "}
+                  <span className="text-muted-foreground">(opcional)</span>
+                </Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Alguma observaÃ§Ã£o ou preferÃªncia especial..."
+                  value={clientData.notes}
+                  onChange={e =>
+                    setClientData({ ...clientData, notes: e.target.value })
+                  }
+                  rows={3}
+                  className="rounded-lg border-border resize-none"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Campo Email */}
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="email"
+                  className="text-sm flex items-center gap-2"
+                >
+                  Email *
+                  {isCheckingEmail && (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                  )}
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={clientData.email}
+                    onChange={e => {
+                      setClientData({ ...clientData, email: e.target.value });
+                      setEmailValidated(false);
+                      setErrors(prev => ({ ...prev, email: "" }));
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleEmailValidation();
+                      }
+                    }}
+                    className={`rounded-lg border-border ${errors.email ? "border-destructive" : ""}`}
+                    disabled={isCheckingEmail}
+                  />
+                  {!emailValidated && (
+                    <Button
+                      type="button"
+                      onClick={handleEmailValidation}
+                      disabled={isCheckingEmail || !clientData.email.trim()}
+                      variant="secondary"
+                      className="rounded-lg shrink-0"
+                    >
+                      {isCheckingEmail ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        "Verificar"
+                      )}
+                    </Button>
+                  )}
+                </div>
+                {errors.email && (
+                  <div className="flex items-center gap-1.5 text-xs text-destructive">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span>{errors.email}</span>
+                  </div>
                 )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {isLoggedIn ? (
+
+                {emailValidated && !clientError && client && (
+                  <div className="flex items-center gap-2 p-2.5 bg-[hsl(142_72%_50%/0.08)] border border-[hsl(142_72%_50%/0.2)] rounded-lg text-xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600 shrink-0" />
+                    <span className="text-green-700 font-medium">
+                      Email encontrado!
+                    </span>
+                  </div>
+                )}
+
+                {emailValidated &&
+                  clientError === "Cliente nÃ£o encontrado" && (
+                    <div className="flex items-center gap-2 p-2.5 bg-muted border border-border rounded-lg text-xs">
+                      <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-muted-foreground">
+                        Email disponÃ­vel para criar conta
+                      </span>
+                    </div>
+                  )}
+
+                {emailValidated && client && !client.verified && (
+                  <div className="p-2.5 bg-[hsl(38_92%_50%/0.08)] border border-[hsl(38_92%_50%/0.2)] rounded-lg text-xs space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <p className="font-medium text-amber-700">
+                        Email nÃ£o verificado
+                      </p>
+                    </div>
+                    <p className="text-amber-600 pl-5">
+                      Clique em "Fazer login" para verificar seu email e
+                      continuar.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Campos restantes */}
+              {emailValidated && (
                 <>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-xs text-muted-foreground">
-                          Nome
-                        </Label>
-                        <p className="font-medium mt-1">{clientData.name}</p>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-muted-foreground">
-                          Sobrenome
-                        </Label>
-                        <p className="font-medium mt-1">{clientData.surname}</p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label className="text-xs text-muted-foreground">
-                        Email
-                      </Label>
-                      <p className="font-medium mt-1 break-all">
-                        {clientData.email}
-                      </p>
-                    </div>
-
-                    <div>
-                      <Label className="text-xs text-muted-foreground">
-                        Telefone
-                      </Label>
-                      <p className="font-medium mt-1">
-                        {formatPhone(clientData.phone.replace(/^\+55/, ""))}
-                      </p>
-                    </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="name" className="text-sm">
+                      Nome *
+                    </Label>
+                    <Input
+                      id="name"
+                      placeholder="Digite seu nome"
+                      value={clientData.name}
+                      onChange={e =>
+                        setClientData({ ...clientData, name: e.target.value })
+                      }
+                      className={`rounded-lg border-border ${errors.name ? "border-destructive" : ""}`}
+                      disabled={
+                        client !== null &&
+                        clientError !== "Cliente nÃ£o encontrado"
+                      }
+                    />
+                    {errors.name && (
+                      <p className="text-xs text-destructive">{errors.name}</p>
+                    )}
                   </div>
 
-                  <div className="space-y-2 pt-4 border-t">
-                    <Label htmlFor="notes">Observações (opcional)</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="surname" className="text-sm">
+                      Sobrenome *
+                    </Label>
+                    <Input
+                      id="surname"
+                      placeholder="Digite seu sobrenome"
+                      value={clientData.surname}
+                      onChange={e =>
+                        setClientData({
+                          ...clientData,
+                          surname: e.target.value,
+                        })
+                      }
+                      className={`rounded-lg border-border ${errors.surname ? "border-destructive" : ""}`}
+                      disabled={
+                        client !== null &&
+                        clientError !== "Cliente nÃ£o encontrado"
+                      }
+                    />
+                    {errors.surname && (
+                      <p className="text-xs text-destructive">
+                        {errors.surname}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="phone" className="text-sm">
+                      Telefone *
+                    </Label>
+                    <Input
+                      id="phone"
+                      placeholder="(11) 99999-9999"
+                      value={clientData.phone}
+                      onChange={e => {
+                        const formatted = formatPhone(e.target.value);
+                        setClientData({ ...clientData, phone: formatted });
+                      }}
+                      className={`rounded-lg border-border ${errors.phone ? "border-destructive" : ""}`}
+                      disabled={
+                        client !== null &&
+                        clientError !== "Cliente nÃ£o encontrado"
+                      }
+                    />
+                    {errors.phone && (
+                      <p className="text-xs text-destructive">{errors.phone}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="notes" className="text-sm">
+                      ObservaÃ§Ãµes{" "}
+                      <span className="text-muted-foreground">(opcional)</span>
+                    </Label>
                     <Textarea
                       id="notes"
-                      placeholder="Alguma observação ou preferência especial..."
+                      placeholder="Alguma observaÃ§Ã£o ou preferÃªncia especial..."
                       value={clientData.notes}
                       onChange={e =>
                         setClientData({ ...clientData, notes: e.target.value })
                       }
                       rows={3}
+                      className="rounded-lg border-border resize-none"
                     />
                   </div>
                 </>
-              ) : (
-                // Modo formulário quando não logado
-                <>
-                  {/* Campo de Email - Sempre visível */}
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="flex items-center gap-2">
-                      Email *
-                      {isCheckingEmail && (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      )}
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="seu@email.com"
-                        value={clientData.email}
-                        onChange={e => {
-                          setClientData({
-                            ...clientData,
-                            email: e.target.value,
-                          });
-                          setEmailValidated(false);
-                          setErrors(prev => ({ ...prev, email: "" }));
-                        }}
-                        onKeyDown={e => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleEmailValidation();
-                          }
-                        }}
-                        className={errors.email ? "border-destructive" : ""}
-                        disabled={isCheckingEmail}
-                      />
-                      {!emailValidated && (
-                        <Button
-                          type="button"
-                          onClick={handleEmailValidation}
-                          disabled={isCheckingEmail || !clientData.email.trim()}
-                          variant="secondary"
-                        >
-                          {isCheckingEmail ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            "Verificar"
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                    {errors.email && (
-                      <div className="flex items-center gap-2 text-sm text-destructive">
-                        <AlertCircle className="w-4 h-4" />
-                        <span>{errors.email}</span>
-                      </div>
-                    )}
-
-                    {/* Status da verificação */}
-                    {emailValidated && !clientError && client && (
-                      <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded text-sm">
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        <span className="text-green-700 font-medium">
-                          Email encontrado!
-                        </span>
-                      </div>
-                    )}
-
-                    {emailValidated &&
-                      clientError === "Cliente não encontrado" && (
-                        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
-                          <Mail className="w-4 h-4 text-blue-600" />
-                          <span className="text-blue-700">
-                            Email disponível para criar conta
-                          </span>
-                        </div>
-                      )}
-
-                    {emailValidated && client && !client.verified && (
-                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
-                        <div className="flex items-center gap-2">
-                          <AlertCircle className="w-4 h-4 text-yellow-600" />
-                          <p className="font-medium text-yellow-700">
-                            Email não verificado
-                          </p>
-                        </div>
-                        <p className="text-xs text-yellow-600 mt-1">
-                          Clique em "Fazer login" para verificar seu email e
-                          continuar.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Campos restantes - Mostrar apenas após email validado */}
-                  {emailValidated && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Nome *</Label>
-                        <Input
-                          id="name"
-                          placeholder="Digite seu nome"
-                          value={clientData.name}
-                          onChange={e =>
-                            setClientData({
-                              ...clientData,
-                              name: e.target.value,
-                            })
-                          }
-                          className={errors.name ? "border-destructive" : ""}
-                          disabled={
-                            client !== null &&
-                            clientError !== "Cliente não encontrado"
-                          }
-                        />
-                        {errors.name && (
-                          <p className="text-sm text-destructive">
-                            {errors.name}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="surname">Sobrenome *</Label>
-                        <Input
-                          id="surname"
-                          placeholder="Digite seu sobrenome"
-                          value={clientData.surname}
-                          onChange={e =>
-                            setClientData({
-                              ...clientData,
-                              surname: e.target.value,
-                            })
-                          }
-                          className={errors.surname ? "border-destructive" : ""}
-                          disabled={
-                            client !== null &&
-                            clientError !== "Cliente não encontrado"
-                          }
-                        />
-                        {errors.surname && (
-                          <p className="text-sm text-destructive">
-                            {errors.surname}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Telefone *</Label>
-                        <Input
-                          id="phone"
-                          placeholder="(11) 99999-9999"
-                          value={clientData.phone}
-                          onChange={e => {
-                            const formatted = formatPhone(e.target.value);
-                            setClientData({
-                              ...clientData,
-                              phone: formatted,
-                            });
-                          }}
-                          className={errors.phone ? "border-destructive" : ""}
-                          disabled={
-                            client !== null &&
-                            clientError !== "Cliente não encontrado"
-                          }
-                        />
-                        {errors.phone && (
-                          <p className="text-sm text-destructive">
-                            {errors.phone}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="notes">Observações (opcional)</Label>
-                        <Textarea
-                          id="notes"
-                          placeholder="Alguma observação ou preferência especial..."
-                          value={clientData.notes}
-                          onChange={e =>
-                            setClientData({
-                              ...clientData,
-                              notes: e.target.value,
-                            })
-                          }
-                          rows={3}
-                        />
-                      </div>
-                    </>
-                  )}
-                </>
               )}
-            </CardContent>
-          </Card>
+            </>
+          )}
         </div>
-
-        {/* Resumo do servico - Apenas Desktop */}
-        <div className="hidden lg:block space-y-4">{renderSummaryCard()}</div>
       </div>
 
-      {/* Botão fixo no mobile */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-lg z-50 flex justify-end">
-        {renderActionButton()}
+      {/* Card resumo */}
+      <div className="rounded-xl border border-border bg-card shadow-[0_1px_3px_0_hsl(215_25%_15%/0.07)] divide-y divide-border">
+        <div className="px-4 py-3 text-sm font-medium text-foreground">
+          Resumo do agendamento
+        </div>
+        <div className="p-4 space-y-3 text-sm">
+          <div className="flex items-start gap-3">
+            <Briefcase className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium text-foreground">{service.name}</p>
+              <ServiceDescription
+                description={service.description}
+                maxItemsCollapsed={2}
+                className="mt-0.5"
+                introClassName="text-xs text-muted-foreground"
+                listClassName="text-xs text-muted-foreground"
+                toggleClassName="text-xs text-muted-foreground"
+              />
+              {service.price && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  R$ {service.price.toFixed(2)}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <Calendar className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium text-foreground capitalize">
+                {formatDate(selectedSlot.date)}
+              </p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                <Clock className="w-3.5 h-3.5" />
+                {formatTime(selectedSlot.time)}
+                {service.duration && ` Â· ${service.duration} min`}
+              </p>
+            </div>
+          </div>
+
+          {selectedEmployee && (
+            <div className="flex items-start gap-3">
+              <User className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+              <p className="font-medium text-foreground">
+                {selectedEmployee.name}
+              </p>
+            </div>
+          )}
+
+          {selectedBranch && (
+            <div className="flex items-start gap-3">
+              <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium text-foreground">
+                  {selectedBranch.name}
+                </p>
+                {selectedBranch.address && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {selectedBranch.address}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Botão no desktop (dentro do card) - Renderizado dentro do Card no desktop */}
+      {/* BotÃ£o de aÃ§Ã£o */}
+      <div className="pt-1">{renderActionButton()}</div>
 
       <ClientVerifyCodeDialog
         open={isVerifyDialogOpen}
@@ -642,87 +699,17 @@ export function ClientDetailsForm({
     </div>
   );
 
-  // Função auxiliar para renderizar o card de resumo
-  function renderSummaryCard() {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Resumo do servico</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Serviço */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">Serviço</p>
-            <p className="font-medium">{service.name}</p>
-            <ServiceDescription
-              description={service.description}
-              maxItemsCollapsed={2}
-              className="mt-1"
-              introClassName="text-sm text-muted-foreground"
-              listClassName="text-sm text-muted-foreground"
-              toggleClassName="text-xs text-muted-foreground"
-            />
-          </div>
-
-          {/* Data e horário */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              Data e horário
-            </p>
-            <p className="font-medium">{formatDate(selectedSlot.date)}</p>
-            <p className="font-medium">{formatTime(selectedSlot.time)}</p>
-          </div>
-
-          {/* Profissional */}
-          {selectedEmployee && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Profissional
-              </p>
-              <p className="font-medium">{selectedEmployee.name}</p>
-            </div>
-          )}
-
-          {/* Local */}
-          {selectedBranch && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Local</p>
-              <p className="font-medium">{selectedBranch.name}</p>
-              {selectedBranch.address && (
-                <p className="text-sm text-muted-foreground">
-                  {selectedBranch.address}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Preço */}
-          {service.price && (
-            <div className="space-y-2 pt-4 border-t">
-              <div className="flex items-center justify-between">
-                <p className="font-medium">Total</p>
-                <p className="font-bold text-lg">
-                  R$ {service.price.toFixed(2)}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Botão no desktop */}
-          <div className="pt-4 ">{renderActionButton()}</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Função auxiliar para renderizar o botão de ação
   function renderActionButton() {
-    // Se o usuário está logado e tem token, pode finalizar agendamento
     if (isLoggedIn && clientToken) {
       return (
         <Button
           size="lg"
-          style={{ backgroundColor: brandColor }}
+          className="w-full rounded-lg h-11 font-semibold"
+          style={{
+            backgroundColor: brandColor,
+            color: "#fff",
+            borderColor: brandColor,
+          }}
           onClick={handleSubmit}
         >
           Finalizar agendamento
@@ -730,12 +717,16 @@ export function ClientDetailsForm({
       );
     }
 
-    // Se email foi validado e cliente não existe, mostrar botão de criar conta
-    if (emailValidated && clientError === "Cliente não encontrado") {
+    if (emailValidated && clientError === "Cliente nÃ£o encontrado") {
       return (
         <Button
           size="lg"
-          style={{ backgroundColor: brandColor }}
+          className="w-full rounded-lg h-11 font-semibold"
+          style={{
+            backgroundColor: brandColor,
+            color: "#fff",
+            borderColor: brandColor,
+          }}
           onClick={handleCreateAccount}
         >
           {creatingClient ? (
@@ -747,12 +738,16 @@ export function ClientDetailsForm({
       );
     }
 
-    // Se email foi validado, cliente existe e não está verificado, mostrar botão de login
     if (emailValidated && client && !client.verified) {
       return (
         <Button
           size="lg"
-          style={{ backgroundColor: brandColor }}
+          className="w-full rounded-lg h-11 font-semibold"
+          style={{
+            backgroundColor: brandColor,
+            color: "#fff",
+            borderColor: brandColor,
+          }}
           onClick={handleLogin}
         >
           {sendingCode ? (
@@ -764,12 +759,16 @@ export function ClientDetailsForm({
       );
     }
 
-    // Se email foi validado, cliente existe e está verificado, mostrar botão de login
     if (emailValidated && client && client.verified && !isLoggedIn) {
       return (
         <Button
           size="lg"
-          style={{ backgroundColor: brandColor }}
+          className="w-full rounded-lg h-11 font-semibold"
+          style={{
+            backgroundColor: brandColor,
+            color: "#fff",
+            borderColor: brandColor,
+          }}
           onClick={handleLogin}
         >
           {sendingCode ? (
@@ -781,9 +780,17 @@ export function ClientDetailsForm({
       );
     }
 
-    // Caso padrão: botão desabilitado
     return (
-      <Button size="lg" style={{ backgroundColor: brandColor }} disabled>
+      <Button
+        size="lg"
+        className="w-full rounded-lg h-11 font-semibold"
+        style={{
+          backgroundColor: brandColor,
+          color: "#fff",
+          borderColor: brandColor,
+        }}
+        disabled
+      >
         Finalizar agendamento
       </Button>
     );

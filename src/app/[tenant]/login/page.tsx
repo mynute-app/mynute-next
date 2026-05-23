@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "../../../../auth";
 import { LoginFormSwitcher } from "@/app/auth/employee/_components/login-form-switcher";
 import { getTenantCompanyForAuthPage } from "@/lib/tenant-auth-page";
+import { isBackendTokenExpired } from "@/utils/decode-jwt";
 
 export default async function TenantLoginPage({
   params,
@@ -11,7 +12,8 @@ export default async function TenantLoginPage({
   const { tenant } = await params;
 
   const session = await auth();
-  if (session?.user) {
+  const accessToken = (session as any)?.accessToken as string | undefined;
+  if (session?.user && accessToken && !isBackendTokenExpired(accessToken)) {
     redirect(`/${tenant}/dashboard`);
   }
 

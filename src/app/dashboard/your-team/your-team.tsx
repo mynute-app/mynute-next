@@ -1,10 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Calendar,
-  Clock,
-  Edit,
   Mail,
   MoreHorizontal,
   Phone,
@@ -16,7 +15,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetCompany } from "@/hooks/get-company";
-import { useGetEmployeeById } from "@/hooks/get-employee-by-id";
 import { useDeleteEmployee } from "@/hooks/employee/use-delete-employee";
 import { useEmployeeApi } from "@/hooks/employee/use-employee-api";
 import { formatPhone } from "@/utils/format-cnpj";
@@ -45,10 +43,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import AddTeamMemberDialog from "./add-team-member-modal";
-import { TeamMemberInfoDialog } from "./dialogs/team-member-info-dialog";
-import { TeamMemberScheduleDialog } from "./dialogs/team-member-schedule-dialog";
-import { TeamMemberServicesDialog } from "./dialogs/team-member-services-dialog";
-import { TeamMemberServicesScheduleDialog } from "./dialogs/team-member-services-schedule-dialog";
 
 const getInitials = (member: Employee) => {
   const first = member.name?.trim().charAt(0);
@@ -59,38 +53,25 @@ const getInitials = (member: Employee) => {
 
 const formatPhoneForDisplay = (phone?: string) => {
   if (!phone) return "";
-
   const digits = phone.replace(/\D/g, "");
   if (!digits) return "";
-
-  // API commonly returns E.164 (+55...). Show only national portion for BR mask.
   const nationalNumber =
     digits.startsWith("55") && digits.length > 11 ? digits.slice(2) : digits;
-
   return formatPhone(nationalNumber);
 };
 
-type MemberDialogKey = "info" | "services" | "schedule" | "services-schedule";
-
-const isEmployeeActive = (member: Employee) =>
-  (member as { is_active?: boolean }).is_active !== false;
+const isEmployeeActive = (member: Employee) => member.is_active !== false;
 
 export default function YourTeam() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [activeDialog, setActiveDialog] = useState<MemberDialogKey | null>(
-    null,
-  );
-  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
-  const [selectedMember, setSelectedMember] = useState<Employee | null>(null);
-  const [memberReloadKey, setMemberReloadKey] = useState(0);
   const [memberToDelete, setMemberToDelete] = useState<Employee | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [activeById, setActiveById] = useState<Record<number, boolean>>({});
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isEmployeesLoading, setIsEmployeesLoading] = useState(true);
 
-  const { company, loading, refetch } = useGetCompany();
+  const { company, refetch } = useGetCompany();
   const { fetchEmployees } = useEmployeeApi();
   const { toast } = useToast();
 
@@ -106,57 +87,14 @@ export default function YourTeam() {
   useEffect(() => {
     let active = true;
     setIsEmployeesLoading(true);
-
     void refreshEmployees().finally(() => {
       if (!active) return;
       setIsEmployeesLoading(false);
     });
-
     return () => {
       active = false;
     };
   }, [refreshEmployees]);
-
-  const { employee: selectedEmployeeData } = useGetEmployeeById(
-    selectedMemberId,
-    memberReloadKey,
-  );
-
-  const { deleteEmployee, isDeleting } = useDeleteEmployee({
-    onSuccess: () => {
-      void refreshEmployees(true);
-    },
-  });
-
-  useEffect(() => {
-    if (!selectedMemberId) {
-      setSelectedMember(null);
-      return;
-    }
-
-    if (selectedEmployeeData) {
-      setSelectedMember(selectedEmployeeData);
-    }
-  }, [selectedEmployeeData, selectedMemberId]);
-
-  useEffect(() => {
-    if (employees.length === 0) return;
-
-    setActiveById(prev => {
-      let changed = false;
-      const next = { ...prev };
-
-      employees.forEach(employee => {
-        const empId = Number(employee.id);
-        if (next[empId] === undefined) {
-          next[empId] = true;
-          changed = true;
-        }
-      });
-
-      return changed ? next : prev;
-    });
-  }, [employees]);
 
   const availableServices = useMemo(() => {
     if (!Array.isArray(company?.services)) return [];
@@ -169,7 +107,6 @@ export default function YourTeam() {
   const filteredEmployees = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     if (!normalizedSearch) return employees;
-
     return employees.filter(employee => {
       const fullName = `${employee.name || ""} ${employee.surname || ""}`
         .trim()
@@ -181,7 +118,6 @@ export default function YourTeam() {
             (service.name || "").toLowerCase().includes(normalizedSearch),
           )
         : false;
-
       return (
         fullName.includes(normalizedSearch) ||
         email.includes(normalizedSearch) ||
@@ -191,61 +127,20 @@ export default function YourTeam() {
     });
   }, [employees, searchTerm]);
 
-  const handleCreateMember = () => {
-    setAddDialogOpen(true);
-  };
-
-  const handleOpenDialog = (member: Employee, dialog: MemberDialogKey) => {
-    if (selectedMemberId !== Number(member.id)) {
-      setSelectedMember(null);
-      setSelectedMemberId(Number(member.id));
-    }
-    setActiveDialog(dialog);
-  };
-
-  const handleMenuSelect = (action: () => void) => {
-    if (typeof document !== "undefined") {
-      const activeElement = document.activeElement;
-      if (activeElement instanceof HTMLElement) {
-        activeElement.blur();
-      }
-    }
-    setTimeout(action, 0);
-  };
-
-  const handleCloseDialog = () => {
-    setActiveDialog(null);
-    setSelectedMemberId(null);
-    setSelectedMember(null);
-  };
-
-  const handleReloadMember = () => {
-    setMemberReloadKey(prev => prev + 1);
-  };
-
-  const handleDeleteClick = (member: Employee) => {
-    setMemberToDelete(member);
-    setDeleteDialogOpen(true);
-  };
-
   const handleToggleStatus = async (member: Employee, newValue: boolean) => {
     setEmployees(prev =>
       prev.map(item =>
         item.id === member.id ? { ...item, is_active: newValue } : item,
       ),
     );
-
     try {
       const response = await fetch(`/api/employee/${member.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_active: newValue }),
       });
-
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error("Erro ao atualizar status do profissional");
-      }
-
       const updated = (await response.json()) as Employee;
       setEmployees(prev =>
         prev.map(item =>
@@ -258,7 +153,6 @@ export default function YourTeam() {
           item.id === member.id ? { ...item, is_active: !newValue } : item,
         ),
       );
-
       toast({
         title: "Erro ao atualizar status",
         description: "Não foi possível atualizar o profissional.",
@@ -267,6 +161,17 @@ export default function YourTeam() {
     }
   };
 
+  const handleDeleteClick = (member: Employee) => {
+    setMemberToDelete(member);
+    setDeleteDialogOpen(true);
+  };
+
+  const { deleteEmployee, isDeleting } = useDeleteEmployee({
+    onSuccess: () => {
+      void refreshEmployees(true);
+    },
+  });
+
   const handleConfirmDelete = async () => {
     if (!memberToDelete) return;
     const success = await deleteEmployee(memberToDelete.id);
@@ -274,6 +179,10 @@ export default function YourTeam() {
       setMemberToDelete(null);
       setDeleteDialogOpen(false);
     }
+  };
+
+  const navigateTo = (member: Employee, tab: string) => {
+    router.push(`/dashboard/your-team/${member.id}?tab=${tab}`);
   };
 
   return (
@@ -288,7 +197,10 @@ export default function YourTeam() {
                   Gerencie os profissionais da equipe.
                 </p>
               </div>
-              <Button className="btn-gradient" onClick={handleCreateMember}>
+              <Button
+                className="btn-gradient"
+                onClick={() => setAddDialogOpen(true)}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Novo Profissional
               </Button>
@@ -338,7 +250,7 @@ export default function YourTeam() {
                 </p>
                 <Button
                   className="mt-4 gap-2 btn-gradient"
-                  onClick={handleCreateMember}
+                  onClick={() => setAddDialogOpen(true)}
                 >
                   <Plus className="h-4 w-4" />
                   Criar profissional
@@ -352,48 +264,39 @@ export default function YourTeam() {
                     ? member.services
                     : [];
                   const serviceNames = services
-                    .map(service => service?.name)
+                    .map(s => s?.name)
                     .filter(Boolean) as string[];
                   const roleLabel =
                     member.role || member.permission || "Profissional";
                   const emailValue =
                     member.email ||
-                    (member as { email?: string; user?: { email?: string } })
-                      .user?.email ||
+                    (member as { user?: { email?: string } }).user?.email ||
                     "";
                   const phoneValue =
                     member.phone ||
-                    (member as { phone?: string; phone_number?: string })
-                      .phone_number ||
+                    (member as { phone_number?: string }).phone_number ||
                     "";
                   const formattedPhone = formatPhoneForDisplay(phoneValue);
-                  const descriptionValue =
-                    (member as { bio?: string; description?: string })?.bio ||
-                    (member as { bio?: string; description?: string })
-                      ?.description ||
-                    "";
-                  const rating = 0;
                   const appointmentsCount =
                     (member as { appointments_count?: number })
                       .appointments_count ?? 0;
-                  const workingDaysLabel =
-                    (
-                      member as {
-                        schedule_label?: string;
-                        has_schedule?: boolean;
-                      }
-                    ).schedule_label ||
-                    ((member as { has_schedule?: boolean }).has_schedule
-                      ? "Com agenda"
-                      : "Sem agenda");
 
                   return (
                     <div
                       key={member.id}
                       className={cn(
-                        "bg-card rounded-xl border border-border shadow-sm p-4 sm:p-5 card-hover",
+                        "bg-card rounded-xl border border-border shadow-sm p-4 sm:p-5 card-hover cursor-pointer group",
                         !isActive && "opacity-60",
                       )}
+                      onClick={() => navigateTo(member, "info")}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          navigateTo(member, "info");
+                        }
+                      }}
                     >
                       <div className="flex items-start gap-3 sm:gap-4">
                         <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center text-primary-foreground text-base font-bold flex-shrink-0 sm:h-16 sm:w-16 sm:text-xl">
@@ -403,21 +306,24 @@ export default function YourTeam() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h3 className="font-semibold text-foreground">
+                              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                                 {member.name} {member.surname}
                               </h3>
                               <p className="text-sm text-muted-foreground">
                                 {roleLabel}
                               </p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div
+                              className="flex items-center gap-2"
+                              onClick={e => e.stopPropagation()}
+                            >
                               <Switch
                                 checked={isActive}
                                 onCheckedChange={checked =>
                                   handleToggleStatus(member, checked)
                                 }
                               />
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs text-muted-foreground hidden sm:inline">
                                 {isActive ? "Ativo" : "Inativo"}
                               </span>
                               <DropdownMenu>
@@ -432,20 +338,14 @@ export default function YourTeam() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
-                                    onSelect={() =>
-                                      handleMenuSelect(() =>
-                                        handleOpenDialog(member, "info"),
-                                      )
-                                    }
+                                    onSelect={() => navigateTo(member, "info")}
                                   >
-                                    <Edit className="w-4 h-4 mr-2" />
-                                    Editar
+                                    <Search className="w-4 h-4 mr-2" />
+                                    Ver perfil
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onSelect={() =>
-                                      handleMenuSelect(() =>
-                                        handleOpenDialog(member, "services"),
-                                      )
+                                      navigateTo(member, "services")
                                     }
                                   >
                                     <Sparkles className="w-4 h-4 mr-2" />
@@ -453,34 +353,15 @@ export default function YourTeam() {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onSelect={() =>
-                                      handleMenuSelect(() =>
-                                        handleOpenDialog(member, "schedule"),
-                                      )
-                                    }
-                                  >
-                                    <Clock className="w-4 h-4 mr-2" />
-                                    Filiais e horarios
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onSelect={() =>
-                                      handleMenuSelect(() =>
-                                        handleOpenDialog(
-                                          member,
-                                          "services-schedule",
-                                        ),
-                                      )
+                                      navigateTo(member, "schedule")
                                     }
                                   >
                                     <Calendar className="w-4 h-4 mr-2" />
-                                    Servicos por horario
+                                    Horarios
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
-                                    onSelect={() =>
-                                      handleMenuSelect(() =>
-                                        handleDeleteClick(member),
-                                      )
-                                    }
+                                    onSelect={() => handleDeleteClick(member)}
                                     className="text-destructive focus:text-destructive"
                                   >
                                     <Trash2 className="w-4 h-4 mr-2" />
@@ -491,25 +372,21 @@ export default function YourTeam() {
                             </div>
                           </div>
 
-                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                            {descriptionValue
-                              ? descriptionValue
-                              : "Nenhuma descricao cadastrada."}
-                          </p>
-
                           <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-                            <span className="flex items-center gap-1 min-w-0">
-                              <Mail className="w-3.5 h-3.5" />
-                              <span className="truncate">
-                                {emailValue || "Email nao informado"}
+                            {emailValue && (
+                              <span className="flex items-center gap-1 min-w-0">
+                                <Mail className="w-3.5 h-3.5" />
+                                <span className="truncate">{emailValue}</span>
                               </span>
-                            </span>
-                            <span className="flex items-center gap-1 min-w-0">
-                              <Phone className="w-3.5 h-3.5" />
-                              <span className="truncate">
-                                {formattedPhone || "Telefone nao informado"}
+                            )}
+                            {formattedPhone && (
+                              <span className="flex items-center gap-1 min-w-0">
+                                <Phone className="w-3.5 h-3.5" />
+                                <span className="truncate">
+                                  {formattedPhone}
+                                </span>
                               </span>
-                            </span>
+                            )}
                           </div>
 
                           <div className="flex flex-wrap gap-1 mt-3">
@@ -524,29 +401,21 @@ export default function YourTeam() {
                                 </Badge>
                               ))
                             ) : (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge
+                                variant="outline"
+                                className="text-xs text-muted-foreground"
+                              >
                                 Sem servicos
                               </Badge>
                             )}
                           </div>
 
-                          <div className="mt-4 flex flex-col gap-2 border-t border-border pt-4 text-sm sm:flex-row sm:items-center sm:gap-4">
-                            {rating > 0 && (
-                              <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4 text-accent fill-accent" />
-                                <span className="font-medium text-foreground">
-                                  {rating.toFixed(1)}
-                                </span>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Calendar className="w-4 h-4" />
+                          {appointmentsCount > 0 && (
+                            <div className="mt-3 flex items-center gap-1 pt-3 border-t border-border text-sm text-muted-foreground">
+                              <Star className="w-3.5 h-3.5" />
                               <span>{appointmentsCount} atendimentos</span>
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              {workingDaysLabel}
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -566,48 +435,6 @@ export default function YourTeam() {
           void refreshEmployees(true);
         }}
         availableServices={availableServices}
-      />
-
-      <TeamMemberInfoDialog
-        open={activeDialog === "info"}
-        onOpenChange={open => {
-          if (!open) handleCloseDialog();
-        }}
-        member={selectedMember}
-        onReloadMember={handleReloadMember}
-      />
-      <TeamMemberServicesDialog
-        open={activeDialog === "services"}
-        onOpenChange={open => {
-          if (!open) handleCloseDialog();
-        }}
-        member={selectedMember}
-        setMember={setSelectedMember}
-        onReloadMember={handleReloadMember}
-        services={company?.services ?? []}
-        loadingServices={loading}
-      />
-      <TeamMemberScheduleDialog
-        open={activeDialog === "schedule"}
-        onOpenChange={open => {
-          if (!open) handleCloseDialog();
-        }}
-        member={selectedMember}
-        setMember={setSelectedMember}
-        onReloadMember={handleReloadMember}
-        branches={company?.branches ?? []}
-        loadingBranches={loading}
-      />
-      <TeamMemberServicesScheduleDialog
-        open={activeDialog === "services-schedule"}
-        onOpenChange={open => {
-          if (!open) handleCloseDialog();
-        }}
-        member={selectedMember}
-        setMember={setSelectedMember}
-        onReloadMember={handleReloadMember}
-        services={company?.services ?? []}
-        loadingServices={loading}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

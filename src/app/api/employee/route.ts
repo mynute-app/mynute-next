@@ -168,21 +168,16 @@ export const POST = auth(async function POST(req) {
       time_zone: body.timezone,
     };
 
-    console.log("🔍 API - Request body being sent to backend:", requestBody);
-
     // Usando fetchFromBackend para criar o funcionário
     const createdEmployee = await fetchFromBackend(req, "/employee", token, {
       method: "POST",
       body: requestBody,
     });
 
-    console.log("✅ Funcionário criado com sucesso:", createdEmployee);
-
     revalidateTag("company", "max");
 
     return NextResponse.json(createdEmployee, { status: 201 });
-  } catch (error) {
-    console.error("❌ Erro ao criar funcionário:", error);
+  } catch {
     return NextResponse.json(
       { message: "Erro interno ao criar o funcionário" },
       { status: 500 },

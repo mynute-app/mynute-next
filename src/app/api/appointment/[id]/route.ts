@@ -18,7 +18,7 @@ export const GET = auth(async function GET(req, ctx) {
     if (!authData.isValid) {
       return NextResponse.json(
         { message: authData.error || "Token inválido" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -27,7 +27,7 @@ export const GET = auth(async function GET(req, ctx) {
     if (!id) {
       return NextResponse.json(
         { message: "ID do agendamento é obrigatório" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,18 +37,17 @@ export const GET = auth(async function GET(req, ctx) {
       authData.token!,
       {
         method: "GET",
-      }
+      },
     );
 
     return NextResponse.json(appointment, { status: 200 });
   } catch (error) {
-    console.error("❌ Erro ao buscar detalhes do agendamento:", error);
     return NextResponse.json(
       {
         message: "Erro interno ao buscar agendamento.",
         error: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -68,7 +67,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
     if (!authData.isValid) {
       return NextResponse.json(
         { message: authData.error || "Token inválido" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -77,7 +76,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
     if (!id) {
       return NextResponse.json(
         { message: "ID do agendamento é obrigatório" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -87,17 +86,72 @@ export const DELETE = auth(async function DELETE(req, ctx) {
 
     return NextResponse.json(
       { message: "Agendamento cancelado com sucesso" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    console.error("❌ Erro ao deletar agendamento:", error);
     return NextResponse.json(
       {
         message: "Erro interno ao deletar agendamento.",
         error: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
 
+/**
+ * PATCH /api/appointment/[id]
+ *
+ * Atualiza um agendamento (funcionário, data/hora)
+ *
+ * Path Params:
+ * - id: ID do agendamento
+ *
+ * Body:
+ * - employee_id: string
+ * - start_time: ISO string
+ * - end_time: ISO string
+ */
+export const PATCH = auth(async function PATCH(req, ctx) {
+  try {
+    const authData = getAuthDataFromRequest(req);
+
+    if (!authData.isValid) {
+      return NextResponse.json(
+        { message: authData.error || "Token inválido" },
+        { status: 401 },
+      );
+    }
+
+    const { id } = (await ctx.params) as { id: string };
+
+    if (!id) {
+      return NextResponse.json(
+        { message: "ID do agendamento é obrigatório" },
+        { status: 400 },
+      );
+    }
+
+    const body = await req.json();
+
+    const result = await fetchFromBackend(
+      req,
+      `/appointment/${id}?email_language=pt`,
+      authData.token!,
+      {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      },
+    );
+
+    return NextResponse.json(result, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        message: "Erro interno ao atualizar agendamento.",
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    );
+  }
+});
