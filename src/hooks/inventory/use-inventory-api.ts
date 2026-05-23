@@ -16,6 +16,18 @@ import type {
   InventoryBatchList,
 } from "@/types/inventory";
 
+// ── Error types ───────────────────────────────────────────────────────────────
+
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function apiFetch<T>(
@@ -32,7 +44,7 @@ async function apiFetch<T>(
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(text || `Erro ${res.status}`);
+    throw new ApiError(res.status, text || `Erro ${res.status}`);
   }
 
   return res.json() as Promise<T>;
@@ -139,6 +151,22 @@ export async function fetchBalance(
 
   const query = params.toString() ? `?${params.toString()}` : "";
   return apiFetch<InventoryBalanceList>(`/api/inventory/balance${query}`);
+}
+
+export interface FetchAllBalancesOptions {
+  page?: number;
+  page_size?: number;
+}
+
+export async function fetchAllBalances(
+  options: FetchAllBalancesOptions = {},
+): Promise<InventoryBalanceList> {
+  const params = new URLSearchParams();
+  if (options.page) params.set("page", String(options.page));
+  if (options.page_size) params.set("page_size", String(options.page_size));
+
+  const query = params.toString() ? `?${params.toString()}` : "";
+  return apiFetch<InventoryBalanceList>(`/api/inventory/balances${query}`);
 }
 
 export async function fetchBatches(

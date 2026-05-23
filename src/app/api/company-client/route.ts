@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
-import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
+import { fetchFromBackend, BackendHttpError } from "@/lib/api/fetch-from-backend";
 import { getAuthDataFromRequest } from "@/utils/decode-jwt";
 
 export const POST = auth(async function POST(req) {
@@ -33,7 +33,7 @@ export const POST = auth(async function POST(req) {
 
     if (!name || !surname || !email || !phone) {
       return NextResponse.json(
-        { message: "Campos obrigatÃ³rios invÃ¡lidos: name, surname, email, phone." },
+        { message: "Campos obrigatórios inválidos: name, surname, email, phone." },
         { status: 400 }
       );
     }
@@ -41,7 +41,7 @@ export const POST = auth(async function POST(req) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { message: "E-mail invÃ¡lido." },
+        { message: "E-mail inválido." },
         { status: 400 }
       );
     }
@@ -49,16 +49,19 @@ export const POST = auth(async function POST(req) {
     const phoneDigits = phone.replace(/\D/g, "");
     if (phoneDigits.length < 10 || phoneDigits.length > 11) {
       return NextResponse.json(
-        { message: "Telefone invÃ¡lido." },
+        { message: "Telefone inválido. Use o formato (11) 99999-9999." },
         { status: 400 }
       );
     }
+
+    // Converter para E.164 conforme exigido pelo backend Go (validate:"e164")
+    const phoneE164 = `+55${phoneDigits}`;
 
     const requestBody = {
       name,
       surname,
       email,
-      phone,
+      phone: phoneE164,
       street: body.street || "",
       number: body.number || "",
       neighborhood: body.neighborhood || "",
@@ -160,11 +163,8 @@ export const GET = auth(async function GET(req) {
 
       return NextResponse.json(listResponse, { status: 200 });
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
       const isNotFound =
-        message.includes("Erro ao acessar backend (404)") &&
-        (message.includes("company_clients") ||
-          message.includes("resource not found for company_id"));
+        error instanceof BackendHttpError && error.status === 404;
 
       if (isNotFound) {
         return NextResponse.json(

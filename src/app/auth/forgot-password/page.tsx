@@ -1,8 +1,8 @@
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
-import { useSubdomainValidation } from "@/hooks/use-subdomain-validation";
+import { getSubdomainValidation } from "@/hooks/use-subdomain-validation";
 
 export default async function ForgotPasswordPage() {
-  const { company, errorComponent } = await useSubdomainValidation();
+  const { company, errorComponent } = await getSubdomainValidation();
 
   if (errorComponent) {
     return errorComponent;

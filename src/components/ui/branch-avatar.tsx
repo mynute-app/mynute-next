@@ -34,31 +34,20 @@ export function BranchAvatar({
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  // Só usar o hook se tiver branchId válido (número ou UUID string)
-  const shouldUseHook =
-    branchId &&
-    ((typeof branchId === "number" && branchId > 0) ||
-      (typeof branchId === "string" && branchId.trim().length > 0));
+  // shouldUseHook tracks whether a valid branchId was provided (for guard checks below).
+  const shouldUseHook = branchId !== undefined && branchId !== null && branchId !== "";
 
-  // Só inicializar o hook se tiver ID válido
-  const hookResult = shouldUseHook
-    ? useBranchImage({
-        branchId: branchId, // Passa direto, pode ser number ou string
-        currentImage: imageUrl,
-        imageType: "profile",
-        onSuccess: () => {
-          onImageChange?.(null); // Trigger para atualizar o componente pai
-        },
-      })
-    : {
-        isUploading: false,
-        isRemoving: false,
-        handleImageChange: async () => {},
-        handleRemoveImage: async () => {},
-      };
-
+  // Always call the hook unconditionally (Rules of Hooks).
+  // useBranchImage already guards internally via isValidBranchId.
   const { isUploading, isRemoving, handleImageChange, handleRemoveImage } =
-    hookResult;
+    useBranchImage({
+      branchId: (branchId ?? "") as number | string,
+      currentImage: imageUrl,
+      imageType: "profile",
+      onSuccess: () => {
+        onImageChange?.(null);
+      },
+    });
 
   const { toast } = useToast(); // Reset image error quando imageUrl muda
   useEffect(() => {

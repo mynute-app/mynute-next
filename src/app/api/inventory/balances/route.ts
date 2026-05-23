@@ -4,11 +4,8 @@ import { fetchFromBackend, BackendHttpError } from "@/lib/api/fetch-from-backend
 import { getAuthDataFromRequest } from "@/utils/decode-jwt";
 
 /**
- * GET /api/inventory/alerts
- * Lista alertas de inventário com suporte a filtros de status.
- *
- * PATCH /api/inventory/alerts
- * Não suportado nesta rota. Use /api/inventory/alerts/[id] para ações por ID.
+ * GET /api/inventory/balances
+ * Retorna a lista paginada de saldos de estoque da empresa.
  */
 
 export const GET = auth(async function GET(req) {
@@ -27,16 +24,10 @@ export const GET = auth(async function GET(req) {
     if (searchParams.get("page")) queryParams.page = searchParams.get("page")!;
     if (searchParams.get("page_size"))
       queryParams.page_size = searchParams.get("page_size")!;
-    if (searchParams.get("status"))
-      queryParams.status = searchParams.get("status")!;
-    if (searchParams.get("severity"))
-      queryParams.severity = searchParams.get("severity")!;
-    if (searchParams.get("product_id"))
-      queryParams.product_id = searchParams.get("product_id")!;
 
     const result = await fetchFromBackend(
       req,
-      "/inventory/alert",
+      "/inventory/balances",
       authData.token!,
       { method: "GET", queryParams },
     );
@@ -46,6 +37,6 @@ export const GET = auth(async function GET(req) {
     if (error instanceof BackendHttpError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
     }
-    return NextResponse.json({ message: "Erro interno ao buscar alertas." }, { status: 500 });
+    return NextResponse.json({ message: "Erro interno ao buscar saldos de estoque." }, { status: 500 });
   }
 });

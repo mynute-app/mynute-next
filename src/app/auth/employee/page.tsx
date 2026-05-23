@@ -1,5 +1,5 @@
 import { LoginFormSwitcher } from "./_components/login-form-switcher";
-import { useSubdomainValidation } from "@/hooks/use-subdomain-validation";
+import { getSubdomainValidation } from "@/hooks/use-subdomain-validation";
 import { redirect } from "next/navigation";
 import { auth } from "../../../../auth";
 
@@ -9,7 +9,7 @@ export default async function LoginPage() {
     redirect("/dashboard");
   }
 
-  const { company, errorComponent } = await useSubdomainValidation();
+  const { company, errorComponent } = await getSubdomainValidation();
 
   if (errorComponent) {
     return errorComponent;

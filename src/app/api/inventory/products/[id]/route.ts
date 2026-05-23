@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
-import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
+import { fetchFromBackend, BackendHttpError } from "@/lib/api/fetch-from-backend";
 import { getAuthDataFromRequest } from "@/utils/decode-jwt";
 
 /**
@@ -38,12 +38,10 @@ export const GET = auth(async function GET(req, ctx) {
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      {
-        message: "Erro interno ao buscar produto.",
-      },
-      { status: 500 },
-    );
+    if (error instanceof BackendHttpError) {
+      return NextResponse.json({ message: error.message }, { status: error.status });
+    }
+    return NextResponse.json({ message: "Erro interno ao buscar produto." }, { status: 500 });
   }
 });
 
@@ -78,12 +76,10 @@ export const PATCH = auth(async function PATCH(req, ctx) {
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      {
-        message: "Erro interno ao atualizar produto.",
-      },
-      { status: 500 },
-    );
+    if (error instanceof BackendHttpError) {
+      return NextResponse.json({ message: error.message }, { status: error.status });
+    }
+    return NextResponse.json({ message: "Erro interno ao atualizar produto." }, { status: 500 });
   }
 });
 
@@ -113,11 +109,10 @@ export const DELETE = auth(async function DELETE(req, ctx) {
 
     return NextResponse.json({ message: "Produto removido com sucesso." }, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      {
-        message: "Erro interno ao remover produto.",
-      },
-      { status: 500 },
+    if (error instanceof BackendHttpError) {
+      return NextResponse.json({ message: error.message }, { status: error.status });
+    }
+    return NextResponse.json({ message: "Erro interno ao remover produto." }, { status: 500 },
     );
   }
 });

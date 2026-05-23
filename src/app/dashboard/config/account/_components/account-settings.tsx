@@ -157,10 +157,7 @@ export default function AccountSettings() {
                   </AlertDescription>
                 </Alert>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    Tenant: {tenant || "nao identificado"}
-                  </p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                   <Button
                     type="button"
                     className="btn-gradient"

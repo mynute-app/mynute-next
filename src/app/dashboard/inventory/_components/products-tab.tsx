@@ -37,7 +37,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import {
   fetchProducts,
+  fetchAllBalances,
   deleteProduct,
+  ApiError,
 } from "@/hooks/inventory/use-inventory-api";
 import type { InventoryProduct } from "@/types/inventory";
 import { ProductDialog } from "./product-dialog";
@@ -58,6 +60,8 @@ export function ProductsTab() {
   const [products, setProducts] = useState<InventoryProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [stockQty, setStockQty] = useState<Record<string, number>>({});
+  const [accessDenied, setAccessDenied] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [page, setPageState] = useState(() => {
     const p = parseInt(searchParams.get("products_page") ?? "1");
@@ -74,16 +78,21 @@ export function ProductsTab() {
   const setPage = useCallback((newPage: number | ((prev: number) => number)) => {
     setPageState(prev => {
       const next = typeof newPage === "function" ? newPage(prev) : newPage;
-      const params = new URLSearchParams(searchParams.toString());
-      if (next === 1) {
-        params.delete("products_page");
-      } else {
-        params.set("products_page", String(next));
-      }
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
       return next;
     });
-  }, [searchParams, router, pathname]);
+  }, []);
+
+  // Sync page to URL whenever page changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page === 1) {
+      params.delete("products_page");
+    } else {
+      params.set("products_page", String(page));
+    }
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -97,7 +106,21 @@ export function ProductsTab() {
       });
       setProducts(result.products ?? []);
       setTotal(result.total ?? 0);
-    } catch {
+      // Load balance quantities in parallel — failures are silent (qty shows as 0)
+      fetchAllBalances({ page_size: PAGE_SIZE * 10 })
+        .then(balanceResult => {
+          const qty: Record<string, number> = {};
+          for (const b of balanceResult.balances ?? []) {
+            qty[b.product_id] = (qty[b.product_id] ?? 0) + b.quantity_on_hand;
+          }
+          setStockQty(qty);
+        })
+        .catch(() => { /* silent — table still renders without qty */ });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 403) {
+        setAccessDenied(true);
+        return;
+      }
       toast({
         title: "Erro ao carregar produtos",
         description: "Tente novamente mais tarde.",
@@ -151,6 +174,14 @@ export function ProductsTab() {
     );
   }
 
+  if (accessDenied) {
+    return (
+      <div className="flex h-40 items-center justify-center text-muted-foreground">
+        Você não tem permissão para acessar o inventário.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
@@ -186,6 +217,7 @@ export function ProductsTab() {
                 <TableHead>Nome</TableHead>
                 <TableHead>SKU</TableHead>
                 <TableHead>Custo unit.</TableHead>
+                <TableHead>Em estoque</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[100px]">Ações</TableHead>
               </TableRow>
@@ -198,6 +230,7 @@ export function ProductsTab() {
                     {product.sku}
                   </TableCell>
                   <TableCell>{formatCents(product.unit_cost)}</TableCell>
+                  <TableCell>{stockQty[product.id] ?? 0}</TableCell>
                   <TableCell>
                     <Badge
                       variant={product.is_active ? "default" : "secondary"}

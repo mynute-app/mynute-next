@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { VerifyCodeForm } from "./_components/verify-code-form";
-import { useSubdomainValidation } from "@/hooks/use-subdomain-validation";
+import { getSubdomainValidation } from "@/hooks/use-subdomain-validation";
 
 export default async function VerifyCodePage() {
-  const { company, errorComponent } = await useSubdomainValidation();
+  const { company, errorComponent } = await getSubdomainValidation();
 
   if (errorComponent) {
     return errorComponent;
