@@ -40,6 +40,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [checkResult, setCheckResult] = useState<CheckEmailResponse | null>(null);
+  const [companyEmailMode, setCompanyEmailMode] = useState<"login" | "reset">("login");
 
   const handleOpenChange = (val: boolean) => {
     if (!val) {
@@ -48,6 +49,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
       setPassword("");
       setError("");
       setCheckResult(null);
+      setCompanyEmailMode("login");
     }
     onOpenChange(val);
   };
@@ -88,6 +90,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
   };
 
   const sendCompanyEmail = async (mode: "login" | "reset") => {
+    setCompanyEmailMode(mode);
     const endpoint =
       mode === "login"
         ? "/api/public/send-company-login-email"
@@ -124,7 +127,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
         return;
       }
       setScreen("client-success");
-      setTimeout(() => router.push("/client/agendamentos"), 800);
+      setTimeout(() => router.push("/client/agendamentos"), 1500);
     } catch {
       setError("Erro ao fazer login. Tente novamente.");
     } finally {
@@ -281,8 +284,9 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
             </div>
             <p className="text-base font-medium text-foreground">E-mail enviado!</p>
             <p className="text-sm text-muted-foreground max-w-xs">
-              Verifique sua caixa de entrada. Você receberá um e-mail com os
-              links de acesso para cada empresa em que está cadastrado.
+              {companyEmailMode === "reset"
+                ? "Verifique sua caixa de entrada. Você receberá um e-mail com o link para redefinição de senha de cada empresa em que está cadastrado."
+                : "Verifique sua caixa de entrada. Você receberá um e-mail com os links de acesso para cada empresa em que está cadastrado."}
             </p>
             <Button variant="outline" className="mt-2" onClick={() => handleOpenChange(false)}>
               Fechar
