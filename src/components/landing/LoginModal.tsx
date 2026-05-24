@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +33,7 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
+  const router = useRouter();
   const [screen, setScreen] = useState<Screen>("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -121,6 +124,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
         return;
       }
       setScreen("client-success");
+      setTimeout(() => router.push("/client/agendamentos"), 800);
     } catch {
       setError("Erro ao fazer login. Tente novamente.");
     } finally {
@@ -180,12 +184,12 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
               </button>
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <span>Ainda não tem conta?</span>
-                <a
+                <Link
                   href="/auth/register-company"
                   className="text-foreground font-medium hover:underline"
                 >
                   Criar conta
-                </a>
+                </Link>
               </div>
             </div>
           </div>

@@ -22,7 +22,16 @@ export async function POST(request: NextRequest) {
 
     const authToken = response.headers.get("X-Auth-Token");
     const nextResponse = NextResponse.json({ ok: true }, { status: 200 });
-    if (authToken) nextResponse.headers.set("X-Auth-Token", authToken);
+    if (authToken) {
+      nextResponse.headers.set("X-Auth-Token", authToken);
+      nextResponse.cookies.set("client-auth-token", authToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
+    }
     return nextResponse;
   } catch (error) {
     console.error("Erro ao fazer login do cliente:", error);
