@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import LogoutButton from "./_components/LogoutButton";
+import { isBackendTokenExpired } from "@/utils/decode-jwt";
 
 export default async function ClientLayout({
   children,
@@ -11,6 +12,10 @@ export default async function ClientLayout({
   const token = cookieStore.get("client-auth-token");
 
   if (!token) {
+    redirect("/");
+  }
+
+  if (isBackendTokenExpired(token.value)) {
     redirect("/");
   }
 

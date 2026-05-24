@@ -7,15 +7,11 @@ import { Button } from "@/components/ui/button";
 interface AppointmentsListProps {
   initialAppointments: Appointment[];
   totalCount: number;
-  clientId: string;
-  authToken: string;
 }
 
 export default function AppointmentsList({
   initialAppointments,
   totalCount,
-  clientId: _clientId,
-  authToken: _authToken,
 }: AppointmentsListProps) {
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
   const [filter, setFilter] = useState<"all" | "upcoming" | "past" | "cancelled">("all");

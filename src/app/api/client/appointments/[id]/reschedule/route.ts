@@ -28,26 +28,30 @@ export async function PATCH(
     return NextResponse.json({ error: "company_id obrigatório" }, { status: 400 });
   }
 
-  const res = await fetch(
-    `${process.env.BACKEND_URL}/client/${clientId}/appointments/${appointmentId}/reschedule`,
-    {
-      method: "PATCH",
-      headers: {
-        "X-Auth-Token": token.value,
-        "X-Company-ID": companyId,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        new_start_time: body.new_start_time,
-        new_end_time: body.new_end_time,
-      }),
-    }
-  );
+  try {
+    const res = await fetch(
+      `${process.env.BACKEND_URL || 'http://localhost:4000'}/client/${clientId}/appointments/${appointmentId}/reschedule`,
+      {
+        method: "PATCH",
+        headers: {
+          "X-Auth-Token": token.value,
+          "X-Company-ID": companyId,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          new_start_time: body.new_start_time,
+          new_end_time: body.new_end_time,
+        }),
+      }
+    );
 
-  if (res.status === 200 || res.status === 204) {
+    if (res.status === 200 || res.status === 204) {
+      const json = await res.json().catch(() => ({}));
+      return NextResponse.json(json, { status: res.status });
+    }
     const json = await res.json().catch(() => ({}));
     return NextResponse.json(json, { status: res.status });
+  } catch {
+    return NextResponse.json({ error: "Erro ao conectar ao backend" }, { status: 502 });
   }
-  const json = await res.json().catch(() => ({}));
-  return NextResponse.json(json, { status: res.status });
 }

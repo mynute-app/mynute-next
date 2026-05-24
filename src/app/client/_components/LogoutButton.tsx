@@ -9,6 +9,7 @@ export default function LogoutButton() {
 
   const handleLogout = async () => {
     await fetch("/api/client/logout", { method: "DELETE" });
+    router.refresh();
     router.push("/");
   };
 

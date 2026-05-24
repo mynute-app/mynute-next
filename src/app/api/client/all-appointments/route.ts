@@ -23,16 +23,23 @@ export async function GET(request: NextRequest) {
   const page = searchParams.get("page") ?? "1";
   const pageSize = searchParams.get("page_size") ?? "20";
 
-  const res = await fetch(
-    `${process.env.BACKEND_URL}/client/${clientId}/all-appointments?page=${page}&page_size=${pageSize}`,
-    {
-      headers: {
-        "X-Auth-Token": token.value,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  try {
+    const res = await fetch(
+      `${process.env.BACKEND_URL || 'http://localhost:4000'}/client/${clientId}/all-appointments?page=${page}&page_size=${pageSize}`,
+      {
+        headers: {
+          "X-Auth-Token": token.value,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-  const body = await res.json();
-  return NextResponse.json(body, { status: res.status });
+    const body = await res.json().catch(() => ({}));
+    return NextResponse.json(body, { status: res.status });
+  } catch {
+    return NextResponse.json(
+      { error: "Erro ao comunicar com o servidor" },
+      { status: 502 }
+    );
+  }
 }

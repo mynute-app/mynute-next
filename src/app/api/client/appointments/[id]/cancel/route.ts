@@ -29,21 +29,25 @@ export async function DELETE(
     return NextResponse.json({ error: "company_id obrigatório" }, { status: 400 });
   }
 
-  const res = await fetch(
-    `${process.env.BACKEND_URL}/client/${clientId}/appointments/${appointmentId}`,
-    {
-      method: "DELETE",
-      headers: {
-        "X-Auth-Token": token.value,
-        "X-Company-ID": companyId,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  try {
+    const res = await fetch(
+      `${process.env.BACKEND_URL || 'http://localhost:4000'}/client/${clientId}/appointments/${appointmentId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "X-Auth-Token": token.value,
+          "X-Company-ID": companyId,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-  if (res.status === 204) {
-    return new NextResponse(null, { status: 204 });
+    if (res.status === 204) {
+      return new NextResponse(null, { status: 204 });
+    }
+    const body = await res.json().catch(() => ({}));
+    return NextResponse.json(body, { status: res.status });
+  } catch {
+    return NextResponse.json({ error: "Erro ao conectar ao backend" }, { status: 502 });
   }
-  const body = await res.json().catch(() => ({}));
-  return NextResponse.json(body, { status: res.status });
 }

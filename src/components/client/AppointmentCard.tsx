@@ -52,6 +52,7 @@ export default function AppointmentCard({
 }: AppointmentCardProps) {
   const [cancelling, setCancelling] = useState(false);
   const [showReschedule, setShowReschedule] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const formatDateTime = (iso: string) => {
     const d = new Date(iso);
@@ -86,6 +87,7 @@ export default function AppointmentCard({
 
   const handleCancel = async () => {
     setCancelling(true);
+    setCancelError(null);
     try {
       const res = await fetch(
         `/api/client/appointments/${appointment.id}/cancel?company_id=${appointment.company_id}`,
@@ -93,7 +95,11 @@ export default function AppointmentCard({
       );
       if (res.ok || res.status === 204) {
         onCancel(appointment.id);
+      } else {
+        setCancelError("Não foi possível cancelar o agendamento. Tente novamente.");
       }
+    } catch {
+      setCancelError("Erro de conexão ao cancelar. Tente novamente.");
     } finally {
       setCancelling(false);
     }
@@ -198,6 +204,9 @@ export default function AppointmentCard({
             </div>
           )}
         </div>
+        {cancelError && (
+          <p className="text-xs text-destructive mt-1">{cancelError}</p>
+        )}
       </div>
 
       {showReschedule && (

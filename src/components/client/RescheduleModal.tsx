@@ -40,6 +40,23 @@ export default function RescheduleModal({
 
   const handleSubmit = async () => {
     setError(null);
+
+    // Validação client-side de datas
+    const newStart = new Date(startTime);
+    const newEnd = new Date(endTime);
+    if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) {
+      setError("Data inválida. Verifique os campos e tente novamente.");
+      return;
+    }
+    if (newStart < new Date()) {
+      setError("A nova data de início não pode estar no passado.");
+      return;
+    }
+    if (newEnd <= newStart) {
+      setError("A data de fim deve ser após a data de início.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch(`/api/client/appointments/${appointment.id}/reschedule`, {
@@ -47,13 +64,13 @@ export default function RescheduleModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           company_id: appointment.company_id,
-          new_start_time: new Date(startTime).toISOString(),
-          new_end_time: new Date(endTime).toISOString(),
+          new_start_time: newStart.toISOString(),
+          new_end_time: newEnd.toISOString(),
         }),
       });
 
       if (res.ok) {
-        onSuccess(new Date(startTime).toISOString(), new Date(endTime).toISOString());
+        onSuccess(newStart.toISOString(), newEnd.toISOString());
       } else {
         const body = await res.json().catch(() => ({}));
         setError(body?.message ?? "Não foi possível reagendar. Tente novamente.");

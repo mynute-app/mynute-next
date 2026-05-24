@@ -1,21 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import AppointmentsList from "./_components/AppointmentsList";
-
-interface JwtPayload {
-  data: { id: string; name: string; email: string };
-  exp: number;
-}
-
-function decodeJwt(token: string): JwtPayload | null {
-  try {
-    const base64Payload = token.split(".")[1];
-    const payload = Buffer.from(base64Payload, "base64url").toString("utf-8");
-    return JSON.parse(payload) as JwtPayload;
-  } catch {
-    return null;
-  }
-}
+import { decodeJWTToken, isBackendTokenExpired } from "@/utils/decode-jwt";
 
 interface Appointment {
   id: string;
@@ -54,12 +40,17 @@ export default async function AgendamentosPage() {
     redirect("/");
   }
 
-  const payload = decodeJwt(token.value);
-  if (!payload) {
+  const userData = decodeJWTToken(token.value);
+  if (!userData?.id) {
     redirect("/");
   }
 
-  const clientId = payload.data.id;
+  // Verificar se o token expirou
+  if (isBackendTokenExpired(token.value)) {
+    redirect("/");
+  }
+
+  const clientId = userData.id;
 
   let data: AppointmentsResponse = {
     appointments: [],
@@ -69,8 +60,10 @@ export default async function AgendamentosPage() {
   };
 
   try {
+    // M7: fallback para evitar URL inválida quando BACKEND_URL não está definido
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
     const res = await fetch(
-      `${process.env.BACKEND_URL}/client/${clientId}/all-appointments`,
+      `${backendUrl}/client/${clientId}/all-appointments`,
       {
         headers: {
           "X-Auth-Token": token.value,
@@ -99,8 +92,6 @@ export default async function AgendamentosPage() {
       <AppointmentsList
         initialAppointments={data.appointments}
         totalCount={data.total_count}
-        clientId={clientId}
-        authToken={token.value}
       />
     </div>
   );
