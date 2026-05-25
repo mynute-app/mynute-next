@@ -81,20 +81,6 @@ export const middleware = auth(req => {
     return NextResponse.next();
   }
   // --- End System Admin routes ---
-    const accessToken = (req.auth as any)?.accessToken as string | undefined;
-    if (req.auth && accessToken) {
-      const decoded = decodeJWTToken(accessToken);
-      if (decoded?.type === "system_admin" && !isBackendTokenExpired(accessToken)) {
-        const url = req.nextUrl.clone();
-        url.pathname = SYSTEM_ADMIN_DASHBOARD_PREFIX;
->>>>>>> origin/test
-        url.search = "";
-        return NextResponse.redirect(url);
-      }
-    }
-    return NextResponse.next();
-  }
-  // --- End System Admin routes ---
 
   const pathTenant = extractTenantSlugFromPathname(pathname);
   const authTenant = normalizeTenantSlug(

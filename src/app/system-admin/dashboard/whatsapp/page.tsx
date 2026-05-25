@@ -27,7 +27,7 @@ type QrCode = {
   error?: string;
 };
 
-export default function AdminWhatsAppPage() {
+export default function SystemAdminWhatsAppPage() {
   const [status, setStatus] = useState<WhatsAppStatus | null>(null);
   const [qrCode, setQrCode] = useState<QrCode | null>(null);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -41,37 +41,31 @@ export default function AdminWhatsAppPage() {
   }, []);
 
   const fetchStatus = useCallback(async () => {
-    const controller = new AbortController();
     try {
-      const res = await fetch("/api/admin/whatsapp/status", { signal: controller.signal });
+      const res = await fetch("/api/admin/whatsapp/status");
       const json = await res.json();
       if (mountedRef.current) {
         setStatus(json?.data ?? json);
       }
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
+    } catch {
       if (mountedRef.current) {
         setStatus({ connected: false, error: "Erro ao verificar status" });
       }
     }
-    return controller;
   }, []);
 
   const fetchQrCode = useCallback(async () => {
-    const controller = new AbortController();
     try {
-      const res = await fetch("/api/admin/whatsapp/qr-code", { signal: controller.signal });
+      const res = await fetch("/api/admin/whatsapp/qr-code");
       const json = await res.json();
       if (mountedRef.current) {
         setQrCode(json?.data ?? json);
       }
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
+    } catch {
       if (mountedRef.current) {
         setQrCode({ error: "Erro ao buscar QR code" });
       }
     }
-    return controller;
   }, []);
 
   // Poll status every 5s
