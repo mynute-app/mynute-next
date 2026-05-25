@@ -181,7 +181,8 @@ export const { handlers, auth, signIn } = NextAuth({
             throw new Error(`Falha ao autenticar. Codigo: ${response.status}`);
           }
 
-          const data = await response.json();
+          const text = await response.text();
+          const data = text ? JSON.parse(text) : {};
           const token = response.headers.get("X-Auth-Token") ?? data?.token;
 
           if (!token) {
@@ -195,8 +196,8 @@ export const { handlers, auth, signIn } = NextAuth({
             token,
             isSystemAdmin: true,
           };
-        } catch (error) {
-          console.error("Erro durante autenticacao system-admin:", error);
+        } catch (error: any) {
+          console.error("[AUTH] system-admin authorize error:", error?.message);
           return null;
         }
       },

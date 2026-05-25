@@ -23,7 +23,7 @@ type WhatsAppStatus = {
 };
 
 type QrCode = {
-  base64?: string;
+  qrCode?: string;
   error?: string;
 };
 
@@ -124,14 +124,14 @@ export default function AdminWhatsAppPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!isConnected && qrCode?.base64 && (
+          {!isConnected && qrCode?.qrCode && (
             <div>
               <p className="text-sm text-muted-foreground mb-2">
                 Escaneie o QR code com o WhatsApp. O codigo atualiza
                 automaticamente a cada 30 segundos.
               </p>
               <img
-                src={`data:image/png;base64,${qrCode.base64}`}
+                src={qrCode.qrCode}
                 alt="QR Code WhatsApp"
                 className="w-64 h-64 rounded border"
               />

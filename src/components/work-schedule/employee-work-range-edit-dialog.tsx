@@ -91,21 +91,6 @@ export function EmployeeWorkRangeEditDialog({
   // Estado para rastrear serviços iniciais
   const [initialServices, setInitialServices] = useState<string[]>([]);
 
-  // Log para debug - mostrar dados recebidos quando abre o dialog
-  if (isOpen && initialData) {
-    const diaLabel =
-      diasSemana.find(dia => dia.value === initialData.weekday)?.label ||
-      "Indefinido";
-    console.log("🔍 Dialog - Dados recebidos para edição:", initialData);
-    console.log(
-      "📅 Dialog - Dia da semana detectado:",
-      diaLabel,
-      "(weekday:",
-      initialData.weekday,
-      ")"
-    );
-  }
-
   const [formData, setFormData] = useState<EmployeeWorkRangeEditData>(
     () =>
       initialData || {
@@ -121,10 +106,6 @@ export function EmployeeWorkRangeEditDialog({
   // Atualizar formData E initialServices quando initialData mudar
   useEffect(() => {
     if (initialData) {
-      console.log(
-        "🔄 Dialog - Atualizando formData com novos initialData:",
-        initialData
-      );
       setFormData(initialData);
       setInitialServices(initialData.services || []);
     }
@@ -146,7 +127,6 @@ export function EmployeeWorkRangeEditDialog({
         branch_id: formData.branch_id,
       };
 
-      console.log("💾 Dialog - Salvando dados básicos:", basicData);
       await onSave(basicData);
 
       // ✅ DETECÇÃO DE MUDANÇAS NOS SERVIÇOS
@@ -163,19 +143,11 @@ export function EmployeeWorkRangeEditDialog({
           serviceId => !currentServices.includes(serviceId)
         );
 
-        console.log("🔍 Dialog - Análise de mudanças nos serviços:", {
-          initialServices,
-          currentServices,
-          servicesToAdd,
-          servicesToRemove,
-        });
-
         // Executar adições e remoções em paralelo
         const operations: Promise<any>[] = [];
 
         // Adicionar novos serviços
         if (servicesToAdd.length > 0) {
-          console.log("➕ Dialog - Adicionando serviços:", servicesToAdd);
           operations.push(
             addServicesToEmployeeWorkRange(
               employeeId,
@@ -188,7 +160,6 @@ export function EmployeeWorkRangeEditDialog({
 
         // Remover serviços desmarcados (chamadas individuais em paralelo)
         if (servicesToRemove.length > 0) {
-          console.log("➖ Dialog - Removendo serviços:", servicesToRemove);
           servicesToRemove.forEach(serviceId => {
             operations.push(
               removeServiceFromEmployeeWorkRange(
@@ -230,10 +201,6 @@ export function EmployeeWorkRangeEditDialog({
       } else {
         // Novo work_range: apenas adicionar serviços se houver
         if (formData.services.length > 0) {
-          console.log(
-            "➕ Dialog (Novo) - Adicionando serviços:",
-            formData.services
-          );
           await addServicesToEmployeeWorkRange(
             employeeId,
             workRangeId,
@@ -242,7 +209,6 @@ export function EmployeeWorkRangeEditDialog({
         }
       }
 
-      console.log("✅ Dialog - Tudo salvo com sucesso!");
       onClose();
     } catch (error) {
       console.error("❌ Dialog - Erro ao salvar:", error);

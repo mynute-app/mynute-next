@@ -68,7 +68,8 @@ export default function AdminProxyPage() {
         <CardHeader>
           <CardTitle>Proxy HTTP/SOCKS</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
+          <form onSubmit={e => { e.preventDefault(); handleSave(); }} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="proxy-host">Host</Label>
@@ -115,9 +116,10 @@ export default function AdminProxyPage() {
             />
             <Label htmlFor="proxy-enabled">Habilitado</Label>
           </div>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button type="submit" disabled={saving}>
             {saving ? "Salvando..." : "Salvar"}
           </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
