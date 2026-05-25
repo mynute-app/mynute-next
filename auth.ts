@@ -1,8 +1,12 @@
 import NextAuth from "next-auth";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import Credentials from "next-auth/providers/credentials";
-import { signInSchema } from "@/lib/zod";
 import { resolveTenantSlugFromRequest } from "@/lib/tenant";
+
+const signInSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
 import { getCompanyByTenantSlug } from "@/lib/tenant-company";
 
 function getTenantFromAuthRequest(
@@ -195,6 +199,7 @@ export const { handlers, auth, signIn } = NextAuth({
             name: email.split("@")[0] || "Admin",
             token,
             isSystemAdmin: true,
+            userType: "system_admin",
           };
         } catch (error: any) {
           console.error("[AUTH] system-admin authorize error:", error?.message);
@@ -208,6 +213,7 @@ export const { handlers, auth, signIn } = NextAuth({
       if (user) {
         const u = user as any;
         token.accessToken = u.token;
+        token.userType = u.userType;
         token.companyId = u.companyId;
         token.subdomain = u.subdomain;
         token.tenant = u.tenant ?? u.subdomain;
@@ -221,6 +227,7 @@ export const { handlers, auth, signIn } = NextAuth({
       (session as any).accessToken = (token as any).accessToken;
       (session as any).tenant = (token as any).tenant ?? (token as any).subdomain;
       (session as any).isSystemAdmin = (token as any).isSystemAdmin ?? false;
+      (session as any).userType = (token as any).userType;
 
       session.user = {
         ...session.user,

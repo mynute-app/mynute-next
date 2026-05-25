@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarOff, Plus, Trash2, Building2, UserCog } from "lucide-react";
+import { CalendarOff, Plus, Trash2, Building2, UserCog, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,6 +34,7 @@ import {
 import { useGetCompany } from "@/hooks/get-company";
 import { useBranchBlockedDates } from "@/hooks/branch/use-branch-blocked-dates";
 import { useEmployeeBlockedDates } from "@/hooks/employee/use-employee-blocked-dates";
+import { useServiceBlockedDates } from "@/hooks/services/use-service-blocked-dates";
 
 const formatDateRange = (start: string, end: string) => {
   const fmt = (d: string) => {
@@ -466,6 +467,159 @@ function EmployeeSection() {
   );
 }
 
+function ServiceSection() {
+  const { company } = useGetCompany();
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+
+  const services = company?.services ?? [];
+
+  const {
+    blockedDates,
+    loading,
+    creating,
+    fetchBlockedDates,
+    createBlockedDate,
+    deleteBlockedDate,
+  } = useServiceBlockedDates(selectedServiceId);
+
+  useEffect(() => {
+    if (services.length > 0 && !selectedServiceId) {
+      setSelectedServiceId(String(services[0].id));
+    }
+  }, [services, selectedServiceId]);
+
+  useEffect(() => {
+    if (selectedServiceId) {
+      void fetchBlockedDates();
+    }
+  }, [selectedServiceId, fetchBlockedDates]);
+
+  const handleCreate = async (start: string, end: string, reason: string) => {
+    await createBlockedDate({ start_date: start, end_date: end, reason });
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    await deleteBlockedDate(deleteTarget.id);
+    setDeleteTarget(null);
+  };
+
+  return (
+    <>
+      <Card className="card-hover">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
+              <Scissors className="h-5 w-5 text-amber-500" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Serviços</CardTitle>
+              <CardDescription>
+                Bloqueie dias em que um serviço específico não será oferecido.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {services.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhum serviço encontrado.
+            </p>
+          ) : (
+            <>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Serviço</Label>
+                <Select
+                  value={selectedServiceId ?? ""}
+                  onValueChange={setSelectedServiceId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o serviço" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services.map(s => (
+                      <SelectItem key={s.id} value={String(s.id)}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <AddBlockedDateForm creating={creating} onSubmit={handleCreate} />
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Datas bloqueadas
+                  </span>
+                  <Badge variant="secondary">{blockedDates.length}</Badge>
+                </div>
+
+                {loading ? (
+                  <div className="space-y-2">
+                    {[1, 2].map(i => (
+                      <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                    ))}
+                  </div>
+                ) : blockedDates.length === 0 ? (
+                  <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-6 text-center">
+                    <CalendarOff className="h-8 w-8 text-muted-foreground/40" />
+                    <p className="text-sm text-muted-foreground">
+                      Nenhuma data bloqueada
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {blockedDates.map(d => (
+                      <BlockedDateRow
+                        key={d.id}
+                        id={d.id}
+                        startDate={d.start_date}
+                        endDate={d.end_date}
+                        reason={d.reason}
+                        onDelete={id =>
+                          setDeleteTarget({
+                            id,
+                            label: formatDateRange(d.start_date, d.end_date),
+                          })
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={open => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover bloqueio</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja remover o bloqueio de{" "}
+              <strong>{deleteTarget?.label}</strong>? O serviço voltará a
+              aparecer disponível nesse período.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
 export default function BlockedDates() {
   return (
     <div className="dashboard-page flex min-h-0 flex-1 flex-col bg-background text-foreground">
@@ -475,14 +629,15 @@ export default function BlockedDates() {
             <div className="page-header">
               <h1 className="page-title">Datas Bloqueadas</h1>
               <p className="page-description">
-                Gerencie os períodos em que filiais ou funcionários não estarão
-                disponíveis para novos agendamentos.
+                Gerencie os períodos em que filiais, funcionários ou serviços
+                não estarão disponíveis para novos agendamentos.
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <BranchSection />
               <EmployeeSection />
+              <ServiceSection />
             </div>
           </div>
         </div>

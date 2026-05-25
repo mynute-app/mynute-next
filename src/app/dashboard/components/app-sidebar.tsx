@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Droplets,
   LayoutDashboard,
+  LifeBuoy,
   Palette,
   Settings,
   Sparkles,
@@ -176,6 +177,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               Sistema
             </p>
             <div className="space-y-1">
+              <NavItem
+                href={toTenantDashboardPath("/dashboard/suporte")}
+                icon={<LifeBuoy className="h-5 w-5" />}
+                label="Suporte"
+                isActive={isActive("/dashboard/suporte")}
+              />
               <button
                 type="button"
                 onClick={() => setIsConfigOpen(open => !open)}

@@ -26,6 +26,7 @@ export interface Company {
     surname: string;
     email: string;
     phone: string;
+    is_active?: boolean;
   }[];
   branches?: any[]; // Tipar se necessário
   services?: any[]; // Tipar se necessário

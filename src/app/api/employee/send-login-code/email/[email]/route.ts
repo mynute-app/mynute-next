@@ -10,7 +10,10 @@ export async function POST(
     const { email } = await params;
 
     if (!email) {
-      return NextResponse.json({ error: "Email e obrigatorio" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Email e obrigatorio" },
+        { status: 400 },
+      );
     }
 
     const decodedEmail = decodeURIComponent(email);
@@ -18,7 +21,10 @@ export async function POST(
     const tenant = resolveTenantSlugFromRequest(req, tenantFromQuery);
 
     if (!tenant) {
-      return NextResponse.json({ error: "Tenant nao identificado" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Tenant nao identificado" },
+        { status: 400 },
+      );
     }
 
     const companyLookup = await getCompanyByTenantSlug(tenant);
@@ -48,10 +54,7 @@ export async function POST(
       console.error("Erro ao enviar codigo:", errorText);
 
       return NextResponse.json(
-        {
-          error: "Erro ao enviar codigo de verificacao",
-          details: errorText,
-        },
+        { error: "Erro ao enviar codigo de verificacao" },
         { status: response.status },
       );
     }
@@ -65,7 +68,9 @@ export async function POST(
         try {
           data = JSON.parse(text);
         } catch {
-          console.log("Resposta nao JSON valida, mas codigo enviado com sucesso");
+          console.log(
+            "Resposta nao JSON valida, mas codigo enviado com sucesso",
+          );
         }
       }
     }
@@ -82,10 +87,7 @@ export async function POST(
     console.error("Erro ao processar envio de codigo:", error);
 
     return NextResponse.json(
-      {
-        error: "Erro interno ao enviar codigo de verificacao",
-        details: error instanceof Error ? error.message : "Erro desconhecido",
-      },
+      { error: "Erro interno ao enviar codigo de verificacao" },
       { status: 500 },
     );
   }

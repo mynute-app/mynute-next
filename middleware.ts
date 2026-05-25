@@ -8,9 +8,11 @@ import {
   resolveTenantSlugFromRequest,
   stripTenantScopedPathname,
 } from "@/lib/tenant";
-import { isBackendTokenExpired } from "@/utils/decode-jwt";
+import { decodeJWTToken, isBackendTokenExpired } from "@/utils/decode-jwt";
 
 const LOGIN_ROUTES = new Set(["/auth/employee"]);
+const SYSTEM_ADMIN_LOGIN_ROUTE = "/auth/system-admin";
+const SYSTEM_ADMIN_DASHBOARD_PREFIX = "/system-admin/dashboard";
 const TENANT_NATIVE_DASHBOARD_ROUTES = new Set([
   "/dashboard",
   "/dashboard/scheduling/view",
@@ -27,20 +29,72 @@ const TENANT_NATIVE_DASHBOARD_ROUTES = new Set([
 export const middleware = auth(req => {
   const { pathname } = req.nextUrl;
 
-  // Protect /admin routes — requires isSystemAdmin flag in session
-  if (pathname.startsWith("/admin")) {
-    const isLoginPage = pathname === "/admin/login" || pathname === "/admin/login/";
-    if (!isLoginPage) {
-      const isSystemAdmin = (req.auth as any)?.isSystemAdmin === true;
-      if (!isSystemAdmin) {
+  // --- System Admin routes ---
+  const isSystemAdminDashboard =
+    pathname === SYSTEM_ADMIN_DASHBOARD_PREFIX ||
+    pathname.startsWith(`${SYSTEM_ADMIN_DASHBOARD_PREFIX}/`);
+
+  const isSystemAdminLogin = pathname === SYSTEM_ADMIN_LOGIN_ROUTE;
+
+  if (isSystemAdminDashboard) {
+    if (!req.auth) {
+      const url = req.nextUrl.clone();
+      url.pathname = SYSTEM_ADMIN_LOGIN_ROUTE;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    const accessToken = (req.auth as any)?.accessToken as string | undefined;
+
+    if (!accessToken || isBackendTokenExpired(accessToken)) {
+      const url = req.nextUrl.clone();
+      url.pathname = SYSTEM_ADMIN_LOGIN_ROUTE;
+      url.search = "";
+      const response = NextResponse.redirect(url);
+      response.cookies.delete("authjs.session-token");
+      response.cookies.delete("__Secure-authjs.session-token");
+      return response;
+    }
+
+    const decoded = decodeJWTToken(accessToken);
+    if (decoded?.type !== "system_admin") {
+      const url = req.nextUrl.clone();
+      url.pathname = SYSTEM_ADMIN_LOGIN_ROUTE;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    return NextResponse.next();
+  }
+
+  if (isSystemAdminLogin) {
+    const accessToken = (req.auth as any)?.accessToken as string | undefined;
+    if (req.auth && accessToken) {
+      const decoded = decodeJWTToken(accessToken);
+      if (decoded?.type === "system_admin" && !isBackendTokenExpired(accessToken)) {
         const url = req.nextUrl.clone();
-        url.pathname = "/admin/login";
+        url.pathname = SYSTEM_ADMIN_DASHBOARD_PREFIX;
         url.search = "";
         return NextResponse.redirect(url);
       }
     }
     return NextResponse.next();
   }
+  // --- End System Admin routes ---
+    const accessToken = (req.auth as any)?.accessToken as string | undefined;
+    if (req.auth && accessToken) {
+      const decoded = decodeJWTToken(accessToken);
+      if (decoded?.type === "system_admin" && !isBackendTokenExpired(accessToken)) {
+        const url = req.nextUrl.clone();
+        url.pathname = SYSTEM_ADMIN_DASHBOARD_PREFIX;
+>>>>>>> origin/test
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+    }
+    return NextResponse.next();
+  }
+  // --- End System Admin routes ---
 
   const pathTenant = extractTenantSlugFromPathname(pathname);
   const authTenant = normalizeTenantSlug(
@@ -75,6 +129,18 @@ export const middleware = auth(req => {
     }
 
     const accessToken = (req.auth as any)?.accessToken as string | undefined;
+
+    // System admin nao pertence a nenhum tenant — redireciona ao seu painel
+    if (accessToken && !isBackendTokenExpired(accessToken)) {
+      const decoded = decodeJWTToken(accessToken);
+      if (decoded?.type === "system_admin") {
+        const url = req.nextUrl.clone();
+        url.pathname = SYSTEM_ADMIN_DASHBOARD_PREFIX;
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+    }
+
     if (!accessToken || isBackendTokenExpired(accessToken)) {
       const url = req.nextUrl.clone();
       url.pathname = `/${pathTenant}/login`;

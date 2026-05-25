@@ -39,20 +39,13 @@ export const GET = auth(async function GET(req, { params }) {
       );
 
       return NextResponse.json(service, { status: 200 });
-    } catch (fetchError) {
-      console.error("❌ Erro ao buscar serviço:", fetchError);
+    } catch {
       return NextResponse.json(
-        {
-          error:
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Erro ao buscar serviço",
-        },
+        { error: "Erro ao buscar serviço" },
         { status: 500 },
       );
     }
-  } catch (error) {
-    console.error("❌ Erro no servidor:", error);
+  } catch {
     return NextResponse.json(
       { message: "Erro interno do servidor" },
       { status: 500 },
@@ -101,20 +94,13 @@ export const PATCH = auth(async function PATCH(req, { params }) {
       );
 
       return NextResponse.json(updatedService, { status: 200 });
-    } catch (fetchError) {
-      console.error("❌ Erro ao editar serviço:", fetchError);
+    } catch {
       return NextResponse.json(
-        {
-          error:
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Erro ao editar serviço",
-        },
+        { error: "Erro ao editar serviço" },
         { status: 500 },
       );
     }
-  } catch (error) {
-    console.error("❌ Erro no servidor:", error);
+  } catch {
     return NextResponse.json(
       { message: "Erro interno do servidor" },
       { status: 500 },
@@ -155,20 +141,13 @@ export const DELETE = auth(async function DELETE(req, { params }) {
         { message: "Serviço deletado com sucesso" },
         { status: 200 },
       );
-    } catch (fetchError) {
-      console.error("❌ Erro ao deletar serviço:", fetchError);
+    } catch {
       return NextResponse.json(
-        {
-          error:
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Erro ao deletar serviço",
-        },
+        { error: "Erro ao deletar serviço" },
         { status: 500 },
       );
     }
-  } catch (error) {
-    console.error("❌ Erro no servidor:", error);
+  } catch {
     return NextResponse.json(
       { message: "Erro interno do servidor" },
       { status: 500 },

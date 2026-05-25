@@ -60,6 +60,7 @@ import { TimeSlotPicker } from "@/app/(home)/_components/time-slot-picker";
 import { useAppointmentAvailabilitySpecificDate } from "@/hooks/use-appointment-availability-specific-date";
 import { useDeleteAppointment } from "@/hooks/appointment/useDeleteAppointment";
 import { useApproveAppointment } from "@/hooks/appointment/useApproveAppointment";
+import { useUpdateAppointment } from "@/hooks/appointment/useUpdateAppointment";
 import type { Employee, Service } from "../../../../../../types/company";
 import { ServiceDescription } from "@/components/services/service-description";
 
@@ -100,6 +101,8 @@ export function AppointmentDetailsDialog({
     useDeleteAppointment();
   const { approveAppointment, loading: approvingAppointment } =
     useApproveAppointment();
+  const { updateAppointment, loading: updatingAppointment } =
+    useUpdateAppointment();
 
   // Buscar informações do cliente, serviço e funcionário
   const client = clientInfo.find(c => c.id === appointment?.client_id);
@@ -140,6 +143,7 @@ export function AppointmentDetailsDialog({
         phone: "",
         permission: "",
         role: "",
+        is_active: true,
         branches: [],
         services: [],
         work_schedule: null,
@@ -237,12 +241,18 @@ export function AppointmentDetailsDialog({
     }
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editedDate || !editedTime) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Selecione uma data e um horário para salvar.",
+        variant: "destructive",
+      });
       return;
     }
 
-    // Calcular horário de término baseado na duração do serviço
+    if (!appointment?.id) return;
+
     const [hours, minutes] = editedTime.split(":").map(Number);
     const startDateTime = new Date(editedDate);
     startDateTime.setHours(hours, minutes, 0, 0);
@@ -250,7 +260,29 @@ export function AppointmentDetailsDialog({
     const endDateTime = new Date(startDateTime);
     endDateTime.setMinutes(endDateTime.getMinutes() + (service?.duration || 0));
 
-    setIsEditing(false);
+    try {
+      await updateAppointment(appointment.id, {
+        employee_id: editedEmployeeId,
+        start_time: startDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+      });
+
+      toast({
+        title: "Agendamento atualizado",
+        description: "As alterações foram salvas com sucesso.",
+      });
+
+      setIsEditing(false);
+      onOpenChange(false);
+      onAppointmentApproved?.();
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar agendamento",
+        description:
+          error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCancelEdit = () => {
@@ -612,8 +644,12 @@ export function AppointmentDetailsDialog({
                 <X className="h-4 w-4 mr-2" />
                 Cancelar
               </Button>
-              <Button onClick={handleSaveEdit}>
-                <Save className="h-4 w-4 mr-2" />
+              <Button onClick={handleSaveEdit} disabled={updatingAppointment}>
+                {updatingAppointment ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
                 Salvar Alterações
               </Button>
             </>

@@ -10,9 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { useGetCompany } from "@/hooks/get-company";
 import { useToast } from "@/hooks/use-toast";
 import { useBranchApi } from "@/hooks/branch/use-branch-api";
+import { useEmployeeApi } from "@/hooks/employee/use-employee-api";
 import type { Branch, Employee } from "../../../../../../types/company";
 
 const PageShell = ({ children }: { children: React.ReactNode }) => (
@@ -32,7 +32,8 @@ const resolveInitialEmployeeIds = (
   branchData: Branch | null,
   employees: Employee[],
 ) => {
-  const fromBranch = branchData?.employees?.map(employee => employee.id) ?? [];
+  const fromBranch =
+    branchData?.employees?.map(employee => Number(employee.id)) ?? [];
 
   const fromCompany = employees
     .filter(employee =>
@@ -40,7 +41,7 @@ const resolveInitialEmployeeIds = (
         branch => String(branch.id) === String(branchData?.id),
       ),
     )
-    .map(employee => employee.id);
+    .map(employee => Number(employee.id));
 
   return new Set<number>([...fromBranch, ...fromCompany]);
 };
@@ -52,26 +53,17 @@ export default function BranchEquipePage() {
     : params?.branchId;
   const branchId = typeof branchIdParam === "string" ? branchIdParam : "";
 
-  const { company, loading: isCompanyLoading } = useGetCompany();
+  const { fetchEmployees } = useEmployeeApi();
   const { fetchBranchById, linkEmployeeToBranch, unlinkEmployeeFromBranch } =
     useBranchApi();
   const { toast } = useToast();
-
-  const employees = useMemo(
-    () => (company?.employees ?? []) as Employee[],
-    [company?.employees],
-  );
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isEmployeesLoading, setIsEmployeesLoading] = useState(false);
 
   const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
   const [isBranchLoading, setIsBranchLoading] = useState(false);
 
-  const branch = useMemo(
-    () =>
-      branchDetails ??
-      company?.branches?.find(item => String(item.id) === branchId) ??
-      null,
-    [branchDetails, company?.branches, branchId],
-  );
+  const branch = useMemo(() => branchDetails ?? null, [branchDetails]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<number>>(
@@ -84,24 +76,43 @@ export default function BranchEquipePage() {
   const [initializedBranchId, setInitializedBranchId] = useState("");
 
   useEffect(() => {
-    if (!branchId || isCompanyLoading || initializedBranchId === branchId) {
+    let active = true;
+    setIsEmployeesLoading(true);
+
+    fetchEmployees(1, 200)
+      .then(data => {
+        if (!active || !data) return;
+        setEmployees(data.employees);
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsEmployeesLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [fetchEmployees]);
+
+  useEffect(() => {
+    if (!branchId || isEmployeesLoading || initializedBranchId === branchId) {
       return;
     }
 
     const initialIds = branch
       ? resolveInitialEmployeeIds(branch, employees)
-      : new Set(
+      : new Set<number>(
           employees
             .filter(employee =>
               employee.branches?.some(item => String(item.id) === branchId),
             )
-            .map(employee => employee.id),
+            .map(employee => Number(employee.id)),
         );
 
     setSelectedEmployeeIds(initialIds);
     setInitialEmployeeIds(new Set(initialIds));
     setInitializedBranchId(branchId);
-  }, [branchId, branch, employees, isCompanyLoading, initializedBranchId]);
+  }, [branchId, branch, employees, isEmployeesLoading, initializedBranchId]);
 
   useEffect(() => {
     if (!branchId) return;
@@ -149,7 +160,7 @@ export default function BranchEquipePage() {
     () =>
       employees.reduce(
         (total, employee) =>
-          total + (selectedEmployeeIds.has(employee.id) ? 1 : 0),
+          total + (selectedEmployeeIds.has(Number(employee.id)) ? 1 : 0),
         0,
       ),
     [employees, selectedEmployeeIds],
@@ -181,18 +192,18 @@ export default function BranchEquipePage() {
     const toLink = employees
       .filter(
         employee =>
-          selectedEmployeeIds.has(employee.id) &&
-          !initialEmployeeIds.has(employee.id),
+          selectedEmployeeIds.has(Number(employee.id)) &&
+          !initialEmployeeIds.has(Number(employee.id)),
       )
-      .map(employee => employee.id);
+      .map(employee => Number(employee.id));
 
     const toUnlink = employees
       .filter(
         employee =>
-          initialEmployeeIds.has(employee.id) &&
-          !selectedEmployeeIds.has(employee.id),
+          initialEmployeeIds.has(Number(employee.id)) &&
+          !selectedEmployeeIds.has(Number(employee.id)),
       )
-      .map(employee => employee.id);
+      .map(employee => Number(employee.id));
 
     if (toLink.length === 0 && toUnlink.length === 0) return;
 
@@ -236,7 +247,7 @@ export default function BranchEquipePage() {
     );
   }
 
-  const isLoading = isCompanyLoading || isBranchLoading;
+  const isLoading = isEmployeesLoading || isBranchLoading;
 
   return (
     <PageShell>
@@ -294,7 +305,7 @@ export default function BranchEquipePage() {
         ) : (
           <div className="grid gap-4">
             {filteredEmployees.map(employee => {
-              const isEnabled = selectedEmployeeIds.has(employee.id);
+              const isEnabled = selectedEmployeeIds.has(Number(employee.id));
               const roleLabel = employee.role || employee.permission || "";
 
               return (
@@ -305,7 +316,9 @@ export default function BranchEquipePage() {
                   <div className="flex items-center gap-4">
                     <Switch
                       checked={isEnabled}
-                      onCheckedChange={() => toggleEmployee(employee.id)}
+                      onCheckedChange={() =>
+                        toggleEmployee(Number(employee.id))
+                      }
                       disabled={isSaving}
                     />
                     <UserAvatar

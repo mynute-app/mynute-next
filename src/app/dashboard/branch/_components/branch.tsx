@@ -42,8 +42,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useBranchApi } from "@/hooks/branch/use-branch-api";
 import type { Branch } from "../../../../../types/company";
 import { AddAddressDialog } from "./add-address-dialog";
-import { BranchInfoDialog } from "./branch-info-dialog";
-import { BranchScheduleDialog } from "./branch-schedule-dialog";
 
 type BranchCardProps = {
   branch: Branch;
@@ -358,7 +356,7 @@ const DEFAULT_PAGE_SIZE = 10;
 
 export default function BranchManager() {
   const { toast } = useToast();
-  const { fetchBranches, fetchBranchById } = useBranchApi();
+  const { fetchBranches } = useBranchApi();
   const router = useRouter();
 
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -368,9 +366,6 @@ export default function BranchManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [branchToDelete, setBranchToDelete] = useState<Branch | null>(null);
-  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
-  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
-  const [activeBranch, setActiveBranch] = useState<Branch | null>(null);
   const [updatingBranchId, setUpdatingBranchId] = useState<Branch["id"] | null>(
     null,
   );
@@ -476,12 +471,6 @@ export default function BranchManager() {
           ? currentPage - 1
           : currentPage;
 
-      if (activeBranch?.id === branchToDelete.id) {
-        setInfoDialogOpen(false);
-        setScheduleDialogOpen(false);
-        setActiveBranch(null);
-      }
-
       setDeleteDialogOpen(false);
       setBranchToDelete(null);
       await loadBranches(targetPage, true);
@@ -497,83 +486,34 @@ export default function BranchManager() {
         variant: "destructive",
       });
     }
-  }, [
-    activeBranch?.id,
-    branchToDelete,
-    branches.length,
-    currentPage,
-    loadBranches,
-    toast,
-  ]);
+  }, [branchToDelete, branches.length, currentPage, loadBranches, toast]);
 
   const handleOpenInfoDialog = useCallback(
-    async (branch: Branch) => {
-      setInfoDialogOpen(true);
-      setActiveBranch(branch);
-
-      const updatedBranch = await fetchBranchById(branch.id);
-      if (updatedBranch) {
-        setActiveBranch(updatedBranch);
-        setBranches(prev =>
-          prev.map(item =>
-            item.id === updatedBranch.id ? updatedBranch : item,
-          ),
-        );
-      }
+    (branch: Branch) => {
+      router.push(`/dashboard/branch/${branch.id}?tab=info`);
     },
-    [fetchBranchById],
+    [router],
   );
 
   const handleOpenScheduleDialog = useCallback(
-    async (branch: Branch) => {
-      setScheduleDialogOpen(true);
-      setActiveBranch(branch);
-
-      const updatedBranch = await fetchBranchById(branch.id);
-      if (updatedBranch) {
-        setActiveBranch(updatedBranch);
-        setBranches(prev =>
-          prev.map(item =>
-            item.id === updatedBranch.id ? updatedBranch : item,
-          ),
-        );
-      }
+    (branch: Branch) => {
+      router.push(`/dashboard/branch/${branch.id}?tab=schedule`);
     },
-    [fetchBranchById],
+    [router],
   );
 
   const handleManageServices = useCallback(
     (branch: Branch) => {
-      router.push(`/dashboard/branch/${branch.id}/servicos`);
+      router.push(`/dashboard/branch/${branch.id}?tab=services`);
     },
     [router],
   );
 
   const handleManageEmployees = useCallback(
     (branch: Branch) => {
-      router.push(`/dashboard/branch/${branch.id}/equipe`);
+      router.push(`/dashboard/branch/${branch.id}?tab=team`);
     },
     [router],
-  );
-
-  const handleInfoDialogChange = useCallback(
-    (open: boolean) => {
-      setInfoDialogOpen(open);
-      if (!open && !scheduleDialogOpen) {
-        setActiveBranch(null);
-      }
-    },
-    [scheduleDialogOpen],
-  );
-
-  const handleScheduleDialogChange = useCallback(
-    (open: boolean) => {
-      setScheduleDialogOpen(open);
-      if (!open && !infoDialogOpen) {
-        setActiveBranch(null);
-      }
-    },
-    [infoDialogOpen],
   );
 
   const handleBranchSaved = useCallback(
@@ -583,7 +523,6 @@ export default function BranchManager() {
           branch.id === updatedBranch.id ? updatedBranch : branch,
         ),
       );
-      setActiveBranch(updatedBranch);
 
       // Keep aggregated counters/summaries consistent with paginated source.
       void loadBranches(currentPage, true);
@@ -780,20 +719,6 @@ export default function BranchManager() {
           </div>
         )}
       </div>
-
-      <BranchInfoDialog
-        open={infoDialogOpen}
-        onOpenChange={handleInfoDialogChange}
-        branch={activeBranch}
-        onSaved={handleBranchSaved}
-      />
-
-      <BranchScheduleDialog
-        open={scheduleDialogOpen}
-        onOpenChange={handleScheduleDialogChange}
-        branch={activeBranch}
-        onSaved={handleBranchSaved}
-      />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
