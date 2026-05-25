@@ -26,6 +26,22 @@ const TENANT_NATIVE_DASHBOARD_ROUTES = new Set([
 
 export const middleware = auth(req => {
   const { pathname } = req.nextUrl;
+
+  // Protect /admin routes — requires isSystemAdmin flag in session
+  if (pathname.startsWith("/admin")) {
+    const isLoginPage = pathname === "/admin/login" || pathname === "/admin/login/";
+    if (!isLoginPage) {
+      const isSystemAdmin = (req.auth as any)?.isSystemAdmin === true;
+      if (!isSystemAdmin) {
+        const url = req.nextUrl.clone();
+        url.pathname = "/admin/login";
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+    }
+    return NextResponse.next();
+  }
+
   const pathTenant = extractTenantSlugFromPathname(pathname);
   const authTenant = normalizeTenantSlug(
     (req.auth as any)?.tenant ?? (req.auth as any)?.subdomain ?? null,

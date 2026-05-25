@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle, KeyRound, Mail } from "lucide-react";
+import { CheckCircle, KeyRound, Mail, MessageCircle } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -14,10 +14,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useTenantSlug } from "@/hooks/use-tenant-slug";
 import { decodeJWTToken } from "@/utils/decode-jwt";
 import { buildTenantPath } from "@/lib/tenant";
+
+const E164_REGEX = /^\+[1-9]\d{1,14}$/;
 
 export default function AccountSettings() {
   const { toast } = useToast();
@@ -27,6 +30,12 @@ export default function AccountSettings() {
   const [emailTouched, setEmailTouched] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [successEmail, setSuccessEmail] = useState<string | null>(null);
+
+  // WhatsApp settings state
+  const [waEnabled, setWaEnabled] = useState(false);
+  const [waPhone, setWaPhone] = useState("");
+  const [waPhoneError, setWaPhoneError] = useState<string | null>(null);
+  const [waSaving, setWaSaving] = useState(false);
 
   const accessToken = (session as { accessToken?: string } | null)?.accessToken;
   const decoded = useMemo(
@@ -41,6 +50,24 @@ export default function AccountSettings() {
       setEmail(nextEmail);
     }
   }, [decoded?.email, emailTouched, session?.user?.email]);
+
+  // Load WhatsApp settings on mount
+  useEffect(() => {
+    fetch("/api/company/whatsapp-settings")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data) return;
+        setWaEnabled(data.whatsapp_notifications_enabled ?? false);
+        setWaPhone(data.whatsapp_contact_phone ?? "");
+      })
+      .catch(() => {
+        toast({
+          title: "Erro ao carregar configurações WhatsApp",
+          description: "Não foi possível buscar as configurações. Tente recarregar a página.",
+          variant: "destructive",
+        });
+      });
+  }, []);
 
   const handleResetPassword = async () => {
     if (!email || !tenant) {
@@ -93,6 +120,35 @@ export default function AccountSettings() {
       });
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleSaveWhatsapp = async () => {
+    if (waPhone && !E164_REGEX.test(waPhone)) {
+      setWaPhoneError("Use o formato internacional: +55 11 99999-9999");
+      return;
+    }
+    setWaPhoneError(null);
+    setWaSaving(true);
+    try {
+      const res = await fetch("/api/company/whatsapp-settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          whatsapp_notifications_enabled: waEnabled,
+          whatsapp_contact_phone: waPhone || null,
+        }),
+      });
+      if (!res.ok) throw new Error(`Erro ${res.status}`);
+      toast({ title: "Configuracoes de WhatsApp salvas." });
+    } catch (err) {
+      toast({
+        title: "Erro ao salvar",
+        description: err instanceof Error ? err.message : "Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setWaSaving(false);
     }
   };
 
@@ -165,6 +221,54 @@ export default function AccountSettings() {
                     disabled={isSending || !email}
                   >
                     {isSending ? "Enviando..." : "Enviar nova senha"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-primary" />
+                  Notificacoes WhatsApp
+                </CardTitle>
+                <CardDescription>
+                  Configure o WhatsApp para envio de lembretes de agendamento.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Switch
+                    id="wa-enabled"
+                    checked={waEnabled}
+                    onCheckedChange={setWaEnabled}
+                  />
+                  <Label htmlFor="wa-enabled">Ativar notificacoes via WhatsApp</Label>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wa-phone">Numero WhatsApp da empresa</Label>
+                  <Input
+                    id="wa-phone"
+                    type="tel"
+                    value={waPhone}
+                    onChange={e => {
+                      setWaPhone(e.target.value);
+                      setWaPhoneError(null);
+                    }}
+                    placeholder="+5511999999999"
+                  />
+                  {waPhoneError && (
+                    <p className="text-sm text-destructive">{waPhoneError}</p>
+                  )}
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    className="btn-gradient"
+                    onClick={handleSaveWhatsapp}
+                    disabled={waSaving}
+                  >
+                    {waSaving ? "Salvando..." : "Salvar"}
                   </Button>
                 </div>
               </CardContent>

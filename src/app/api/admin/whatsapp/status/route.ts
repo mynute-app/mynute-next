@@ -1,0 +1,16 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/../auth";
+import { fetchFromChannelApi } from "@/lib/api/fetch-from-channel-api";
+
+export const GET = auth(async function GET(req) {
+  if ((req.auth as any)?.isSystemAdmin !== true) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
+    const data = await fetchFromChannelApi("/admin/whatsapp/status");
+    return NextResponse.json(data);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal error";
+    return NextResponse.json({ data: { connected: false, error: message } }, { status: 502 });
+  }
+});

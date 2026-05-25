@@ -150,6 +150,57 @@ export const { handlers, auth, signIn } = NextAuth({
         }
       },
     }),
+    Credentials({
+      id: "system-admin-login",
+      name: "System Admin Login",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize: async (credentials) => {
+        try {
+          const { email, password } = credentials as {
+            email: string;
+            password: string;
+          };
+
+          if (!email || !password) {
+            throw new Error("Email e senha sao obrigatorios");
+          }
+
+          const response = await fetch(
+            `${process.env.BACKEND_URL}/system-admin/login`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error(`Falha ao autenticar. Codigo: ${response.status}`);
+          }
+
+          const data = await response.json();
+          const token = response.headers.get("X-Auth-Token") ?? data?.token;
+
+          if (!token) {
+            throw new Error("Token nao encontrado na resposta.");
+          }
+
+          return {
+            id: data?.id ?? email,
+            email,
+            name: email.split("@")[0] || "Admin",
+            token,
+            isSystemAdmin: true,
+          };
+        } catch (error) {
+          console.error("Erro durante autenticacao system-admin:", error);
+          return null;
+        }
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -161,12 +212,14 @@ export const { handlers, auth, signIn } = NextAuth({
         token.tenant = u.tenant ?? u.subdomain;
         token.email = u.email ?? token.email;
         token.name = u.name ?? token.name ?? u.email ?? token.email;
+        token.isSystemAdmin = u.isSystemAdmin ?? false;
       }
       return token;
     },
     async session({ session, token }) {
       (session as any).accessToken = (token as any).accessToken;
       (session as any).tenant = (token as any).tenant ?? (token as any).subdomain;
+      (session as any).isSystemAdmin = (token as any).isSystemAdmin ?? false;
 
       session.user = {
         ...session.user,
