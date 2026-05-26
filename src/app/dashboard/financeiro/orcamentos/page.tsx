@@ -23,8 +23,8 @@ export default function OrcamentosPage() {
   const [quoteItemValue, setQuoteItemValue] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { data: quotes, isLoading: loadingQuotes } = useClientQuotes();
-  const { data: budgets, isLoading: loadingBudgets } = useFinancialBudgets();
+  const { data: quotes, isLoading: loadingQuotes, refetch: refetchQuotes } = useClientQuotes();
+  const { data: budgets, isLoading: loadingBudgets, refetch: refetchBudgets } = useFinancialBudgets();
   const { mutate: createBudget, isLoading: creatingBudget } = useCreateFinancialBudget();
   const { mutate: createQuote, isLoading: creatingQuote } = useCreateClientQuote();
   const { mutate: updateQuoteStatus } = useUpdateClientQuoteStatus();
@@ -45,7 +45,7 @@ export default function OrcamentosPage() {
     });
     setBudgetName("");
     setBudgetAmount("");
-    window.location.reload();
+    refetchBudgets();
   };
 
   const handleCreateQuote = async () => {
@@ -69,12 +69,12 @@ export default function OrcamentosPage() {
     setQuoteClientName("");
     setQuoteItemDescription("");
     setQuoteItemValue("");
-    window.location.reload();
+    refetchQuotes();
   };
 
   const handleUpdateStatus = async (id: string, status: string) => {
     await updateQuoteStatus(id, status);
-    window.location.reload();
+    refetchQuotes();
   };
 
   return (

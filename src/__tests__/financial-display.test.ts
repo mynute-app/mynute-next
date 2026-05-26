@@ -48,4 +48,12 @@ describe("financial-display helpers", () => {
     expect(getStatusBadgeVariant("cancelled")).toBe("outline");
     expect(getStatusBadgeVariant("unknown")).toBe("outline");
   });
+
+  it("getTransactionStatusLabel returns \"-\" for empty string", () => {
+    expect(getTransactionStatusLabel("")).toBe("-");
+  });
+
+  it("getTransactionTypeLabel returns fallback for completely unknown type", () => {
+    expect(getTransactionTypeLabel("cashback")).toBe("Cashback");
+  });
 });

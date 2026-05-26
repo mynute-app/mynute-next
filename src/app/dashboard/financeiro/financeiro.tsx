@@ -23,18 +23,23 @@ const statusVariant: Record<string, "secondary" | "default" | "destructive" | "o
 };
 
 export function FinanceiroDashboard() {
-  const { data: cashFlow } = useCashFlowReport({
+  const { data: cashFlow, isLoading: cashFlowLoading } = useCashFlowReport({
     start_date: firstDay,
     end_date: todayISO,
   });
-  const { data: transactions, isLoading } = useFinancialTransactions({ page_size: 10 });
+  const { data: transactions, isLoading: transactionsLoading } = useFinancialTransactions({ page_size: 10 });
+  // Separate query for the pending-income sum so the card stays accurate even when >10 transactions exist
+  const { data: pendingIncome } = useFinancialTransactions({
+    type: "income",
+    status: "pending",
+    page_size: 200,
+  });
 
+  const isLoading = transactionsLoading;
   const totalIncome = cashFlow?.total_income ?? 0;
   const totalExpense = cashFlow?.total_expense ?? 0;
   const netBalance = cashFlow?.net_balance ?? 0;
-  const pendingReceivables = (transactions ?? [])
-    .filter(t => t.transaction_type === "income" && t.status === "pending")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const pendingReceivables = (pendingIncome ?? []).reduce((sum, t) => sum + t.amount, 0);
 
   return (
     <div className="dashboard-page flex min-h-0 flex-1 flex-col bg-background text-foreground">
@@ -53,7 +58,11 @@ export function FinanceiroDashboard() {
                 <CardTitle className="text-sm">Receitas do Mês</CardTitle>
               </CardHeader>
               <CardContent className="text-2xl font-semibold text-[hsl(var(--success))]">
-                {formatFinancialCurrency(totalIncome)}
+                {cashFlowLoading ? (
+                  <span className="text-muted-foreground text-base">Carregando...</span>
+                ) : (
+                  formatFinancialCurrency(totalIncome)
+                )}
               </CardContent>
             </Card>
 
@@ -62,7 +71,11 @@ export function FinanceiroDashboard() {
                 <CardTitle className="text-sm">Despesas do Mês</CardTitle>
               </CardHeader>
               <CardContent className="text-2xl font-semibold text-destructive">
-                {formatFinancialCurrency(totalExpense)}
+                {cashFlowLoading ? (
+                  <span className="text-muted-foreground text-base">Carregando...</span>
+                ) : (
+                  formatFinancialCurrency(totalExpense)
+                )}
               </CardContent>
             </Card>
 
@@ -71,7 +84,11 @@ export function FinanceiroDashboard() {
                 <CardTitle className="text-sm">Saldo Líquido</CardTitle>
               </CardHeader>
               <CardContent className="text-2xl font-semibold">
-                {formatFinancialCurrency(netBalance)}
+                {cashFlowLoading ? (
+                  <span className="text-muted-foreground text-base">Carregando...</span>
+                ) : (
+                  formatFinancialCurrency(netBalance)
+                )}
               </CardContent>
             </Card>
 

@@ -82,12 +82,14 @@ export async function fetchFromBackend<T = any>(
         body: options.body ? JSON.stringify(options.body) : undefined,
       });
     } catch (networkError) {
-      console.error(
-        `[fetchFromBackend] Network error calling ${url} | companyId=${
-          company?.id ?? "-"
-        } schema=${company?.schema_name ?? "-"}:`,
-        networkError,
-      );
+      if (process.env.NODE_ENV !== "production") {
+        console.error(
+          `[fetchFromBackend] Network error calling ${url} | companyId=${
+            company?.id ?? "-"
+          } schema=${company?.schema_name ?? "-"}:`,
+          networkError,
+        );
+      }
       throw networkError;
     }
 

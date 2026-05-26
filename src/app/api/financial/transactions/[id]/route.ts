@@ -45,7 +45,7 @@ export const DELETE = auth(async function DELETE(req, ctx) {
     await fetchFromBackend(req, `/financial/transactions/${id}`, authData.token!, {
       method: "DELETE",
     });
-    return NextResponse.json({ ok: true }, { status: 200 });
+    return new Response(null, { status: 204 });
   } catch (error) {
     return handleApiError(error, "Erro ao remover transação financeira.");
   }

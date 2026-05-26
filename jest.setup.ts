@@ -52,19 +52,21 @@ jest.mock("next/font/local", () => ({
 }));
 
 // Polyfill for window.matchMedia (jsdom doesn't implement it)
-Object.defineProperty(window, "matchMedia", {
-  writable: true,
-  value: jest.fn().mockImplementation((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+if (typeof window !== "undefined") {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: jest.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+}
 
 // Polyfill ResizeObserver (jsdom doesn't implement it)
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
@@ -74,7 +76,9 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 }));
 
 // Polyfill scrollIntoView (required by Radix UI Select in jsdom)
-Element.prototype.scrollIntoView = jest.fn();
+if (typeof Element !== "undefined") {
+  Element.prototype.scrollIntoView = jest.fn();
+}
 
 // Suppress console.error for known React/Next.js test warnings
 const originalError = console.error;

@@ -24,6 +24,8 @@ function useReportData<T>(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const paramsKey = JSON.stringify(params ?? null);
+
   const refetch = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -35,7 +37,8 @@ function useReportData<T>(
     } finally {
       setIsLoading(false);
     }
-  }, [fetcher, params]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetcher, paramsKey]);
 
   useEffect(() => {
     refetch();

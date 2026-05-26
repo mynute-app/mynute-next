@@ -9,6 +9,9 @@ const createJestConfig = nextJest({
 const config: Config = {
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  // Use 4 workers to parallelize the suite and avoid timeouts on full runs.
+  // NEVER set maxWorkers to 1 (equivalent to --runInBand) for the full suite.
+  maxWorkers: 4,
   moduleNameMapper: {
     // Handle @/ path alias — matches tsconfig paths where baseUrl is ./src and @/* -> ./*
     "^@/(.*)$": "<rootDir>/src/$1",

@@ -13,7 +13,7 @@ import {
 import { DateRangeFilter } from "@/app/dashboard/financeiro/_components/date-range-filter";
 import { TransactionActionDialog } from "@/app/dashboard/financeiro/_components/transaction-action-dialog";
 import { getStatusBadgeVariant, getTransactionStatusLabel } from "@/lib/financial-display";
-import { formatFinancialCurrency } from "@/lib/financial-utils";
+import { formatFinancialCurrency, normalizeDateStr } from "@/lib/financial-utils";
 import type { PaymentMethod } from "@/types/financial";
 
 export default function ContasAReceberPage() {
@@ -38,8 +38,8 @@ export default function ContasAReceberPage() {
         if (!item.description.toLowerCase().includes(query)) return false;
       }
 
-      if (startDate && item.due_date && item.due_date < startDate) return false;
-      if (endDate && item.due_date && item.due_date > endDate) return false;
+      if (startDate && item.due_date && normalizeDateStr(item.due_date) < startDate) return false;
+      if (endDate && item.due_date && normalizeDateStr(item.due_date) > endDate) return false;
 
       return true;
     });

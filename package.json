@@ -7,9 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "jest --passWithNoTests",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage --passWithNoTests",
+    "test": "jest --passWithNoTests --maxWorkers=4",
+    "test:watch": "jest --watch --maxWorkers=4",
+    "test:coverage": "jest --coverage --passWithNoTests --maxWorkers=4",
     "test:screenshots": "playwright test tests/screenshots/"
   },
   "dependencies": {

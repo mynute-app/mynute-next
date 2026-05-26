@@ -15,6 +15,8 @@ export function useFinancialCategories(params?: Record<string, string | number |
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const paramsKey = JSON.stringify(params ?? null);
+
   const refetch = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -26,7 +28,8 @@ export function useFinancialCategories(params?: Record<string, string | number |
     } finally {
       setIsLoading(false);
     }
-  }, [params]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramsKey]);
 
   useEffect(() => {
     refetch();
