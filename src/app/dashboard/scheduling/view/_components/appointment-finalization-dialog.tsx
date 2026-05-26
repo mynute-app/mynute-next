@@ -65,6 +65,8 @@ export function AppointmentFinalizationDialog({
 
   const [form, setForm] = useState<Record<string, UsageFormState>>({});
   const [shortagePolicy, setShortagePolicy] = useState<string>("__none__");
+  const [chargedAmountDisplay, setChargedAmountDisplay] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("__none__");
   const [batchOptions, setBatchOptions] = useState<Record<string, InventoryBatch[]>>({});
 
   useEffect(() => {
@@ -77,6 +79,8 @@ export function AppointmentFinalizationDialog({
   useEffect(() => {
     if (!open) {
       setShortagePolicy("__none__");
+      setChargedAmountDisplay("");
+      setPaymentMethod("__none__");
       setBatchOptions({});
     }
   }, [open]);
@@ -168,9 +172,26 @@ export function AppointmentFinalizationDialog({
       return item;
     });
 
+    const chargedAmountCents = chargedAmountDisplay
+      ? Math.round(parseFloat(chargedAmountDisplay) * 100)
+      : undefined;
+
     try {
       const response = await finalizeAppointment(appointmentId, {
         items: usageItems,
+        charged_amount: Number.isFinite(chargedAmountCents)
+          ? chargedAmountCents
+          : undefined,
+        payment_method:
+          paymentMethod !== "__none__"
+            ? (paymentMethod as
+                | "cash"
+                | "pix"
+                | "credit_card"
+                | "debit_card"
+                | "bank_transfer"
+                | "other")
+            : undefined,
         ...(shortagePolicy !== "__none__"
           ? {
               shortage_policy_override: shortagePolicy as
@@ -333,6 +354,44 @@ export function AppointmentFinalizationDialog({
             {activeUsages.length > 0 && (
               <>
                 <Separator />
+                <div className="space-y-2">
+                  <Label htmlFor="charged_amount" className="text-sm font-medium">
+                    Valor Cobrado (R$) — opcional
+                  </Label>
+                  <Input
+                    id="charged_amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Deixe em branco para usar o valor padrão"
+                    value={chargedAmountDisplay}
+                    onChange={e => setChargedAmountDisplay(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Deixe em branco para usar o valor padrão do agendamento.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="payment_method" className="text-sm font-medium">
+                    Forma de Pagamento
+                  </Label>
+                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <SelectTrigger id="payment_method">
+                      <SelectValue placeholder="Selecionar forma de pagamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Não informar</SelectItem>
+                      <SelectItem value="pix">PIX</SelectItem>
+                      <SelectItem value="cash">Dinheiro</SelectItem>
+                      <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                      <SelectItem value="debit_card">Cartão de Débito</SelectItem>
+                      <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
+                      <SelectItem value="other">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">
                     Política de escassez (opcional)

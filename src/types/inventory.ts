@@ -330,6 +330,14 @@ export interface FinalizeUsageItem {
 
 export interface FinalizeAppointmentRequest {
   shortage_policy_override?: FinishShortagePolicy | null;
+  charged_amount?: number;
+  payment_method?:
+    | "cash"
+    | "pix"
+    | "credit_card"
+    | "debit_card"
+    | "bank_transfer"
+    | "other";
   items: FinalizeUsageItem[];
 }
 

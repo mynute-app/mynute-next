@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BarChart2,
   BookOpen,
   Building2,
   Calendar,
@@ -23,6 +24,10 @@ import {
   Users,
   Wrench,
   Package,
+  PieChart,
+  Settings2,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 
 import { Sidebar } from "@/components/ui/sidebar";
@@ -168,6 +173,64 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 icon={<Building2 className="h-5 w-5" />}
                 label="Filiais"
                 isActive={isActive("/dashboard/branch")}
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 px-3 py-2">
+            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+              Financeiro
+            </p>
+            <div className="space-y-1">
+              <NavItem
+                href={toTenantDashboardPath("/dashboard/financeiro")}
+                icon={<LayoutDashboard className="h-5 w-5" />}
+                label="Painel Financeiro"
+                isActive={isActive("/dashboard/financeiro", true)}
+              />
+              <NavItem
+                href={toTenantDashboardPath(
+                  "/dashboard/financeiro/contas-a-receber",
+                )}
+                icon={<TrendingUp className="h-5 w-5" />}
+                label="Contas a Receber"
+                isActive={isActive("/dashboard/financeiro/contas-a-receber")}
+              />
+              <NavItem
+                href={toTenantDashboardPath(
+                  "/dashboard/financeiro/contas-a-pagar",
+                )}
+                icon={<TrendingDown className="h-5 w-5" />}
+                label="Contas a Pagar"
+                isActive={isActive("/dashboard/financeiro/contas-a-pagar")}
+              />
+              <NavItem
+                href={toTenantDashboardPath(
+                  "/dashboard/financeiro/fluxo-de-caixa",
+                )}
+                icon={<BarChart2 className="h-5 w-5" />}
+                label="Fluxo de Caixa"
+                isActive={isActive("/dashboard/financeiro/fluxo-de-caixa")}
+              />
+              <NavItem
+                href={toTenantDashboardPath("/dashboard/financeiro/orcamentos")}
+                icon={<BookOpen className="h-5 w-5" />}
+                label="Orçamentos"
+                isActive={isActive("/dashboard/financeiro/orcamentos")}
+              />
+              <NavItem
+                href={toTenantDashboardPath("/dashboard/financeiro/relatorios")}
+                icon={<PieChart className="h-5 w-5" />}
+                label="Relatórios"
+                isActive={isActive("/dashboard/financeiro/relatorios")}
+              />
+              <NavItem
+                href={toTenantDashboardPath(
+                  "/dashboard/financeiro/configuracoes",
+                )}
+                icon={<Settings2 className="h-5 w-5" />}
+                label="Config. Financeiro"
+                isActive={isActive("/dashboard/financeiro/configuracoes")}
               />
             </div>
           </div>

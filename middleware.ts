@@ -22,6 +22,13 @@ const TENANT_NATIVE_DASHBOARD_ROUTES = new Set([
   "/dashboard/inventory",
   "/dashboard/your-team",
   "/dashboard/branch",
+  "/dashboard/financeiro",
+  "/dashboard/financeiro/contas-a-receber",
+  "/dashboard/financeiro/contas-a-pagar",
+  "/dashboard/financeiro/fluxo-de-caixa",
+  "/dashboard/financeiro/orcamentos",
+  "/dashboard/financeiro/relatorios",
+  "/dashboard/financeiro/configuracoes",
   "/dashboard/config/your-brand",
   "/dashboard/config/account",
 ]);

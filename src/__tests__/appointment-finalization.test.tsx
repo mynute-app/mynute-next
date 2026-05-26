@@ -924,6 +924,90 @@ describe("AppointmentFinalizationDialog", () => {
       expect((global.fetch as jest.Mock).mock.calls).toHaveLength(1);
     });
   });
+
+  it("renders charged amount and payment method fields", async () => {
+    (global.fetch as jest.Mock) = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockAppointmentInventoryUsagesResponse,
+    });
+
+    const { AppointmentFinalizationDialog } = await import(
+      "@/app/dashboard/scheduling/view/_components/appointment-finalization-dialog"
+    );
+
+    await act(async () => {
+      render(
+        <AppointmentFinalizationDialog
+          appointmentId={MOCK_IDS.appointment1}
+          open={true}
+          onOpenChange={() => {}}
+          onFinalized={() => {}}
+        />,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/valor cobrado/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/forma de pagamento/i)).toBeInTheDocument();
+    });
+  });
+
+  it("sends charged_amount and payment_method when provided", async () => {
+    (global.fetch as jest.Mock) = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockAppointmentInventoryUsagesResponse,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockFinalizeResponse,
+      });
+
+    const { AppointmentFinalizationDialog } = await import(
+      "@/app/dashboard/scheduling/view/_components/appointment-finalization-dialog"
+    );
+
+    await act(async () => {
+      render(
+        <AppointmentFinalizationDialog
+          appointmentId={MOCK_IDS.appointment1}
+          open={true}
+          onOpenChange={() => {}}
+          onFinalized={() => {}}
+        />,
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Shampoo Profissional 500ml")).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/valor cobrado/i), {
+        target: { value: "75.50" },
+      });
+    });
+
+    await act(async () => {
+      fireEvent.mouseDown(screen.getByLabelText(/forma de pagamento/i));
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("PIX"));
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /finalizar atendimento/i }));
+    });
+
+    await waitFor(() => {
+      const patchCall = (global.fetch as jest.Mock).mock.calls[1];
+      const body = JSON.parse(patchCall[1].body);
+      expect(body.charged_amount).toBe(7550);
+      expect(body.payment_method).toBe("pix");
+    });
+  });
 });
 
 // ── AppointmentDetailsDialog — Finalizar button ───────────────────────────────
