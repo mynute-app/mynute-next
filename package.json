@@ -10,7 +10,9 @@
     "test": "jest --passWithNoTests --maxWorkers=4",
     "test:watch": "jest --watch --maxWorkers=4",
     "test:coverage": "jest --coverage --passWithNoTests --maxWorkers=4",
-    "test:screenshots": "playwright test tests/screenshots/"
+    "test:screenshots": "playwright test tests/screenshots/",
+    "test:screenshots:financial": "playwright test tests/screenshots/ --grep financeiro",
+    "test:screenshots:page": "playwright test tests/screenshots/ --grep"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

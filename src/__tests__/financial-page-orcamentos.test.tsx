@@ -24,6 +24,8 @@ const mockQuoteRefetch = jest.fn();
 const mockCreateBudget = jest.fn().mockResolvedValue({});
 const mockCreateQuote = jest.fn().mockResolvedValue({});
 const mockUpdateQuoteStatus = jest.fn().mockResolvedValue({});
+// mockUseClientQuotes is a jest.fn() that can be overridden per test with mockReturnValueOnce
+const mockUseClientQuotes = jest.fn();
 
 jest.mock("@/hooks/financial/use-financial-budgets", () => ({
   useFinancialBudgets: () => ({
@@ -40,12 +42,8 @@ jest.mock("@/hooks/financial/use-financial-budgets", () => ({
 }));
 
 jest.mock("@/hooks/financial/use-client-quotes", () => ({
-  useClientQuotes: () => ({
-    data: [],
-    isLoading: false,
-    error: null,
-    refetch: mockQuoteRefetch,
-  }),
+  // Forward calls to mockUseClientQuotes so tests can override via mockReturnValueOnce
+  useClientQuotes: (...args: unknown[]) => mockUseClientQuotes(...args),
   useCreateClientQuote: () => ({
     mutate: mockCreateQuote,
     isLoading: false,
@@ -84,6 +82,13 @@ import OrcamentosPage from "@/app/dashboard/financeiro/orcamentos/page";
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // Default: useClientQuotes returns empty list (for refetch tests that don't need quote data)
+  mockUseClientQuotes.mockReturnValue({
+    data: [],
+    isLoading: false,
+    error: null,
+    refetch: mockQuoteRefetch,
+  });
 });
 
 describe("OrcamentosPage — mutations call refetch instead of window.location.reload", () => {
@@ -139,5 +144,73 @@ describe("OrcamentosPage — mutations call refetch instead of window.location.r
     });
 
     expect(mockLocationReload).not.toHaveBeenCalled();
+  });
+});
+
+// ── Status flow tests ─────────────────────────────────────────────────────────
+
+describe("OrcamentosPage — quote status flow", () => {
+  it("shows 'Enviar' button (not 'Aprovar') for a draft quote", () => {
+    mockUseClientQuotes.mockReturnValueOnce({
+      data: [{ id: "q1", status: "draft", client_name: "Cliente A", total_amount: 5000, items: [], valid_until: null }],
+      isLoading: false,
+      error: null,
+      refetch: mockQuoteRefetch,
+    });
+
+    render(<OrcamentosPage />);
+
+    // Draft quotes should show "Enviar" to advance to "sent" (first step)
+    expect(screen.getByText("Enviar")).toBeInTheDocument();
+    // Should NOT show "Aprovar" from draft — that skips the "sent" step
+    expect(screen.queryByText("Aprovar")).not.toBeInTheDocument();
+  });
+
+  it("shows 'Aceitar' and 'Recusar' buttons for a sent quote", () => {
+    mockUseClientQuotes.mockReturnValueOnce({
+      data: [{ id: "q2", status: "sent", client_name: "Cliente B", total_amount: 8000, items: [], valid_until: null }],
+      isLoading: false,
+      error: null,
+      refetch: mockQuoteRefetch,
+    });
+
+    render(<OrcamentosPage />);
+
+    expect(screen.getByText("Aceitar")).toBeInTheDocument();
+    expect(screen.getByText("Recusar")).toBeInTheDocument();
+  });
+
+  it("calls updateQuoteStatus with 'sent' when clicking Enviar on a draft quote", async () => {
+    mockUseClientQuotes.mockReturnValueOnce({
+      data: [{ id: "q3", status: "draft", client_name: "Cliente C", total_amount: 3000, items: [], valid_until: null }],
+      isLoading: false,
+      error: null,
+      refetch: mockQuoteRefetch,
+    });
+
+    render(<OrcamentosPage />);
+
+    fireEvent.click(screen.getByText("Enviar"));
+
+    await waitFor(() => {
+      expect(mockUpdateQuoteStatus).toHaveBeenCalledWith("q3", "sent");
+    });
+  });
+
+  it("calls updateQuoteStatus with 'rejected' when clicking Recusar on a sent quote", async () => {
+    mockUseClientQuotes.mockReturnValueOnce({
+      data: [{ id: "q4", status: "sent", client_name: "Cliente D", total_amount: 7000, items: [], valid_until: null }],
+      isLoading: false,
+      error: null,
+      refetch: mockQuoteRefetch,
+    });
+
+    render(<OrcamentosPage />);
+
+    fireEvent.click(screen.getByText("Recusar"));
+
+    await waitFor(() => {
+      expect(mockUpdateQuoteStatus).toHaveBeenCalledWith("q4", "rejected");
+    });
   });
 });

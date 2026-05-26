@@ -141,14 +141,31 @@ export default function OrcamentosPage() {
                         <TableCell>{item.valid_until ? new Date(item.valid_until).toLocaleDateString("pt-BR") : "-"}</TableCell>
                         <TableCell className="text-right">{formatFinancialCurrency(item.total_amount)}</TableCell>
                         <TableCell className="text-right">
-                          {item.status === "draft" || item.status === "sent" ? (
+                          {item.status === "draft" ? (
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleUpdateStatus(item.id, "approved")}
+                              onClick={() => handleUpdateStatus(item.id, "sent")}
                             >
-                              Aprovar
+                              Enviar
                             </Button>
+                          ) : item.status === "sent" ? (
+                            <div className="flex gap-1 justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUpdateStatus(item.id, "approved")}
+                              >
+                                Aceitar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleUpdateStatus(item.id, "rejected")}
+                              >
+                                Recusar
+                              </Button>
+                            </div>
                           ) : (
                             <span className="text-xs text-muted-foreground">-</span>
                           )}

@@ -9,6 +9,7 @@ import {
   useCreateFinancialTransaction,
   useFinancialTransactions,
   usePayFinancialTransaction,
+  useCancelFinancialTransaction,
 } from "@/hooks/financial/use-financial-transactions";
 import { DateRangeFilter } from "@/app/dashboard/financeiro/_components/date-range-filter";
 import { TransactionActionDialog } from "@/app/dashboard/financeiro/_components/transaction-action-dialog";
@@ -28,6 +29,7 @@ export default function ContasAReceberPage() {
   const { data, isLoading, error, refetch } = useFinancialTransactions({ type: "income", page_size: 200 });
   const createTransaction = useCreateFinancialTransaction();
   const payTransaction = usePayFinancialTransaction();
+  const cancelTransaction = useCancelFinancialTransaction();
 
   const filteredData = useMemo(() => {
     return (data ?? []).filter((item) => {
@@ -61,6 +63,11 @@ export default function ContasAReceberPage() {
     await payTransaction.mutate(selectedTransactionId, payload);
     setPayOpen(false);
     setSelectedTransactionId(null);
+    await refetch();
+  };
+
+  const handleDelete = async (id: string) => {
+    await cancelTransaction.mutate(id);
     await refetch();
   };
 
@@ -139,16 +146,25 @@ export default function ContasAReceberPage() {
                     <TableCell className="text-right">{formatFinancialCurrency(item.amount)}</TableCell>
                     <TableCell className="text-right">
                       {item.status === "pending" ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedTransactionId(item.id);
-                            setPayOpen(true);
-                          }}
-                        >
-                          Quitar
-                        </Button>
+                        <div className="flex gap-1 justify-end">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedTransactionId(item.id);
+                              setPayOpen(true);
+                            }}
+                          >
+                            Quitar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(item.id)}
+                          >
+                            Excluir
+                          </Button>
+                        </div>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
                       )}
