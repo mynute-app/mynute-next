@@ -564,3 +564,363 @@ export const mockUser = {
   permission: "owner",
   role: "Proprietária",
 };
+
+// ─── Financial Mock IDs ───────────────────────────────────────────────────────
+
+export const MOCK_FINANCIAL_IDS = {
+  account1: "fin-acc-001",
+  account2: "fin-acc-002",
+  category1: "fin-cat-001",
+  category2: "fin-cat-002",
+  transaction1: "fin-txn-001",
+  transaction2: "fin-txn-002",
+  transaction3: "fin-txn-003",
+  budget1: "fin-bgt-001",
+  quote1: "fin-qte-001",
+  quote2: "fin-qte-002",
+};
+
+// ─── Financial Accounts ───────────────────────────────────────────────────────
+
+export const mockFinancialAccounts = [
+  {
+    id: MOCK_FINANCIAL_IDS.account1,
+    name: "Caixa Principal",
+    account_type: "cash",
+    balance: 5000.0,
+    branch_id: null,
+    description: "Caixa físico do salão",
+    is_active: true,
+    created_at: 1716000000,
+  },
+  {
+    id: MOCK_FINANCIAL_IDS.account2,
+    name: "Conta Corrente Itaú",
+    account_type: "bank",
+    balance: 12500.5,
+    branch_id: null,
+    description: "Conta bancária principal",
+    is_active: true,
+    created_at: 1716000001,
+  },
+];
+
+export const mockFinancialAccountsResponse = {
+  accounts: mockFinancialAccounts,
+  total: mockFinancialAccounts.length,
+};
+
+// ─── Financial Categories ─────────────────────────────────────────────────────
+
+export const mockFinancialCategories = [
+  {
+    id: MOCK_FINANCIAL_IDS.category1,
+    name: "Serviços de Beleza",
+    category_type: "income",
+    color: "#22c55e",
+    icon: "scissors",
+    description: "Receitas de serviços prestados",
+    is_active: true,
+    branch_id: null,
+    created_at: 1716000010,
+  },
+  {
+    id: MOCK_FINANCIAL_IDS.category2,
+    name: "Material de Consumo",
+    category_type: "expense",
+    color: "#ef4444",
+    icon: "shopping-bag",
+    description: "Compras de insumos e materiais",
+    is_active: true,
+    branch_id: null,
+    created_at: 1716000011,
+  },
+];
+
+export const mockFinancialCategoriesResponse = {
+  categories: mockFinancialCategories,
+  total: mockFinancialCategories.length,
+};
+
+// ─── Financial Transactions ───────────────────────────────────────────────────
+
+export const mockFinancialTransactions = [
+  {
+    id: MOCK_FINANCIAL_IDS.transaction1,
+    description: "Pagamento — Corte + Escova",
+    amount: 150.0,
+    charged_amount: 150.0,
+    transaction_type: "income",
+    status: "paid",
+    payment_method: "pix",
+    due_date: "2026-05-20",
+    payment_date: "2026-05-20",
+    branch_id: MOCK_IDS.branch1,
+    account_id: MOCK_FINANCIAL_IDS.account1,
+    category_id: MOCK_FINANCIAL_IDS.category1,
+    reference_type: "appointment",
+    reference_id: MOCK_IDS.appointment1,
+    notes: "",
+    created_at: 1716100000,
+  },
+  {
+    id: MOCK_FINANCIAL_IDS.transaction2,
+    description: "Compra de Tintura",
+    amount: 320.0,
+    charged_amount: null,
+    transaction_type: "expense",
+    status: "pending",
+    payment_method: "",
+    due_date: "2026-05-28",
+    payment_date: null,
+    branch_id: null,
+    account_id: null,
+    category_id: MOCK_FINANCIAL_IDS.category2,
+    reference_type: "manual",
+    reference_id: null,
+    notes: "Compra mensal de insumos",
+    created_at: 1716100100,
+  },
+  {
+    id: MOCK_FINANCIAL_IDS.transaction3,
+    description: "Assinatura Software de Gestão",
+    amount: 89.9,
+    charged_amount: null,
+    transaction_type: "expense",
+    status: "overdue",
+    payment_method: "",
+    due_date: "2026-05-15",
+    payment_date: null,
+    branch_id: null,
+    account_id: null,
+    category_id: null,
+    reference_type: "manual",
+    reference_id: null,
+    notes: "",
+    created_at: 1716100200,
+  },
+];
+
+export const mockFinancialTransactionsResponse = {
+  transactions: mockFinancialTransactions,
+  total: mockFinancialTransactions.length,
+};
+
+// ─── Financial Cash Flow Report ───────────────────────────────────────────────
+
+export const mockCashFlowReport = {
+  start_date: "2026-05-01",
+  end_date: "2026-05-31",
+  total_income: 1850.0,
+  total_expense: 409.9,
+  net_balance: 1440.1,
+  entries: [
+    { date: "2026-05-01", income: 300.0, expense: 0, net_balance: 300.0, running_balance: 300.0 },
+    { date: "2026-05-15", income: 0, expense: 89.9, net_balance: -89.9, running_balance: 210.1 },
+    { date: "2026-05-20", income: 1550.0, expense: 320.0, net_balance: 1230.0, running_balance: 1440.1 },
+  ],
+};
+
+// ─── Financial Summary ────────────────────────────────────────────────────────
+
+export const mockFinancialSummary = {
+  monthly_income: 1850.0,
+  monthly_expense: 409.9,
+  net_balance: 1440.1,
+  pending_receivables: 500.0,
+};
+
+// ─── Financial DRE Report ─────────────────────────────────────────────────────
+
+export const mockDREReport = {
+  start_date: "2026-05-01",
+  end_date: "2026-05-31",
+  total_income: 185000,
+  total_expense: 40990,
+  gross_profit: 144010,
+  income_by_category: [
+    { category_id: MOCK_FINANCIAL_IDS.category1, category_name: "Serviços de Beleza", amount: 185000 },
+  ],
+  expense_by_category: [
+    { category_id: MOCK_FINANCIAL_IDS.category2, category_name: "Material de Consumo", amount: 40990 },
+  ],
+};
+
+// ─── Financial Receivables/Payables Reports ───────────────────────────────────
+
+export const mockReceivablesReport = {
+  total: 500.0,
+  items: [mockFinancialTransactions[0]],
+};
+
+export const mockPayablesReport = {
+  total: 409.9,
+  items: [mockFinancialTransactions[1], mockFinancialTransactions[2]],
+};
+
+export const mockAppointmentsRevenueReport = {
+  total_revenue: 1850.0,
+  appointment_count: 12,
+  entries: [
+    { date: "2026-05-20", revenue: 150.0, count: 1 },
+  ],
+};
+
+// ─── Financial Budgets ────────────────────────────────────────────────────────
+
+export const mockFinancialBudgets = [
+  {
+    id: MOCK_FINANCIAL_IDS.budget1,
+    name: "Orçamento Maio 2026",
+    category_id: null,
+    amount: 2000.0,
+    realized: 409.9,
+    period_start: "2026-05-01",
+    period_end: "2026-05-31",
+    branch_id: null,
+    notes: "",
+    created_at: 1716000020,
+  },
+];
+
+export const mockFinancialBudgetsResponse = {
+  budgets: mockFinancialBudgets,
+  total: mockFinancialBudgets.length,
+};
+
+// ─── Client Quotes ────────────────────────────────────────────────────────────
+
+export const mockClientQuotes = [
+  {
+    id: MOCK_FINANCIAL_IDS.quote1,
+    client_name: "Mariana Costa",
+    client_email: "mariana@email.com",
+    client_phone: "(11) 97654-3210",
+    status: "sent",
+    total_amount: 450.0,
+    valid_until: "2026-06-01",
+    notes: "Pacote completo",
+    branch_id: null,
+    items: [
+      {
+        id: "qitem-001",
+        quote_id: MOCK_FINANCIAL_IDS.quote1,
+        description: "Coloração completa",
+        quantity: 1,
+        unit_price: 300.0,
+        total_price: 300.0,
+      },
+      {
+        id: "qitem-002",
+        quote_id: MOCK_FINANCIAL_IDS.quote1,
+        description: "Corte feminino",
+        quantity: 1,
+        unit_price: 150.0,
+        total_price: 150.0,
+      },
+    ],
+    created_at: 1716200000,
+  },
+  {
+    id: MOCK_FINANCIAL_IDS.quote2,
+    client_name: "Fernanda Lima",
+    client_email: "fernanda@email.com",
+    client_phone: "(11) 96543-2109",
+    status: "draft",
+    total_amount: 120.0,
+    valid_until: null,
+    notes: "",
+    branch_id: null,
+    items: [
+      {
+        id: "qitem-003",
+        quote_id: MOCK_FINANCIAL_IDS.quote2,
+        description: "Hidratação",
+        quantity: 1,
+        unit_price: 120.0,
+        total_price: 120.0,
+      },
+    ],
+    created_at: 1716200100,
+  },
+];
+
+export const mockClientQuotesResponse = {
+  quotes: mockClientQuotes,
+  total: mockClientQuotes.length,
+};
+
+// ─── Client Appointments (for client-facing /client/agendamentos page) ────────
+
+const futureDate1 = new Date();
+futureDate1.setDate(futureDate1.getDate() + 3);
+const futureDate2 = new Date();
+futureDate2.setDate(futureDate2.getDate() + 10);
+const pastDate1 = new Date();
+pastDate1.setDate(pastDate1.getDate() - 7);
+
+export const mockClientAppointments = [
+  {
+    id: "apt-client-001",
+    company_id: "company-preview-001",
+    company_name: "Salão Beleza Total",
+    company_slug: "beleza-total",
+    branch_id: MOCK_IDS.branch1,
+    branch_name: "Unidade Centro",
+    service_id: MOCK_IDS.service1,
+    service_name: "Corte de Cabelo",
+    service_price: 8500,
+    employee_id: MOCK_IDS.employee1,
+    employee_name: "Ana",
+    employee_surname: "Silva",
+    start_time: futureDate1.toISOString(),
+    end_time: new Date(futureDate1.getTime() + 60 * 60 * 1000).toISOString(),
+    time_zone: "America/Sao_Paulo",
+    is_cancelled: false,
+    is_fulfilled: false,
+    is_cancelled_by_client: false,
+    is_approved_by_employee: true,
+  },
+  {
+    id: "apt-client-002",
+    company_id: "company-preview-001",
+    company_name: "Salão Beleza Total",
+    company_slug: "beleza-total",
+    branch_id: MOCK_IDS.branch1,
+    branch_name: "Unidade Centro",
+    service_id: MOCK_IDS.service2,
+    service_name: "Coloração Completa",
+    service_price: 25000,
+    employee_id: MOCK_IDS.employee2,
+    employee_name: "Carlos",
+    employee_surname: "Mendes",
+    start_time: new Date(futureDate2.getTime()).toISOString(),
+    end_time: new Date(futureDate2.getTime() + 2 * 60 * 60 * 1000).toISOString(),
+    time_zone: "America/Sao_Paulo",
+    is_cancelled: false,
+    is_fulfilled: false,
+    is_cancelled_by_client: false,
+    is_approved_by_employee: false,
+  },
+  {
+    id: "apt-client-003",
+    company_id: "company-preview-001",
+    company_name: "Salão Beleza Total",
+    company_slug: "beleza-total",
+    branch_id: MOCK_IDS.branch1,
+    branch_name: "Unidade Centro",
+    service_id: MOCK_IDS.service3,
+    service_name: "Manicure",
+    service_price: 5000,
+    employee_id: MOCK_IDS.employee1,
+    employee_name: "Ana",
+    employee_surname: "Silva",
+    start_time: pastDate1.toISOString(),
+    end_time: new Date(pastDate1.getTime() + 45 * 60 * 1000).toISOString(),
+    time_zone: "America/Sao_Paulo",
+    is_cancelled: true,
+    is_fulfilled: false,
+    is_cancelled_by_client: true,
+    is_approved_by_employee: true,
+  },
+];

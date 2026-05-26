@@ -110,6 +110,63 @@ export const registry: Record<string, RegistryEntry> = {
     category: "config",
     component: lazy(() => import("@/app/dashboard/config/blocked-dates/_components/blocked-dates").then((m) => ({ default: m.default }))),
   },
+
+  // ─── Financeiro ─────────────────────────────────────────────────────────────
+  "financeiro-dashboard": {
+    title: "Financeiro — Dashboard",
+    category: "dashboard",
+    component: lazy(() => import("@/app/dashboard/financeiro/financeiro").then((m) => ({ default: m.FinanceiroDashboard }))),
+  },
+
+  "financeiro-contas-a-receber": {
+    title: "Financeiro — Contas a Receber",
+    category: "dashboard",
+    component: lazy(() => import("@/app/dashboard/financeiro/contas-a-receber/page").then((m) => ({ default: m.default }))),
+  },
+
+  "financeiro-contas-a-pagar": {
+    title: "Financeiro — Contas a Pagar",
+    category: "dashboard",
+    component: lazy(() => import("@/app/dashboard/financeiro/contas-a-pagar/page").then((m) => ({ default: m.default }))),
+  },
+
+  "financeiro-fluxo-de-caixa": {
+    title: "Financeiro — Fluxo de Caixa",
+    category: "dashboard",
+    component: lazy(() => import("@/app/dashboard/financeiro/fluxo-de-caixa/page").then((m) => ({ default: m.default }))),
+  },
+
+  "financeiro-orcamentos": {
+    title: "Financeiro — Orçamentos",
+    category: "dashboard",
+    component: lazy(() => import("@/app/dashboard/financeiro/orcamentos/page").then((m) => ({ default: m.default }))),
+  },
+
+  "financeiro-relatorios": {
+    title: "Financeiro — Relatórios",
+    category: "dashboard",
+    component: lazy(() => import("@/app/dashboard/financeiro/relatorios/page").then((m) => ({ default: m.default }))),
+  },
+
+  "financeiro-configuracoes": {
+    title: "Financeiro — Configurações",
+    category: "dashboard",
+    component: lazy(() => import("@/app/dashboard/financeiro/configuracoes/page").then((m) => ({ default: m.default }))),
+  },
+
+  // ─── Cliente ────────────────────────────────────────────────────────────────
+  "client-agendamentos": {
+    title: "Cliente — Meus Agendamentos",
+    category: "public",
+    component: lazy(() => import("./previews/ClientAgendamentosPreview").then((m) => ({ default: m.default }))),
+  },
+
+  // ─── System Admin ────────────────────────────────────────────────────────────
+  "system-admin-whatsapp": {
+    title: "Admin — WhatsApp",
+    category: "config",
+    component: lazy(() => import("@/app/system-admin/dashboard/whatsapp/page").then((m) => ({ default: m.default }))),
+  },
 };
 
 /** All categories for grouping display in the index page */
