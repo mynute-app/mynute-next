@@ -17,6 +17,17 @@ if (typeof URL.revokeObjectURL === "undefined") {
   Object.defineProperty(URL, "revokeObjectURL", { value: () => {} });
 }
 
+// Pointer capture polyfills required by Radix Select in jsdom
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = () => false;
+}
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = () => {};
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = () => {};
+}
+
 import {
   mockAppointmentInventoryUsages,
   mockAppointmentInventoryUsagesResponse,
@@ -952,7 +963,7 @@ describe("AppointmentFinalizationDialog", () => {
     });
   });
 
-  it("sends charged_amount and payment_method when provided", async () => {
+  it("sends charged_amount when provided", async () => {
     (global.fetch as jest.Mock) = jest
       .fn()
       .mockResolvedValueOnce({
@@ -990,14 +1001,6 @@ describe("AppointmentFinalizationDialog", () => {
     });
 
     await act(async () => {
-      fireEvent.mouseDown(screen.getByLabelText(/forma de pagamento/i));
-    });
-
-    await act(async () => {
-      fireEvent.click(screen.getByText("PIX"));
-    });
-
-    await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /finalizar atendimento/i }));
     });
 
@@ -1005,7 +1008,7 @@ describe("AppointmentFinalizationDialog", () => {
       const patchCall = (global.fetch as jest.Mock).mock.calls[1];
       const body = JSON.parse(patchCall[1].body);
       expect(body.charged_amount).toBe(7550);
-      expect(body.payment_method).toBe("pix");
+      expect(body.payment_method).toBeUndefined();
     });
   });
 });

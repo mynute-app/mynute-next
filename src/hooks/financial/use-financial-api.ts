@@ -51,7 +51,23 @@ async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new FinancialApiError(res.status, text || `Erro ${res.status}`);
+
+    let parsedMessage = "";
+    if (text) {
+      try {
+        const parsed = JSON.parse(text) as {
+          message?: string;
+          pt_message?: string;
+          error?: string;
+        };
+        parsedMessage = parsed.pt_message || parsed.message || parsed.error || "";
+      } catch {
+        parsedMessage = text;
+      }
+    }
+
+    const normalizedMessage = parsedMessage.trim();
+    throw new FinancialApiError(res.status, normalizedMessage || `Erro ${res.status}`);
   }
 
   if (res.status === 204) {
