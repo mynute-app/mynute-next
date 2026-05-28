@@ -56,8 +56,8 @@ export function useServiceBlockedDates(serviceId: string | number | null) {
           const err = await res.json().catch(() => ({}));
           throw new Error(err.message || "Erro ao criar data bloqueada");
         }
-        const created = await res.json();
-        setBlockedDates(prev => [...prev, created]);
+        await res.json();
+        await fetchBlockedDates();
         toast({ title: "Data bloqueada com sucesso" });
         return true;
       } catch (error) {
@@ -74,7 +74,7 @@ export function useServiceBlockedDates(serviceId: string | number | null) {
         setCreating(false);
       }
     },
-    [serviceId, toast],
+    [serviceId, toast, fetchBlockedDates],
   );
 
   const deleteBlockedDate = useCallback(
@@ -86,7 +86,7 @@ export function useServiceBlockedDates(serviceId: string | number | null) {
           { method: "DELETE" },
         );
         if (!res.ok) throw new Error("Erro ao remover data bloqueada");
-        setBlockedDates(prev => prev.filter(d => d.id !== blockedDateId));
+        await fetchBlockedDates();
         toast({ title: "Bloqueio removido com sucesso" });
         return true;
       } catch (error) {
@@ -101,7 +101,7 @@ export function useServiceBlockedDates(serviceId: string | number | null) {
         return false;
       }
     },
-    [serviceId, toast],
+    [serviceId, toast, fetchBlockedDates],
   );
 
   return {

@@ -32,16 +32,19 @@ function ClientsSkeleton() {
 
 export function ClientsPage() {
   const router = useRouter();
-  const { clients, isLoading, hasFetched, error } = useAdminClients();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+
+  const { clients, total, isLoading, hasFetched, error } = useAdminClients({
+    page,
+    pageSize: PAGE_SIZE,
+  });
 
   const filtered = clients.filter(c =>
     c.email.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   function handleRowClick(client: AdminClient) {
     router.push(`/system-admin/dashboard/users/${client.id}`);
@@ -101,7 +104,7 @@ export function ClientsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paginated.map(client => (
+                      {filtered.map(client => (
                         <TableRow
                           key={client.id}
                           className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -128,7 +131,7 @@ export function ClientsPage() {
                   <DataPagination
                     page={page}
                     pageSize={PAGE_SIZE}
-                    total={filtered.length}
+                    total={total}
                     onPageChange={setPage}
                   />
                 )}
