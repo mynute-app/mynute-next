@@ -2,9 +2,23 @@ import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 import { getAuthDataFromRequest } from "@/utils/decode-jwt";
+import { rateLimit } from "@/lib/rate-limit";
+
+// 10 merge operations/minute per IP — merges are destructive mutations
+const checkLimit = rateLimit({ maxRequests: 10, windowMs: 60_000 });
 
 export const POST = auth(async function POST(req) {
   try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+    const rl = checkLimit(ip);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { message: "Muitas tentativas. Tente novamente em breve." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+      );
+    }
+
     const authData = getAuthDataFromRequest(req);
 
     if (!authData.isValid) {

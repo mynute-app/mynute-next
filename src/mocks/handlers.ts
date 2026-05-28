@@ -286,6 +286,17 @@ export const handlers = [
     });
   }),
 
+  http.get("/api/company-supplier/email/:email", ({ params }) => {
+    const email = decodeURIComponent(params.email as string).toLowerCase();
+    const supplier = mockCompanySuppliersResponse.company_suppliers.find(
+      (s) => s.email?.toLowerCase() === email
+    );
+    if (!supplier) {
+      return HttpResponse.json({ message: "Fornecedor não encontrado" }, { status: 404 });
+    }
+    return HttpResponse.json(supplier);
+  }),
+
   // ─── Client (public) ──────────────────────────────────────────────────────
 
   http.get("/api/client", ({ request }) => {

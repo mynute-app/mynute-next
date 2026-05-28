@@ -1,6 +1,6 @@
 export interface CompanySupplier {
   id: string;
-  company_id?: string;
+  company_id: string;
   name: string;
   surname: string;
   email: string;
@@ -12,8 +12,8 @@ export interface CompanySupplier {
   state?: string;
   country?: string;
   zip_code?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateCompanySupplierInput {

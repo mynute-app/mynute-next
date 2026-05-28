@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -485,9 +486,9 @@ export function SupplierDialog({
                 </div>
 
                 {formError && (
-                  <p className="text-sm font-medium text-destructive">
-                    {formError}
-                  </p>
+                  <Alert variant="destructive">
+                    <AlertDescription>{formError}</AlertDescription>
+                  </Alert>
                 )}
               </div>
             </ScrollArea>

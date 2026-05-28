@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
-import { fetchFromBackend, BackendHttpError } from "@/lib/api/fetch-from-backend";
+import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 import { getAuthDataFromRequest } from "@/utils/decode-jwt";
 
 export const POST = auth(async function POST(req) {
@@ -121,8 +121,8 @@ export const GET = auth(async function GET(req) {
     }
 
     const { searchParams } = req.nextUrl;
-    const page = searchParams.get("page") || "1";
-    const pageSize = searchParams.get("page_size") || "10";
+    const page = String(Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1));
+    const pageSize = String(Math.min(100, Math.max(1, parseInt(searchParams.get("page_size") || "10", 10) || 10)));
     const search = searchParams.get("search") || "";
 
     const queryParams: Record<string, string> = { page, page_size: pageSize };

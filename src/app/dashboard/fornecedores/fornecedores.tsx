@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Building2,
+  GitMerge,
   Mail,
   MapPin,
   MoreHorizontal,
@@ -33,6 +34,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { SupplierDialog } from "@/components/suppliers/SupplierDialog";
+import { MergeSupplierDialog } from "@/components/suppliers/MergeSupplierDialog";
 import { ErrorState } from "@/components/ui/error-state";
 import { DataPagination } from "@/components/ui/data-pagination";
 import { useCompanySuppliers } from "@/hooks/use-company-suppliers";
@@ -62,6 +64,8 @@ export const FornecedoresPage = () => {
   const [supplierToDelete, setSupplierToDelete] =
     useState<CompanySupplier | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
+  const [mergeTarget, setMergeTarget] = useState<CompanySupplier | null>(null);
 
   const { data, isLoading, error, refetch, hasFetched, total } =
     useCompanySuppliers({ page, pageSize });
@@ -111,6 +115,11 @@ export const FornecedoresPage = () => {
   const handleDeleteClick = (supplier: CompanySupplier) => {
     setSupplierToDelete(supplier);
     setTimeout(() => setDeleteDialogOpen(true), 0);
+  };
+
+  const handleMergeClick = (supplier: CompanySupplier) => {
+    setMergeTarget(supplier);
+    setTimeout(() => setMergeDialogOpen(true), 0);
   };
 
   const handleConfirmDelete = useCallback(async () => {
@@ -275,6 +284,12 @@ export const FornecedoresPage = () => {
                             <Pencil className="mr-2 h-4 w-4" />
                             Editar
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleMergeClick(supplier)}
+                          >
+                            <GitMerge className="mr-2 h-4 w-4" />
+                            Mesclar
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleDeleteClick(supplier)}
@@ -349,6 +364,24 @@ export const FornecedoresPage = () => {
         supplier={editingSupplier}
         onSuccess={handleDialogSuccess}
       />
+
+      {mergeTarget && (
+        <MergeSupplierDialog
+          open={mergeDialogOpen}
+          onOpenChange={setMergeDialogOpen}
+          keepSupplier={mergeTarget}
+          onSuccess={() => {
+            setMergeTarget(null);
+            refetch().catch(() => {
+              toast({
+                title: "Atenção",
+                description: "Mescla realizada, mas houve erro ao atualizar a lista. Tente recarregar a página.",
+                variant: "destructive",
+              });
+            });
+          }}
+        />
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
