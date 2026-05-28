@@ -25,6 +25,7 @@ import {
   Wrench,
   Package,
   PieChart,
+  Store,
   Settings2,
   TrendingDown,
   TrendingUp,
@@ -149,6 +150,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 icon={<Users className="h-5 w-5" />}
                 label="Clientes / Familias"
                 isActive={isActive("/dashboard/clientes")}
+              />
+              <NavItem
+                href={toTenantDashboardPath("/dashboard/fornecedores")}
+                icon={<Store className="h-5 w-5" />}
+                label="Fornecedores"
+                isActive={isActive("/dashboard/fornecedores")}
               />
               <NavItem
                 href={toTenantDashboardPath("/dashboard/services")}

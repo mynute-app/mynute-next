@@ -64,6 +64,19 @@ export const registry: Record<string, RegistryEntry> = {
     defaultParams: { id: "client-preview-001" },
   },
 
+  fornecedores: {
+    title: "Fornecedores",
+    category: "dashboard",
+    component: lazy(() => import("@/app/dashboard/fornecedores/fornecedores").then((m) => ({ default: m.FornecedoresPage }))),
+  },
+
+  "fornecedores-detail": {
+    title: "Detalhe do Fornecedor",
+    category: "dashboard",
+    component: lazy(() => import("@/app/dashboard/fornecedores/[id]/page").then((m) => ({ default: m.default }))),
+    defaultParams: { id: "supplier-preview-001" },
+  },
+
   "scheduling-view": {
     title: "Agenda Visual",
     category: "dashboard",

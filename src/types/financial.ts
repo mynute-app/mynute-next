@@ -60,6 +60,8 @@ export interface FinancialTransaction {
   reference_type: string;
   reference_id: string | null;
   notes: string;
+  client_id: string | null;
+  supplier_id: string | null;
   created_at: number;
 }
 
@@ -186,6 +188,8 @@ export interface CreateFinancialTransactionPayload {
   account_id?: string | null;
   category_id?: string | null;
   notes?: string;
+  client_id?: string | null;
+  supplier_id?: string | null;
 }
 
 export interface PayFinancialTransactionPayload {

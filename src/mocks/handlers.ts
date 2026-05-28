@@ -9,6 +9,7 @@ import {
   mockEmployeeListResponse,
   mockEmployee1,
   mockCompanyClientsResponse,
+  mockCompanySuppliersResponse,
   mockUser,
   mockFinancialAccounts,
   mockFinancialAccountsResponse,
@@ -247,6 +248,42 @@ export const handlers = [
 
   http.delete("/api/company-client/:id", () => {
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ─── Company Suppliers ──────────────────────────────────────────────────────
+
+  http.get("/api/company-supplier", ({ request }) => {
+    const state = getPreviewState(request);
+    if (state === "error") return HttpResponse.json({ message: "Server error" }, { status: 500 });
+    if (state === "empty") return HttpResponse.json({ company_suppliers: [], total: 0, page: 1, page_size: 20 });
+    return HttpResponse.json(mockCompanySuppliersResponse);
+  }),
+
+  http.get("/api/company-supplier/:id", ({ params }) => {
+    const { id } = params as { id: string };
+    const supplier = mockCompanySuppliersResponse.company_suppliers.find((s) => s.id === id)
+      ?? mockCompanySuppliersResponse.company_suppliers[0];
+    return HttpResponse.json(supplier);
+  }),
+
+  http.post("/api/company-supplier", () => {
+    return HttpResponse.json(mockCompanySuppliersResponse.company_suppliers[0], { status: 201 });
+  }),
+
+  http.patch("/api/company-supplier/:id", () => {
+    return HttpResponse.json(mockCompanySuppliersResponse.company_suppliers[0]);
+  }),
+
+  http.delete("/api/company-supplier/:id", () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post("/api/company-supplier/merge", () => {
+    return HttpResponse.json({
+      message: "Suppliers merged successfully",
+      kept_id: "00000000-0000-0000-0000-000000000001",
+      deleted_id: "00000000-0000-0000-0000-000000000002",
+    });
   }),
 
   // ─── Client (public) ──────────────────────────────────────────────────────
