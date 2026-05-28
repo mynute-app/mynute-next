@@ -766,6 +766,110 @@ export const mockAppointmentsRevenueReport = {
   ],
 };
 
+// ─── Financial Service Analytics ─────────────────────────────────────────────
+
+export const mockServiceRankingReport = {
+  start_date: "2026-05-01",
+  end_date: "2026-05-31",
+  sort_by: "revenue",
+  total_revenue: 185000,
+  total_appointments: 12,
+  items: [
+    {
+      service_id: "svc-001",
+      service_name: "Corte de Cabelo",
+      appointment_count: 6,
+      total_revenue: 120000,
+      avg_revenue_per_appointment: 20000,
+      revenue_share_percent: 64.9,
+    },
+    {
+      service_id: "svc-002",
+      service_name: "Coloração",
+      appointment_count: 4,
+      total_revenue: 45000,
+      avg_revenue_per_appointment: 11250,
+      revenue_share_percent: 24.3,
+    },
+    {
+      service_id: "svc-003",
+      service_name: "Hidratação",
+      appointment_count: 2,
+      total_revenue: 20000,
+      avg_revenue_per_appointment: 10000,
+      revenue_share_percent: 10.8,
+    },
+  ],
+};
+
+export const mockServiceTrendReport = {
+  start_date: "2026-05-01",
+  end_date: "2026-05-31",
+  granularity: "week",
+  service_id: null,
+  service_name: "",
+  points: [
+    { period_label: "Sem 1 (01/05)", period_start: "2026-05-01", period_end: "2026-05-07", appointment_count: 3, total_revenue: 46000 },
+    { period_label: "Sem 2 (08/05)", period_start: "2026-05-08", period_end: "2026-05-14", appointment_count: 4, total_revenue: 62000 },
+    { period_label: "Sem 3 (15/05)", period_start: "2026-05-15", period_end: "2026-05-21", appointment_count: 3, total_revenue: 47000 },
+    { period_label: "Sem 4 (22/05)", period_start: "2026-05-22", period_end: "2026-05-28", appointment_count: 2, total_revenue: 30000 },
+  ],
+};
+
+export const mockServiceByPeriodReport = {
+  granularity: "month",
+  periods: ["2026-04", "2026-05"],
+  services: [
+    {
+      service_id: "svc-001",
+      service_name: "Corte de Cabelo",
+      data: [
+        { period: "2026-04", count: 5, revenue: 100000 },
+        { period: "2026-05", count: 6, revenue: 120000 },
+      ],
+    },
+    {
+      service_id: "svc-002",
+      service_name: "Coloração",
+      data: [
+        { period: "2026-04", count: 3, revenue: 33750 },
+        { period: "2026-05", count: 4, revenue: 45000 },
+      ],
+    },
+  ],
+};
+
+export const mockServiceWeekdayPatternReport = {
+  items: [
+    {
+      service_id: "svc-001",
+      service_name: "Corte de Cabelo",
+      by_weekday: [
+        { weekday: 0, weekday_name: "Domingo", count: 0, revenue: 0 },
+        { weekday: 1, weekday_name: "Segunda", count: 1, revenue: 20000 },
+        { weekday: 2, weekday_name: "Terça", count: 2, revenue: 40000 },
+        { weekday: 3, weekday_name: "Quarta", count: 1, revenue: 20000 },
+        { weekday: 4, weekday_name: "Quinta", count: 0, revenue: 0 },
+        { weekday: 5, weekday_name: "Sexta", count: 2, revenue: 40000 },
+        { weekday: 6, weekday_name: "Sábado", count: 0, revenue: 0 },
+      ],
+    },
+    {
+      service_id: "svc-002",
+      service_name: "Coloração",
+      by_weekday: [
+        { weekday: 0, weekday_name: "Domingo", count: 0, revenue: 0 },
+        { weekday: 1, weekday_name: "Segunda", count: 1, revenue: 11250 },
+        { weekday: 2, weekday_name: "Terça", count: 0, revenue: 0 },
+        { weekday: 3, weekday_name: "Quarta", count: 2, revenue: 22500 },
+        { weekday: 4, weekday_name: "Quinta", count: 1, revenue: 11250 },
+        { weekday: 5, weekday_name: "Sexta", count: 0, revenue: 0 },
+        { weekday: 6, weekday_name: "Sábado", count: 0, revenue: 0 },
+      ],
+    },
+  ],
+};
+
 // ─── Financial Budgets ────────────────────────────────────────────────────────
 
 export const mockFinancialBudgets = [

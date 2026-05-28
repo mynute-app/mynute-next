@@ -26,6 +26,10 @@ import {
   mockReceivablesReport,
   mockPayablesReport,
   mockAppointmentsRevenueReport,
+  mockServiceRankingReport,
+  mockServiceTrendReport,
+  mockServiceByPeriodReport,
+  mockServiceWeekdayPatternReport,
 } from "./data";
 
 /**
@@ -460,6 +464,34 @@ export const handlers = [
     if (state === "error") return HttpResponse.json({ message: "Server error" }, { status: 500 });
     if (state === "empty") return HttpResponse.json({ total_revenue: 0, appointment_count: 0, entries: [] });
     return HttpResponse.json(mockAppointmentsRevenueReport);
+  }),
+
+  http.get("/api/financial/reports/services/ranking", ({ request }) => {
+    const state = getPreviewState(request);
+    if (state === "error") return HttpResponse.json({ message: "Server error" }, { status: 500 });
+    if (state === "empty") return HttpResponse.json({ start_date: "", end_date: "", sort_by: "revenue", items: [], total_revenue: 0, total_appointments: 0 });
+    return HttpResponse.json(mockServiceRankingReport);
+  }),
+
+  http.get("/api/financial/reports/services/trend", ({ request }) => {
+    const state = getPreviewState(request);
+    if (state === "error") return HttpResponse.json({ message: "Server error" }, { status: 500 });
+    if (state === "empty") return HttpResponse.json({ start_date: "", end_date: "", granularity: "week", service_id: null, service_name: "", points: [] });
+    return HttpResponse.json(mockServiceTrendReport);
+  }),
+
+  http.get("/api/financial/reports/services/by-period", ({ request }) => {
+    const state = getPreviewState(request);
+    if (state === "error") return HttpResponse.json({ message: "Server error" }, { status: 500 });
+    if (state === "empty") return HttpResponse.json({ granularity: "month", periods: [], services: [] });
+    return HttpResponse.json(mockServiceByPeriodReport);
+  }),
+
+  http.get("/api/financial/reports/services/weekday-pattern", ({ request }) => {
+    const state = getPreviewState(request);
+    if (state === "error") return HttpResponse.json({ message: "Server error" }, { status: 500 });
+    if (state === "empty") return HttpResponse.json({ items: [] });
+    return HttpResponse.json(mockServiceWeekdayPatternReport);
   }),
 
   // ─── Financial — Summary ──────────────────────────────────────────────────

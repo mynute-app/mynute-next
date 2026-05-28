@@ -7,6 +7,10 @@ import {
   fetchDREReport,
   fetchPayablesReport,
   fetchReceivablesReport,
+  fetchServiceByPeriodReport,
+  fetchServiceRankingReport,
+  fetchServiceTrendReport,
+  fetchServiceWeekdayPatternReport,
 } from "./use-financial-api";
 import type {
   AppointmentsRevenueReport,
@@ -15,6 +19,12 @@ import type {
   PayablesReport,
   ReceivablesReport,
 } from "@/types/financial";
+import type {
+  ServiceByPeriodReport,
+  ServiceRankingReport,
+  ServiceTrendReport,
+  ServiceWeekdayPatternReport,
+} from "@/types/financial-service-analytics";
 
 function useReportData<T>(
   fetcher: (params?: Record<string, string | number | boolean | undefined>) => Promise<T>,
@@ -65,4 +75,20 @@ export function usePayablesReport(params?: Record<string, string | number | bool
 
 export function useAppointmentsRevenueReport(params?: Record<string, string | number | boolean | undefined>) {
   return useReportData<AppointmentsRevenueReport>(fetchAppointmentsRevenueReport, params);
+}
+
+export function useServiceRankingReport(params?: Record<string, string | number | boolean | undefined>) {
+  return useReportData<ServiceRankingReport>(fetchServiceRankingReport, params);
+}
+
+export function useServiceTrendReport(params?: Record<string, string | number | boolean | undefined>) {
+  return useReportData<ServiceTrendReport>(fetchServiceTrendReport, params);
+}
+
+export function useServiceByPeriodReport(params?: Record<string, string | number | boolean | undefined>) {
+  return useReportData<ServiceByPeriodReport>(fetchServiceByPeriodReport, params);
+}
+
+export function useServiceWeekdayPatternReport(params?: Record<string, string | number | boolean | undefined>) {
+  return useReportData<ServiceWeekdayPatternReport>(fetchServiceWeekdayPatternReport, params);
 }

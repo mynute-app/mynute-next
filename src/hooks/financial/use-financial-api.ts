@@ -18,6 +18,12 @@ import type {
   PayFinancialTransactionPayload,
   ReceivablesReport,
 } from "@/types/financial";
+import type {
+  ServiceByPeriodReport,
+  ServiceRankingReport,
+  ServiceTrendReport,
+  ServiceWeekdayPatternReport,
+} from "@/types/financial-service-analytics";
 
 export class FinancialApiError extends Error {
   constructor(
@@ -181,5 +187,31 @@ export function fetchPayablesReport(params?: Record<string, string | number | bo
 export function fetchAppointmentsRevenueReport(params?: Record<string, string | number | boolean | undefined>) {
   return apiFetch<AppointmentsRevenueReport>(
     `/api/financial/reports/appointments-revenue${buildQuery(params)}`,
+  );
+}
+
+// Service Analytics Reports
+
+export function fetchServiceRankingReport(params?: Record<string, string | number | boolean | undefined>) {
+  return apiFetch<ServiceRankingReport>(
+    `/api/financial/reports/services/ranking${buildQuery(params)}`,
+  );
+}
+
+export function fetchServiceTrendReport(params?: Record<string, string | number | boolean | undefined>) {
+  return apiFetch<ServiceTrendReport>(
+    `/api/financial/reports/services/trend${buildQuery(params)}`,
+  );
+}
+
+export function fetchServiceByPeriodReport(params?: Record<string, string | number | boolean | undefined>) {
+  return apiFetch<ServiceByPeriodReport>(
+    `/api/financial/reports/services/by-period${buildQuery(params)}`,
+  );
+}
+
+export function fetchServiceWeekdayPatternReport(params?: Record<string, string | number | boolean | undefined>) {
+  return apiFetch<ServiceWeekdayPatternReport>(
+    `/api/financial/reports/services/weekday-pattern${buildQuery(params)}`,
   );
 }

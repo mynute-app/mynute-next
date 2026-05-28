@@ -225,6 +225,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 isActive={isActive("/dashboard/financeiro/relatorios")}
               />
               <NavItem
+                href={toTenantDashboardPath("/dashboard/financeiro/analytics")}
+                icon={<BarChart2 className="h-5 w-5" />}
+                label="Analytics de Serviços"
+                isActive={isActive("/dashboard/financeiro/analytics")}
+              />
+              <NavItem
                 href={toTenantDashboardPath(
                   "/dashboard/financeiro/configuracoes",
                 )}

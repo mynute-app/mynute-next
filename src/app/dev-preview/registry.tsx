@@ -148,6 +148,12 @@ export const registry: Record<string, RegistryEntry> = {
     component: lazy(() => import("@/app/dashboard/financeiro/relatorios/page").then((m) => ({ default: m.default }))),
   },
 
+  "financeiro-analytics": {
+    title: "Financeiro — Analytics de Serviços",
+    category: "dashboard",
+    component: lazy(() => import("@/app/dashboard/financeiro/analytics/page").then((m) => ({ default: m.default }))),
+  },
+
   "financeiro-configuracoes": {
     title: "Financeiro — Configurações",
     category: "dashboard",
