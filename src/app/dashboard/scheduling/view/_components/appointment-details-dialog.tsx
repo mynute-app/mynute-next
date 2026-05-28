@@ -45,7 +45,10 @@ import {
   Phone,
   Loader2,
   CheckCircle,
+  PackageCheck,
 } from "lucide-react";
+import { AppointmentFinalizationDialog } from "./appointment-finalization-dialog";
+import type { FinalizeAppointmentResponse } from "@/types/inventory";
 import type {
   Appointment,
   ClientInfo,
@@ -71,6 +74,7 @@ interface AppointmentDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
   onAppointmentDeleted?: () => void;
   onAppointmentApproved?: () => void;
+  onAppointmentFinalized?: (response: FinalizeAppointmentResponse) => void;
 }
 
 export function AppointmentDetailsDialog({
@@ -83,8 +87,10 @@ export function AppointmentDetailsDialog({
   onOpenChange,
   onAppointmentDeleted,
   onAppointmentApproved,
+  onAppointmentFinalized,
 }: AppointmentDetailsDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [finalizationOpen, setFinalizationOpen] = useState(false);
   const [editedEmployeeId, setEditedEmployeeId] = useState<string>("");
   const [editedDate, setEditedDate] = useState<Date | null>(null);
   const [editedTime, setEditedTime] = useState<string | null>(null);
@@ -674,6 +680,17 @@ export function AppointmentDetailsDialog({
                       )}
                     </Button>
                   )}
+                  {!appointment.is_fulfilled &&
+                    appointment.is_approved_by_employee && (
+                      <Button
+                        variant="default"
+                        onClick={() => setFinalizationOpen(true)}
+                        className="bg-[hsl(var(--success))] hover:bg-[hsl(var(--success)/0.9)] text-white"
+                      >
+                        <PackageCheck className="h-4 w-4 mr-2" />
+                        Finalizar
+                      </Button>
+                    )}
                   <Button variant="outline" onClick={() => setIsEditing(true)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Editar
@@ -691,6 +708,16 @@ export function AppointmentDetailsDialog({
           )}
         </DialogFooter>
       </DialogContent>
+
+      <AppointmentFinalizationDialog
+        appointmentId={appointment?.id ?? ""}
+        open={finalizationOpen}
+        onOpenChange={setFinalizationOpen}
+        onFinalized={response => {
+          onAppointmentFinalized?.(response);
+          onOpenChange(false);
+        }}
+      />
 
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent className="z-[10001]">

@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Headphones,
   LayoutDashboard,
+  MessageCircle,
   Settings,
   ShieldCheck,
   Users,
@@ -130,6 +131,12 @@ export function AdminSidebar({
                 icon={<Headphones className="h-5 w-5" />}
                 label="Suporte"
                 isActive={isActive("/system-admin/dashboard/support")}
+              />
+              <NavItem
+                href="/system-admin/dashboard/whatsapp"
+                icon={<MessageCircle className="h-5 w-5" />}
+                label="WhatsApp"
+                isActive={isActive("/system-admin/dashboard/whatsapp")}
               />
             </div>
           </div>

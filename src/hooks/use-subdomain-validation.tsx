@@ -16,7 +16,7 @@ export interface SubdomainHookResult {
  * Hook para usar a validação de subdomínio em Server Components
  * Retorna os dados da empresa ou o componente de erro para renderizar
  */
-export async function useSubdomainValidation(): Promise<SubdomainHookResult> {
+export async function getSubdomainValidation(): Promise<SubdomainHookResult> {
   const result = await validateSubdomainAndGetCompany();
 
   // Se for o domínio principal (mynute.app ou localhost sem subdomínio)

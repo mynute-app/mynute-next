@@ -23,51 +23,6 @@ export const { handlers, auth, signIn } = NextAuth({
   trustHost: true,
   providers: [
     Credentials({
-      id: "system-admin-login",
-      name: "System Admin Login",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      authorize: async (credentials) => {
-        try {
-          const { email, password } = await signInSchema.parseAsync(credentials);
-
-          const response = await fetch(`${process.env.BACKEND_URL}/system-admin/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          });
-
-          if (!response.ok) {
-            throw new Error(`Falha ao autenticar. Codigo: ${response.status}`);
-          }
-
-          const token = response.headers.get("X-Auth-Token");
-
-          if (!token) {
-            throw new Error("Token nao encontrado na resposta.");
-          }
-
-          const fallbackName = email?.split("@")[0] || "Admin";
-
-          return {
-            email,
-            name: fallbackName,
-            token,
-            userType: "system_admin",
-          };
-        } catch (error) {
-          if (error instanceof ZodError) {
-            console.error("Erro de validacao:", error.errors);
-            return null;
-          }
-          console.error("Erro durante a autenticacao system_admin:", error);
-          return null;
-        }
-      },
-    }),
-    Credentials({
       id: "employee-login",
       name: "Employee Login",
       credentials: {
@@ -199,6 +154,59 @@ export const { handlers, auth, signIn } = NextAuth({
         }
       },
     }),
+    Credentials({
+      id: "system-admin-login",
+      name: "System Admin Login",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize: async (credentials) => {
+        try {
+          const { email, password } = credentials as {
+            email: string;
+            password: string;
+          };
+
+          if (!email || !password) {
+            throw new Error("Email e senha sao obrigatorios");
+          }
+
+          const response = await fetch(
+            `${process.env.BACKEND_URL}/system-admin/login`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error(`Falha ao autenticar. Codigo: ${response.status}`);
+          }
+
+          const text = await response.text();
+          const data = text ? JSON.parse(text) : {};
+          const token = response.headers.get("X-Auth-Token") ?? data?.token;
+
+          if (!token) {
+            throw new Error("Token nao encontrado na resposta.");
+          }
+
+          return {
+            id: data?.id ?? email,
+            email,
+            name: email.split("@")[0] || "Admin",
+            token,
+            isSystemAdmin: true,
+            userType: "system_admin",
+          };
+        } catch (error: any) {
+          console.error("[AUTH] system-admin authorize error:", error?.message);
+          return null;
+        }
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -211,12 +219,14 @@ export const { handlers, auth, signIn } = NextAuth({
         token.tenant = u.tenant ?? u.subdomain;
         token.email = u.email ?? token.email;
         token.name = u.name ?? token.name ?? u.email ?? token.email;
+        token.isSystemAdmin = u.isSystemAdmin ?? false;
       }
       return token;
     },
     async session({ session, token }) {
       (session as any).accessToken = (token as any).accessToken;
       (session as any).tenant = (token as any).tenant ?? (token as any).subdomain;
+      (session as any).isSystemAdmin = (token as any).isSystemAdmin ?? false;
       (session as any).userType = (token as any).userType;
 
       session.user = {

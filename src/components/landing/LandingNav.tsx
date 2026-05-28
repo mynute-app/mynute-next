@@ -1,11 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LoginModal from "@/components/landing/LoginModal";
 
-const LandingNav = () => (
+const LandingNav = () => {
+  const [modalOpen, setModalOpen] = useState(false);
+
+  return (
+    <>
+      <LoginModal open={modalOpen} onOpenChange={setModalOpen} />
   <motion.nav
     initial={{ y: -100 }}
     animate={{ y: 0 }}
@@ -50,6 +57,15 @@ const LandingNav = () => (
           </a>
         </div>
         <div className="flex items-center gap-3">
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setModalOpen(true)}
+            >
+              Entrar
+            </Button>
+          </motion.div>
           <Link href="/auth/register-company">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button size="sm" className="btn-gradient">
@@ -61,6 +77,8 @@ const LandingNav = () => (
       </div>
     </div>
   </motion.nav>
-);
+    </>
+  );
+};
 
 export default LandingNav;

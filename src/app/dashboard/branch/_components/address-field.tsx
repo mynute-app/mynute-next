@@ -35,6 +35,10 @@ export function AddressField({
   index,
   onDelete,
 }: AddressFieldProps) {
+  // Hook must be called unconditionally (Rules of Hooks)
+  const { isSaving, isDeleting, hasChanges, handleSave, handleDelete } =
+    useAddressField(branch as Branch, index, onDelete, watch);
+
   if (!branch || !branch.id) {
     console.warn("AddressField: branch ou branch.id está undefined", {
       branch,
@@ -42,9 +46,6 @@ export function AddressField({
     });
     return null;
   }
-
-  const { isSaving, isDeleting, hasChanges, handleSave, handleDelete } =
-    useAddressField(branch, index, onDelete, watch);
 
   return (
     <Card>

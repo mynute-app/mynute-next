@@ -1,5 +1,5 @@
 import { ChangePasswordForm } from "@/components/auth/ChangePasswordForm";
-import { useSubdomainValidation } from "@/hooks/use-subdomain-validation";
+import { getSubdomainValidation } from "@/hooks/use-subdomain-validation";
 import { auth } from "../../../../../auth";
 import { redirect } from "next/navigation";
 
@@ -9,7 +9,7 @@ export default async function ChangePasswordPage() {
     redirect("/dashboard");
   }
 
-  const { company, errorComponent } = await useSubdomainValidation();
+  const { company, errorComponent } = await getSubdomainValidation();
 
   if (errorComponent) {
     return errorComponent;

@@ -8,6 +8,16 @@ export class BackendUnauthorizedError extends Error {
   }
 }
 
+export class BackendHttpError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "BackendHttpError";
+  }
+}
+
 type Options = {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   queryParams?: Record<string, string | number | undefined>;
@@ -72,12 +82,14 @@ export async function fetchFromBackend<T = any>(
         body: options.body ? JSON.stringify(options.body) : undefined,
       });
     } catch (networkError) {
-      console.error(
-        `[fetchFromBackend] Network error calling ${url} | companyId=${
-          company?.id ?? "-"
-        } schema=${company?.schema_name ?? "-"}:`,
-        networkError,
-      );
+      if (process.env.NODE_ENV !== "production") {
+        console.error(
+          `[fetchFromBackend] Network error calling ${url} | companyId=${
+            company?.id ?? "-"
+          } schema=${company?.schema_name ?? "-"}:`,
+          networkError,
+        );
+      }
       throw networkError;
     }
 
@@ -116,8 +128,16 @@ export async function fetchFromBackend<T = any>(
       continue;
     }
 
-    throw new Error(
-      `Erro ao acessar backend (${response.status}): ${errorText}`,
+    throw new BackendHttpError(
+      response.status,
+      (() => {
+        try {
+          const parsed = JSON.parse(errorText) as { message?: string; pt_message?: string };
+          return parsed.pt_message || parsed.message || `Erro ao acessar backend (${response.status})`;
+        } catch {
+          return errorText || `Erro ao acessar backend (${response.status})`;
+        }
+      })(),
     );
   }
 
