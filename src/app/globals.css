@@ -214,7 +214,8 @@ body {
   .services-dialog,
   .team-page,
   .team-dialog,
-  .branding-page {
+  .branding-page,
+  .fornecedores-page {
     --background: 210 20% 98%;
     --foreground: 215 25% 15%;
     --card: 0 0% 100%;
@@ -244,14 +245,16 @@ body {
   .dashboard-page .card-hover,
   .services-page .card-hover,
   .team-page .card-hover,
-  .branding-page .card-hover {
+  .branding-page .card-hover,
+  .fornecedores-page .card-hover {
     @apply transition-all duration-300 ease-out;
   }
 
   .dashboard-page .card-hover:hover,
   .services-page .card-hover:hover,
   .team-page .card-hover:hover,
-  .branding-page .card-hover:hover {
+  .branding-page .card-hover:hover,
+  .fornecedores-page .card-hover:hover {
     @apply -translate-y-1;
     box-shadow: var(--shadow-lg);
   }
@@ -262,7 +265,8 @@ body {
   .clients-page .btn-gradient,
   .team-page .btn-gradient,
   .team-dialog .btn-gradient,
-  .branding-page .btn-gradient {
+  .branding-page .btn-gradient,
+  .fornecedores-page .btn-gradient {
     background: var(--gradient-primary);
     @apply text-white font-medium transition-all duration-300;
   }
@@ -273,7 +277,8 @@ body {
   .services-dialog .btn-gradient:hover,
   .team-page .btn-gradient:hover,
   .team-dialog .btn-gradient:hover,
-  .branding-page .btn-gradient:hover {
+  .branding-page .btn-gradient:hover,
+  .fornecedores-page .btn-gradient:hover {
     @apply opacity-90 scale-[1.02];
     box-shadow: var(--shadow-glow);
   }
@@ -282,7 +287,8 @@ body {
   .services-page .page-header,
   .clients-page .page-header,
   .team-page .page-header,
-  .branding-page .page-header {
+  .branding-page .page-header,
+  .fornecedores-page .page-header {
     @apply mb-8;
   }
 
@@ -290,7 +296,8 @@ body {
   .services-page .page-title,
   .clients-page .page-title,
   .team-page .page-title,
-  .branding-page .page-title {
+  .branding-page .page-title,
+  .fornecedores-page .page-title {
     @apply text-2xl font-bold text-foreground tracking-tight;
   }
 
@@ -298,7 +305,8 @@ body {
   .services-page .page-description,
   .clients-page .page-description,
   .team-page .page-description,
-  .branding-page .page-description {
+  .branding-page .page-description,
+  .fornecedores-page .page-description {
     @apply text-muted-foreground mt-1;
   }
 
@@ -306,7 +314,8 @@ body {
   .services-page .input-focus,
   .clients-page .input-focus,
   .team-page .input-focus,
-  .branding-page .input-focus {
+  .branding-page .input-focus,
+  .fornecedores-page .input-focus {
     @apply focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
   }
 
@@ -314,7 +323,8 @@ body {
   .services-page .text-success,
   .clients-page .text-success,
   .team-page .text-success,
-  .branding-page .text-success {
+  .branding-page .text-success,
+  .fornecedores-page .text-success {
     color: hsl(var(--success));
   }
 
@@ -327,51 +337,59 @@ body {
   .dashboard-page .animate-in,
   .services-page .animate-in,
   .team-page .animate-in,
-  .branding-page .animate-in {
+  .branding-page .animate-in,
+  .fornecedores-page .animate-in {
     animation: animateIn 0.3s ease-out forwards;
   }
 
   .dashboard-page .stagger-children > *,
   .services-page .stagger-children > *,
   .team-page .stagger-children > *,
-  .branding-page .stagger-children > * {
+  .branding-page .stagger-children > *,
+  .fornecedores-page .stagger-children > * {
     animation: animateIn 0.3s ease-out forwards;
   }
 
   .dashboard-page .stagger-children > *:nth-child(1),
   .services-page .stagger-children > *:nth-child(1),
   .team-page .stagger-children > *:nth-child(1),
-  .branding-page .stagger-children > *:nth-child(1) {
+  .branding-page .stagger-children > *:nth-child(1),
+  .fornecedores-page .stagger-children > *:nth-child(1) {
     animation-delay: 0ms;
   }
   .dashboard-page .stagger-children > *:nth-child(2),
   .services-page .stagger-children > *:nth-child(2),
   .team-page .stagger-children > *:nth-child(2),
-  .branding-page .stagger-children > *:nth-child(2) {
+  .branding-page .stagger-children > *:nth-child(2),
+  .fornecedores-page .stagger-children > *:nth-child(2) {
     animation-delay: 50ms;
   }
   .dashboard-page .stagger-children > *:nth-child(3),
   .services-page .stagger-children > *:nth-child(3),
   .team-page .stagger-children > *:nth-child(3),
-  .branding-page .stagger-children > *:nth-child(3) {
+  .branding-page .stagger-children > *:nth-child(3),
+  .fornecedores-page .stagger-children > *:nth-child(3) {
     animation-delay: 100ms;
   }
   .dashboard-page .stagger-children > *:nth-child(4),
   .services-page .stagger-children > *:nth-child(4),
   .team-page .stagger-children > *:nth-child(4),
-  .branding-page .stagger-children > *:nth-child(4) {
+  .branding-page .stagger-children > *:nth-child(4),
+  .fornecedores-page .stagger-children > *:nth-child(4) {
     animation-delay: 150ms;
   }
   .dashboard-page .stagger-children > *:nth-child(5),
   .services-page .stagger-children > *:nth-child(5),
   .team-page .stagger-children > *:nth-child(5),
-  .branding-page .stagger-children > *:nth-child(5) {
+  .branding-page .stagger-children > *:nth-child(5),
+  .fornecedores-page .stagger-children > *:nth-child(5) {
     animation-delay: 200ms;
   }
   .dashboard-page .stagger-children > *:nth-child(6),
   .services-page .stagger-children > *:nth-child(6),
   .team-page .stagger-children > *:nth-child(6),
-  .branding-page .stagger-children > *:nth-child(6) {
+  .branding-page .stagger-children > *:nth-child(6),
+  .fornecedores-page .stagger-children > *:nth-child(6) {
     animation-delay: 250ms;
   }
 

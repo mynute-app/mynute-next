@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAdminClients } from "@/hooks/system-admin/use-admin-clients";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { AdminClient } from "@/types/system-admin-client";
 
 const PAGE_SIZE = 10;
@@ -32,16 +33,17 @@ function ClientsSkeleton() {
 
 export function ClientsPage() {
   const router = useRouter();
-  const { clients, isLoading, hasFetched, error } = useAdminClients();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const debouncedSearch = useDebounce(search, 300);
 
-  const filtered = clients.filter(c =>
-    c.email.toLowerCase().includes(search.toLowerCase()),
-  );
+  const { clients, total, isLoading, hasFetched, error } = useAdminClients({
+    page,
+    pageSize: PAGE_SIZE,
+    search: debouncedSearch,
+  });
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   function handleRowClick(client: AdminClient) {
     router.push(`/system-admin/dashboard/users/${client.id}`);
@@ -82,7 +84,7 @@ export function ClientsPage() {
               <div className="rounded-xl border bg-card p-6 shadow-sm">
                 <p className="text-sm text-destructive">{error}</p>
               </div>
-            ) : filtered.length === 0 ? (
+            ) : clients.length === 0 ? (
               <div className="py-16 text-center">
                 <p className="text-sm text-muted-foreground">
                   {search
@@ -101,7 +103,7 @@ export function ClientsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paginated.map(client => (
+                      {clients.map(client => (
                         <TableRow
                           key={client.id}
                           className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -128,7 +130,7 @@ export function ClientsPage() {
                   <DataPagination
                     page={page}
                     pageSize={PAGE_SIZE}
-                    total={filtered.length}
+                    total={total}
                     onPageChange={setPage}
                   />
                 )}

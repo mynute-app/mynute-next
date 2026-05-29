@@ -25,6 +25,8 @@ export const MOCK_IDS = {
   service3: "svc-preview-003",
   client1: "client-preview-001",
   client2: "client-preview-002",
+  supplier1: "supplier-preview-001",
+  supplier2: "supplier-preview-002",
   appointment1: "appt-preview-001",
   appointment2: "appt-preview-002",
   appointment3: "appt-preview-003",
@@ -529,6 +531,52 @@ export const mockCompanyClients = [
 
 export const mockCompanyClientsResponse = {
   clients: mockCompanyClients,
+  total: 2,
+  page: 1,
+  page_size: 20,
+};
+
+// ─── Company Suppliers ────────────────────────────────────────────────────────
+
+export const mockCompanySuppliers = [
+  {
+    id: MOCK_IDS.supplier1,
+    company_id: MOCK_IDS.company,
+    name: "Distribuidora",
+    surname: "Cosméticos BR",
+    email: "contato@cosmeticosbr.com.br",
+    phone: "+5511988776655",
+    street: "Rua das Indústrias",
+    number: "500",
+    neighborhood: "Distrito Industrial",
+    city: "São Paulo",
+    state: "SP",
+    country: "Brasil",
+    zip_code: "01310-100",
+    created_at: 1716800000,
+    updated_at: 1716800000,
+  },
+  {
+    id: MOCK_IDS.supplier2,
+    company_id: MOCK_IDS.company,
+    name: "Fornecedor",
+    surname: "Equipamentos",
+    email: "vendas@equipamentos.com.br",
+    phone: "+5511977665544",
+    street: "",
+    number: "",
+    neighborhood: "",
+    city: "Campinas",
+    state: "SP",
+    country: "Brasil",
+    zip_code: "",
+    created_at: 1716810000,
+    updated_at: 1716810000,
+  },
+];
+
+export const mockCompanySuppliersResponse = {
+  company_suppliers: mockCompanySuppliers,
   total: 2,
   page: 1,
   page_size: 20,

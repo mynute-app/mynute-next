@@ -21,7 +21,7 @@ import React from "react";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PathParamsContext, NavigationPromisesContext } = require("next/dist/shared/lib/hooks-client-context.shared-runtime") as {
   PathParamsContext: React.Context<Record<string, string>>;
-  NavigationPromisesContext: React.Context<{ params: Promise<Record<string, string>> } | null>;
+  NavigationPromisesContext: React.Context<{ params: Promise<Record<string, string>>; pathname: Promise<string> } | null>;
 };
 
 interface MockParamsProviderProps {
@@ -36,7 +36,13 @@ interface MockParamsProviderProps {
 export function MockParamsProvider({ mockParams, children }: MockParamsProviderProps) {
   // Stable promise for the dev-mode Suspense DevTools path (NavigationPromisesContext)
   const paramsPromise = React.useMemo(() => Promise.resolve(mockParams), [mockParams]);
-  const navigationPromises = React.useMemo(() => ({ params: paramsPromise }), [paramsPromise]);
+  // Mock pathname to avoid usePathname() crashing in dev mode when NavigationPromisesContext
+  // is overridden — in dev Next.js reads navigationPromises.pathname via React.use()
+  const pathnamePromise = React.useMemo(() => Promise.resolve("/dev-preview"), []);
+  const navigationPromises = React.useMemo(
+    () => ({ params: paramsPromise, pathname: pathnamePromise }),
+    [paramsPromise, pathnamePromise]
+  );
 
   return (
     <PathParamsContext.Provider value={mockParams}>

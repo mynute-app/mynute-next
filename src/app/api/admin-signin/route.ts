@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     // Definir o cookie de sessão do NextAuth
     const cookieName = "authjs.session-token";
-    const res = NextResponse.json({ ok: true, redirect: "/admin/whatsapp" });
+    const res = NextResponse.json({ ok: true, redirect: "/system-admin/dashboard" });
     res.cookies.set(cookieName, encoded, {
       httpOnly: true,
       sameSite: "lax",
