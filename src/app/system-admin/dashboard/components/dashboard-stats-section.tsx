@@ -3,6 +3,7 @@
 import { Building2, ShieldCheck, Users } from "lucide-react";
 import { useAdminCompanies } from "@/hooks/system-admin/use-admin-companies";
 import { useAdminClients } from "@/hooks/system-admin/use-admin-clients";
+import { useAdminAdmins } from "@/hooks/system-admin/use-admin-admins";
 
 function StatCard({
   icon,
@@ -32,9 +33,11 @@ function StatCard({
 export function DashboardStatsSection() {
   const { total: totalCompanies, isLoading: loadingCompanies, error: companiesError } = useAdminCompanies({ pageSize: 1 });
   const { total: totalClients, isLoading: loadingClients, error: clientsError } = useAdminClients({ pageSize: 1 });
+  const { total: totalAdmins, isLoading: loadingAdmins, error: adminsError } = useAdminAdmins({ pageSize: 1 });
 
   const companiesValue = loadingCompanies ? "..." : companiesError ? "Erro" : String(totalCompanies);
   const clientsValue = loadingClients ? "..." : clientsError ? "Erro" : String(totalClients);
+  const adminsValue = loadingAdmins ? "..." : adminsError ? "Erro" : String(totalAdmins);
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -53,7 +56,7 @@ export function DashboardStatsSection() {
       <StatCard
         icon={<ShieldCheck className="h-5 w-5 text-primary" />}
         label="Admins"
-        value="—"
+        value={adminsValue}
         description="Administradores do sistema"
       />
     </div>

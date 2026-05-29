@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { fetchFromBackend } from "@/lib/api/fetch-from-backend";
 import { getAuthDataFromRequest } from "@/utils/decode-jwt";
-import type { AdminClientListResponse } from "@/types/system-admin-client";
+import type { AdminAdminListResponse } from "@/types/system-admin-admin";
 
 const parseBackendError = (error: unknown) => {
   const fallback = {
     status: 500,
     body: {
-      message: "Erro interno ao buscar clientes.",
+      message: "Erro interno ao buscar administradores.",
       error: error instanceof Error ? error.message : String(error),
     },
   };
@@ -26,7 +26,7 @@ const parseBackendError = (error: unknown) => {
   if (!payloadText) {
     return {
       status: Number.isFinite(status) ? status : 500,
-      body: { message: "Erro ao buscar clientes." },
+      body: { message: "Erro ao buscar administradores." },
     };
   }
 
@@ -61,18 +61,14 @@ export const GET = auth(async function GET(req) {
     const { searchParams } = new URL(req.url);
     const page = searchParams.get("page") || "1";
     const pageSize = searchParams.get("page_size") || "10";
-    const search = searchParams.get("search") || "";
 
-    const queryParams: Record<string, string> = { page, page_size: pageSize };
-    if (search) queryParams.search = search;
-
-    const data = await fetchFromBackend<AdminClientListResponse>(
+    const data = await fetchFromBackend<AdminAdminListResponse>(
       req,
-      "/system-admin/clients",
+      "/system-admin/admins",
       authData.token!,
       {
         method: "GET",
-        queryParams,
+        queryParams: { page, page_size: pageSize },
         skipCompanyContext: true,
       },
     );
