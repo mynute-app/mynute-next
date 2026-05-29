@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/use-toast";
 import type { CompanySupplierListResponse } from "@/types/company-supplier";
@@ -24,11 +24,17 @@ export function useCompanySuppliers({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { data: session, status } = useSession();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchSuppliers = useCallback(async () => {
     if (!session?.accessToken) {
       return null;
     }
+
+    // Abort any in-flight request before starting a new one
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
     setIsLoading(true);
     setHasFetched(false);
     setError(null);
@@ -45,6 +51,7 @@ export function useCompanySuppliers({
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
+          signal: abortControllerRef.current.signal,
         }
       );
 
@@ -61,6 +68,7 @@ export function useCompanySuppliers({
       setData(responseData);
       return responseData;
     } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return null;
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
       setError(errorMessage);
@@ -91,6 +99,9 @@ export function useCompanySuppliers({
     }
 
     fetchSuppliers();
+    return () => {
+      abortControllerRef.current?.abort();
+    };
   }, [enabled, status, fetchSuppliers]);
 
   return {

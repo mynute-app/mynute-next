@@ -59,10 +59,7 @@ export const POST = auth(async function POST(req) {
   } catch (error) {
     console.error("❌ Erro ao mesclar fornecedores:", error);
     return NextResponse.json(
-      {
-        message: "Erro interno ao mesclar fornecedores.",
-        error: error instanceof Error ? error.message : String(error),
-      },
+      { message: "Erro interno ao mesclar fornecedores." },
       { status: 500 }
     );
   }

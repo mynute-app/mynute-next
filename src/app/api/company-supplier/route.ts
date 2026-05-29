@@ -85,7 +85,6 @@ export const POST = auth(async function POST(req) {
         {
           code: "EMAIL_DUPLICATE",
           message: "E-mail já cadastrado.",
-          error: errorMessage,
         },
         { status: 409 }
       );
@@ -93,10 +92,7 @@ export const POST = auth(async function POST(req) {
 
     console.error("❌ Erro ao criar fornecedor:", error);
     return NextResponse.json(
-      {
-        message: "Erro interno ao criar fornecedor.",
-        error: errorMessage,
-      },
+      { message: "Erro interno ao criar fornecedor." },
       { status: 500 }
     );
   }
@@ -142,10 +138,7 @@ export const GET = auth(async function GET(req) {
   } catch (error) {
     console.error("❌ Erro ao listar fornecedores:", error);
     return NextResponse.json(
-      {
-        message: "Erro interno ao listar fornecedores.",
-        error: error instanceof Error ? error.message : String(error),
-      },
+      { message: "Erro interno ao listar fornecedores." },
       { status: 500 }
     );
   }

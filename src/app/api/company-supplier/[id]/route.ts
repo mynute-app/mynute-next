@@ -33,11 +33,9 @@ export const GET = auth(async function GET(req, { params }) {
 
     return NextResponse.json(supplier, { status: 200 });
   } catch (error) {
+    console.error("❌ Erro ao buscar fornecedor:", error);
     return NextResponse.json(
-      {
-        message: "Erro interno ao buscar fornecedor.",
-        error: error instanceof Error ? error.message : String(error),
-      },
+      { message: "Erro interno ao buscar fornecedor." },
       { status: 500 }
     );
   }
@@ -98,10 +96,7 @@ export const PATCH = auth(async function PATCH(req, { params }) {
   } catch (error) {
     console.error("❌ Erro ao atualizar fornecedor:", error);
     return NextResponse.json(
-      {
-        message: "Erro interno ao atualizar fornecedor.",
-        error: error instanceof Error ? error.message : String(error),
-      },
+      { message: "Erro interno ao atualizar fornecedor." },
       { status: 500 }
     );
   }
@@ -142,10 +137,7 @@ export const DELETE = auth(async function DELETE(req, { params }) {
   } catch (error) {
     console.error("❌ Erro ao deletar fornecedor:", error);
     return NextResponse.json(
-      {
-        message: "Erro interno ao deletar fornecedor.",
-        error: error instanceof Error ? error.message : String(error),
-      },
+      { message: "Erro interno ao deletar fornecedor." },
       { status: 500 }
     );
   }

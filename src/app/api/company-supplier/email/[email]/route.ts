@@ -30,7 +30,20 @@ export const GET = auth(async function GET(req) {
   // auth() wrapper não repassa params nativos do Next.js — extração manual via URL
   const url = new URL(req.url);
   const segments = url.pathname.split("/");
-  const email = decodeURIComponent(segments[segments.length - 1] ?? "").toLowerCase();
+  const rawSegment = segments[segments.length - 1] ?? "";
+
+  // M3: prevenir payloads excessivamente longos antes de qualquer processamento
+  if (rawSegment.length > 254) {
+    return NextResponse.json({ message: "E-mail inválido." }, { status: 400 });
+  }
+
+  // I10: decodeURIComponent pode lançar URIError para percent-encoding inválido (ex: %GG)
+  let email: string;
+  try {
+    email = decodeURIComponent(rawSegment).toLowerCase();
+  } catch {
+    return NextResponse.json({ message: "E-mail inválido." }, { status: 400 });
+  }
 
   if (!email) {
     return NextResponse.json({ message: "E-mail não informado." }, { status: 400 });

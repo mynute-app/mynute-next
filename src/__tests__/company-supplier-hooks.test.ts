@@ -6,6 +6,8 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { useCompanySuppliers } from "@/hooks/use-company-suppliers";
 import { useMergeCompanySuppliers } from "@/hooks/company-supplier/use-merge-company-suppliers";
+import { useCompanySupplierDetails } from "@/hooks/company-supplier/use-company-supplier-details";
+import { useCompanySupplierTransactions } from "@/hooks/company-supplier/use-company-supplier-transactions";
 
 // Stable toast mock — must NOT be jest.fn() inside the factory (creates new fn on each render → infinite re-render loop)
 const stableToast = jest.fn();
@@ -352,5 +354,210 @@ describe("useMergeCompanySuppliers", () => {
 
     // Error must be cleared after successful merge
     expect(result.current.error).toBeNull();
+  });
+});
+
+// ─── useCompanySupplierDetails ────────────────────────────────────────────────
+
+describe("useCompanySupplierDetails", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("fetches and returns supplier on success", async () => {
+    jest.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSupplierA,
+    } as Response);
+
+    const { result } = renderHook(() =>
+      useCompanySupplierDetails({ supplierId: "sup-1" })
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.supplier).toEqual(mockSupplierA);
+    expect(result.current.error).toBeNull();
+  });
+
+  it("sets error state when supplier is not found (404)", async () => {
+    jest.spyOn(global, "fetch").mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({ message: "Fornecedor não encontrado" }),
+    } as Response);
+
+    const { result } = renderHook(() =>
+      useCompanySupplierDetails({ supplierId: "nonexistent-id" })
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.supplier).toBeNull();
+    expect(result.current.error).toBe("Fornecedor não encontrado");
+  });
+
+  it("does not fetch when supplierId is empty", async () => {
+    const fetchMock = jest.spyOn(global, "fetch");
+    fetchMock.mockClear();
+
+    const { result } = renderHook(() =>
+      useCompanySupplierDetails({ supplierId: "" })
+    );
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+
+    // State should remain empty — no fetch triggered for empty supplierId
+    expect(result.current.supplier).toBeNull();
+    expect(result.current.error).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("does not fetch when enabled=false", async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockSupplierA,
+    } as Response);
+    const originalFetch = global.fetch;
+    global.fetch = fetchMock;
+
+    renderHook(() =>
+      useCompanySupplierDetails({ supplierId: "sup-1", enabled: false })
+    );
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+
+    global.fetch = originalFetch;
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("refetch triggers a new API call with correct URL", async () => {
+    const fetchMock = jest.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockSupplierA,
+    } as Response);
+
+    const { result } = renderHook(() =>
+      useCompanySupplierDetails({ supplierId: "sup-1" })
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const callsBefore = fetchMock.mock.calls.length;
+
+    await act(async () => {
+      await result.current.refetch();
+    });
+
+    expect(fetchMock.mock.calls.length).toBe(callsBefore + 1);
+    const lastUrl = fetchMock.mock.calls[fetchMock.mock.calls.length - 1][0] as string;
+    expect(lastUrl).toContain("/api/company-supplier/sup-1");
+  });
+});
+
+// ─── useCompanySupplierTransactions ──────────────────────────────────────────
+
+describe("useCompanySupplierTransactions", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("fetches and returns transactions on success", async () => {
+    const mockTransactions = [
+      { id: "tx-1", description: "Pagamento", amount_cents: 5000 },
+      { id: "tx-2", description: "Compra", amount_cents: 10000 },
+    ];
+
+    jest.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockTransactions,
+    } as Response);
+
+    const { result } = renderHook(() =>
+      useCompanySupplierTransactions({ supplierId: "sup-1" })
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.transactions).toHaveLength(2);
+    expect(result.current.transactions[0].id).toBe("tx-1");
+    expect(result.current.error).toBeNull();
+  });
+
+  it("sets error state when API returns an error", async () => {
+    jest.spyOn(global, "fetch").mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ message: "Erro interno" }),
+    } as Response);
+
+    const { result } = renderHook(() =>
+      useCompanySupplierTransactions({ supplierId: "sup-1" })
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.transactions).toHaveLength(0);
+    expect(result.current.error).toBe("Erro interno");
+  });
+
+  it("returns empty array when supplier has no transactions", async () => {
+    jest.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => [],
+    } as Response);
+
+    const { result } = renderHook(() =>
+      useCompanySupplierTransactions({ supplierId: "sup-1" })
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.transactions).toHaveLength(0);
+    expect(result.current.error).toBeNull();
+  });
+
+  it("does not set error on AbortError (request cancelled)", async () => {
+    jest.spyOn(global, "fetch").mockRejectedValue(
+      Object.assign(new Error("The operation was aborted"), { name: "AbortError" })
+    );
+
+    const { result } = renderHook(() =>
+      useCompanySupplierTransactions({ supplierId: "sup-1" })
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // AbortError must be silently ignored — no error state
+    expect(result.current.error).toBeNull();
+  });
+
+  it("includes supplier_id in the fetch URL", async () => {
+    const fetchMock = jest.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => [],
+    } as Response);
+    fetchMock.mockClear();
+
+    const { result } = renderHook(() =>
+      useCompanySupplierTransactions({ supplierId: "sup-abc" })
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const calledUrls = fetchMock.mock.calls.map((c) => c[0] as string);
+    const transactionCall = calledUrls.find((url) =>
+      url.includes("/api/financial/transactions")
+    );
+    expect(transactionCall).toBeDefined();
+    expect(transactionCall).toContain("supplier_id=sup-abc");
   });
 });
