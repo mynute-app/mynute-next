@@ -97,7 +97,7 @@ export function ClientDetailsForm({
     (branch: any) => branch.id === selectedSlot.branchId,
   );
 
-  // Verificar se jÃ¡ existe token no localStorage ao carregar
+  // Verificar se já existe token no localStorage ao carregar
   useEffect(() => {
     const storedToken = localStorage.getItem("client_token");
 
@@ -105,7 +105,7 @@ export function ClientDetailsForm({
       const userData = decodeJWTToken(storedToken);
 
       if (userData) {
-        // Preencher os dados do formulÃ¡rio com os dados do token
+        // Preencher os dados do formulário com os dados do token
         setClientData({
           name: userData.name,
           surname: userData.surname,
@@ -150,26 +150,26 @@ export function ClientDetailsForm({
     setErrors(prev => ({ ...prev, email: "" }));
 
     if (!email) {
-      setErrors(prev => ({ ...prev, email: "Email Ã© obrigatÃ³rio" }));
+      setErrors(prev => ({ ...prev, email: "Email é obrigatório" }));
       return;
     }
 
     if (!validateEmail(email)) {
       setErrors(prev => ({
         ...prev,
-        email: "Digite um email vÃ¡lido (exemplo: seu@email.com)",
+        email: "Digite um email válido (exemplo: seu@email.com)",
       }));
       return;
     }
 
-    // Email vÃ¡lido, buscar no servidor
+    // Email válido, buscar no servidor
     setIsCheckingEmail(true);
     await checkEmail(email);
     setIsCheckingEmail(false);
     setEmailValidated(true);
   };
 
-  // Preencher campos automaticamente quando cliente for encontrado (verificado ou nÃ£o)
+  // Preencher campos automaticamente quando cliente for encontrado (verificado ou não)
   useEffect(() => {
     if (client) {
       setClientData(prev => ({
@@ -200,8 +200,7 @@ export function ClientDetailsForm({
     if (phoneDuplicate) {
       setErrors(prev => ({
         ...prev,
-        phone:
-          "Este nÃºmero de telefone jÃ¡ estÃ¡ cadastrado. Use outro nÃºmero.",
+        phone: "Este número de telefone já está cadastrado. Use outro número.",
       }));
       return;
     }
@@ -213,7 +212,7 @@ export function ClientDetailsForm({
     ) {
       setErrors(prev => ({
         ...prev,
-        email: "Este email jÃ¡ estÃ¡ cadastrado.",
+        email: "Este email já está cadastrado.",
       }));
       return;
     }
@@ -233,23 +232,23 @@ export function ClientDetailsForm({
     const newErrors: Record<string, string> = {};
 
     if (!clientData.email.trim()) {
-      newErrors.email = "Email Ã© obrigatÃ³rio";
+      newErrors.email = "Email é obrigatório";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientData.email.trim())) {
-      newErrors.email = "Email deve ter um formato vÃ¡lido";
+      newErrors.email = "Email deve ter um formato válido";
     }
 
     if (!clientData.name.trim()) {
-      newErrors.name = "Nome Ã© obrigatÃ³rio";
+      newErrors.name = "Nome é obrigatório";
     }
 
     if (!clientData.surname.trim()) {
-      newErrors.surname = "Sobrenome Ã© obrigatÃ³rio";
+      newErrors.surname = "Sobrenome é obrigatório";
     }
 
     if (!clientData.phone.trim()) {
-      newErrors.phone = "Telefone Ã© obrigatÃ³rio";
+      newErrors.phone = "Telefone é obrigatório";
     } else if (!/^[\d\s\-\(\)\+]+$/.test(clientData.phone.trim())) {
-      newErrors.phone = "Telefone deve conter apenas nÃºmeros";
+      newErrors.phone = "Telefone deve conter apenas números";
     }
 
     setErrors(newErrors);
@@ -285,7 +284,7 @@ export function ClientDetailsForm({
     if (!validateEmail(clientData.email.trim())) {
       setErrors(prev => ({
         ...prev,
-        email: "Digite um email vÃ¡lido antes de fazer login",
+        email: "Digite um email válido antes de fazer login",
       }));
       return;
     }
@@ -295,7 +294,7 @@ export function ClientDetailsForm({
     if (!codeSent) {
       setErrors(prev => ({
         ...prev,
-        email: "Erro ao enviar cÃ³digo. Verifique seu email e tente novamente.",
+        email: "Erro ao enviar código. Verifique seu email e tente novamente.",
       }));
       return;
     }
@@ -369,7 +368,7 @@ export function ClientDetailsForm({
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2 text-sm font-medium text-foreground">
             <User className="w-4 h-4 text-muted-foreground" />
-            {isLoggedIn ? "Seus dados" : "InformaÃ§Ãµes pessoais"}
+            {isLoggedIn ? "Seus dados" : "Informações pessoais"}
           </div>
           {isLoggedIn && (
             <button
@@ -416,12 +415,12 @@ export function ClientDetailsForm({
               </div>
               <div className="space-y-1.5 pt-3 border-t border-border">
                 <Label htmlFor="notes" className="text-sm">
-                  ObservaÃ§Ãµes{" "}
+                  Observações{" "}
                   <span className="text-muted-foreground">(opcional)</span>
                 </Label>
                 <Textarea
                   id="notes"
-                  placeholder="Alguma observaÃ§Ã£o ou preferÃªncia especial..."
+                  placeholder="Alguma observação ou preferência especial..."
                   value={clientData.notes}
                   onChange={e =>
                     setClientData({ ...clientData, notes: e.target.value })
@@ -496,22 +495,21 @@ export function ClientDetailsForm({
                   </div>
                 )}
 
-                {emailValidated &&
-                  clientError === "Cliente nÃ£o encontrado" && (
-                    <div className="flex items-center gap-2 p-2.5 bg-muted border border-border rounded-lg text-xs">
-                      <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <span className="text-muted-foreground">
-                        Email disponÃ­vel para criar conta
-                      </span>
-                    </div>
-                  )}
+                {emailValidated && clientError === "Cliente não encontrado" && (
+                  <div className="flex items-center gap-2 p-2.5 bg-muted border border-border rounded-lg text-xs">
+                    <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-muted-foreground">
+                      Email disponível para criar conta
+                    </span>
+                  </div>
+                )}
 
                 {emailValidated && client && !client.verified && (
                   <div className="p-2.5 bg-[hsl(38_92%_50%/0.08)] border border-[hsl(38_92%_50%/0.2)] rounded-lg text-xs space-y-0.5">
                     <div className="flex items-center gap-1.5">
                       <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                       <p className="font-medium text-amber-700">
-                        Email nÃ£o verificado
+                        Email não verificado
                       </p>
                     </div>
                     <p className="text-amber-600 pl-5">
@@ -539,7 +537,7 @@ export function ClientDetailsForm({
                       className={`rounded-lg border-border ${errors.name ? "border-destructive" : ""}`}
                       disabled={
                         client !== null &&
-                        clientError !== "Cliente nÃ£o encontrado"
+                        clientError !== "Cliente não encontrado"
                       }
                     />
                     {errors.name && (
@@ -564,7 +562,7 @@ export function ClientDetailsForm({
                       className={`rounded-lg border-border ${errors.surname ? "border-destructive" : ""}`}
                       disabled={
                         client !== null &&
-                        clientError !== "Cliente nÃ£o encontrado"
+                        clientError !== "Cliente não encontrado"
                       }
                     />
                     {errors.surname && (
@@ -589,7 +587,7 @@ export function ClientDetailsForm({
                       className={`rounded-lg border-border ${errors.phone ? "border-destructive" : ""}`}
                       disabled={
                         client !== null &&
-                        clientError !== "Cliente nÃ£o encontrado"
+                        clientError !== "Cliente não encontrado"
                       }
                     />
                     {errors.phone && (
@@ -599,12 +597,12 @@ export function ClientDetailsForm({
 
                   <div className="space-y-1.5">
                     <Label htmlFor="notes" className="text-sm">
-                      ObservaÃ§Ãµes{" "}
+                      Observações{" "}
                       <span className="text-muted-foreground">(opcional)</span>
                     </Label>
                     <Textarea
                       id="notes"
-                      placeholder="Alguma observaÃ§Ã£o ou preferÃªncia especial..."
+                      placeholder="Alguma observação ou preferência especial..."
                       value={clientData.notes}
                       onChange={e =>
                         setClientData({ ...clientData, notes: e.target.value })
@@ -655,7 +653,7 @@ export function ClientDetailsForm({
               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                 <Clock className="w-3.5 h-3.5" />
                 {formatTime(selectedSlot.time)}
-                {service.duration && ` Â· ${service.duration} min`}
+                {service.duration && ` · ${service.duration} min`}
               </p>
             </div>
           </div>
@@ -687,7 +685,7 @@ export function ClientDetailsForm({
         </div>
       </div>
 
-      {/* BotÃ£o de aÃ§Ã£o */}
+      {/* Botão de ação */}
       <div className="pt-1">{renderActionButton()}</div>
 
       <ClientVerifyCodeDialog
@@ -717,7 +715,7 @@ export function ClientDetailsForm({
       );
     }
 
-    if (emailValidated && clientError === "Cliente nÃ£o encontrado") {
+    if (emailValidated && clientError === "Cliente não encontrado") {
       return (
         <Button
           size="lg"

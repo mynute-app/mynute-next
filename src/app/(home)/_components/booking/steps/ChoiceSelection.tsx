@@ -45,7 +45,7 @@ export function ChoiceSelection({
         </Button>
         <header>
           <h1 className="text-lg font-bold tracking-tight text-foreground">
-            Como deseja comeÃ§ar?
+            Como deseja começar?
           </h1>
           <p className="text-sm text-muted-foreground">
             Escolha local ou profissional primeiro
@@ -53,7 +53,7 @@ export function ChoiceSelection({
         </header>
       </div>
 
-      {/* Cards de opÃ§Ã£o */}
+      {/* Cards de opção */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {options.map(({ choice, icon: Icon, title, description }) => (
           <button
@@ -95,3 +95,4 @@ export function ChoiceSelection({
     </div>
   );
 }
+

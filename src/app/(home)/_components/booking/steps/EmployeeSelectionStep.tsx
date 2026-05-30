@@ -50,12 +50,12 @@ export function EmployeeSelectionStep({
           <p className="text-sm text-muted-foreground">
             {selectedDate && selectedTime
               ? `${selectedDate} Ã s ${selectedTime}`
-              : "Selecione quem irÃ¡ atender vocÃª"}
+              : "Selecione quem irá atender você"}
           </p>
         </header>
       </div>
 
-      {/* Lista de funcionÃ¡rios */}
+      {/* Lista de funcionários */}
       <div className="space-y-2">
         {availableEmployees.map(employee => (
           <button
@@ -94,7 +94,7 @@ export function EmployeeSelectionStep({
                 {employee.name} {employee.surname}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                DisponÃ­vel
+                Disponível
               </p>
             </div>
 
@@ -108,10 +108,10 @@ export function EmployeeSelectionStep({
               <User className="w-6 h-6 text-muted-foreground" />
             </div>
             <p className="font-semibold text-foreground">
-              Nenhum profissional disponÃ­vel
+              Nenhum profissional disponível
             </p>
             <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-              Tente selecionar outro horÃ¡rio
+              Tente selecionar outro horário
               {selectedBranchId ? " ou local" : ""}.
             </p>
           </div>

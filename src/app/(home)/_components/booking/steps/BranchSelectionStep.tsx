@@ -43,7 +43,7 @@ export function BranchSelectionStep({
           <p className="text-sm text-muted-foreground">
             {selectedEmployeeId
               ? "Locais onde o profissional atende"
-              : "Selecione onde vocÃª gostaria de ser atendido"}
+              : "Selecione onde você gostaria de ser atendido"}
           </p>
         </header>
       </div>
@@ -109,12 +109,12 @@ export function BranchSelectionStep({
               <MapPin className="w-6 h-6 text-muted-foreground" />
             </div>
             <p className="font-semibold text-foreground">
-              Nenhum local disponÃ­vel
+              Nenhum local disponível
             </p>
             <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-              NÃ£o hÃ¡ locais disponÃ­veis
+              Não há locais disponíveis
               {selectedEmployeeId
-                ? " para este profissional no horÃ¡rio selecionado"
+                ? " para este profissional no horário selecionado"
                 : ""}
               .
             </p>
@@ -124,3 +124,4 @@ export function BranchSelectionStep({
     </div>
   );
 }
+

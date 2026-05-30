@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -54,26 +54,27 @@ export function SuccessStep({
   }).format(new Date(selectedSlot.date + "T00:00:00"));
 
   const appointmentText = `
-ðŸ“‹ SOLICITAÃ‡ÃƒO DE AGENDAMENTO RECEBIDA
+�x9 SOLICITAÇÃO DE AGENDAMENTO RECEBIDA
 
-ðŸ“… Data: ${formattedDate}
-â° HorÃ¡rio: ${selectedSlot.time}
+�x& Data: ${formattedDate}
+� Horário: ${selectedSlot.time}
 
-ðŸ’¼ ServiÃ§o: ${service.name}
-${service.duration ? `â±ï¸ DuraÃ§Ã£o: ${service.duration} minutos` : ""}
-${service.price ? `ðŸ’° Valor: R$ ${service.price.toFixed(2)}` : ""}
+�x� Serviço: ${service.name}
+${service.duration ? `� Duração: ${service.duration} minutos` : ""}
+${service.price ? `�x� Valor: R$ ${service.price.toFixed(2)}` : ""}
 
-ðŸ‘¤ Cliente: ${clientData.name} ${clientData.surname}
-ðŸ“§ E-mail: ${clientData.email}
-ðŸ“± Telefone: ${clientData.phone}
+�x� Cliente: ${clientData.name} ${clientData.surname}
+�x� E-mail: ${clientData.email}
+�x� Telefone: ${clientData.phone}
 
-ðŸ‘¨â€ðŸ’¼ Profissional: ${employee?.name} ${employee?.surname || ""}
+�x�
+�x� Profissional: ${employee?.name} ${employee?.surname || ""}
 
-ðŸ“ Local: ${branch?.name}
+�x� Local: ${branch?.name}
 ${branch?.street}, ${branch?.number}${branch?.complement ? ` - ${branch?.complement}` : ""}
 ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
 
-â„¹ï¸ Sua solicitaÃ§Ã£o serÃ¡ analisada e vocÃª receberÃ¡ uma confirmaÃ§Ã£o por e-mail.
+�� Sua solicitação será analisada e Você receberá uma confirmação por e-mail.
   `.trim();
 
   const handleCopy = async () => {
@@ -124,10 +125,10 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
           </div>
           <div>
             <h2 className="text-xl font-bold text-foreground">
-              SolicitaÃ§Ã£o Recebida!
+              Solicitação Recebida!
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Sua solicitaÃ§Ã£o foi enviada e aguarda confirmaÃ§Ã£o.
+              Sua solicitação foi enviada e aguarda confirmação.
             </p>
           </div>
 
@@ -146,8 +147,8 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
               style={{ color: accent }}
             />
             <p className="text-xs" style={{ color: accent }}>
-              VocÃª receberÃ¡ um <strong>e-mail de confirmaÃ§Ã£o</strong> assim
-              que o profissional aprovar o agendamento.
+              Você receberá um <strong>e-mail de confirmação</strong> assim que
+              o profissional aprovar o agendamento.
             </p>
           </div>
         </div>
@@ -157,12 +158,12 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
           {[
             {
               icon: Calendar,
-              label: "Data e HorÃ¡rio",
-              value: `${formattedDate} Ã s ${selectedSlot.time}${service.duration ? ` (${service.duration} min)` : ""}`,
+              label: "Data e Horário",
+              value: `${formattedDate} às ${selectedSlot.time}${service.duration ? ` (${service.duration} min)` : ""}`,
             },
             {
               icon: Briefcase,
-              label: "ServiÃ§o",
+              label: "Serviço",
               value: service.name,
               sub: service.price ? `R$ ${service.price.toFixed(2)}` : undefined,
             },
@@ -171,14 +172,14 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
               label: "Profissional",
               value:
                 `${employee?.name ?? ""} ${employee?.surname ?? ""}`.trim() ||
-                "â€”",
+                "–",
             },
             {
               icon: MapPin,
               label: "Local",
-              value: branch?.name ?? "â€”",
+              value: branch?.name ?? "–",
               sub: branch
-                ? `${branch.street}, ${branch.number}${branch.complement ? ` â€” ${branch.complement}` : ""} Â· ${branch.neighborhood}`
+                ? `${branch.street}, ${branch.number}${branch.complement ? ` – ${branch.complement}` : ""} – ${branch.neighborhood}`
                 : undefined,
             },
           ].map(({ icon: Icon, label, value, sub }) => (
@@ -197,7 +198,7 @@ ${branch?.neighborhood} - ${branch?.city}/${branch?.state}
           ))}
         </div>
 
-        {/* AÃ§Ãµes */}
+        {/* Ações */}
         <div className="grid grid-cols-2 gap-2">
           <Button
             variant="outline"

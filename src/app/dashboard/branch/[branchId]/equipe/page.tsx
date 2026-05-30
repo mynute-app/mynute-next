@@ -33,7 +33,7 @@ const resolveInitialEmployeeIds = (
   employees: Employee[],
 ) => {
   const fromBranch =
-    branchData?.employees?.map(employee => Number(employee.id)) ?? [];
+    branchData?.employees?.map(employee => String(employee.id)) ?? [];
 
   const fromCompany = employees
     .filter(employee =>
@@ -41,9 +41,9 @@ const resolveInitialEmployeeIds = (
         branch => String(branch.id) === String(branchData?.id),
       ),
     )
-    .map(employee => Number(employee.id));
+    .map(employee => String(employee.id));
 
-  return new Set<number>([...fromBranch, ...fromCompany]);
+  return new Set<string>([...fromBranch, ...fromCompany]);
 };
 
 export default function BranchEquipePage() {
@@ -66,10 +66,10 @@ export default function BranchEquipePage() {
   const branch = useMemo(() => branchDetails ?? null, [branchDetails]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<number>>(
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(
     new Set(),
   );
-  const [initialEmployeeIds, setInitialEmployeeIds] = useState<Set<number>>(
+  const [initialEmployeeIds, setInitialEmployeeIds] = useState<Set<string>>(
     new Set(),
   );
   const [isSaving, setIsSaving] = useState(false);
@@ -101,12 +101,12 @@ export default function BranchEquipePage() {
 
     const initialIds = branch
       ? resolveInitialEmployeeIds(branch, employees)
-      : new Set<number>(
+      : new Set<string>(
           employees
             .filter(employee =>
               employee.branches?.some(item => String(item.id) === branchId),
             )
-            .map(employee => Number(employee.id)),
+            .map(employee => String(employee.id)),
         );
 
     setSelectedEmployeeIds(initialIds);
@@ -160,7 +160,7 @@ export default function BranchEquipePage() {
     () =>
       employees.reduce(
         (total, employee) =>
-          total + (selectedEmployeeIds.has(Number(employee.id)) ? 1 : 0),
+          total + (selectedEmployeeIds.has(String(employee.id)) ? 1 : 0),
         0,
       ),
     [employees, selectedEmployeeIds],
@@ -174,7 +174,7 @@ export default function BranchEquipePage() {
     return false;
   }, [selectedEmployeeIds, initialEmployeeIds]);
 
-  const toggleEmployee = (employeeId: number) => {
+  const toggleEmployee = (employeeId: string) => {
     setSelectedEmployeeIds(prev => {
       const next = new Set(prev);
       if (next.has(employeeId)) {
@@ -192,18 +192,18 @@ export default function BranchEquipePage() {
     const toLink = employees
       .filter(
         employee =>
-          selectedEmployeeIds.has(Number(employee.id)) &&
-          !initialEmployeeIds.has(Number(employee.id)),
+          selectedEmployeeIds.has(String(employee.id)) &&
+          !initialEmployeeIds.has(String(employee.id)),
       )
-      .map(employee => Number(employee.id));
+      .map(employee => String(employee.id));
 
     const toUnlink = employees
       .filter(
         employee =>
-          initialEmployeeIds.has(Number(employee.id)) &&
-          !selectedEmployeeIds.has(Number(employee.id)),
+          initialEmployeeIds.has(String(employee.id)) &&
+          !selectedEmployeeIds.has(String(employee.id)),
       )
-      .map(employee => Number(employee.id));
+      .map(employee => String(employee.id));
 
     if (toLink.length === 0 && toUnlink.length === 0) return;
 
@@ -305,7 +305,7 @@ export default function BranchEquipePage() {
         ) : (
           <div className="grid gap-4">
             {filteredEmployees.map(employee => {
-              const isEnabled = selectedEmployeeIds.has(Number(employee.id));
+              const isEnabled = selectedEmployeeIds.has(String(employee.id));
               const roleLabel = employee.role || employee.permission || "";
 
               return (
@@ -317,7 +317,7 @@ export default function BranchEquipePage() {
                     <Switch
                       checked={isEnabled}
                       onCheckedChange={() =>
-                        toggleEmployee(Number(employee.id))
+                        toggleEmployee(String(employee.id))
                       }
                       disabled={isSaving}
                     />

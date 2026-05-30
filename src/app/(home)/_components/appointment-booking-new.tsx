@@ -81,7 +81,7 @@ export function AppointmentBookingNew({
     Array.isArray(availability.available_dates) &&
     availability.available_dates.length === 0;
 
-  // Organizar os 3 primeiros dias (hoje, amanhã, depois de amanhã)
+  // Organizar os próximos dias disponíveis (máx 3)
   const organizedTodayTomorrow = useMemo(() => {
     if (!availability?.available_dates) return { today: [], tomorrow: [] };
 
@@ -92,13 +92,6 @@ export function AppointmentBookingNew({
 
     const todayStr = today.toISOString().split("T")[0];
     const tomorrowStr = tomorrow.toISOString().split("T")[0];
-
-    const todayData = availability.available_dates.find(
-      (d: any) => d.date === todayStr,
-    );
-    const tomorrowData = availability.available_dates.find(
-      (d: any) => d.date === tomorrowStr,
-    );
 
     const formatDateInfo = (dateInfo: any, label: string) => ({
       ...dateInfo,
@@ -113,9 +106,41 @@ export function AppointmentBookingNew({
       }).format(new Date(dateInfo.date + "T00:00:00")),
     });
 
+    const sortedDates = [...availability.available_dates].sort(
+      (a: any, b: any) => a.date.localeCompare(b.date),
+    );
+
+    const todayData = sortedDates.find((d: any) => d.date === todayStr);
+    const tomorrowData = sortedDates.find((d: any) => d.date === tomorrowStr);
+
+    // Se hoje e amanhã existem, usar labels fixos
+    if (todayData || tomorrowData) {
+      return {
+        today: todayData ? [formatDateInfo(todayData, "Hoje")] : [],
+        tomorrow: tomorrowData ? [formatDateInfo(tomorrowData, "Amanhã")] : [],
+      };
+    }
+
+    // Caso contrário, mostrar os próximos 3 dias disponíveis a partir de hoje
+    const upcoming = sortedDates
+      .filter((d: any) => d.date >= todayStr)
+      .slice(0, 3);
+
+    if (upcoming.length === 0) return { today: [], tomorrow: [] };
+
+    const getLabel = (dateStr: string) => {
+      if (dateStr === todayStr) return "Hoje";
+      if (dateStr === tomorrowStr) return "Amanhã";
+      return new Intl.DateTimeFormat("pt-BR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }).format(new Date(dateStr + "T00:00:00"));
+    };
+
     return {
-      today: todayData ? [formatDateInfo(todayData, "Hoje")] : [],
-      tomorrow: tomorrowData ? [formatDateInfo(tomorrowData, "Amanhã")] : [],
+      today: upcoming.map((d: any) => formatDateInfo(d, getLabel(d.date))),
+      tomorrow: [],
     };
   }, [availability?.available_dates]);
 
@@ -384,7 +409,7 @@ export function AppointmentBookingNew({
                   <CardContent className="p-6 text-center">
                     <CalendarDays className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                     <p className="text-muted-foreground">
-                      Nenhum horário disponível para hoje e amanhã.
+                      Nenhum horário disponível nos próximos dias.
                     </p>
                     {isAvailabilityEmpty ? (
                       <div className="mt-4 rounded-lg border border-dashed border-border bg-muted/40 p-4 text-left">

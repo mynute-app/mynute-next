@@ -31,17 +31,17 @@ export function ServiceHeader({ service, onBack }: ServiceHeaderProps) {
 
   return (
     <div className="space-y-4">
-      {/* TÃ­tulo da seÃ§Ã£o */}
+      {/* Título da seção */}
       <header>
         <h1 className="text-xl font-bold tracking-tight text-foreground">
           Agendamento
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Selecione uma data e horÃ¡rio disponÃ­vel
+          Selecione uma data e horário disponível
         </p>
       </header>
 
-      {/* Card do serviÃ§o selecionado */}
+      {/* Card do serviço selecionado */}
       <div className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border shadow-[0_1px_3px_0_hsl(215_25%_15%/0.07)]">
         <Button
           variant="ghost"
@@ -56,7 +56,7 @@ export function ServiceHeader({ service, onBack }: ServiceHeaderProps) {
           {imageUrl ? (
             <Image
               src={imageUrl}
-              alt={service.name || "Imagem do serviÃ§o"}
+              alt={service.name || "Imagem do serviço"}
               width={48}
               height={48}
               className="object-cover w-full h-full"
@@ -100,3 +100,4 @@ export function ServiceHeader({ service, onBack }: ServiceHeaderProps) {
     </div>
   );
 }
+

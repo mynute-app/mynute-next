@@ -181,11 +181,11 @@ const resolveInitialEmployeeIds = (
   branchData: Branch | null,
   employees: Employee[],
 ) => {
-  const fromBranch = branchData?.employees?.map(e => Number(e.id)) ?? [];
+  const fromBranch = branchData?.employees?.map(e => String(e.id)) ?? [];
   const fromCompany = employees
     .filter(e => e.branches?.some(b => String(b.id) === String(branchData?.id)))
-    .map(e => Number(e.id));
-  return new Set<number>([...fromBranch, ...fromCompany]);
+    .map(e => String(e.id));
+  return new Set<string>([...fromBranch, ...fromCompany]);
 };
 
 const formatPrice = (price?: Service["price"]) => {
@@ -292,10 +292,10 @@ export default function BranchDetailPage({
   const [isSavingTeam, setIsSavingTeam] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isEmployeesLoading, setIsEmployeesLoading] = useState(false);
-  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<number>>(
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(
     new Set(),
   );
-  const [initialEmployeeIds, setInitialEmployeeIds] = useState<Set<number>>(
+  const [initialEmployeeIds, setInitialEmployeeIds] = useState<Set<string>>(
     new Set(),
   );
   const [teamInitializedFor, setTeamInitializedFor] = useState("");
@@ -802,7 +802,7 @@ export default function BranchDetailPage({
     );
   }, [employees, teamSearch]);
 
-  const toggleEmployee = (employeeId: number) => {
+  const toggleEmployee = (employeeId: string) => {
     setSelectedEmployeeIds(prev => {
       const next = new Set(prev);
       next.has(employeeId) ? next.delete(employeeId) : next.add(employeeId);
@@ -815,17 +815,17 @@ export default function BranchDetailPage({
     const toLink = employees
       .filter(
         e =>
-          selectedEmployeeIds.has(Number(e.id)) &&
-          !initialEmployeeIds.has(Number(e.id)),
+          selectedEmployeeIds.has(String(e.id)) &&
+          !initialEmployeeIds.has(String(e.id)),
       )
-      .map(e => Number(e.id));
+      .map(e => String(e.id));
     const toUnlink = employees
       .filter(
         e =>
-          initialEmployeeIds.has(Number(e.id)) &&
-          !selectedEmployeeIds.has(Number(e.id)),
+          initialEmployeeIds.has(String(e.id)) &&
+          !selectedEmployeeIds.has(String(e.id)),
       )
-      .map(e => Number(e.id));
+      .map(e => String(e.id));
     if (toLink.length === 0 && toUnlink.length === 0) return;
 
     setIsSavingTeam(true);
@@ -1378,7 +1378,7 @@ export default function BranchDetailPage({
                     <div className="grid gap-3">
                       {filteredEmployees.map(employee => {
                         const isEnabled = selectedEmployeeIds.has(
-                          Number(employee.id),
+                          String(employee.id),
                         );
                         return (
                           <div
@@ -1389,7 +1389,7 @@ export default function BranchDetailPage({
                               <Switch
                                 checked={isEnabled}
                                 onCheckedChange={() =>
-                                  toggleEmployee(Number(employee.id))
+                                  toggleEmployee(String(employee.id))
                                 }
                                 disabled={isSavingTeam}
                               />

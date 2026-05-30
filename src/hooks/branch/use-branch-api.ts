@@ -32,7 +32,9 @@ const normalizeBranch = (branchData: Branch): Branch => ({
         : undefined,
   services: Array.isArray(branchData.services)
     ? branchData.services.map((service: any) =>
-        typeof service === "number" ? service : service.id,
+        typeof service === "number" || typeof service === "string"
+          ? service
+          : service?.id,
       )
     : branchData.services,
   employees: Array.isArray(branchData.employees)
